@@ -1,0 +1,41 @@
+{
+  "name": "kaiser-von-deutschland",
+  "version": "2.5.1",
+  "type": "module",
+  "description": "Historical Kingdom Simulator - Role-play from year 0 to the future with Prisoners of War system and 20+ integrated features!",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "check": "tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@pixi/graphics": "^7.4.3",
+    "@pixi/text": "^7.4.3",
+    "localforage": "^1.10.0",
+    "pixi.js": "^8.14.3",
+    "sql.js": "^1.13.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/sql.js": "^1.4.9",
+    "@types/uuid": "^9.0.7",
+    "typescript": "^5.3.3",
+    "vite": "^7.3.0",
+    "vitest": "^4.0.16"
+  },
+  "keywords": [
+    "game",
+    "simulation",
+    "strategy",
+    "kingdom",
+    "historical",
+    "kaiser",
+    "germany"
+  ],
+  "author": "Kaiser Development Team",
+  "license": "MIT"
+}

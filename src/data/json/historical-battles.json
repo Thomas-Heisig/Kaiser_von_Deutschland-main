@@ -1,0 +1,194 @@
+{
+  "battles": [
+    {
+      "id": "teutoburg_forest",
+      "name": "Schlacht im Teutoburger Wald",
+      "year": 9,
+      "location": "Germania",
+      "participants": ["Germanic Tribes", "Roman Empire"],
+      "victor": "Germanic Tribes",
+      "casualties": {
+        "total": 20000,
+        "victor": 1000,
+        "loser": 19000
+      },
+      "significance": "Stopped Roman expansion into Germania",
+      "historicalImpact": 95,
+      "militaryInnovations": ["guerilla_warfare", "forest_tactics"],
+      "commanders": ["Arminius", "Varus"],
+      "weatherConditions": "rainy",
+      "terrain": "forest"
+    },
+    {
+      "id": "lechfeld",
+      "name": "Schlacht auf dem Lechfeld",
+      "year": 955,
+      "location": "Bayern",
+      "participants": ["Holy Roman Empire", "Magyar"],
+      "victor": "Holy Roman Empire",
+      "casualties": {
+        "total": 15000,
+        "victor": 3000,
+        "loser": 12000
+      },
+      "significance": "End of Magyar invasions",
+      "historicalImpact": 85,
+      "militaryInnovations": ["heavy_cavalry", "combined_arms"],
+      "commanders": ["Otto I", "Bulcsú"],
+      "weatherConditions": "clear",
+      "terrain": "plains"
+    },
+    {
+      "id": "leipzig",
+      "name": "Völkerschlacht bei Leipzig",
+      "year": 1813,
+      "location": "Sachsen",
+      "participants": ["Coalition", "French Empire"],
+      "victor": "Coalition",
+      "casualties": {
+        "total": 120000,
+        "victor": 54000,
+        "loser": 66000
+      },
+      "significance": "Decisive defeat of Napoleon",
+      "historicalImpact": 95,
+      "militaryInnovations": ["coalition_warfare", "mass_mobilization"],
+      "commanders": ["Schwarzenberg", "Blücher", "Napoleon"],
+      "weatherConditions": "mixed",
+      "terrain": "urban_suburban"
+    },
+    {
+      "id": "sedan",
+      "name": "Schlacht von Sedan",
+      "year": 1870,
+      "location": "Frankreich",
+      "participants": ["Prussia", "France"],
+      "victor": "Prussia",
+      "casualties": {
+        "total": 20000,
+        "victor": 9000,
+        "loser": 11000
+      },
+      "significance": "Led to German Unification",
+      "historicalImpact": 98,
+      "militaryInnovations": ["breech_loading_rifles", "railroad_logistics"],
+      "commanders": ["Moltke", "Napoleon III"],
+      "weatherConditions": "clear",
+      "terrain": "hills"
+    },
+    {
+      "id": "tannenberg",
+      "name": "Schlacht bei Tannenberg",
+      "year": 1914,
+      "location": "Ostpreußen",
+      "participants": ["German Empire", "Russian Empire"],
+      "victor": "German Empire",
+      "casualties": {
+        "total": 170000,
+        "victor": 20000,
+        "loser": 150000
+      },
+      "significance": "Major German victory in WWI",
+      "historicalImpact": 88,
+      "militaryInnovations": ["radio_communication", "rail_transport", "encirclement"],
+      "commanders": ["Hindenburg", "Ludendorff", "Samsonov"],
+      "weatherConditions": "clear",
+      "terrain": "forest_lakes"
+    },
+    {
+      "id": "verdun",
+      "name": "Schlacht von Verdun",
+      "year": 1916,
+      "location": "Frankreich",
+      "participants": ["France", "German Empire"],
+      "victor": "France",
+      "casualties": {
+        "total": 700000,
+        "victor": 377000,
+        "loser": 323000
+      },
+      "significance": "Longest battle of WWI",
+      "historicalImpact": 92,
+      "militaryInnovations": ["trench_warfare", "artillery_barrage", "gas_warfare"],
+      "commanders": ["Pétain", "Falkenhayn"],
+      "weatherConditions": "muddy",
+      "terrain": "trenches"
+    },
+    {
+      "id": "stalingrad",
+      "name": "Schlacht von Stalingrad",
+      "year": 1942,
+      "location": "Sowjetunion",
+      "participants": ["Soviet Union", "Germany"],
+      "victor": "Soviet Union",
+      "casualties": {
+        "total": 2000000,
+        "victor": 1100000,
+        "loser": 900000
+      },
+      "significance": "Turning point of WWII",
+      "historicalImpact": 100,
+      "militaryInnovations": ["urban_warfare", "winter_tactics", "encirclement"],
+      "commanders": ["Zhukov", "Paulus"],
+      "weatherConditions": "winter",
+      "terrain": "urban"
+    },
+    {
+      "id": "kursk",
+      "name": "Schlacht bei Kursk",
+      "year": 1943,
+      "location": "Sowjetunion",
+      "participants": ["Soviet Union", "Germany"],
+      "victor": "Soviet Union",
+      "casualties": {
+        "total": 800000,
+        "victor": 500000,
+        "loser": 300000
+      },
+      "significance": "Largest tank battle in history",
+      "historicalImpact": 95,
+      "militaryInnovations": ["tank_warfare", "defensive_positions", "air_superiority"],
+      "commanders": ["Zhukov", "Manstein"],
+      "weatherConditions": "summer",
+      "terrain": "steppes"
+    },
+    {
+      "id": "waterloo",
+      "name": "Schlacht von Waterloo",
+      "year": 1815,
+      "location": "Belgien",
+      "participants": ["Coalition", "France"],
+      "victor": "Coalition",
+      "casualties": {
+        "total": 65000,
+        "victor": 24000,
+        "loser": 41000
+      },
+      "significance": "Final defeat of Napoleon",
+      "historicalImpact": 98,
+      "militaryInnovations": ["square_formation", "artillery_timing"],
+      "commanders": ["Wellington", "Blücher", "Napoleon"],
+      "weatherConditions": "rainy_muddy",
+      "terrain": "farmland"
+    },
+    {
+      "id": "koeniggraetz",
+      "name": "Schlacht von Königgrätz",
+      "year": 1866,
+      "location": "Böhmen",
+      "participants": ["Prussia", "Austria"],
+      "victor": "Prussia",
+      "casualties": {
+        "total": 45000,
+        "victor": 9000,
+        "loser": 36000
+      },
+      "significance": "Prussian dominance in Germany",
+      "historicalImpact": 90,
+      "militaryInnovations": ["needle_gun", "railroad_mobilization"],
+      "commanders": ["Moltke", "Benedek"],
+      "weatherConditions": "clear",
+      "terrain": "fields"
+    }
+  ]
+}

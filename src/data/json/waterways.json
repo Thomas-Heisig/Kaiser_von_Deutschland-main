@@ -1,0 +1,283 @@
+{
+  "waterways": [
+    {
+      "id": "rhine",
+      "name": "Rhein",
+      "type": "Major River",
+      "length": 1233,
+      "navigable": 883,
+      "yearImproved": 1200,
+      "cargoCapacity": 1000,
+      "speed": 15,
+      "description": "Wichtigste Wasserstraße Deutschlands",
+      "cities": ["Basel", "Straßburg", "Mainz", "Köln", "Düsseldorf", "Rotterdam"],
+      "economicValue": 100,
+      "tradeBo nus": 0.5
+    },
+    {
+      "id": "danube",
+      "name": "Donau",
+      "type": "Major River",
+      "length": 2857,
+      "navigable": 2415,
+      "yearImproved": 1000,
+      "cargoCapacity": 800,
+      "speed": 12,
+      "description": "Verbindung nach Südosteuropa",
+      "cities": ["Ulm", "Regensburg", "Passau", "Wien", "Budapest"],
+      "economicValue": 80,
+      "tradeBonus": 0.4
+    },
+    {
+      "id": "elbe",
+      "name": "Elbe",
+      "type": "Major River",
+      "length": 1094,
+      "navigable": 727,
+      "yearImproved": 1400,
+      "cargoCapacity": 600,
+      "speed": 13,
+      "description": "Verbindung zur Nordsee",
+      "cities": ["Dresden", "Magdeburg", "Hamburg"],
+      "economicValue": 60,
+      "tradeBonus": 0.3
+    },
+    {
+      "id": "oder",
+      "name": "Oder",
+      "type": "River",
+      "length": 866,
+      "navigable": 717,
+      "yearImproved": 1500,
+      "cargoCapacity": 400,
+      "speed": 10,
+      "description": "Grenzfluss nach Polen",
+      "cities": ["Breslau", "Frankfurt/Oder", "Stettin"],
+      "economicValue": 40,
+      "tradeBonus": 0.2
+    }
+  ],
+  "canals": [
+    {
+      "id": "ludwig_canal",
+      "name": "Ludwig-Donau-Main-Kanal",
+      "built": 1846,
+      "length": 172,
+      "connects": ["Main", "Danube"],
+      "buildCost": {
+        "gold": 50000,
+        "wood": 5000,
+        "stone": 3000
+      },
+      "maintenanceCost": 2000,
+      "cargoCapacity": 300,
+      "description": "Erste Verbindung zwischen Rhein und Donau",
+      "economicValue": 40,
+      "tradeBonus": 0.25,
+      "obsolete": 1950
+    },
+    {
+      "id": "kiel_canal",
+      "name": "Nord-Ostsee-Kanal",
+      "built": 1895,
+      "length": 98,
+      "connects": ["North Sea", "Baltic Sea"],
+      "buildCost": {
+        "gold": 200000,
+        "iron": 10000,
+        "coal": 5000
+      },
+      "maintenanceCost": 5000,
+      "cargoCapacity": 2000,
+      "description": "Wichtigste Wasserstraße für Seehandel",
+      "economicValue": 150,
+      "militaryValue": 100,
+      "tradeBonus": 0.6
+    },
+    {
+      "id": "mittelland_canal",
+      "name": "Mittellandkanal",
+      "built": 1938,
+      "length": 325,
+      "connects": ["Rhine", "Elbe", "Oder"],
+      "buildCost": {
+        "gold": 300000,
+        "iron": 15000,
+        "coal": 8000
+      },
+      "maintenanceCost": 8000,
+      "cargoCapacity": 1500,
+      "description": "Ost-West-Verbindung durch Norddeutschland",
+      "economicValue": 120,
+      "tradeBonus": 0.5
+    },
+    {
+      "id": "rhine_main_danube",
+      "name": "Rhein-Main-Donau-Kanal",
+      "built": 1992,
+      "length": 171,
+      "connects": ["Rhine", "Main", "Danube"],
+      "buildCost": {
+        "gold": 500000,
+        "iron": 20000
+      },
+      "maintenanceCost": 10000,
+      "cargoCapacity": 3000,
+      "description": "Moderne Verbindung Nordsee bis Schwarzes Meer",
+      "economicValue": 200,
+      "tradeBonus": 0.8
+    }
+  ],
+  "ports": [
+    {
+      "id": "hamburg",
+      "name": "Hafen Hamburg",
+      "type": "Major Seaport",
+      "established": 1189,
+      "capacity": 5000,
+      "facilities": ["Container Terminal", "Shipyard", "Warehouse", "Customs"],
+      "buildCost": {
+        "gold": 100000,
+        "stone": 10000,
+        "iron": 5000
+      },
+      "maintenanceCost": 5000,
+      "description": "Tor zur Welt - größter deutscher Seehafen",
+      "economicValue": 200,
+      "tradeBonus": 1.0
+    },
+    {
+      "id": "bremen",
+      "name": "Hafen Bremen/Bremerhaven",
+      "type": "Major Seaport",
+      "established": 1827,
+      "capacity": 3000,
+      "facilities": ["Container Terminal", "Automobile Terminal", "Warehouse"],
+      "buildCost": {
+        "gold": 80000,
+        "stone": 8000,
+        "iron": 4000
+      },
+      "maintenanceCost": 4000,
+      "description": "Wichtiger Handelshafen",
+      "economicValue": 150,
+      "tradeBonus": 0.8
+    },
+    {
+      "id": "kiel",
+      "name": "Hafen Kiel",
+      "type": "Naval Base",
+      "established": 1865,
+      "capacity": 2000,
+      "facilities": ["Naval Dockyard", "Submarine Base", "Military Warehouse"],
+      "buildCost": {
+        "gold": 120000,
+        "stone": 10000,
+        "iron": 8000
+      },
+      "maintenanceCost": 6000,
+      "description": "Hauptstützpunkt der Marine",
+      "militaryValue": 150,
+      "navalCapacity": 100
+    }
+  ],
+  "rivershipping": [
+    {
+      "id": "medieval_barge",
+      "name": "Mittelalterlicher Lastkahn",
+      "era": "Mittelalter",
+      "yearAvailable": 800,
+      "capacity": 50,
+      "speed": 8,
+      "cost": {
+        "gold": 500,
+        "wood": 100
+      },
+      "maintenanceCost": 20,
+      "description": "Einfaches Transportschiff"
+    },
+    {
+      "id": "hanse_cog",
+      "name": "Hanse-Kogge",
+      "era": "Spätmittelalter",
+      "yearAvailable": 1200,
+      "capacity": 200,
+      "speed": 12,
+      "cost": {
+        "gold": 2000,
+        "wood": 400
+      },
+      "maintenanceCost": 50,
+      "description": "Hanseatisches Handelsschiff"
+    },
+    {
+      "id": "steam_barge",
+      "name": "Dampfschlepper",
+      "era": "Industrialisierung",
+      "yearAvailable": 1850,
+      "capacity": 500,
+      "speed": 20,
+      "cost": {
+        "gold": 10000,
+        "iron": 2000,
+        "coal": 500
+      },
+      "maintenanceCost": 200,
+      "description": "Dampfbetriebenes Frachtschiff"
+    },
+    {
+      "id": "modern_container_barge",
+      "name": "Container-Binnenschiff",
+      "era": "Moderne",
+      "yearAvailable": 1970,
+      "capacity": 2000,
+      "speed": 25,
+      "cost": {
+        "gold": 50000,
+        "iron": 5000
+      },
+      "maintenanceCost": 500,
+      "description": "Modernes Container-Transportschiff"
+    }
+  ],
+  "waterwayImprovements": [
+    {
+      "id": "dredging",
+      "name": "Ausbaggerung",
+      "description": "Vertiefung der Fahrrinne",
+      "cost": {
+        "gold": 10000
+      },
+      "effects": {
+        "depth": 2,
+        "capacity": 0.3
+      }
+    },
+    {
+      "id": "locks",
+      "name": "Schleusen",
+      "description": "Höhenunterschiede überwinden",
+      "cost": {
+        "gold": 20000,
+        "stone": 2000,
+        "iron": 500
+      },
+      "effects": {
+        "navigability": 0.5,
+        "reach": 0.4
+      }
+    },
+    {
+      "id": "river_straightening",
+      "name": "Flussbegradigung",
+      "description": "Verkürzen der Strecke durch Begradigung",
+      "cost": {
+        "gold": 30000
+      },
+      "effects": {
+        "speed": 0.2,
+        "floodRisk": 0.3
+      }
+    }
+  ]
+}

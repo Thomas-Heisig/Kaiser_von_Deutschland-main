@@ -1,0 +1,249 @@
+{
+  "taxSystems": [
+    {
+      "id": "tithe",
+      "name": "Zehnt",
+      "era": "medieval",
+      "period": {
+        "start": 500,
+        "end": 1800
+      },
+      "description": "10% der Ernte an Kirche oder Herrscher",
+      "taxRate": 0.1,
+      "collectionEfficiency": 0.6,
+      "populationAcceptance": 0.5,
+      "administrativeCost": 0.05,
+      "taxBase": ["agriculture"],
+      "effects": {
+        "revenue": 0.06,
+        "population_happiness": -0.15,
+        "religious_authority": 0.3
+      }
+    },
+    {
+      "id": "feudal_dues",
+      "name": "Frondienste",
+      "era": "medieval",
+      "period": {
+        "start": 800,
+        "end": 1850
+      },
+      "description": "Arbeitsleistung für den Lehnsherrn",
+      "taxRate": 0.15,
+      "collectionEfficiency": 0.7,
+      "populationAcceptance": 0.3,
+      "administrativeCost": 0.02,
+      "taxBase": ["labor"],
+      "effects": {
+        "revenue": 0.10,
+        "population_happiness": -0.25,
+        "productivity": -0.1
+      }
+    },
+    {
+      "id": "excise_tax",
+      "name": "Akzise",
+      "era": "renaissance",
+      "period": {
+        "start": 1500,
+        "end": null
+      },
+      "description": "Verbrauchssteuer auf Waren",
+      "taxRate": 0.08,
+      "collectionEfficiency": 0.75,
+      "populationAcceptance": 0.6,
+      "administrativeCost": 0.08,
+      "taxBase": ["consumption", "trade"],
+      "effects": {
+        "revenue": 0.06,
+        "population_happiness": -0.1,
+        "trade": -0.05
+      }
+    },
+    {
+      "id": "customs_duty",
+      "name": "Zoll",
+      "era": "renaissance",
+      "period": {
+        "start": 1200,
+        "end": null
+      },
+      "description": "Steuer auf Import/Export",
+      "taxRate": 0.12,
+      "collectionEfficiency": 0.8,
+      "populationAcceptance": 0.7,
+      "administrativeCost": 0.1,
+      "taxBase": ["trade", "imports"],
+      "effects": {
+        "revenue": 0.096,
+        "population_happiness": -0.05,
+        "trade": -0.1,
+        "domestic_industry": 0.05
+      }
+    },
+    {
+      "id": "property_tax",
+      "name": "Grundsteuer",
+      "era": "industrial",
+      "period": {
+        "start": 1700,
+        "end": null
+      },
+      "description": "Steuer auf Landbesitz",
+      "taxRate": 0.05,
+      "collectionEfficiency": 0.85,
+      "populationAcceptance": 0.65,
+      "administrativeCost": 0.06,
+      "taxBase": ["property", "land"],
+      "effects": {
+        "revenue": 0.0425,
+        "population_happiness": -0.08,
+        "land_use_efficiency": 0.05
+      }
+    },
+    {
+      "id": "income_tax",
+      "name": "Einkommensteuer",
+      "era": "industrial",
+      "period": {
+        "start": 1812,
+        "end": null
+      },
+      "description": "Progressives Steuersystem auf Einkommen",
+      "taxRate": 0.25,
+      "collectionEfficiency": 0.75,
+      "populationAcceptance": 0.55,
+      "administrativeCost": 0.15,
+      "taxBase": ["income", "wages"],
+      "progressive": true,
+      "effects": {
+        "revenue": 0.1875,
+        "population_happiness": -0.15,
+        "social_equality": 0.1
+      }
+    },
+    {
+      "id": "corporate_tax",
+      "name": "Körperschaftssteuer",
+      "era": "modern",
+      "period": {
+        "start": 1920,
+        "end": null
+      },
+      "description": "Steuer auf Unternehmensgewinne",
+      "taxRate": 0.3,
+      "collectionEfficiency": 0.65,
+      "populationAcceptance": 0.75,
+      "administrativeCost": 0.12,
+      "taxBase": ["corporate_profits"],
+      "effects": {
+        "revenue": 0.195,
+        "population_happiness": 0.05,
+        "business_investment": -0.1
+      }
+    },
+    {
+      "id": "vat",
+      "name": "Mehrwertsteuer",
+      "era": "modern",
+      "period": {
+        "start": 1954,
+        "end": null
+      },
+      "description": "Allgemeine Umsatzsteuer",
+      "taxRate": 0.19,
+      "collectionEfficiency": 0.9,
+      "populationAcceptance": 0.6,
+      "administrativeCost": 0.08,
+      "taxBase": ["consumption", "sales"],
+      "effects": {
+        "revenue": 0.171,
+        "population_happiness": -0.1,
+        "consumption": -0.05
+      }
+    },
+    {
+      "id": "solidarity_tax",
+      "name": "Solidaritätszuschlag",
+      "era": "contemporary",
+      "period": {
+        "start": 1991,
+        "end": null
+      },
+      "description": "Zusatzsteuer für deutsche Einheit",
+      "taxRate": 0.055,
+      "collectionEfficiency": 0.95,
+      "populationAcceptance": 0.5,
+      "administrativeCost": 0.03,
+      "taxBase": ["income"],
+      "effects": {
+        "revenue": 0.0523,
+        "population_happiness": -0.08,
+        "national_unity": 0.05
+      }
+    },
+    {
+      "id": "carbon_tax",
+      "name": "CO2-Steuer",
+      "era": "contemporary",
+      "period": {
+        "start": 2021,
+        "end": null
+      },
+      "description": "Umweltsteuer auf CO2-Emissionen",
+      "taxRate": 0.04,
+      "collectionEfficiency": 0.8,
+      "populationAcceptance": 0.45,
+      "administrativeCost": 0.1,
+      "taxBase": ["emissions", "energy"],
+      "effects": {
+        "revenue": 0.032,
+        "population_happiness": -0.12,
+        "environmental_quality": 0.15,
+        "green_technology": 0.1
+      }
+    },
+    {
+      "id": "wealth_tax",
+      "name": "Vermögenssteuer",
+      "era": "modern",
+      "period": {
+        "start": 1952,
+        "end": 1997
+      },
+      "description": "Steuer auf Gesamtvermögen",
+      "taxRate": 0.01,
+      "collectionEfficiency": 0.5,
+      "populationAcceptance": 0.4,
+      "administrativeCost": 0.2,
+      "taxBase": ["wealth", "assets"],
+      "effects": {
+        "revenue": 0.005,
+        "population_happiness": -0.05,
+        "social_equality": 0.15,
+        "capital_flight": 0.1
+      }
+    },
+    {
+      "id": "inheritance_tax",
+      "name": "Erbschaftssteuer",
+      "era": "modern",
+      "period": {
+        "start": 1906,
+        "end": null
+      },
+      "description": "Steuer auf Erbschaften",
+      "taxRate": 0.3,
+      "collectionEfficiency": 0.6,
+      "populationAcceptance": 0.5,
+      "administrativeCost": 0.15,
+      "taxBase": ["inheritance"],
+      "progressive": true,
+      "effects": {
+        "revenue": 0.018,
+        "population_happiness": -0.1,
+        "social_equality": 0.2
+      }
+    }
+  ]
+}

@@ -1,0 +1,427 @@
+{
+  "currencies": [
+    {
+      "id": "denarius",
+      "name": "Denarius",
+      "symbol": "₯",
+      "period": {
+        "start": 0,
+        "end": 400
+      },
+      "baseValue": 1.0,
+      "material": "Silber",
+      "issuingAuthority": "Römisches Reich",
+      "acceptedRegions": ["Europa", "Nordafrika", "Naher Osten"],
+      "inflationRate": 2.0,
+      "isFiat": false
+    },
+    {
+      "id": "solidus",
+      "name": "Solidus",
+      "symbol": "S",
+      "period": {
+        "start": 310,
+        "end": 1453
+      },
+      "baseValue": 1.2,
+      "material": "Gold",
+      "issuingAuthority": "Byzantinisches Reich",
+      "acceptedRegions": ["Byzanz", "Mittelmeer"],
+      "inflationRate": 1.5,
+      "isFiat": false
+    },
+    {
+      "id": "pfennig",
+      "name": "Pfennig",
+      "symbol": "₰",
+      "period": {
+        "start": 800,
+        "end": 1871
+      },
+      "baseValue": 0.1,
+      "material": "Silber/Kupfer",
+      "issuingAuthority": "Deutsches Reich",
+      "acceptedRegions": ["Deutschland", "Mitteleuropa"],
+      "inflationRate": 2.5,
+      "isFiat": false
+    },
+    {
+      "id": "gulden",
+      "name": "Gulden",
+      "symbol": "ƒ",
+      "period": {
+        "start": 1252,
+        "end": 1871
+      },
+      "baseValue": 2.5,
+      "material": "Gold",
+      "issuingAuthority": "Diverse deutsche Staaten",
+      "acceptedRegions": ["Deutschland", "Niederlande"],
+      "inflationRate": 2.0,
+      "isFiat": false
+    },
+    {
+      "id": "goldmark",
+      "name": "Goldmark",
+      "symbol": "ℳ",
+      "period": {
+        "start": 1871,
+        "end": 1914
+      },
+      "baseValue": 3.0,
+      "material": "Gold",
+      "issuingAuthority": "Deutsches Kaiserreich",
+      "acceptedRegions": ["Deutschland"],
+      "inflationRate": 1.0,
+      "isFiat": false
+    },
+    {
+      "id": "papiermark",
+      "name": "Papiermark",
+      "symbol": "ℳ",
+      "period": {
+        "start": 1914,
+        "end": 1923
+      },
+      "baseValue": 0.0001,
+      "material": null,
+      "issuingAuthority": "Deutsches Reich",
+      "acceptedRegions": ["Deutschland"],
+      "inflationRate": 50000.0,
+      "isFiat": true
+    },
+    {
+      "id": "rentenmark",
+      "name": "Rentenmark",
+      "symbol": "ℳ",
+      "period": {
+        "start": 1923,
+        "end": 1924
+      },
+      "baseValue": 1.0,
+      "material": null,
+      "issuingAuthority": "Deutsche Rentenbank",
+      "acceptedRegions": ["Deutschland"],
+      "inflationRate": 2.0,
+      "isFiat": true
+    },
+    {
+      "id": "reichsmark",
+      "name": "Reichsmark",
+      "symbol": "ℛℳ",
+      "period": {
+        "start": 1924,
+        "end": 1948
+      },
+      "baseValue": 1.2,
+      "material": null,
+      "issuingAuthority": "Deutsches Reich",
+      "acceptedRegions": ["Deutschland"],
+      "inflationRate": 5.0,
+      "isFiat": true
+    },
+    {
+      "id": "deutsche_mark",
+      "name": "Deutsche Mark",
+      "symbol": "DM",
+      "period": {
+        "start": 1948,
+        "end": 2002
+      },
+      "baseValue": 2.0,
+      "material": null,
+      "issuingAuthority": "Bundesbank",
+      "acceptedRegions": ["Deutschland"],
+      "inflationRate": 2.5,
+      "isFiat": true
+    },
+    {
+      "id": "euro",
+      "name": "Euro",
+      "symbol": "€",
+      "period": {
+        "start": 2002,
+        "end": null
+      },
+      "baseValue": 1.8,
+      "material": null,
+      "issuingAuthority": "Europäische Zentralbank",
+      "acceptedRegions": ["Europa", "International"],
+      "inflationRate": 2.0,
+      "isFiat": true
+    }
+  ],
+  "banks": [
+    {
+      "id": "fugger_bank",
+      "name": "Fugger Bank",
+      "foundedYear": 1473,
+      "location": "Augsburg",
+      "type": "commercial",
+      "assets": 5000000,
+      "interestRate": 8.0,
+      "loanCapacity": 2000000,
+      "solvency": 100,
+      "isHistorical": true
+    },
+    {
+      "id": "rothschild",
+      "name": "Rothschild Bank",
+      "foundedYear": 1760,
+      "location": "Frankfurt",
+      "type": "investment",
+      "assets": 10000000,
+      "interestRate": 6.0,
+      "loanCapacity": 5000000,
+      "solvency": 100,
+      "isHistorical": true
+    },
+    {
+      "id": "reichsbank",
+      "name": "Reichsbank",
+      "foundedYear": 1876,
+      "location": "Berlin",
+      "type": "central",
+      "assets": 50000000,
+      "interestRate": 4.0,
+      "loanCapacity": 25000000,
+      "solvency": 100,
+      "isHistorical": true
+    },
+    {
+      "id": "deutsche_bank",
+      "name": "Deutsche Bank",
+      "foundedYear": 1870,
+      "location": "Berlin",
+      "type": "commercial",
+      "assets": 20000000,
+      "interestRate": 5.5,
+      "loanCapacity": 10000000,
+      "solvency": 100,
+      "isHistorical": true
+    },
+    {
+      "id": "bundesbank",
+      "name": "Deutsche Bundesbank",
+      "foundedYear": 1957,
+      "location": "Frankfurt",
+      "type": "central",
+      "assets": 100000000,
+      "interestRate": 2.0,
+      "loanCapacity": 50000000,
+      "solvency": 100,
+      "isHistorical": true
+    },
+    {
+      "id": "commerzbank",
+      "name": "Commerzbank",
+      "foundedYear": 1870,
+      "location": "Hamburg",
+      "type": "commercial",
+      "assets": 15000000,
+      "interestRate": 5.0,
+      "loanCapacity": 7000000,
+      "solvency": 100,
+      "isHistorical": true
+    }
+  ],
+  "stockExchanges": [
+    {
+      "id": "frankfurt_exchange",
+      "name": "Frankfurter Wertpapierbörse",
+      "foundedYear": 1585,
+      "location": "Frankfurt",
+      "marketCap": 1000000,
+      "listedCompanies": 50,
+      "tradingVolume": 50000,
+      "indexValue": 1000,
+      "volatility": 15
+    },
+    {
+      "id": "berlin_exchange",
+      "name": "Berliner Börse",
+      "foundedYear": 1685,
+      "location": "Berlin",
+      "marketCap": 800000,
+      "listedCompanies": 40,
+      "tradingVolume": 40000,
+      "indexValue": 950,
+      "volatility": 18
+    },
+    {
+      "id": "stuttgart_exchange",
+      "name": "Börse Stuttgart",
+      "foundedYear": 1861,
+      "location": "Stuttgart",
+      "marketCap": 500000,
+      "listedCompanies": 30,
+      "tradingVolume": 25000,
+      "indexValue": 900,
+      "volatility": 20
+    }
+  ],
+  "cryptocurrencies": [
+    {
+      "id": "bitcoin",
+      "name": "Bitcoin",
+      "symbol": "₿",
+      "launchYear": 2009,
+      "technology": "blockchain",
+      "marketCap": 50000000,
+      "price": 10000,
+      "volatility": 80,
+      "adoptionRate": 25,
+      "isDecentralized": true
+    },
+    {
+      "id": "ethereum",
+      "name": "Ethereum",
+      "symbol": "Ξ",
+      "launchYear": 2015,
+      "technology": "blockchain",
+      "marketCap": 30000000,
+      "price": 2000,
+      "volatility": 75,
+      "adoptionRate": 20,
+      "isDecentralized": true
+    }
+  ],
+  "financialCrises": [
+    {
+      "id": "tulip_mania",
+      "name": "Tulpenmanie",
+      "type": "speculative_bubble",
+      "yearStarted": 1637,
+      "duration": 1,
+      "severity": 40,
+      "causes": ["Spekulation", "Irrationalität", "Mangelnde Regulierung"],
+      "economicImpact": {
+        "gdpDecline": 5,
+        "unemploymentIncrease": 2,
+        "bankruptcies": 100,
+        "wealthDestruction": 500000
+      },
+      "recoveryMeasures": ["Marktbereinigung", "Neue Handelsregeln"],
+      "isHistorical": true
+    },
+    {
+      "id": "black_friday_1873",
+      "name": "Gründerkrach",
+      "type": "speculative_bubble",
+      "yearStarted": 1873,
+      "duration": 6,
+      "severity": 60,
+      "causes": ["Überspekulation", "Überinvestitionen", "Bankenkollaps"],
+      "economicImpact": {
+        "gdpDecline": 15,
+        "unemploymentIncrease": 10,
+        "bankruptcies": 500,
+        "wealthDestruction": 5000000
+      },
+      "recoveryMeasures": ["Bankenreform", "Industrielle Konsolidierung"],
+      "isHistorical": true
+    },
+    {
+      "id": "hyperinflation_1923",
+      "name": "Hyperinflation 1923",
+      "type": "currency",
+      "yearStarted": 1923,
+      "duration": 1,
+      "severity": 100,
+      "causes": ["Kriegsreparationen", "Gelddrucken", "Ruhrbesetzung"],
+      "economicImpact": {
+        "gdpDecline": 30,
+        "unemploymentIncrease": 25,
+        "bankruptcies": 10000,
+        "wealthDestruction": 50000000
+      },
+      "recoveryMeasures": ["Rentenmark", "Dawes-Plan", "Währungsreform"],
+      "isHistorical": true
+    },
+    {
+      "id": "great_depression",
+      "name": "Weltwirtschaftskrise",
+      "type": "banking",
+      "yearStarted": 1929,
+      "duration": 10,
+      "severity": 95,
+      "causes": ["Börsencrash", "Bankenkrise", "Deflation", "Handelsbarrieren"],
+      "economicImpact": {
+        "gdpDecline": 40,
+        "unemploymentIncrease": 30,
+        "bankruptcies": 50000,
+        "wealthDestruction": 100000000
+      },
+      "recoveryMeasures": ["New Deal (USA)", "Arbeitsbeschaffung", "Staatsinterventionen"],
+      "isHistorical": true
+    },
+    {
+      "id": "oil_crisis_1973",
+      "name": "Ölpreiskrise",
+      "type": "currency",
+      "yearStarted": 1973,
+      "duration": 3,
+      "severity": 50,
+      "causes": ["OPEC-Embargo", "Dollarkrise", "Energieabhängigkeit"],
+      "economicImpact": {
+        "gdpDecline": 10,
+        "unemploymentIncrease": 5,
+        "bankruptcies": 1000,
+        "wealthDestruction": 10000000
+      },
+      "recoveryMeasures": ["Energiesparprogramme", "Alternative Energien", "Wirtschaftspolitik"],
+      "isHistorical": true
+    },
+    {
+      "id": "dotcom_bubble",
+      "name": "Dotcom-Blase",
+      "type": "speculative_bubble",
+      "yearStarted": 2000,
+      "duration": 2,
+      "severity": 65,
+      "causes": ["Überbewertung", "Spekulation", "Irrationalität"],
+      "economicImpact": {
+        "gdpDecline": 8,
+        "unemploymentIncrease": 4,
+        "bankruptcies": 5000,
+        "wealthDestruction": 50000000
+      },
+      "recoveryMeasures": ["Marktkorrektur", "Regulierung", "Zinssenkungen"],
+      "isHistorical": true
+    },
+    {
+      "id": "financial_crisis_2008",
+      "name": "Finanzkrise 2008",
+      "type": "banking",
+      "yearStarted": 2008,
+      "duration": 5,
+      "severity": 90,
+      "causes": ["Subprime-Hypotheken", "Lehman Brothers", "Immobilienblase", "Derivate"],
+      "economicImpact": {
+        "gdpDecline": 20,
+        "unemploymentIncrease": 8,
+        "bankruptcies": 10000,
+        "wealthDestruction": 200000000
+      },
+      "recoveryMeasures": ["Bankenrettung", "Quantitative Easing", "Regulierung (Dodd-Frank)", "Konjunkturprogramme"],
+      "isHistorical": true
+    },
+    {
+      "id": "covid_crisis_2020",
+      "name": "COVID-19 Wirtschaftskrise",
+      "type": "debt",
+      "yearStarted": 2020,
+      "duration": 2,
+      "severity": 70,
+      "causes": ["Pandemie", "Lockdowns", "Lieferkettenprobleme"],
+      "economicImpact": {
+        "gdpDecline": 15,
+        "unemploymentIncrease": 10,
+        "bankruptcies": 8000,
+        "wealthDestruction": 100000000
+      },
+      "recoveryMeasures": ["Kurzarbeit", "Staatshilfen", "Impfkampagnen", "Digitalisierung"],
+      "isHistorical": true
+    }
+  ]
+}

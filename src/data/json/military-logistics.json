@@ -1,0 +1,221 @@
+{
+  "supplyLines": [
+    {
+      "id": "road_supply",
+      "name": "Straßenversorgung",
+      "era": "Antike",
+      "yearAvailable": 0,
+      "capacity": 100,
+      "speed": 20,
+      "cost": {
+        "gold": 10
+      },
+      "maintenanceCost": 5,
+      "description": "Versorgung über Landstraßen",
+      "terrainEfficiency": {
+        "plains": 1.0,
+        "forest": 0.7,
+        "mountains": 0.4,
+        "desert": 0.8
+      },
+      "weatherVulnerability": 0.3
+    },
+    {
+      "id": "river_supply",
+      "name": "Flussversorgung",
+      "era": "Frühmittelalter",
+      "yearAvailable": 500,
+      "capacity": 300,
+      "speed": 30,
+      "cost": {
+        "gold": 15
+      },
+      "maintenanceCost": 8,
+      "description": "Versorgung über Flüsse und Kanäle",
+      "terrainRequirement": "river",
+      "weatherVulnerability": 0.2
+    },
+    {
+      "id": "rail_supply",
+      "name": "Eisenbahnversorgung",
+      "era": "Industrialisierung",
+      "yearAvailable": 1850,
+      "capacity": 1000,
+      "speed": 80,
+      "cost": {
+        "gold": 50,
+        "iron": 20,
+        "coal": 10
+      },
+      "maintenanceCost": 30,
+      "description": "Schnelle Versorgung per Eisenbahn",
+      "terrainRequirement": "railroad",
+      "weatherVulnerability": 0.1
+    },
+    {
+      "id": "motorized_supply",
+      "name": "Motorisierte Versorgung",
+      "era": "Moderne",
+      "yearAvailable": 1920,
+      "capacity": 500,
+      "speed": 60,
+      "cost": {
+        "gold": 40,
+        "iron": 15,
+        "coal": 20
+      },
+      "maintenanceCost": 25,
+      "description": "Versorgung mit LKWs",
+      "terrainEfficiency": {
+        "plains": 1.0,
+        "forest": 0.8,
+        "mountains": 0.5,
+        "desert": 0.9
+      },
+      "weatherVulnerability": 0.15
+    }
+  ],
+  "militaryCamps": [
+    {
+      "id": "tent_camp",
+      "name": "Zeltlager",
+      "era": "Antike",
+      "yearAvailable": 0,
+      "capacity": 500,
+      "buildTime": 1,
+      "buildCost": {
+        "gold": 100,
+        "wood": 50
+      },
+      "maintenanceCost": 20,
+      "description": "Einfaches Feldlager für kurze Aufenthalte",
+      "moralEffect": -0.1,
+      "healthEffect": -0.05,
+      "defenseBonus": 0.1
+    },
+    {
+      "id": "wooden_fort",
+      "name": "Holzfort",
+      "era": "Mittelalter",
+      "yearAvailable": 800,
+      "capacity": 1000,
+      "buildTime": 7,
+      "buildCost": {
+        "gold": 500,
+        "wood": 300,
+        "stone": 100
+      },
+      "maintenanceCost": 50,
+      "description": "Befestigtes Lager für längere Kampagnen",
+      "moralEffect": 0.0,
+      "healthEffect": 0.0,
+      "defenseBonus": 0.3
+    },
+    {
+      "id": "winter_quarters",
+      "name": "Winterquartiere",
+      "era": "Mittelalter",
+      "yearAvailable": 1000,
+      "capacity": 2000,
+      "buildTime": 30,
+      "buildCost": {
+        "gold": 2000,
+        "wood": 800,
+        "stone": 400
+      },
+      "maintenanceCost": 150,
+      "description": "Feste Quartiere für Überwinterung",
+      "moralEffect": 0.2,
+      "healthEffect": 0.15,
+      "defenseBonus": 0.5,
+      "winterProtection": true
+    },
+    {
+      "id": "barracks",
+      "name": "Kaserne",
+      "era": "Frühe Neuzeit",
+      "yearAvailable": 1600,
+      "capacity": 3000,
+      "buildTime": 60,
+      "buildCost": {
+        "gold": 5000,
+        "wood": 1000,
+        "stone": 1500,
+        "iron": 300
+      },
+      "maintenanceCost": 300,
+      "description": "Permanente Militärunterkunft",
+      "moralEffect": 0.3,
+      "healthEffect": 0.2,
+      "defenseBonus": 0.7,
+      "trainingBonus": 0.1
+    },
+    {
+      "id": "military_base",
+      "name": "Militärbasis",
+      "era": "Moderne",
+      "yearAvailable": 1900,
+      "capacity": 10000,
+      "buildTime": 180,
+      "buildCost": {
+        "gold": 50000,
+        "stone": 5000,
+        "iron": 3000,
+        "coal": 1000
+      },
+      "maintenanceCost": 2000,
+      "description": "Moderne Militärbasis mit allen Einrichtungen",
+      "moralEffect": 0.4,
+      "healthEffect": 0.3,
+      "defenseBonus": 1.0,
+      "trainingBonus": 0.2,
+      "facilities": ["Hospital", "Training Grounds", "Arsenal", "Airfield"]
+    }
+  ],
+  "logisticsUpgrades": [
+    {
+      "id": "pack_animals",
+      "name": "Lasttiere",
+      "description": "Esel und Maultiere für Transport",
+      "yearAvailable": 0,
+      "cost": {
+        "gold": 500
+      },
+      "capacityBonus": 0.2
+    },
+    {
+      "id": "wagons",
+      "name": "Versorgungswagen",
+      "description": "Pferdewagen für größere Lasten",
+      "yearAvailable": 500,
+      "cost": {
+        "gold": 1000,
+        "wood": 100
+      },
+      "capacityBonus": 0.4
+    },
+    {
+      "id": "field_depots",
+      "name": "Felddepots",
+      "description": "Vorgelagerte Versorgungspunkte",
+      "yearAvailable": 1500,
+      "cost": {
+        "gold": 3000,
+        "wood": 500
+      },
+      "rangeBonus": 0.5
+    },
+    {
+      "id": "modern_logistics",
+      "name": "Moderne Logistik",
+      "description": "Computer-gestützte Versorgungsplanung",
+      "yearAvailable": 1990,
+      "cost": {
+        "gold": 10000,
+        "iron": 100
+      },
+      "efficiencyBonus": 0.3,
+      "capacityBonus": 0.2
+    }
+  ]
+}

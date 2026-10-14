@@ -1,0 +1,4 @@
+export const Random = {
+  int(min: number, max: number) { return Math.floor(Math.random() * (max - min + 1)) + min; },
+  chance(p: number) { return Math.random() < p; }
+};

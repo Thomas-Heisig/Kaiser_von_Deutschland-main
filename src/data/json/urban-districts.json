@@ -1,0 +1,283 @@
+{
+  "urbanDistricts": [
+    {
+      "id": "slum",
+      "name": "Slum",
+      "type": "Poor",
+      "era": "Industrialisierung",
+      "yearAvailable": 1800,
+      "housingQuality": 0.1,
+      "density": 0.9,
+      "crimeRate": 0.7,
+      "healthRisk": 0.8,
+      "cost": {
+        "gold": 1000
+      },
+      "description": "Überfüllte Elendsviertel mit schlechten Bedingungen",
+      "effects": {
+        "civilUnrest": 0.3,
+        "disease": 0.4,
+        "morale": -0.3
+      }
+    },
+    {
+      "id": "working_class",
+      "name": "Arbeiterviertel",
+      "type": "WorkingClass",
+      "era": "Industrialisierung",
+      "yearAvailable": 1850,
+      "housingQuality": 0.4,
+      "density": 0.7,
+      "crimeRate": 0.4,
+      "healthRisk": 0.5,
+      "cost": {
+        "gold": 5000,
+        "wood": 500,
+        "stone": 300
+      },
+      "description": "Einfache Wohnungen für Fabrikarbeiter",
+      "effects": {
+        "productivity": 0.1,
+        "morale": -0.1
+      }
+    },
+    {
+      "id": "middle_class",
+      "name": "Mittelklasseviertel",
+      "type": "MiddleClass",
+      "era": "Industrialisierung",
+      "yearAvailable": 1870,
+      "housingQuality": 0.7,
+      "density": 0.5,
+      "crimeRate": 0.2,
+      "healthRisk": 0.2,
+      "cost": {
+        "gold": 15000,
+        "stone": 1000,
+        "iron": 200
+      },
+      "description": "Komfortable Wohnungen für Bürger",
+      "effects": {
+        "economicGrowth": 0.2,
+        "culturalValue": 0.15,
+        "morale": 0.1
+      }
+    },
+    {
+      "id": "noble_district",
+      "name": "Nobelviertel",
+      "type": "UpperClass",
+      "era": "Frühe Neuzeit",
+      "yearAvailable": 1700,
+      "housingQuality": 0.95,
+      "density": 0.2,
+      "crimeRate": 0.05,
+      "healthRisk": 0.05,
+      "cost": {
+        "gold": 50000,
+        "stone": 3000,
+        "iron": 500
+      },
+      "description": "Luxuriöse Villen und Herrenhäuser",
+      "effects": {
+        "culturalValue": 0.4,
+        "prestige": 0.3,
+        "inequality": 0.2
+      }
+    },
+    {
+      "id": "gated_community",
+      "name": "Gated Community",
+      "type": "Elite",
+      "era": "Moderne",
+      "yearAvailable": 1980,
+      "housingQuality": 0.98,
+      "density": 0.1,
+      "crimeRate": 0.01,
+      "healthRisk": 0.02,
+      "cost": {
+        "gold": 200000,
+        "stone": 5000,
+        "iron": 2000
+      },
+      "description": "Abgeschottete Luxusenklaven mit Sicherheitsdienst",
+      "effects": {
+        "prestige": 0.5,
+        "inequality": 0.4,
+        "socialTension": 0.3
+      }
+    }
+  ],
+  "gentrificationEvents": [
+    {
+      "id": "urban_renewal",
+      "name": "Stadterneuerung",
+      "description": "Sanierung alter Viertel für wohlhabende Bewohner",
+      "yearAvailable": 1960,
+      "cost": {
+        "gold": 50000
+      },
+      "duration": 365,
+      "effects": {
+        "propertyValues": 0.8,
+        "displacement": 0.6,
+        "culturalLoss": 0.3
+      }
+    },
+    {
+      "id": "hipster_invasion",
+      "name": "Hipster-Invasion",
+      "description": "Künstler und Kreative ziehen in günstige Viertel",
+      "yearAvailable": 2000,
+      "cost": {
+        "gold": 10000
+      },
+      "duration": 180,
+      "effects": {
+        "propertyValues": 0.4,
+        "culturalValue": 0.3,
+        "originalResidentsDisplaced": 0.3
+      }
+    },
+    {
+      "id": "luxury_development",
+      "name": "Luxusentwicklung",
+      "description": "Abriss und Neubau von Luxuswohnungen",
+      "yearAvailable": 1990,
+      "cost": {
+        "gold": 100000
+      },
+      "duration": 730,
+      "effects": {
+        "propertyValues": 1.5,
+        "displacement": 0.9,
+        "inequality": 0.4
+      }
+    }
+  ],
+  "crimeHotspots": [
+    {
+      "id": "pickpocket_zone",
+      "name": "Taschendieb-Zone",
+      "severity": 0.3,
+      "crimeType": "Petty Theft",
+      "policeRequired": 5,
+      "effects": {
+        "tourism": -0.1,
+        "businessActivity": -0.05
+      }
+    },
+    {
+      "id": "drug_market",
+      "name": "Drogenmarkt",
+      "severity": 0.6,
+      "crimeType": "Drug Trade",
+      "policeRequired": 20,
+      "yearAvailable": 1970,
+      "effects": {
+        "health": -0.2,
+        "civilUnrest": 0.2,
+        "propertyValues": -0.3
+      }
+    },
+    {
+      "id": "gang_territory",
+      "name": "Bandengebiet",
+      "severity": 0.8,
+      "crimeType": "Organized Crime",
+      "policeRequired": 50,
+      "yearAvailable": 1920,
+      "effects": {
+        "safety": -0.5,
+        "businessActivity": -0.4,
+        "propertyValues": -0.5
+      }
+    }
+  ],
+  "districtIdentities": [
+    {
+      "id": "artistic_quarter",
+      "name": "Künstlerviertel",
+      "description": "Bohème und kreative Szene",
+      "effects": {
+        "culturalValue": 0.4,
+        "tourism": 0.2,
+        "propertyValues": 0.1
+      }
+    },
+    {
+      "id": "financial_district",
+      "name": "Finanzviertel",
+      "description": "Banken und Börsen",
+      "effects": {
+        "economicActivity": 0.5,
+        "prestige": 0.3,
+        "propertyValues": 0.6
+      }
+    },
+    {
+      "id": "immigrant_enclave",
+      "name": "Immigranten-Enklave",
+      "description": "Multikulturelle Gemeinschaft",
+      "effects": {
+        "diversity": 0.6,
+        "culturalValue": 0.3,
+        "socialTension": 0.2
+      }
+    },
+    {
+      "id": "university_district",
+      "name": "Universitätsviertel",
+      "description": "Studenten und akademisches Leben",
+      "effects": {
+        "culturalValue": 0.4,
+        "innovation": 0.3,
+        "nightlife": 0.5
+      }
+    }
+  ],
+  "urbanPolicies": [
+    {
+      "id": "rent_control",
+      "name": "Mietpreisbremse",
+      "description": "Begrenzung von Mietpreissteigerungen",
+      "yearAvailable": 1970,
+      "cost": {
+        "gold": 10000
+      },
+      "effects": {
+        "gentrification": -0.4,
+        "housingSupply": -0.2,
+        "socialJustice": 0.3
+      }
+    },
+    {
+      "id": "social_housing",
+      "name": "Sozialer Wohnungsbau",
+      "description": "Staatlich geförderte günstige Wohnungen",
+      "yearAvailable": 1920,
+      "cost": {
+        "gold": 50000
+      },
+      "effects": {
+        "affordability": 0.5,
+        "inequality": -0.3,
+        "civilUnrest": -0.2
+      }
+    },
+    {
+      "id": "slum_clearance",
+      "name": "Slum-Räumung",
+      "description": "Abriss von Elendsvierteln",
+      "yearAvailable": 1950,
+      "cost": {
+        "gold": 30000
+      },
+      "effects": {
+        "healthRisk": -0.5,
+        "displacement": 0.8,
+        "socialTension": 0.4
+      }
+    }
+  ]
+}

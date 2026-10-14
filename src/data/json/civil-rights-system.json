@@ -1,0 +1,496 @@
+{
+  "fundamentalRights": [
+    {
+      "id": "right_to_life",
+      "name": "Recht auf Leben",
+      "category": "civil",
+      "yearIntroduced": 1215,
+      "description": "Schutz vor willkürlicher Tötung",
+      "prerequisites": [],
+      "requiredTechnology": null,
+      "satisfactionBonus": 10,
+      "stabilityImpact": 5,
+      "implementationCost": 1000
+    },
+    {
+      "id": "freedom_from_slavery",
+      "name": "Freiheit von Sklaverei",
+      "category": "civil",
+      "yearIntroduced": 1807,
+      "description": "Abschaffung der Sklaverei",
+      "prerequisites": ["right_to_life"],
+      "requiredTechnology": null,
+      "satisfactionBonus": 20,
+      "stabilityImpact": 10,
+      "implementationCost": 5000
+    },
+    {
+      "id": "freedom_of_speech",
+      "name": "Meinungsfreiheit",
+      "category": "political",
+      "yearIntroduced": 1789,
+      "description": "Recht auf freie Meinungsäußerung",
+      "prerequisites": ["right_to_life"],
+      "requiredTechnology": null,
+      "satisfactionBonus": 15,
+      "stabilityImpact": -5,
+      "implementationCost": 2000
+    },
+    {
+      "id": "freedom_of_press",
+      "name": "Pressefreiheit",
+      "category": "political",
+      "yearIntroduced": 1789,
+      "description": "Freie und unzensierte Presse",
+      "prerequisites": ["freedom_of_speech"],
+      "requiredTechnology": "printing_press",
+      "satisfactionBonus": 12,
+      "stabilityImpact": -3,
+      "implementationCost": 3000
+    },
+    {
+      "id": "right_to_vote",
+      "name": "Wahlrecht (Männer)",
+      "category": "political",
+      "yearIntroduced": 1848,
+      "description": "Allgemeines Männerwahlrecht",
+      "prerequisites": ["freedom_of_speech"],
+      "requiredTechnology": null,
+      "satisfactionBonus": 25,
+      "stabilityImpact": 15,
+      "implementationCost": 10000
+    },
+    {
+      "id": "womens_suffrage",
+      "name": "Frauenwahlrecht",
+      "category": "political",
+      "yearIntroduced": 1919,
+      "description": "Wahlrecht für Frauen",
+      "prerequisites": ["right_to_vote"],
+      "requiredTechnology": null,
+      "satisfactionBonus": 30,
+      "stabilityImpact": 20,
+      "implementationCost": 8000
+    },
+    {
+      "id": "right_to_education",
+      "name": "Recht auf Bildung",
+      "category": "social",
+      "yearIntroduced": 1919,
+      "description": "Allgemeine Schulpflicht und kostenlose Bildung",
+      "prerequisites": [],
+      "requiredTechnology": null,
+      "satisfactionBonus": 18,
+      "stabilityImpact": 10,
+      "implementationCost": 15000
+    },
+    {
+      "id": "social_security",
+      "name": "Sozialversicherung",
+      "category": "social",
+      "yearIntroduced": 1883,
+      "description": "Kranken-, Unfall- und Rentenversicherung",
+      "prerequisites": [],
+      "requiredTechnology": null,
+      "satisfactionBonus": 22,
+      "stabilityImpact": 15,
+      "implementationCost": 20000
+    },
+    {
+      "id": "right_to_work",
+      "name": "Recht auf Arbeit",
+      "category": "economic",
+      "yearIntroduced": 1949,
+      "description": "Recht auf Arbeit und faire Arbeitsbedingungen",
+      "prerequisites": ["social_security"],
+      "requiredTechnology": null,
+      "satisfactionBonus": 20,
+      "stabilityImpact": 12,
+      "implementationCost": 12000
+    },
+    {
+      "id": "right_to_privacy",
+      "name": "Recht auf Privatsphäre",
+      "category": "civil",
+      "yearIntroduced": 1970,
+      "description": "Schutz der Privatsphäre und persönlicher Daten",
+      "prerequisites": ["freedom_of_speech"],
+      "requiredTechnology": null,
+      "satisfactionBonus": 15,
+      "stabilityImpact": 8,
+      "implementationCost": 5000
+    },
+    {
+      "id": "freedom_of_religion",
+      "name": "Religionsfreiheit",
+      "category": "cultural",
+      "yearIntroduced": 1648,
+      "description": "Freiheit der Religionsausübung",
+      "prerequisites": [],
+      "requiredTechnology": null,
+      "satisfactionBonus": 12,
+      "stabilityImpact": 5,
+      "implementationCost": 3000
+    },
+    {
+      "id": "equality_before_law",
+      "name": "Gleichheit vor dem Gesetz",
+      "category": "civil",
+      "yearIntroduced": 1949,
+      "description": "Alle Menschen sind vor dem Gesetz gleich",
+      "prerequisites": ["right_to_life"],
+      "requiredTechnology": null,
+      "satisfactionBonus": 25,
+      "stabilityImpact": 18,
+      "implementationCost": 8000
+    }
+  ],
+  "votingMilestones": [
+    {
+      "id": "census_suffrage",
+      "name": "Zensuswahlrecht",
+      "year": 1820,
+      "description": "Wahlrecht nur für Besitzende",
+      "electorateExpansion": 5,
+      "affectedGroups": ["Wohlhabende Männer"],
+      "politicalImpact": {
+        "democratization": 10,
+        "participation": 5,
+        "representation": 8
+      }
+    },
+    {
+      "id": "universal_male_suffrage",
+      "name": "Allgemeines Männerwahlrecht",
+      "year": 1848,
+      "description": "Wahlrecht für alle erwachsenen Männer",
+      "electorateExpansion": 45,
+      "affectedGroups": ["Alle Männer ab 21"],
+      "politicalImpact": {
+        "democratization": 40,
+        "participation": 35,
+        "representation": 30
+      }
+    },
+    {
+      "id": "womens_suffrage_milestone",
+      "name": "Frauenwahlrecht",
+      "year": 1919,
+      "description": "Wahlrecht für Frauen in Deutschland",
+      "electorateExpansion": 50,
+      "affectedGroups": ["Frauen ab 20"],
+      "politicalImpact": {
+        "democratization": 45,
+        "participation": 50,
+        "representation": 40
+      }
+    },
+    {
+      "id": "voting_age_18",
+      "name": "Herabsetzung Wahlalter auf 18",
+      "year": 1970,
+      "description": "Absenkung des Wahlalters von 21 auf 18 Jahre",
+      "electorateExpansion": 8,
+      "affectedGroups": ["18-20 Jährige"],
+      "politicalImpact": {
+        "democratization": 5,
+        "participation": 8,
+        "representation": 5
+      }
+    }
+  ],
+  "equalityMovements": [
+    {
+      "id": "womens_movement",
+      "name": "Frauenbewegung",
+      "type": "gender",
+      "period": {
+        "start": 1848,
+        "end": null
+      },
+      "goals": [
+        "Wahlrecht für Frauen",
+        "Gleiche Bildungschancen",
+        "Arbeitnehmerinnenrechte",
+        "Körperliche Selbstbestimmung"
+      ],
+      "achievements": [
+        "Frauenwahlrecht 1919",
+        "Gleichstellungsgesetz 1949",
+        "Quotenregelungen ab 1990"
+      ],
+      "supportLevel": 60,
+      "oppositionLevel": 30,
+      "socialImpact": {
+        "awareness": 80,
+        "legislation": 70,
+        "culturalChange": 75,
+        "economicEquality": 60
+      },
+      "keyFigures": [
+        "Louise Otto-Peters",
+        "Clara Zetkin",
+        "Alice Schwarzer"
+      ]
+    },
+    {
+      "id": "workers_movement",
+      "name": "Arbeiterbewegung",
+      "type": "class",
+      "period": {
+        "start": 1848,
+        "end": null
+      },
+      "goals": [
+        "8-Stunden-Tag",
+        "Gewerkschaftsrechte",
+        "Sozialversicherung",
+        "Faire Löhne"
+      ],
+      "achievements": [
+        "Sozialversicherung 1883",
+        "8-Stunden-Tag 1918",
+        "Mitbestimmungsrecht 1952"
+      ],
+      "supportLevel": 70,
+      "oppositionLevel": 40,
+      "socialImpact": {
+        "awareness": 85,
+        "legislation": 80,
+        "culturalChange": 65,
+        "economicEquality": 70
+      },
+      "keyFigures": [
+        "Ferdinand Lassalle",
+        "August Bebel",
+        "Willy Brandt"
+      ]
+    },
+    {
+      "id": "civil_rights_movement",
+      "name": "Bürgerrechtsbewegung",
+      "type": "racial",
+      "period": {
+        "start": 1945,
+        "end": null
+      },
+      "goals": [
+        "Gleichberechtigung aller Ethnien",
+        "Anti-Diskriminierungsgesetze",
+        "Integration",
+        "Kulturelle Anerkennung"
+      ],
+      "achievements": [
+        "Grundgesetz Art. 3 (1949)",
+        "Antidiskriminierungsgesetz (2006)",
+        "Integrationspolitik"
+      ],
+      "supportLevel": 65,
+      "oppositionLevel": 25,
+      "socialImpact": {
+        "awareness": 75,
+        "legislation": 65,
+        "culturalChange": 70,
+        "economicEquality": 55
+      },
+      "keyFigures": [
+        "Martin Buber",
+        "Aktion Sühnezeichen",
+        "Diverse Aktivisten"
+      ]
+    },
+    {
+      "id": "lgbtq_movement",
+      "name": "LGBTQ+ Bewegung",
+      "type": "lgbtq",
+      "period": {
+        "start": 1969,
+        "end": null
+      },
+      "goals": [
+        "Dekriminalisierung",
+        "Gleichstellung in der Ehe",
+        "Anti-Diskriminierung",
+        "Selbstbestimmungsrecht"
+      ],
+      "achievements": [
+        "§175 abgeschafft (1994)",
+        "Lebenspartnerschaft (2001)",
+        "Ehe für alle (2017)"
+      ],
+      "supportLevel": 55,
+      "oppositionLevel": 35,
+      "socialImpact": {
+        "awareness": 70,
+        "legislation": 60,
+        "culturalChange": 65,
+        "economicEquality": 50
+      },
+      "keyFigures": [
+        "Magnus Hirschfeld",
+        "Volker Beck",
+        "Diverse Aktivisten"
+      ]
+    },
+    {
+      "id": "disability_rights",
+      "name": "Behindertenbewegung",
+      "type": "disability",
+      "period": {
+        "start": 1980,
+        "end": null
+      },
+      "goals": [
+        "Barrierefreiheit",
+        "Inklusion",
+        "Selbstbestimmung",
+        "Gleichstellung"
+      ],
+      "achievements": [
+        "Behindertengleichstellungsgesetz (2002)",
+        "UN-Behindertenrechtskonvention (2009)",
+        "Bundesteilhabegesetz (2016)"
+      ],
+      "supportLevel": 70,
+      "oppositionLevel": 15,
+      "socialImpact": {
+        "awareness": 65,
+        "legislation": 70,
+        "culturalChange": 60,
+        "economicEquality": 50
+      },
+      "keyFigures": [
+        "Franz Christoph",
+        "Raúl Krauthausen",
+        "Diverse Aktivisten"
+      ]
+    }
+  ],
+  "privacyRegulations": [
+    {
+      "id": "bdsg_1977",
+      "name": "Bundesdatenschutzgesetz",
+      "yearEnacted": 1977,
+      "scope": "national",
+      "protectionLevel": 60,
+      "protectedDataTypes": [
+        "Personenbezogene Daten",
+        "Gesundheitsdaten",
+        "Finanzdaten"
+      ],
+      "enforcementMechanisms": [
+        "Datenschutzbeauftragter",
+        "Auskunftsrecht",
+        "Löschungsrecht"
+      ],
+      "violations": {
+        "fineLevel": 50000,
+        "criminalCharges": false
+      },
+      "trustImpact": 15
+    },
+    {
+      "id": "gdpr_2018",
+      "name": "Datenschutz-Grundverordnung (DSGVO)",
+      "yearEnacted": 2018,
+      "scope": "international",
+      "protectionLevel": 90,
+      "protectedDataTypes": [
+        "Alle personenbezogenen Daten",
+        "Besondere Kategorien (Gesundheit, Ethnie, etc.)",
+        "Kinderdaten"
+      ],
+      "enforcementMechanisms": [
+        "Datenschutzbeauftragter",
+        "Auskunftsrecht",
+        "Löschungsrecht",
+        "Datenportabilität",
+        "Privacy by Design"
+      ],
+      "violations": {
+        "fineLevel": 20000000,
+        "criminalCharges": true
+      },
+      "trustImpact": 30
+    }
+  ],
+  "constitutions": [
+    {
+      "id": "holy_roman_empire",
+      "name": "Heiliges Römisches Reich",
+      "yearAdopted": 962,
+      "type": "absolute_monarchy",
+      "guaranteedRights": [],
+      "separationOfPowers": {
+        "legislative": false,
+        "executive": false,
+        "judicial": false
+      },
+      "amendmentDifficulty": 100,
+      "legitimacy": 30
+    },
+    {
+      "id": "frankfurt_constitution",
+      "name": "Paulskirchenverfassung",
+      "yearAdopted": 1849,
+      "type": "constitutional_monarchy",
+      "guaranteedRights": [
+        "Gleichheit vor dem Gesetz",
+        "Meinungsfreiheit",
+        "Pressefreiheit",
+        "Religionsfreiheit"
+      ],
+      "separationOfPowers": {
+        "legislative": true,
+        "executive": false,
+        "judicial": true
+      },
+      "amendmentDifficulty": 60,
+      "legitimacy": 50
+    },
+    {
+      "id": "weimar_constitution",
+      "name": "Weimarer Verfassung",
+      "yearAdopted": 1919,
+      "type": "republic",
+      "guaranteedRights": [
+        "Gleichheit vor dem Gesetz",
+        "Meinungsfreiheit",
+        "Pressefreiheit",
+        "Versammlungsfreiheit",
+        "Wahlrecht (alle ab 20)",
+        "Religionsfreiheit"
+      ],
+      "separationOfPowers": {
+        "legislative": true,
+        "executive": true,
+        "judicial": true
+      },
+      "amendmentDifficulty": 40,
+      "legitimacy": 75
+    },
+    {
+      "id": "grundgesetz",
+      "name": "Grundgesetz",
+      "yearAdopted": 1949,
+      "type": "federal_republic",
+      "guaranteedRights": [
+        "Menschenwürde",
+        "Gleichheit",
+        "Meinungsfreiheit",
+        "Religionsfreiheit",
+        "Versammlungsfreiheit",
+        "Berufsfreiheit",
+        "Eigentumsrecht",
+        "Asylrecht"
+      ],
+      "separationOfPowers": {
+        "legislative": true,
+        "executive": true,
+        "judicial": true
+      },
+      "amendmentDifficulty": 80,
+      "legitimacy": 95
+    }
+  ]
+}

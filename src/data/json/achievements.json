@@ -1,0 +1,195 @@
+{
+  "achievements": [
+    {
+      "id": "kingdom_builder",
+      "name": "Königreichsbauer",
+      "description": "Erreiche eine Königreichspunktzahl von 10.000",
+      "category": "economic",
+      "prestigeReward": 100,
+      "goldReward": 5000,
+      "unlockConditions": {
+        "kingdomRequirements": {
+          "minScore": 10000,
+          "minYear": 5
+        }
+      }
+    },
+    {
+      "id": "conqueror",
+      "name": "Eroberer",
+      "description": "Habe eine Armee von über 10.000 Mann",
+      "category": "military",
+      "prestigeReward": 150,
+      "unlockConditions": {
+        "kingdomRequirements": {
+          "buildings": {
+            "barracks": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "master_diplomat",
+      "name": "Meisterdiplomaten",
+      "description": "Erreiche 90+ Diplomatie",
+      "category": "diplomatic",
+      "prestigeReward": 120,
+      "unlockConditions": {
+        "statRequirements": {
+          "diplomacy": 90
+        }
+      }
+    },
+    {
+      "id": "scholar_king",
+      "name": "Gelehrtenkönig",
+      "description": "Erreiche 90+ Gelehrsamkeit",
+      "category": "cultural",
+      "prestigeReward": 120,
+      "goldReward": 3000,
+      "unlockConditions": {
+        "statRequirements": {
+          "learning": 90
+        }
+      }
+    },
+    {
+      "id": "legendary_ruler",
+      "name": "Legendärer Herrscher",
+      "description": "Erreiche 1000+ Prestige",
+      "category": "personal",
+      "prestigeReward": 200,
+      "goldReward": 10000,
+      "unlockConditions": {
+        "statRequirements": {
+          "prestige": 1000
+        }
+      }
+    },
+    {
+      "id": "golden_reign",
+      "name": "Goldenes Zeitalter",
+      "description": "Herrsche 50 Jahre lang",
+      "category": "personal",
+      "prestigeReward": 250,
+      "goldReward": 15000,
+      "unlockConditions": {
+        "kingdomRequirements": {
+          "minYear": 50
+        }
+      }
+    },
+    {
+      "id": "wealthy_kingdom",
+      "name": "Reiches Königreich",
+      "description": "Sammle 100.000 Gold",
+      "category": "economic",
+      "prestigeReward": 150,
+      "unlockConditions": {
+        "kingdomRequirements": {
+          "minScore": 50000
+        }
+      }
+    },
+    {
+      "id": "military_genius",
+      "name": "Militärgenie",
+      "description": "Erreiche 90+ Militärische Fähigkeiten",
+      "category": "military",
+      "prestigeReward": 140,
+      "unlockConditions": {
+        "statRequirements": {
+          "martial": 90
+        }
+      }
+    },
+    {
+      "id": "beloved_ruler",
+      "name": "Geliebter Herrscher",
+      "description": "Erreiche 95+ Beliebtheit beim Volk",
+      "category": "personal",
+      "prestigeReward": 130,
+      "unlockConditions": {
+        "statRequirements": {
+          "popularity": 95
+        }
+      }
+    },
+    {
+      "id": "economic_powerhouse",
+      "name": "Wirtschaftsmacht",
+      "description": "Baue 10 Märkte",
+      "category": "economic",
+      "prestigeReward": 110,
+      "goldReward": 5000,
+      "unlockConditions": {
+        "kingdomRequirements": {
+          "buildings": {
+            "markets": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "spiritual_leader",
+      "name": "Geistlicher Führer",
+      "description": "Erreiche 90+ Frömmigkeit und baue 5 Kirchen",
+      "category": "cultural",
+      "prestigeReward": 140,
+      "unlockConditions": {
+        "statRequirements": {
+          "piety": 90
+        },
+        "kingdomRequirements": {
+          "buildings": {
+            "churches": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "master_builder",
+      "name": "Meisterbauherr",
+      "description": "Baue mindestens 3 Gebäude jedes Typs",
+      "category": "economic",
+      "prestigeReward": 180,
+      "goldReward": 8000,
+      "unlockConditions": {
+        "kingdomRequirements": {
+          "buildings": {
+            "markets": 3,
+            "churches": 3,
+            "barracks": 3,
+            "farms": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "decade_ruler",
+      "name": "Jahrzehnt-Herrscher",
+      "description": "Herrsche 10 Jahre lang",
+      "category": "personal",
+      "prestigeReward": 80,
+      "goldReward": 2000,
+      "unlockConditions": {
+        "kingdomRequirements": {
+          "minYear": 10
+        }
+      }
+    },
+    {
+      "id": "silver_jubilee",
+      "name": "Silbernes Jubiläum",
+      "description": "Herrsche 25 Jahre lang",
+      "category": "personal",
+      "prestigeReward": 150,
+      "goldReward": 7500,
+      "unlockConditions": {
+        "kingdomRequirements": {
+          "minYear": 25
+        }
+      }
+    }
+  ]
+}

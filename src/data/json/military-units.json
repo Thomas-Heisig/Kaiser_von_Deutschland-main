@@ -1,0 +1,422 @@
+{
+  "militaryUnits": [
+    {
+      "id": "militia",
+      "name": "Miliz",
+      "era": "ancient",
+      "category": "infantry",
+      "tier": 1,
+      "cost": {
+        "gold": 50,
+        "food": 20,
+        "time": 7
+      },
+      "maintenance": 10,
+      "strength": 10,
+      "defense": 8,
+      "speed": 15,
+      "range": 0,
+      "morale": 30,
+      "training": 5,
+      "requiredTechnology": null,
+      "availableFrom": -3000,
+      "upgrades": ["spearmen", "archers"],
+      "specialAbilities": [],
+      "terrainBonus": {
+        "forest": 0.1
+      }
+    },
+    {
+      "id": "spearmen",
+      "name": "Speerträger",
+      "era": "ancient",
+      "category": "infantry",
+      "tier": 2,
+      "cost": {
+        "gold": 100,
+        "iron": 10,
+        "time": 14
+      },
+      "maintenance": 20,
+      "strength": 20,
+      "defense": 15,
+      "speed": 12,
+      "range": 0,
+      "morale": 45,
+      "training": 15,
+      "requiredTechnology": "bronze_working",
+      "availableFrom": -1000,
+      "upgrades": ["pikemen"],
+      "specialAbilities": ["anti_cavalry"],
+      "terrainBonus": {
+        "plains": 0.1
+      }
+    },
+    {
+      "id": "archers",
+      "name": "Bogenschützen",
+      "era": "ancient",
+      "category": "ranged",
+      "tier": 2,
+      "cost": {
+        "gold": 80,
+        "wood": 15,
+        "time": 10
+      },
+      "maintenance": 15,
+      "strength": 15,
+      "defense": 8,
+      "speed": 18,
+      "range": 2,
+      "morale": 40,
+      "training": 20,
+      "requiredTechnology": "archery",
+      "availableFrom": -2000,
+      "upgrades": ["crossbowmen", "longbowmen"],
+      "specialAbilities": ["ranged_attack"],
+      "terrainBonus": {
+        "hills": 0.2
+      }
+    },
+    {
+      "id": "cavalry",
+      "name": "Kavallerie",
+      "era": "medieval",
+      "category": "cavalry",
+      "tier": 3,
+      "cost": {
+        "gold": 200,
+        "horses": 2,
+        "time": 21
+      },
+      "maintenance": 40,
+      "strength": 35,
+      "defense": 20,
+      "speed": 40,
+      "range": 0,
+      "morale": 60,
+      "training": 30,
+      "requiredTechnology": "horseback_riding",
+      "availableFrom": -500,
+      "upgrades": ["knights", "heavy_cavalry"],
+      "specialAbilities": ["charge", "flanking"],
+      "terrainBonus": {
+        "plains": 0.3
+      },
+      "terrainPenalty": {
+        "mountains": -0.4,
+        "forest": -0.3
+      }
+    },
+    {
+      "id": "knights",
+      "name": "Ritter",
+      "era": "medieval",
+      "category": "cavalry",
+      "tier": 4,
+      "cost": {
+        "gold": 500,
+        "iron": 30,
+        "horses": 1,
+        "time": 30
+      },
+      "maintenance": 80,
+      "strength": 60,
+      "defense": 50,
+      "speed": 35,
+      "range": 0,
+      "morale": 80,
+      "training": 60,
+      "requiredTechnology": "feudalism",
+      "availableFrom": 800,
+      "upgrades": ["cuirassiers"],
+      "specialAbilities": ["charge", "heavy_armor", "prestige_unit"],
+      "terrainBonus": {
+        "plains": 0.3
+      },
+      "terrainPenalty": {
+        "mountains": -0.5,
+        "forest": -0.4
+      }
+    },
+    {
+      "id": "crossbowmen",
+      "name": "Armbrustschützen",
+      "era": "medieval",
+      "category": "ranged",
+      "tier": 3,
+      "cost": {
+        "gold": 150,
+        "iron": 10,
+        "wood": 10,
+        "time": 18
+      },
+      "maintenance": 30,
+      "strength": 30,
+      "defense": 15,
+      "speed": 15,
+      "range": 2,
+      "morale": 55,
+      "training": 25,
+      "requiredTechnology": "machinery",
+      "availableFrom": 1100,
+      "upgrades": ["musketeers"],
+      "specialAbilities": ["armor_piercing", "ranged_attack"],
+      "terrainBonus": {
+        "hills": 0.2,
+        "urban": 0.15
+      }
+    },
+    {
+      "id": "pikemen",
+      "name": "Pikeniere",
+      "era": "renaissance",
+      "category": "infantry",
+      "tier": 3,
+      "cost": {
+        "gold": 150,
+        "iron": 15,
+        "time": 20
+      },
+      "maintenance": 30,
+      "strength": 35,
+      "defense": 30,
+      "speed": 10,
+      "range": 0,
+      "morale": 60,
+      "training": 35,
+      "requiredTechnology": "pike_and_shot",
+      "availableFrom": 1450,
+      "upgrades": ["line_infantry"],
+      "specialAbilities": ["anti_cavalry", "formation"],
+      "terrainBonus": {
+        "plains": 0.2
+      }
+    },
+    {
+      "id": "musketeers",
+      "name": "Musketiere",
+      "era": "renaissance",
+      "category": "gunpowder",
+      "tier": 4,
+      "cost": {
+        "gold": 250,
+        "iron": 20,
+        "gunpowder": 5,
+        "time": 25
+      },
+      "maintenance": 50,
+      "strength": 45,
+      "defense": 20,
+      "speed": 18,
+      "range": 2,
+      "morale": 65,
+      "training": 40,
+      "requiredTechnology": "gunpowder",
+      "availableFrom": 1550,
+      "upgrades": ["line_infantry"],
+      "specialAbilities": ["ranged_attack", "gunpowder_unit"],
+      "terrainBonus": {
+        "urban": 0.15
+      }
+    },
+    {
+      "id": "cannon",
+      "name": "Kanone",
+      "era": "renaissance",
+      "category": "artillery",
+      "tier": 4,
+      "cost": {
+        "gold": 800,
+        "iron": 50,
+        "gunpowder": 20,
+        "time": 40
+      },
+      "maintenance": 100,
+      "strength": 80,
+      "defense": 10,
+      "speed": 5,
+      "range": 3,
+      "morale": 50,
+      "training": 50,
+      "requiredTechnology": "metallurgy",
+      "availableFrom": 1400,
+      "upgrades": ["field_artillery"],
+      "specialAbilities": ["siege", "bombardment", "area_damage"],
+      "terrainBonus": {
+        "plains": 0.1
+      },
+      "terrainPenalty": {
+        "mountains": -0.6
+      }
+    },
+    {
+      "id": "line_infantry",
+      "name": "Linieninfanterie",
+      "era": "industrial",
+      "category": "gunpowder",
+      "tier": 5,
+      "cost": {
+        "gold": 300,
+        "iron": 25,
+        "gunpowder": 10,
+        "time": 20
+      },
+      "maintenance": 60,
+      "strength": 55,
+      "defense": 30,
+      "speed": 20,
+      "range": 2,
+      "morale": 70,
+      "training": 45,
+      "requiredTechnology": "rifling",
+      "availableFrom": 1700,
+      "upgrades": ["rifle_infantry"],
+      "specialAbilities": ["volley_fire", "formation"],
+      "terrainBonus": {
+        "plains": 0.15
+      }
+    },
+    {
+      "id": "rifle_infantry",
+      "name": "Gewehrinfanterie",
+      "era": "industrial",
+      "category": "gunpowder",
+      "tier": 6,
+      "cost": {
+        "gold": 400,
+        "iron": 30,
+        "gunpowder": 15,
+        "time": 25
+      },
+      "maintenance": 80,
+      "strength": 70,
+      "defense": 40,
+      "speed": 22,
+      "range": 3,
+      "morale": 80,
+      "training": 55,
+      "requiredTechnology": "advanced_ballistics",
+      "availableFrom": 1850,
+      "upgrades": ["machine_gun_infantry"],
+      "specialAbilities": ["precision_fire", "entrenchment"],
+      "terrainBonus": {
+        "forest": 0.2,
+        "urban": 0.25
+      }
+    },
+    {
+      "id": "field_artillery",
+      "name": "Feldartillerie",
+      "era": "industrial",
+      "category": "artillery",
+      "tier": 6,
+      "cost": {
+        "gold": 1200,
+        "iron": 80,
+        "gunpowder": 30,
+        "time": 35
+      },
+      "maintenance": 150,
+      "strength": 100,
+      "defense": 15,
+      "speed": 12,
+      "range": 4,
+      "morale": 65,
+      "training": 60,
+      "requiredTechnology": "steel",
+      "availableFrom": 1860,
+      "upgrades": ["heavy_artillery"],
+      "specialAbilities": ["bombardment", "area_damage", "anti_fortification"],
+      "terrainBonus": {
+        "plains": 0.2
+      }
+    },
+    {
+      "id": "machine_gun_infantry",
+      "name": "Maschinengewehr-Infanterie",
+      "era": "modern",
+      "category": "modern_infantry",
+      "tier": 7,
+      "cost": {
+        "gold": 600,
+        "iron": 40,
+        "oil": 5,
+        "time": 30
+      },
+      "maintenance": 120,
+      "strength": 90,
+      "defense": 60,
+      "speed": 20,
+      "range": 3,
+      "morale": 85,
+      "training": 65,
+      "requiredTechnology": "machine_guns",
+      "availableFrom": 1914,
+      "upgrades": ["mechanized_infantry"],
+      "specialAbilities": ["suppressive_fire", "defensive_specialist"],
+      "terrainBonus": {
+        "trenches": 0.5,
+        "urban": 0.3
+      }
+    },
+    {
+      "id": "tank",
+      "name": "Panzer",
+      "era": "modern",
+      "category": "armor",
+      "tier": 8,
+      "cost": {
+        "gold": 2000,
+        "iron": 100,
+        "oil": 20,
+        "time": 45
+      },
+      "maintenance": 300,
+      "strength": 150,
+      "defense": 100,
+      "speed": 40,
+      "range": 2,
+      "morale": 90,
+      "training": 75,
+      "requiredTechnology": "tanks",
+      "availableFrom": 1917,
+      "upgrades": ["main_battle_tank"],
+      "specialAbilities": ["breakthrough", "armored", "shock"],
+      "terrainBonus": {
+        "plains": 0.4
+      },
+      "terrainPenalty": {
+        "mountains": -0.5,
+        "urban": -0.2
+      }
+    },
+    {
+      "id": "mechanized_infantry",
+      "name": "Mechanisierte Infanterie",
+      "era": "contemporary",
+      "category": "modern_infantry",
+      "tier": 9,
+      "cost": {
+        "gold": 1500,
+        "iron": 60,
+        "oil": 15,
+        "time": 35
+      },
+      "maintenance": 250,
+      "strength": 120,
+      "defense": 80,
+      "speed": 45,
+      "range": 3,
+      "morale": 95,
+      "training": 80,
+      "requiredTechnology": "combined_arms",
+      "availableFrom": 1940,
+      "upgrades": [],
+      "specialAbilities": ["mobile", "versatile", "combined_arms"],
+      "terrainBonus": {
+        "all": 0.1
+      }
+    }
+  ]
+}

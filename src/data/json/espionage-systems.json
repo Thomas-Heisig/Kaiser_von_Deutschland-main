@@ -1,0 +1,311 @@
+{
+  "espionageOperations": [
+    {
+      "id": "recruit_agent",
+      "name": "Agent rekrutieren",
+      "description": "Neuen Spion anwerben und ausbilden",
+      "cost": {
+        "gold": 1000
+      },
+      "duration": 30,
+      "successRate": 0.7,
+      "effects": {
+        "agentCount": 1
+      }
+    },
+    {
+      "id": "build_network",
+      "name": "Netzwerk aufbauen",
+      "description": "Spionagenetzwerk in fremdem Königreich etablieren",
+      "cost": {
+        "gold": 5000
+      },
+      "duration": 90,
+      "successRate": 0.6,
+      "requiresAgents": 3,
+      "effects": {
+        "intelligence": 0.3,
+        "infiltration": 0.2
+      }
+    },
+    {
+      "id": "sabotage_production",
+      "name": "Produktion sabotieren",
+      "description": "Feindliche Produktionsanlagen beschädigen",
+      "cost": {
+        "gold": 3000
+      },
+      "duration": 14,
+      "successRate": 0.5,
+      "requiresAgents": 2,
+      "detectionRisk": 0.4,
+      "effects": {
+        "enemyProduction": -0.2,
+        "enemyMoral": -0.1
+      }
+    },
+    {
+      "id": "sabotage_infrastructure",
+      "name": "Infrastruktur sabotieren",
+      "description": "Brücken, Straßen und Versorgungswege zerstören",
+      "cost": {
+        "gold": 4000
+      },
+      "duration": 21,
+      "successRate": 0.5,
+      "requiresAgents": 3,
+      "detectionRisk": 0.5,
+      "effects": {
+        "enemySupplyEfficiency": -0.3,
+        "enemyMoral": -0.15
+      }
+    },
+    {
+      "id": "steal_technology",
+      "name": "Technologie stehlen",
+      "description": "Industriespionage - fremde Technologien erbeuten",
+      "cost": {
+        "gold": 10000
+      },
+      "duration": 180,
+      "successRate": 0.3,
+      "requiresAgents": 5,
+      "detectionRisk": 0.6,
+      "effects": {
+        "researchBonus": 0.5,
+        "techUnlock": true
+      }
+    },
+    {
+      "id": "assassination",
+      "name": "Attentat",
+      "description": "Gezielter Anschlag auf wichtige Persönlichkeit",
+      "cost": {
+        "gold": 15000
+      },
+      "duration": 60,
+      "successRate": 0.2,
+      "requiresAgents": 3,
+      "detectionRisk": 0.8,
+      "effects": {
+        "enemyStability": -0.4,
+        "enemyMoral": -0.3,
+        "internationalRelations": -0.5
+      },
+      "consequences": "severe"
+    },
+    {
+      "id": "kidnapping",
+      "name": "Entführung",
+      "description": "Wichtige Person als Geisel nehmen",
+      "cost": {
+        "gold": 8000
+      },
+      "duration": 45,
+      "successRate": 0.3,
+      "requiresAgents": 4,
+      "detectionRisk": 0.7,
+      "effects": {
+        "ransom": 20000,
+        "enemyMoral": -0.2,
+        "internationalRelations": -0.4
+      }
+    },
+    {
+      "id": "plant_double_agent",
+      "name": "Doppelagent einschleusen",
+      "description": "Eigenen Agenten in feindlichem Dienst platzieren",
+      "cost": {
+        "gold": 12000
+      },
+      "duration": 120,
+      "successRate": 0.4,
+      "requiresAgents": 2,
+      "detectionRisk": 0.5,
+      "effects": {
+        "counterIntelligence": 0.5,
+        "deception": 0.6,
+        "enemyOperationsRevealed": true
+      }
+    },
+    {
+      "id": "spread_disinformation",
+      "name": "Desinformation verbreiten",
+      "description": "Falsche Informationen streuen um Gegner zu täuschen",
+      "cost": {
+        "gold": 2000
+      },
+      "duration": 30,
+      "successRate": 0.6,
+      "requiresAgents": 2,
+      "detectionRisk": 0.3,
+      "effects": {
+        "enemyConfusion": 0.3,
+        "tacticalAdvantage": 0.2
+      }
+    }
+  ],
+  "propagandaCampaigns": [
+    {
+      "id": "patriotic_propaganda",
+      "name": "Patriotische Propaganda",
+      "description": "Nationalgefühl und Moral stärken",
+      "cost": {
+        "gold": 5000
+      },
+      "duration": 90,
+      "effects": {
+        "morale": 0.2,
+        "recruitment": 0.15,
+        "civilUnrest": -0.1
+      }
+    },
+    {
+      "id": "enemy_demonization",
+      "name": "Feinddämonisierung",
+      "description": "Gegner als böse darstellen",
+      "cost": {
+        "gold": 3000
+      },
+      "duration": 60,
+      "effects": {
+        "warSupport": 0.3,
+        "morale": 0.1,
+        "internationalRelations": -0.2
+      }
+    },
+    {
+      "id": "counter_propaganda",
+      "name": "Gegenpropaganda",
+      "description": "Feindliche Propaganda entkräften",
+      "cost": {
+        "gold": 4000
+      },
+      "duration": 45,
+      "effects": {
+        "enemyPropagandaEffectiveness": -0.5,
+        "morale": 0.1
+      }
+    },
+    {
+      "id": "leaflet_campaign",
+      "name": "Flugblatt-Kampagne",
+      "description": "Feindliche Bevölkerung beeinflussen",
+      "cost": {
+        "gold": 2000
+      },
+      "duration": 30,
+      "effects": {
+        "enemyMorale": -0.15,
+        "enemyDesertion": 0.1
+      }
+    },
+    {
+      "id": "radio_propaganda",
+      "name": "Radio-Propaganda",
+      "description": "Massenpropaganda über Rundfunk",
+      "cost": {
+        "gold": 10000
+      },
+      "duration": 180,
+      "yearAvailable": 1920,
+      "effects": {
+        "morale": 0.25,
+        "warSupport": 0.2,
+        "enemyMorale": -0.1
+      }
+    },
+    {
+      "id": "social_media_campaign",
+      "name": "Social Media Kampagne",
+      "description": "Moderne Propaganda über soziale Netzwerke",
+      "cost": {
+        "gold": 15000
+      },
+      "duration": 90,
+      "yearAvailable": 2000,
+      "effects": {
+        "morale": 0.2,
+        "internationalSupport": 0.15,
+        "enemyMorale": -0.15
+      }
+    }
+  ],
+  "secretSocieties": [
+    {
+      "id": "illuminati",
+      "name": "Illuminatenorden",
+      "description": "Geheimbund der Aufklärer",
+      "yearFounded": 1776,
+      "influence": 0.3,
+      "members": 100,
+      "goals": ["Aufklärung", "Gesellschaftsreform", "Machteinfluss"]
+    },
+    {
+      "id": "freemasons",
+      "name": "Freimaurer",
+      "description": "Internationale Bruderschaft",
+      "yearFounded": 1717,
+      "influence": 0.5,
+      "members": 500,
+      "goals": ["Philosophie", "Netzwerkbildung", "Wohltätigkeit"]
+    },
+    {
+      "id": "revolutionary_cells",
+      "name": "Revolutionäre Zellen",
+      "description": "Untergrund-Widerstandsgruppen",
+      "yearFounded": 1800,
+      "influence": 0.2,
+      "members": 50,
+      "goals": ["Revolution", "Systemsturz", "Gerechtigkeit"],
+      "activities": ["Sabotage", "Propaganda", "Attentate"]
+    }
+  ],
+  "cipherSystems": [
+    {
+      "id": "caesar_cipher",
+      "name": "Caesar-Verschlüsselung",
+      "era": "Antike",
+      "yearAvailable": 0,
+      "security": 0.2,
+      "cost": {
+        "gold": 100
+      },
+      "description": "Einfache Buchstabenverschiebung"
+    },
+    {
+      "id": "vigenere_cipher",
+      "name": "Vigenère-Verschlüsselung",
+      "era": "Frühe Neuzeit",
+      "yearAvailable": 1553,
+      "security": 0.5,
+      "cost": {
+        "gold": 500
+      },
+      "description": "Polyalphabetische Substitution"
+    },
+    {
+      "id": "enigma",
+      "name": "Enigma-Maschine",
+      "era": "Moderne",
+      "yearAvailable": 1918,
+      "security": 0.8,
+      "cost": {
+        "gold": 5000,
+        "iron": 100
+      },
+      "description": "Mechanische Rotor-Verschlüsselung"
+    },
+    {
+      "id": "modern_encryption",
+      "name": "Moderne Verschlüsselung",
+      "era": "Gegenwart",
+      "yearAvailable": 1970,
+      "security": 0.95,
+      "cost": {
+        "gold": 10000
+      },
+      "description": "Computerbasierte Kryptographie"
+    }
+  ]
+}

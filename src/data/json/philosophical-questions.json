@@ -1,0 +1,205 @@
+{
+  "questions": [
+    {
+      "id": "motivation",
+      "question": "Was treibt dich an? Macht, Wissen, Wohlstand oder Glaube?",
+      "answers": [
+        {
+          "text": "Macht - Ich will die Geschicke lenken und Einfluss ausüben",
+          "effects": {
+            "charisma": 20,
+            "intellect": 5,
+            "pragmatism": 15,
+            "spirituality": -10
+          }
+        },
+        {
+          "text": "Wissen - Ich strebe nach Erkenntnis und Weisheit",
+          "effects": {
+            "charisma": 5,
+            "intellect": 25,
+            "pragmatism": 10,
+            "spirituality": 10
+          }
+        },
+        {
+          "text": "Wohlstand - Ich möchte Reichtum und materiellen Erfolg",
+          "effects": {
+            "charisma": 10,
+            "intellect": 10,
+            "pragmatism": 25,
+            "spirituality": -15
+          }
+        },
+        {
+          "text": "Glaube - Ich suche spirituelle Erfüllung und höhere Wahrheit",
+          "effects": {
+            "charisma": 15,
+            "intellect": 5,
+            "pragmatism": -10,
+            "spirituality": 30
+          }
+        }
+      ]
+    },
+    {
+      "id": "mindset",
+      "question": "Bist du eher ein Visionär oder Pragmatiker?",
+      "answers": [
+        {
+          "text": "Visionär - Ich denke in großen Ideen und träume von einer besseren Zukunft",
+          "effects": {
+            "charisma": 15,
+            "intellect": 15,
+            "pragmatism": -15,
+            "spirituality": 15
+          }
+        },
+        {
+          "text": "Pragmatiker - Ich konzentriere mich auf das Machbare und Realisierbare",
+          "effects": {
+            "charisma": 5,
+            "intellect": 10,
+            "pragmatism": 25,
+            "spirituality": -5
+          }
+        },
+        {
+          "text": "Beides - Ich verbinde Vision mit praktischer Umsetzung",
+          "effects": {
+            "charisma": 10,
+            "intellect": 15,
+            "pragmatism": 10,
+            "spirituality": 5
+          }
+        },
+        {
+          "text": "Keines - Ich lasse mich vom Schicksal leiten",
+          "effects": {
+            "charisma": 5,
+            "intellect": 5,
+            "pragmatism": 5,
+            "spirituality": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "conflict_resolution",
+      "question": "Wie gehst du mit Konflikten um? Diplomatie, Stärke oder List?",
+      "answers": [
+        {
+          "text": "Diplomatie - Ich suche den Dialog und Kompromisse",
+          "effects": {
+            "charisma": 25,
+            "intellect": 15,
+            "pragmatism": 5,
+            "spirituality": 10
+          }
+        },
+        {
+          "text": "Stärke - Ich setze auf Macht und Durchsetzungsvermögen",
+          "effects": {
+            "charisma": 10,
+            "intellect": 5,
+            "pragmatism": 20,
+            "spirituality": -10
+          }
+        },
+        {
+          "text": "List - Ich nutze Strategie und Täuschung zu meinem Vorteil",
+          "effects": {
+            "charisma": 5,
+            "intellect": 25,
+            "pragmatism": 15,
+            "spirituality": -15
+          }
+        },
+        {
+          "text": "Vermeidung - Ich ziehe mich zurück und meditiere",
+          "effects": {
+            "charisma": -5,
+            "intellect": 10,
+            "pragmatism": -10,
+            "spirituality": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "values",
+      "question": "Was ist dir wichtiger: Tradition oder Fortschritt?",
+      "answers": [
+        {
+          "text": "Tradition - Bewährtes bewahren und alte Werte hochhalten",
+          "effects": {
+            "charisma": 10,
+            "intellect": 5,
+            "pragmatism": 5,
+            "spirituality": 25
+          }
+        },
+        {
+          "text": "Fortschritt - Innovation und Veränderung vorantreiben",
+          "effects": {
+            "charisma": 15,
+            "intellect": 25,
+            "pragmatism": 15,
+            "spirituality": -10
+          }
+        },
+        {
+          "text": "Balance - Tradition respektieren, aber auch Neues wagen",
+          "effects": {
+            "charisma": 15,
+            "intellect": 15,
+            "pragmatism": 15,
+            "spirituality": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "leadership",
+      "question": "Welche Art von Führung bevorzugst du?",
+      "answers": [
+        {
+          "text": "Autoritär - Klare Hierarchie und Befehle",
+          "effects": {
+            "charisma": 5,
+            "intellect": 5,
+            "pragmatism": 25,
+            "spirituality": 0
+          }
+        },
+        {
+          "text": "Demokratisch - Gemeinsame Entscheidungsfindung",
+          "effects": {
+            "charisma": 25,
+            "intellect": 15,
+            "pragmatism": 5,
+            "spirituality": 10
+          }
+        },
+        {
+          "text": "Charismatisch - Durch persönliche Überzeugungskraft",
+          "effects": {
+            "charisma": 30,
+            "intellect": 10,
+            "pragmatism": 5,
+            "spirituality": 5
+          }
+        },
+        {
+          "text": "Geistlich - Durch moralische Autorität und Weisheit",
+          "effects": {
+            "charisma": 15,
+            "intellect": 15,
+            "pragmatism": -5,
+            "spirituality": 30
+          }
+        }
+      ]
+    }
+  ]
+}

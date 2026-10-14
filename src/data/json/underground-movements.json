@@ -1,0 +1,417 @@
+{
+  "terrorAttackTypes": [
+    {
+      "id": "assassination",
+      "name": "Political Assassination",
+      "type": "assassination",
+      "yearAvailable": 1800,
+      "targetTypes": ["government", "military"],
+      "damage": 40,
+      "casualties": 5,
+      "fearFactor": 60,
+      "detectionDifficulty": 70,
+      "cost": 200
+    },
+    {
+      "id": "bombing",
+      "name": "Bombing Attack",
+      "type": "bombing",
+      "yearAvailable": 1850,
+      "targetTypes": ["government", "civilian", "infrastructure", "military"],
+      "damage": 80,
+      "casualties": 50,
+      "fearFactor": 90,
+      "detectionDifficulty": 60,
+      "cost": 500
+    },
+    {
+      "id": "arson",
+      "name": "Arson Attack",
+      "type": "arson",
+      "yearAvailable": 1700,
+      "targetTypes": ["infrastructure", "civilian"],
+      "damage": 60,
+      "casualties": 20,
+      "fearFactor": 50,
+      "detectionDifficulty": 80,
+      "cost": 100
+    },
+    {
+      "id": "kidnapping",
+      "name": "Kidnapping/Hostage Taking",
+      "type": "kidnapping",
+      "yearAvailable": 1850,
+      "targetTypes": ["government", "civilian"],
+      "damage": 30,
+      "casualties": 2,
+      "fearFactor": 70,
+      "detectionDifficulty": 65,
+      "cost": 300
+    },
+    {
+      "id": "sabotage",
+      "name": "Infrastructure Sabotage",
+      "type": "sabotage",
+      "yearAvailable": 1850,
+      "targetTypes": ["infrastructure"],
+      "damage": 70,
+      "casualties": 10,
+      "fearFactor": 45,
+      "detectionDifficulty": 75,
+      "cost": 400
+    },
+    {
+      "id": "shooting",
+      "name": "Mass Shooting",
+      "type": "shooting",
+      "yearAvailable": 1900,
+      "targetTypes": ["civilian", "government"],
+      "damage": 50,
+      "casualties": 30,
+      "fearFactor": 85,
+      "detectionDifficulty": 50,
+      "cost": 250
+    },
+    {
+      "id": "cyber_attack",
+      "name": "Cyber Attack",
+      "type": "cyber",
+      "yearAvailable": 1990,
+      "targetTypes": ["infrastructure", "government"],
+      "damage": 90,
+      "casualties": 0,
+      "fearFactor": 60,
+      "detectionDifficulty": 85,
+      "cost": 1000
+    }
+  ],
+  "secretSocietyTemplates": [
+    {
+      "id": "freemasons",
+      "name": "Freimaurerlogen (Freemasons)",
+      "description": "Fraternal organization emphasizing moral and philosophical teachings",
+      "type": "fraternal",
+      "yearFounded": 1717,
+      "historicalBasis": "United Grand Lodge of England founded 1717, spread to Germany",
+      "memberCount": 0,
+      "initiation": "Three-degree system: Entered Apprentice, Fellow Craft, Master Mason",
+      "symbols": ["Square and Compass", "All-Seeing Eye", "Letter G", "Trowel", "Apron"],
+      "influence": 60,
+      "secrecy": 40,
+      "goals": [
+        "Moral and ethical improvement",
+        "Charity and philanthropy",
+        "Mutual support among members",
+        "Brotherhood across social classes"
+      ],
+      "chapters": [],
+      "notableMembers": [],
+      "active": true,
+      "resources": 5000
+    },
+    {
+      "id": "illuminati",
+      "name": "Illuminatenorden (Order of Illuminati)",
+      "description": "Enlightenment-era secret society promoting rationalism and opposition to religious influence",
+      "type": "political",
+      "yearFounded": 1776,
+      "historicalBasis": "Founded by Adam Weishaupt in Ingolstadt, Bavaria, disbanded 1785",
+      "memberCount": 0,
+      "initiation": "Complex hierarchy with pseudonyms and secret rituals",
+      "symbols": ["Owl of Minerva", "Pyramid with Eye", "Beehive"],
+      "influence": 80,
+      "secrecy": 95,
+      "goals": [
+        "Promote Enlightenment ideals",
+        "Oppose religious and state abuse of power",
+        "Improve society through reason",
+        "Infiltrate influential positions"
+      ],
+      "chapters": [],
+      "notableMembers": [],
+      "active": true,
+      "resources": 10000
+    },
+    {
+      "id": "carbonari",
+      "name": "Carbonari",
+      "description": "Revolutionary secret society fighting for constitutional government",
+      "type": "political",
+      "yearFounded": 1800,
+      "historicalBasis": "Active in Italy and Germany, influenced by French Revolution",
+      "memberCount": 0,
+      "initiation": "Coal-burning ceremony symbolism",
+      "symbols": ["Burning Coal", "Axe", "Fasces"],
+      "influence": 70,
+      "secrecy": 85,
+      "goals": [
+        "Establish constitutional monarchies",
+        "Fight against absolutism",
+        "National unification",
+        "Liberal reforms"
+      ],
+      "chapters": [],
+      "notableMembers": [],
+      "active": true,
+      "resources": 3000
+    },
+    {
+      "id": "rosicrucians",
+      "name": "Rosenkreuzer (Rosicrucians)",
+      "description": "Mystical and philosophical society seeking hidden knowledge",
+      "type": "mystical",
+      "yearFounded": 1614,
+      "historicalBasis": "Based on manifestos published in Germany in early 17th century",
+      "memberCount": 0,
+      "initiation": "Spiritual and alchemical instruction",
+      "symbols": ["Rose Cross", "Alchemical symbols", "Phoenix"],
+      "influence": 50,
+      "secrecy": 75,
+      "goals": [
+        "Spiritual enlightenment",
+        "Alchemical transformation",
+        "Hidden wisdom preservation",
+        "Universal reformation"
+      ],
+      "chapters": [],
+      "notableMembers": [],
+      "active": true,
+      "resources": 2000
+    },
+    {
+      "id": "thule_society",
+      "name": "Thule-Gesellschaft (Thule Society)",
+      "description": "Occultist and völkisch secret society in post-WWI Germany",
+      "type": "political",
+      "yearFounded": 1918,
+      "historicalBasis": "Founded in Munich, influenced early Nazi Party",
+      "memberCount": 0,
+      "initiation": "Racial and occult criteria",
+      "symbols": ["Swastika", "Runes", "Germanic symbols"],
+      "influence": 65,
+      "secrecy": 70,
+      "goals": [
+        "Promote Germanic supremacy",
+        "Occult research",
+        "Political influence",
+        "Combat Communism"
+      ],
+      "chapters": [],
+      "notableMembers": [],
+      "active": false,
+      "resources": 4000
+    },
+    {
+      "id": "skull_and_bones",
+      "name": "Skull and Bones (German Chapter)",
+      "description": "Elite university secret society",
+      "type": "academic",
+      "yearFounded": 1832,
+      "historicalBasis": "Originally Yale University, spread to German universities",
+      "memberCount": 0,
+      "initiation": "Senior year selection, elaborate rituals",
+      "symbols": ["Skull and crossed bones", "322"],
+      "influence": 75,
+      "secrecy": 90,
+      "goals": [
+        "Elite networking",
+        "Career advancement",
+        "Political influence",
+        "Preservation of traditions"
+      ],
+      "chapters": [],
+      "notableMembers": [],
+      "active": true,
+      "resources": 15000
+    },
+    {
+      "id": "spartacus_league",
+      "name": "Spartakusbund (Spartacus League)",
+      "description": "Revolutionary Marxist organization",
+      "type": "political",
+      "yearFounded": 1916,
+      "historicalBasis": "Founded during WWI, led German Revolution 1918-1919",
+      "memberCount": 0,
+      "initiation": "Political commitment and revolutionary activity",
+      "symbols": ["Red Flag", "Broken Chains", "Spartacus"],
+      "influence": 60,
+      "secrecy": 65,
+      "goals": [
+        "Socialist revolution",
+        "Overthrow monarchy",
+        "Workers' councils",
+        "End to imperialism"
+      ],
+      "chapters": [],
+      "notableMembers": ["Rosa Luxemburg", "Karl Liebknecht"],
+      "active": false,
+      "resources": 1000
+    },
+    {
+      "id": "werewolves",
+      "name": "Werwolf (Nazi Guerrilla)",
+      "description": "Nazi guerrilla organization in late WWII",
+      "type": "political",
+      "yearFounded": 1944,
+      "historicalBasis": "Planned Nazi resistance against Allied occupation",
+      "memberCount": 0,
+      "initiation": "SS/Hitler Youth recruitment",
+      "symbols": ["Werewolf", "Nazi symbols"],
+      "influence": 30,
+      "secrecy": 80,
+      "goals": [
+        "Resist Allied occupation",
+        "Sabotage operations",
+        "Maintain Nazi ideology",
+        "Guerrilla warfare"
+      ],
+      "chapters": [],
+      "notableMembers": [],
+      "active": false,
+      "resources": 500
+    },
+    {
+      "id": "red_army_faction",
+      "name": "Rote Armee Fraktion (RAF/Baader-Meinhof)",
+      "description": "Far-left militant organization in West Germany",
+      "type": "political",
+      "yearFounded": 1970,
+      "historicalBasis": "Active 1970-1998, German leftist terrorism",
+      "memberCount": 0,
+      "initiation": "Revolutionary commitment",
+      "symbols": ["Red Star", "AK-47"],
+      "influence": 40,
+      "secrecy": 90,
+      "goals": [
+        "Anti-capitalist revolution",
+        "Fight imperialism",
+        "Armed resistance",
+        "Liberation of political prisoners"
+      ],
+      "chapters": [],
+      "notableMembers": ["Andreas Baader", "Ulrike Meinhof", "Gudrun Ensslin"],
+      "active": false,
+      "resources": 800
+    }
+  ],
+  "rebelTypes": [
+    {
+      "id": "peasant",
+      "name": "Peasant Rebellion",
+      "description": "Rural uprising against feudal oppression",
+      "typicalDemands": ["Lower taxes", "End serfdom", "Land rights", "Fair treatment"],
+      "historicalExamples": ["German Peasants' War (1524-1525)", "Bauernkrieg"],
+      "typicalSize": "Large (10,000-100,000)",
+      "guerillaTactics": false,
+      "era": "Medieval to Early Modern"
+    },
+    {
+      "id": "worker",
+      "name": "Worker/Labor Movement",
+      "description": "Industrial workers fighting for rights and conditions",
+      "typicalDemands": ["Better wages", "Working hours", "Union rights", "Safety"],
+      "historicalExamples": ["Ruhr Uprising (1920)", "German Revolution (1918-1919)"],
+      "typicalSize": "Medium to Large (1,000-50,000)",
+      "guerillaTactics": false,
+      "era": "Industrial"
+    },
+    {
+      "id": "nationalist",
+      "name": "Nationalist Movement",
+      "description": "Fighting for national independence or unification",
+      "typicalDemands": ["National sovereignty", "Self-determination", "Unification"],
+      "historicalExamples": ["German Unification movements", "Vormärz"],
+      "typicalSize": "Varied (100-100,000)",
+      "guerillaTactics": true,
+      "era": "19th-20th century"
+    },
+    {
+      "id": "religious",
+      "name": "Religious Uprising",
+      "description": "Religious groups fighting persecution or for theocratic goals",
+      "typicalDemands": ["Religious freedom", "End persecution", "Theocratic rule"],
+      "historicalExamples": ["Münster Rebellion (1534-1535)", "Anabaptist uprising"],
+      "typicalSize": "Small to Medium (50-10,000)",
+      "guerillaTactics": true,
+      "era": "Medieval to Modern"
+    },
+    {
+      "id": "ideological",
+      "name": "Ideological Revolution",
+      "description": "Revolutionary movement based on political ideology",
+      "typicalDemands": ["System change", "New constitution", "Political reforms"],
+      "historicalExamples": ["Communist uprisings", "March Revolution (1848)"],
+      "typicalSize": "Medium to Large (1,000-100,000)",
+      "guerillaTactics": true,
+      "era": "Modern"
+    },
+    {
+      "id": "separatist",
+      "name": "Separatist Movement",
+      "description": "Regional groups seeking independence",
+      "typicalDemands": ["Regional autonomy", "Independence", "Cultural preservation"],
+      "historicalExamples": ["Bavaria separatism", "Rhineland separatism"],
+      "typicalSize": "Small to Large (100-50,000)",
+      "guerillaTactics": true,
+      "era": "Modern"
+    }
+  ],
+  "historicalEvents": [
+    {
+      "name": "German Peasants' War",
+      "year": 1524,
+      "type": "peasant",
+      "description": "Largest popular uprising in Europe before French Revolution",
+      "casualties": 100000,
+      "outcome": "Crushed by nobility"
+    },
+    {
+      "name": "Münster Rebellion",
+      "year": 1534,
+      "type": "religious",
+      "description": "Anabaptist takeover of Münster",
+      "casualties": 5000,
+      "outcome": "Suppressed"
+    },
+    {
+      "name": "March Revolution",
+      "year": 1848,
+      "type": "ideological",
+      "description": "Liberal and nationalist uprisings across German states",
+      "casualties": 10000,
+      "outcome": "Partial success, then reaction"
+    },
+    {
+      "name": "German Revolution",
+      "year": 1918,
+      "type": "worker",
+      "description": "Revolution that ended monarchy and established Weimar Republic",
+      "casualties": 2000,
+      "outcome": "Success - Republic established"
+    },
+    {
+      "name": "Spartacist Uprising",
+      "year": 1919,
+      "type": "worker",
+      "description": "Communist uprising in Berlin",
+      "casualties": 1200,
+      "outcome": "Suppressed by Freikorps"
+    },
+    {
+      "name": "Ruhr Uprising",
+      "year": 1920,
+      "type": "worker",
+      "description": "Workers' uprising in the Ruhr region",
+      "casualties": 2000,
+      "outcome": "Suppressed"
+    },
+    {
+      "name": "RAF Terrorism",
+      "year": 1970,
+      "type": "ideological",
+      "description": "Left-wing terrorist campaign",
+      "casualties": 34,
+      "outcome": "Suppressed by 1998"
+    }
+  ]
+}

@@ -1,0 +1,1119 @@
+{
+  "historicalEvents": [
+    {
+      "id": "birth_of_christ",
+      "year": 0,
+      "name": "Geburt Christi",
+      "description": "Die Geburt Jesu Christi markiert den Beginn der christlichen Zeitrechnung",
+      "category": "religious",
+      "impact": {
+        "piety": 50,
+        "culturalInfluence": 30
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "fall_of_rome",
+      "year": 476,
+      "name": "Fall des Weströmischen Reiches",
+      "description": "Das Weströmische Reich zerbricht, Ende der Antike",
+      "category": "political",
+      "impact": {
+        "stability": -30,
+        "tradePower": -20
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "charlemagne_crowned",
+      "year": 800,
+      "name": "Krönung Karls des Großen",
+      "description": "Karl der Große wird zum Kaiser des Heiligen Römischen Reiches gekrönt",
+      "category": "political",
+      "impact": {
+        "prestige": 100,
+        "authority": 50,
+        "culturalInfluence": 40
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "magna_carta",
+      "year": 1215,
+      "name": "Magna Carta",
+      "description": "Die Magna Carta begrenzt die Macht des englischen Königs",
+      "category": "political",
+      "impact": {
+        "popularity": 20,
+        "authority": -10,
+        "stability": 15
+      },
+      "region": "england"
+    },
+    {
+      "id": "black_death",
+      "year": 1347,
+      "name": "Die Schwarze Pest",
+      "description": "Eine verheerende Pandemie tötet Millionen in Europa",
+      "category": "disaster",
+      "impact": {
+        "population": -40,
+        "stability": -30,
+        "tradePower": -25
+      },
+      "duration": 5,
+      "globalEvent": true
+    },
+    {
+      "id": "gutenberg_press",
+      "year": 1450,
+      "name": "Erfindung des Buchdrucks",
+      "description": "Johannes Gutenberg erfindet den Buchdruck mit beweglichen Lettern",
+      "category": "technology",
+      "impact": {
+        "literacyRate": 15,
+        "culturalInfluence": 25,
+        "technologicalLevel": 20
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "columbus_america",
+      "year": 1492,
+      "name": "Entdeckung Amerikas",
+      "description": "Christoph Kolumbus erreicht die Neue Welt",
+      "category": "exploration",
+      "impact": {
+        "tradePower": 30,
+        "prestige": 50,
+        "gold": 10000
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "luther_reformation",
+      "year": 1517,
+      "name": "Reformation",
+      "description": "Martin Luther schlägt seine 95 Thesen an, Beginn der Reformation",
+      "category": "religious",
+      "impact": {
+        "stability": -20,
+        "culturalInfluence": 30,
+        "piety": -15
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "thirty_years_war",
+      "year": 1618,
+      "name": "Dreißigjähriger Krieg",
+      "description": "Verheerender Religionskrieg in Mitteleuropa",
+      "category": "war",
+      "impact": {
+        "population": -30,
+        "stability": -40,
+        "gold": -20000
+      },
+      "duration": 30,
+      "region": "holy_roman_empire"
+    },
+    {
+      "id": "enlightenment",
+      "year": 1685,
+      "name": "Zeitalter der Aufklärung",
+      "description": "Philosophische und wissenschaftliche Revolution",
+      "category": "cultural",
+      "impact": {
+        "literacyRate": 25,
+        "technologicalLevel": 30,
+        "culturalInfluence": 40
+      },
+      "duration": 100,
+      "globalEvent": true
+    },
+    {
+      "id": "french_revolution",
+      "year": 1789,
+      "name": "Französische Revolution",
+      "description": "Die Französische Revolution erschüttert Europa",
+      "category": "political",
+      "impact": {
+        "stability": -35,
+        "authority": -25,
+        "popularity": 30
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "napoleon_wars",
+      "year": 1803,
+      "name": "Napoleonische Kriege",
+      "description": "Napoleon Bonaparte erobert große Teile Europas",
+      "category": "war",
+      "impact": {
+        "militaryStrength": 50,
+        "stability": -20,
+        "tradePower": -15
+      },
+      "duration": 12,
+      "globalEvent": true
+    },
+    {
+      "id": "industrial_revolution",
+      "year": 1760,
+      "name": "Industrielle Revolution",
+      "description": "Beginn der Industrialisierung verändert die Gesellschaft",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 50,
+        "tradePower": 40,
+        "population": 25
+      },
+      "duration": 100,
+      "globalEvent": true
+    },
+    {
+      "id": "german_unification",
+      "year": 1871,
+      "name": "Deutsche Reichsgründung",
+      "description": "Gründung des Deutschen Kaiserreichs unter Bismarck",
+      "category": "political",
+      "impact": {
+        "prestige": 80,
+        "authority": 60,
+        "stability": 40
+      },
+      "region": "germany"
+    },
+    {
+      "id": "world_war_1",
+      "year": 1914,
+      "name": "Erster Weltkrieg",
+      "description": "Der Große Krieg erschüttert die Welt",
+      "category": "war",
+      "impact": {
+        "population": -25,
+        "stability": -50,
+        "gold": -50000
+      },
+      "duration": 4,
+      "globalEvent": true
+    },
+    {
+      "id": "weimar_republic",
+      "year": 1919,
+      "name": "Weimarer Republik",
+      "description": "Erste deutsche Demokratie nach dem Kaiserreich",
+      "category": "political",
+      "impact": {
+        "popularity": 20,
+        "stability": -15,
+        "authority": -20
+      },
+      "region": "germany"
+    },
+    {
+      "id": "world_war_2",
+      "year": 1939,
+      "name": "Zweiter Weltkrieg",
+      "description": "Der verheerendste Konflikt der Geschichte",
+      "category": "war",
+      "impact": {
+        "population": -35,
+        "stability": -60,
+        "gold": -100000
+      },
+      "duration": 6,
+      "globalEvent": true
+    },
+    {
+      "id": "german_division",
+      "year": 1949,
+      "name": "Teilung Deutschlands",
+      "description": "Deutschland wird in BRD und DDR geteilt",
+      "category": "political",
+      "impact": {
+        "stability": -30,
+        "tradePower": -20
+      },
+      "region": "germany"
+    },
+    {
+      "id": "moon_landing",
+      "year": 1969,
+      "name": "Mondlandung",
+      "description": "Neil Armstrong betritt als erster Mensch den Mond",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 40,
+        "prestige": 60,
+        "culturalInfluence": 30
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "fall_berlin_wall",
+      "year": 1989,
+      "name": "Fall der Berliner Mauer",
+      "description": "Die Berliner Mauer fällt, Ende des Kalten Krieges",
+      "category": "political",
+      "impact": {
+        "stability": 40,
+        "tradePower": 35,
+        "popularity": 50
+      },
+      "region": "germany",
+      "globalEvent": true
+    },
+    {
+      "id": "german_reunification",
+      "year": 1990,
+      "name": "Deutsche Wiedervereinigung",
+      "description": "BRD und DDR werden wiedervereinigt",
+      "category": "political",
+      "impact": {
+        "prestige": 50,
+        "stability": 30,
+        "population": 20
+      },
+      "region": "germany"
+    },
+    {
+      "id": "euro_introduction",
+      "year": 2002,
+      "name": "Einführung des Euro",
+      "description": "Der Euro wird als gemeinsame Währung eingeführt",
+      "category": "economic",
+      "impact": {
+        "tradePower": 25,
+        "gold": 5000,
+        "stability": 15
+      },
+      "region": "europe"
+    },
+    {
+      "id": "covid_pandemic",
+      "year": 2020,
+      "name": "COVID-19 Pandemie",
+      "description": "Globale Pandemie verändert die Welt",
+      "category": "disaster",
+      "impact": {
+        "population": -5,
+        "stability": -25,
+        "tradePower": -20
+      },
+      "duration": 3,
+      "globalEvent": true
+    },
+    {
+      "id": "ai_revolution",
+      "year": 2023,
+      "name": "KI-Revolution",
+      "description": "Künstliche Intelligenz verändert Gesellschaft und Wirtschaft",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 60,
+        "tradePower": 30,
+        "literacyRate": 20
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "climate_action",
+      "year": 2030,
+      "name": "Globale Klimaschutzmaßnahmen",
+      "description": "Weltweite Anstrengungen zur Bekämpfung des Klimawandels",
+      "category": "environmental",
+      "impact": {
+        "stability": 20,
+        "technologicalLevel": 35,
+        "tradePower": 15
+      },
+      "globalEvent": true,
+      "future": true
+    },
+    {
+      "id": "space_colonization",
+      "year": 2050,
+      "name": "Weltraumkolonisierung",
+      "description": "Erste permanente menschliche Siedlungen im All",
+      "category": "exploration",
+      "impact": {
+        "prestige": 100,
+        "technologicalLevel": 80,
+        "tradePower": 50
+      },
+      "globalEvent": true,
+      "future": true
+    },
+    {
+      "id": "fusion_energy",
+      "year": 2045,
+      "name": "Fusionsenergie",
+      "description": "Durchbruch bei der kommerziellen Fusionsenergie",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 70,
+        "stability": 30,
+        "gold": 50000
+      },
+      "globalEvent": true,
+      "future": true
+    },
+    {
+      "id": "peasants_war",
+      "year": 1524,
+      "name": "Deutscher Bauernkrieg",
+      "description": "Großer Aufstand der Bauern gegen Adel und Klerus",
+      "category": "social",
+      "impact": {
+        "stability": -40,
+        "population": -15,
+        "authority": -30,
+        "peasantRights": 10
+      },
+      "duration": 2,
+      "region": "germany"
+    },
+    {
+      "id": "revolution_1848",
+      "year": 1848,
+      "name": "Märzrevolution",
+      "description": "Bürgerliche Revolution fordert Verfassung und Freiheitsrechte",
+      "category": "political",
+      "impact": {
+        "stability": -35,
+        "authority": -25,
+        "popularity": 30,
+        "democracy": 20
+      },
+      "region": "germany"
+    },
+    {
+      "id": "unification_wars",
+      "year": 1864,
+      "name": "Deutsche Einigungskriege",
+      "description": "Kriege zur deutschen Einigung unter preußischer Führung",
+      "category": "war",
+      "impact": {
+        "militaryStrength": 40,
+        "prestige": 60,
+        "stability": -20,
+        "unificationProgress": 50
+      },
+      "duration": 7,
+      "region": "germany",
+      "choices": [
+        {
+          "id": "kleindeutsch",
+          "name": "Kleindeutsche Lösung",
+          "description": "Deutsche Einigung ohne Österreich",
+          "impact": {
+            "prestige": 50,
+            "prussianPower": 60
+          }
+        },
+        {
+          "id": "grossdeutsch",
+          "name": "Großdeutsche Lösung",
+          "description": "Deutsche Einigung mit Österreich",
+          "impact": {
+            "prestige": 40,
+            "austrianInfluence": 50,
+            "complexity": 30
+          }
+        }
+      ]
+    },
+    {
+      "id": "colonial_scramble",
+      "year": 1884,
+      "name": "Wettlauf um Afrika",
+      "description": "Kolonialwettlauf und Berliner Kongokonferenz",
+      "category": "colonial",
+      "impact": {
+        "prestige": 70,
+        "tradePower": 50,
+        "colonialPower": 80,
+        "gold": 30000
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "weimar_hyperinflation",
+      "year": 1923,
+      "name": "Hyperinflation",
+      "description": "Verheerende Hyperinflation in der Weimarer Republik",
+      "category": "economic",
+      "impact": {
+        "gold": -80000,
+        "stability": -50,
+        "happiness": -40,
+        "economicCrisis": 100
+      },
+      "region": "germany"
+    },
+    {
+      "id": "economic_miracle",
+      "year": 1955,
+      "name": "Wirtschaftswunder",
+      "description": "Rascher wirtschaftlicher Wiederaufbau nach dem Krieg",
+      "category": "economic",
+      "impact": {
+        "gold": 100000,
+        "stability": 50,
+        "tradePower": 60,
+        "happiness": 40,
+        "populationGrowth": 30
+      },
+      "region": "germany",
+      "duration": 20
+    },
+    {
+      "id": "internet_revolution",
+      "year": 1995,
+      "name": "Internet-Revolution",
+      "description": "Das World Wide Web verändert Kommunikation und Wirtschaft",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 50,
+        "tradePower": 40,
+        "culturalInfluence": 35,
+        "literacyRate": 25
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "cyberpunk_era",
+      "year": 2055,
+      "name": "Cyberpunk-Ära",
+      "description": "Megakonzerne rivalisieren mit Regierungen um Macht",
+      "category": "societal",
+      "impact": {
+        "technologicalLevel": 80,
+        "corporatePower": 70,
+        "authority": -30,
+        "inequality": 50
+      },
+      "globalEvent": true,
+      "future": true
+    },
+    {
+      "id": "transhumanism",
+      "year": 2060,
+      "name": "Transhumanistische Revolution",
+      "description": "Mensch-Maschine-Integration wird Realität",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 100,
+        "health": 60,
+        "lifeExpectancy": 50,
+        "socialChange": 80
+      },
+      "globalEvent": true,
+      "future": true
+    },
+    {
+      "id": "european_federation",
+      "year": 2070,
+      "name": "Europäische Föderation 2.0",
+      "description": "Vollständige politische Integration Europas",
+      "category": "political",
+      "impact": {
+        "stability": 60,
+        "tradePower": 80,
+        "authority": -20,
+        "prestige": 90
+      },
+      "region": "europe",
+      "globalEvent": true,
+      "future": true
+    },
+    {
+      "id": "asteroid_mining",
+      "year": 2065,
+      "name": "Weltraum-Mining",
+      "description": "Kommerzielle Ausbeutung von Asteroiden beginnt",
+      "category": "exploration",
+      "impact": {
+        "gold": 200000,
+        "technologicalLevel": 85,
+        "resources": 150,
+        "prestige": 100
+      },
+      "globalEvent": true,
+      "future": true
+    },
+    {
+      "id": "ai_singularity",
+      "year": 2075,
+      "name": "KI-Singularität",
+      "description": "Künstliche Superintelligenz übertrifft menschliche Fähigkeiten",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 120,
+        "stability": -40,
+        "economicChange": 100,
+        "uncertainty": 80
+      },
+      "globalEvent": true,
+      "future": true,
+      "choices": [
+        {
+          "id": "cooperate_ai",
+          "name": "Mit KI kooperieren",
+          "description": "Zusammenarbeit mit der KI suchen",
+          "impact": {
+            "technologicalLevel": 150,
+            "stability": 30
+          }
+        },
+        {
+          "id": "regulate_ai",
+          "name": "KI regulieren",
+          "description": "Strenge Kontrolle über KI durchsetzen",
+          "impact": {
+            "authority": 40,
+            "technologicalLevel": -20,
+            "stability": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": "viking_raids",
+      "year": 793,
+      "name": "Wikinger-Überfälle",
+      "description": "Wikinger plündern Klöster und Küstenstädte",
+      "category": "war",
+      "impact": {
+        "stability": -25,
+        "gold": -5000,
+        "population": -5
+      },
+      "region": "northern_europe",
+      "duration": 10
+    },
+    {
+      "id": "crusades_begin",
+      "year": 1096,
+      "name": "Beginn der Kreuzzüge",
+      "description": "Erster Kreuzzug ins Heilige Land",
+      "category": "religious",
+      "impact": {
+        "piety": 40,
+        "militaryStrength": 30,
+        "tradePower": 20,
+        "stability": -15
+      },
+      "globalEvent": true,
+      "duration": 200
+    },
+    {
+      "id": "hanseatic_league",
+      "year": 1356,
+      "name": "Hanseatic League",
+      "description": "Handelsbund der Hansestädte erreicht Höhepunkt",
+      "category": "economic",
+      "impact": {
+        "tradePower": 50,
+        "gold": 20000,
+        "culturalInfluence": 25,
+        "diplomaticPower": 30
+      },
+      "region": "northern_germany",
+      "duration": 100
+    },
+    {
+      "id": "golden_bull",
+      "year": 1356,
+      "name": "Goldene Bulle",
+      "description": "Reichsgrundgesetz regelt die Kaiserwahl",
+      "category": "political",
+      "impact": {
+        "stability": 25,
+        "authority": 30,
+        "prestige": 20
+      },
+      "region": "holy_roman_empire"
+    },
+    {
+      "id": "peace_westphalia",
+      "year": 1648,
+      "name": "Westfälischer Frieden",
+      "description": "Ende des Dreißigjährigen Krieges",
+      "category": "diplomatic",
+      "impact": {
+        "stability": 40,
+        "diplomaticPower": 35,
+        "religiousTolerance": 30,
+        "authority": -10
+      },
+      "region": "holy_roman_empire"
+    },
+    {
+      "id": "seven_years_war",
+      "year": 1756,
+      "name": "Siebenjähriger Krieg",
+      "description": "Großer europäischer Konflikt um Vormachtstellung",
+      "category": "war",
+      "impact": {
+        "militaryStrength": 40,
+        "gold": -30000,
+        "stability": -30,
+        "prestige": 25
+      },
+      "duration": 7,
+      "globalEvent": true
+    },
+    {
+      "id": "holy_roman_empire_end",
+      "year": 1806,
+      "name": "Ende des Heiligen Römischen Reiches",
+      "description": "Napoleon erzwingt die Auflösung des Reiches",
+      "category": "political",
+      "impact": {
+        "authority": -60,
+        "stability": -40,
+        "prestige": -50
+      },
+      "region": "germany"
+    },
+    {
+      "id": "zollverein",
+      "year": 1834,
+      "name": "Deutscher Zollverein",
+      "description": "Wirtschaftliche Einigung deutscher Staaten",
+      "category": "economic",
+      "impact": {
+        "tradePower": 40,
+        "gold": 15000,
+        "unificationProgress": 30,
+        "economicGrowth": 35
+      },
+      "region": "germany"
+    },
+    {
+      "id": "kulturkampf",
+      "year": 1871,
+      "name": "Kulturkampf",
+      "description": "Bismarks Kampf gegen katholischen Einfluss",
+      "category": "political",
+      "impact": {
+        "religiousTension": 40,
+        "authority": 20,
+        "stability": -15,
+        "catholicInfluence": -30
+      },
+      "region": "germany",
+      "duration": 16
+    },
+    {
+      "id": "social_laws",
+      "year": 1883,
+      "name": "Sozialgesetzgebung",
+      "description": "Bismarcks Sozialversicherungen als Weltpremiere",
+      "category": "social",
+      "impact": {
+        "happiness": 30,
+        "stability": 25,
+        "workerRights": 40,
+        "prestige": 25
+      },
+      "region": "germany"
+    },
+    {
+      "id": "triple_alliance",
+      "year": 1882,
+      "name": "Dreibund",
+      "description": "Bündnis zwischen Deutschland, Österreich-Ungarn und Italien",
+      "category": "diplomatic",
+      "impact": {
+        "diplomaticPower": 40,
+        "militaryStrength": 30,
+        "stability": 20,
+        "prestige": 25
+      },
+      "region": "central_europe"
+    },
+    {
+      "id": "spanish_flu",
+      "year": 1918,
+      "name": "Spanische Grippe",
+      "description": "Verheerende Pandemie tötet Millionen weltweit",
+      "category": "disaster",
+      "impact": {
+        "population": -20,
+        "stability": -35,
+        "economicGrowth": -30,
+        "health": -40
+      },
+      "globalEvent": true,
+      "duration": 2
+    },
+    {
+      "id": "league_of_nations",
+      "year": 1920,
+      "name": "Völkerbund",
+      "description": "Erste internationale Friedensorganisation",
+      "category": "diplomatic",
+      "impact": {
+        "diplomaticPower": 30,
+        "peacePotential": 25,
+        "internationalCooperation": 40
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "great_depression",
+      "year": 1929,
+      "name": "Weltwirtschaftskrise",
+      "description": "Globale Wirtschaftskrise erschüttert die Welt",
+      "category": "economic",
+      "impact": {
+        "gold": -70000,
+        "stability": -50,
+        "unemployment": 50,
+        "happiness": -40
+      },
+      "globalEvent": true,
+      "duration": 6
+    },
+    {
+      "id": "united_nations",
+      "year": 1945,
+      "name": "Vereinte Nationen",
+      "description": "Gründung der UN zur Friedenssicherung",
+      "category": "diplomatic",
+      "impact": {
+        "diplomaticPower": 40,
+        "peacePotential": 35,
+        "internationalCooperation": 50,
+        "prestige": 30
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "nato_founded",
+      "year": 1949,
+      "name": "NATO-Gründung",
+      "description": "Nordatlantisches Verteidigungsbündnis gegründet",
+      "category": "military",
+      "impact": {
+        "militaryStrength": 50,
+        "diplomaticPower": 35,
+        "stability": 25,
+        "defenseCapability": 60
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "warsaw_pact",
+      "year": 1955,
+      "name": "Warschauer Pakt",
+      "description": "Ostblock-Militärbündnis als Gegenstück zur NATO",
+      "category": "military",
+      "impact": {
+        "coldWarTension": 40,
+        "militaryStrength": 40,
+        "stability": -15
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "sputnik",
+      "year": 1957,
+      "name": "Sputnik-Schock",
+      "description": "Erster künstlicher Satellit im Weltraum",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 35,
+        "spaceRace": 50,
+        "prestige": 40
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "prague_spring",
+      "year": 1968,
+      "name": "Prager Frühling",
+      "description": "Reformbewegung in der Tschechoslowakei",
+      "category": "political",
+      "impact": {
+        "democraticMovement": 30,
+        "coldWarTension": 25,
+        "stability": -20
+      },
+      "region": "eastern_europe"
+    },
+    {
+      "id": "oil_crisis",
+      "year": 1973,
+      "name": "Ölkrise",
+      "description": "Ölembargo führt zu Wirtschaftskrise",
+      "category": "economic",
+      "impact": {
+        "gold": -40000,
+        "stability": -30,
+        "energyCrisis": 50,
+        "economicGrowth": -35
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "personal_computer",
+      "year": 1981,
+      "name": "Personal Computer Revolution",
+      "description": "PCs werden massentauglich",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 40,
+        "economicGrowth": 30,
+        "productivity": 35,
+        "literacyRate": 15
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "chernobyl",
+      "year": 1986,
+      "name": "Tschernobyl-Katastrophe",
+      "description": "Nuklearunfall in der Ukraine",
+      "category": "disaster",
+      "impact": {
+        "stability": -40,
+        "health": -30,
+        "environmentalDamage": 80,
+        "nuclearEnergy": -50
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "eu_formation",
+      "year": 1993,
+      "name": "Gründung der EU",
+      "description": "Vertrag von Maastricht schafft Europäische Union",
+      "category": "political",
+      "impact": {
+        "diplomaticPower": 50,
+        "tradePower": 45,
+        "stability": 30,
+        "internationalCooperation": 60
+      },
+      "region": "europe",
+      "globalEvent": true
+    },
+    {
+      "id": "smartphone_era",
+      "year": 2007,
+      "name": "Smartphone-Ära",
+      "description": "iPhone revolutioniert mobile Kommunikation",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 45,
+        "economicGrowth": 35,
+        "connectivity": 70,
+        "culturalChange": 40
+      },
+      "globalEvent": true
+    },
+    {
+      "id": "refugee_crisis",
+      "year": 2015,
+      "name": "Flüchtlingskrise",
+      "description": "Große Flüchtlingsbewegung nach Europa",
+      "category": "social",
+      "impact": {
+        "stability": -25,
+        "population": 10,
+        "socialTension": 40,
+        "humanitarianAid": 30
+      },
+      "region": "europe"
+    },
+    {
+      "id": "brexit",
+      "year": 2020,
+      "name": "Brexit",
+      "description": "Großbritannien verlässt die EU",
+      "category": "political",
+      "impact": {
+        "stability": -20,
+        "tradePower": -15,
+        "diplomaticPower": -10,
+        "euIntegration": -30
+      },
+      "region": "europe"
+    },
+    {
+      "id": "quantum_computing",
+      "year": 2035,
+      "name": "Quantencomputer-Durchbruch",
+      "description": "Kommerzielle Quantencomputer werden Realität",
+      "category": "technology",
+      "impact": {
+        "technologicalLevel": 65,
+        "scientificProgress": 50,
+        "cryptographyChange": 80,
+        "economicGrowth": 40
+      },
+      "globalEvent": true,
+      "future": true
+    },
+    {
+      "id": "global_basic_income",
+      "year": 2040,
+      "name": "Universelles Grundeinkommen",
+      "description": "Weltweite Einführung des Grundeinkommens",
+      "category": "social",
+      "impact": {
+        "happiness": 50,
+        "stability": 35,
+        "economicChange": 60,
+        "workCultureShift": 70
+      },
+      "globalEvent": true,
+      "future": true
+    },
+    {
+      "id": "climate_stabilization",
+      "year": 2080,
+      "name": "Klimastabilisierung",
+      "description": "Globale Erwärmung erfolgreich begrenzt",
+      "category": "environmental",
+      "impact": {
+        "stability": 50,
+        "environmentalHealth": 80,
+        "sustainability": 90,
+        "internationalCooperation": 70
+      },
+      "globalEvent": true,
+      "future": true
+    }
+  ],
+  "eventTemplates": [
+    {
+      "id": "good_harvest",
+      "name": "Reiche Ernte",
+      "description": "Eine besonders gute Ernte beschert dem Reich Überfluss",
+      "category": "economic",
+      "probability": 0.15,
+      "impact": {
+        "food": 500,
+        "gold": 1000,
+        "happiness": 10
+      }
+    },
+    {
+      "id": "plague_outbreak",
+      "name": "Seuche",
+      "description": "Eine Seuche bricht aus und bedroht die Bevölkerung",
+      "category": "disaster",
+      "probability": 0.05,
+      "impact": {
+        "population": -10,
+        "stability": -15,
+        "gold": -2000
+      }
+    },
+    {
+      "id": "trade_boom",
+      "name": "Handelsboom",
+      "description": "Der Handel floriert und bringt dem Reich Wohlstand",
+      "category": "economic",
+      "probability": 0.12,
+      "impact": {
+        "gold": 3000,
+        "tradePower": 10,
+        "happiness": 8
+      }
+    },
+    {
+      "id": "noble_revolt",
+      "name": "Adelsaufstand",
+      "description": "Unzufriedene Adlige rebellieren gegen die Herrschaft",
+      "category": "political",
+      "probability": 0.08,
+      "impact": {
+        "stability": -20,
+        "authority": -15,
+        "militaryStrength": -10
+      }
+    },
+    {
+      "id": "technological_breakthrough",
+      "name": "Technologischer Durchbruch",
+      "description": "Eine neue Erfindung bringt Fortschritt",
+      "category": "technology",
+      "probability": 0.10,
+      "impact": {
+        "technologicalLevel": 15,
+        "prestige": 20,
+        "gold": 2000
+      }
+    },
+    {
+      "id": "royal_wedding",
+      "name": "Königliche Hochzeit",
+      "description": "Eine prachtvolle königliche Hochzeit stärkt Allianzen",
+      "category": "diplomatic",
+      "probability": 0.07,
+      "impact": {
+        "prestige": 25,
+        "diplomaticRelations": 15,
+        "happiness": 12
+      }
+    },
+    {
+      "id": "natural_disaster",
+      "name": "Naturkatastrophe",
+      "description": "Eine Naturkatastrophe trifft das Reich",
+      "category": "disaster",
+      "probability": 0.06,
+      "impact": {
+        "stability": -25,
+        "gold": -5000,
+        "population": -8
+      }
+    },
+    {
+      "id": "cultural_renaissance",
+      "name": "Kulturelle Renaissance",
+      "description": "Kunst und Wissenschaft blühen auf",
+      "category": "cultural",
+      "probability": 0.09,
+      "impact": {
+        "culturalInfluence": 20,
+        "literacyRate": 10,
+        "prestige": 15
+      }
+    }
+  ],
+  "metadata": {
+    "version": "2.3.0",
+    "lastUpdated": "2025-12-27",
+    "totalHistoricalEvents": 70,
+    "totalEventTemplates": 8,
+    "totalEventChains": 5,
+    "timespan": {
+      "start": 0,
+      "end": 2100,
+      "current": 2024
+    },
+    "eventCategories": [
+      "religious",
+      "political",
+      "war",
+      "technology",
+      "economic",
+      "social",
+      "cultural",
+      "diplomatic",
+      "disaster",
+      "environmental",
+      "exploration",
+      "colonial",
+      "military"
+    ]
+  }
+}

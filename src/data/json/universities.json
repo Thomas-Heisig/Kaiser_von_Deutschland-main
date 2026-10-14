@@ -1,0 +1,290 @@
+{
+  "universities": [
+    {
+      "id": "heidelberg",
+      "name": "Universität Heidelberg",
+      "founded": 1386,
+      "location": "Heidelberg",
+      "type": "Traditional",
+      "buildCost": {
+        "gold": 20000,
+        "stone": 3000,
+        "wood": 1000
+      },
+      "maintenanceCost": 1000,
+      "capacity": 2000,
+      "prestige": 80,
+      "researchBonus": 0.25,
+      "specializations": ["Theologie", "Recht", "Medizin", "Philosophie"],
+      "description": "Älteste Universität Deutschlands",
+      "effects": {
+        "culturalValue": 50,
+        "educationQuality": 0.3,
+        "scientificOutput": 0.2
+      }
+    },
+    {
+      "id": "leipzig",
+      "name": "Universität Leipzig",
+      "founded": 1409,
+      "location": "Leipzig",
+      "type": "Traditional",
+      "buildCost": {
+        "gold": 18000,
+        "stone": 2500,
+        "wood": 800
+      },
+      "maintenanceCost": 900,
+      "capacity": 1800,
+      "prestige": 75,
+      "researchBonus": 0.22,
+      "specializations": ["Theologie", "Philosophie", "Musik", "Literatur"],
+      "description": "Zentrum der deutschen Aufklärung"
+    },
+    {
+      "id": "berlin",
+      "name": "Humboldt-Universität zu Berlin",
+      "founded": 1810,
+      "location": "Berlin",
+      "type": "Research",
+      "buildCost": {
+        "gold": 50000,
+        "stone": 5000,
+        "wood": 2000,
+        "iron": 500
+      },
+      "maintenanceCost": 2500,
+      "capacity": 10000,
+      "prestige": 95,
+      "researchBonus": 0.40,
+      "specializations": ["Naturwissenschaften", "Geschichte", "Philosophie", "Mathematik"],
+      "description": "Humboldtsches Bildungsideal - Forschung und Lehre",
+      "effects": {
+        "culturalValue": 100,
+        "educationQuality": 0.5,
+        "scientificOutput": 0.4
+      }
+    },
+    {
+      "id": "munich_tech",
+      "name": "Technische Universität München",
+      "founded": 1868,
+      "location": "München",
+      "type": "Technical",
+      "buildCost": {
+        "gold": 80000,
+        "stone": 4000,
+        "iron": 3000,
+        "coal": 1000
+      },
+      "maintenanceCost": 4000,
+      "capacity": 15000,
+      "prestige": 90,
+      "researchBonus": 0.50,
+      "specializations": ["Ingenieurwesen", "Physik", "Chemie", "Informatik"],
+      "description": "Führend in technischer Innovation",
+      "effects": {
+        "industrialEfficiency": 0.3,
+        "technologicalProgress": 0.4,
+        "scientificOutput": 0.5
+      }
+    },
+    {
+      "id": "modern_university",
+      "name": "Moderne Universität",
+      "founded": 1960,
+      "location": "Variable",
+      "type": "Modern",
+      "buildCost": {
+        "gold": 150000,
+        "stone": 8000,
+        "iron": 5000,
+        "coal": 2000
+      },
+      "maintenanceCost": 8000,
+      "capacity": 40000,
+      "prestige": 85,
+      "researchBonus": 0.45,
+      "specializations": ["Alle Fachbereiche", "Interdisziplinär"],
+      "description": "Massenhochschule der Nachkriegszeit",
+      "effects": {
+        "educationAccess": 0.6,
+        "scientificOutput": 0.4
+      }
+    }
+  ],
+  "educationalReforms": [
+    {
+      "id": "latin_schools",
+      "name": "Lateinschulen",
+      "era": "Mittelalter",
+      "yearAvailable": 800,
+      "cost": {
+        "gold": 5000
+      },
+      "description": "Klosterschulen → Lateinschulen für Klerus",
+      "effects": {
+        "literacy": 0.05,
+        "culturalValue": 10
+      }
+    },
+    {
+      "id": "gymnasium_system",
+      "name": "Gymnasium-System",
+      "era": "Frühe Neuzeit",
+      "yearAvailable": 1600,
+      "cost": {
+        "gold": 15000
+      },
+      "description": "Humanistische Bildung für Elite",
+      "effects": {
+        "literacy": 0.15,
+        "culturalValue": 25,
+        "socialMobility": 0.1
+      }
+    },
+    {
+      "id": "elementary_education",
+      "name": "Volksschulpflicht",
+      "era": "Industrialisierung",
+      "yearAvailable": 1870,
+      "cost": {
+        "gold": 50000
+      },
+      "description": "Allgemeine Schulpflicht einführen",
+      "effects": {
+        "literacy": 0.5,
+        "productivity": 0.2,
+        "socialProgress": 0.3
+      }
+    },
+    {
+      "id": "technical_schools",
+      "name": "Technische Hochschulen",
+      "era": "Industrialisierung",
+      "yearAvailable": 1850,
+      "cost": {
+        "gold": 40000
+      },
+      "description": "Ingenieurausbildung für Industrie",
+      "effects": {
+        "technologicalProgress": 0.3,
+        "industrialEfficiency": 0.25
+      }
+    },
+    {
+      "id": "research_institutes",
+      "name": "Forschungslabore",
+      "era": "Moderne",
+      "yearAvailable": 1900,
+      "cost": {
+        "gold": 100000,
+        "iron": 2000
+      },
+      "description": "Spezialisierte Forschungseinrichtungen",
+      "effects": {
+        "scientificOutput": 0.5,
+        "innovationRate": 0.4
+      }
+    },
+    {
+      "id": "pisa_reforms",
+      "name": "Bildungsreformen (PISA)",
+      "era": "Gegenwart",
+      "yearAvailable": 2000,
+      "cost": {
+        "gold": 200000
+      },
+      "description": "Qualitätssicherung durch internationale Vergleiche",
+      "effects": {
+        "educationQuality": 0.3,
+        "competitiveness": 0.2
+      }
+    }
+  ],
+  "nobelPrizes": [
+    {
+      "id": "nobel_physics",
+      "name": "Nobelpreis für Physik",
+      "category": "Physics",
+      "yearEstablished": 1901,
+      "prestige": 100,
+      "prizeAmount": 1000000,
+      "description": "Höchste Auszeichnung in der Physik"
+    },
+    {
+      "id": "nobel_chemistry",
+      "name": "Nobelpreis für Chemie",
+      "category": "Chemistry",
+      "yearEstablished": 1901,
+      "prestige": 100,
+      "prizeAmount": 1000000,
+      "description": "Höchste Auszeichnung in der Chemie"
+    },
+    {
+      "id": "nobel_medicine",
+      "name": "Nobelpreis für Medizin",
+      "category": "Medicine",
+      "yearEstablished": 1901,
+      "prestige": 100,
+      "prizeAmount": 1000000,
+      "description": "Höchste Auszeichnung in der Medizin"
+    },
+    {
+      "id": "nobel_literature",
+      "name": "Nobelpreis für Literatur",
+      "category": "Literature",
+      "yearEstablished": 1901,
+      "prestige": 90,
+      "prizeAmount": 1000000,
+      "description": "Höchste Auszeichnung in der Literatur"
+    },
+    {
+      "id": "nobel_peace",
+      "name": "Friedensnobelpreis",
+      "category": "Peace",
+      "yearEstablished": 1901,
+      "prestige": 95,
+      "prizeAmount": 1000000,
+      "description": "Auszeichnung für Friedensbemühungen"
+    },
+    {
+      "id": "nobel_economics",
+      "name": "Wirtschaftsnobelpreis",
+      "category": "Economics",
+      "yearEstablished": 1969,
+      "prestige": 85,
+      "prizeAmount": 1000000,
+      "description": "Preis für Wirtschaftswissenschaften"
+    }
+  ],
+  "famousScholars": [
+    {
+      "id": "einstein",
+      "name": "Albert Einstein",
+      "field": "Physics",
+      "nobelYear": 1921,
+      "university": "berlin",
+      "contribution": "Relativitätstheorie",
+      "prestigeBonus": 50
+    },
+    {
+      "id": "planck",
+      "name": "Max Planck",
+      "field": "Physics",
+      "nobelYear": 1918,
+      "university": "berlin",
+      "contribution": "Quantentheorie",
+      "prestigeBonus": 45
+    },
+    {
+      "id": "koch",
+      "name": "Robert Koch",
+      "field": "Medicine",
+      "nobelYear": 1905,
+      "university": "berlin",
+      "contribution": "Bakteriologie",
+      "prestigeBonus": 40
+    }
+  ]
+}

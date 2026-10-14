@@ -1,0 +1,497 @@
+{
+  "fashionEras": [
+    {
+      "id": "medieval",
+      "name": "Mittelalterliche Mode",
+      "period": {
+        "start": 500,
+        "end": 1450
+      },
+      "styles": ["Tunika", "Kettenhemd", "Wappenrock", "Hennin"],
+      "materials": ["Wolle", "Leinen", "Seide (Adel)", "Pelz"],
+      "characteristics": [
+        "Standesunterschiede durch Kleidung",
+        "Lange Gewänder für Adel",
+        "Einfache Tuniken für Bauern",
+        "Kopfbedeckungen obligatorisch"
+      ],
+      "classDistinctions": {
+        "nobility": "Seide, Pelz, bunte Farben, lange Gewänder",
+        "middle": "Wolle, einfache Farben, kürzere Kleidung",
+        "lower": "Leinen, Naturfarben, funktionale Arbeitskleidung"
+      },
+      "prestigeBonus": 5,
+      "economicImpact": 10
+    },
+    {
+      "id": "renaissance",
+      "name": "Renaissance-Mode",
+      "period": {
+        "start": 1450,
+        "end": 1600
+      },
+      "styles": ["Wams", "Korsett", "Halskrause", "Pluderhosen"],
+      "materials": ["Samt", "Brokat", "Spitze", "Seide"],
+      "characteristics": [
+        "Prunkvolle Verzierungen",
+        "Betonung der Körperform",
+        "Aufwendige Stickereien",
+        "Extravagante Kopfbedeckungen"
+      ],
+      "classDistinctions": {
+        "nobility": "Samt, Brokat, goldene Stickereien, Halskrause",
+        "middle": "Einfachere Samt-Varianten, weniger Verzierungen",
+        "lower": "Wolle, praktische Kleidung, keine Luxusmaterialien"
+      },
+      "prestigeBonus": 15,
+      "economicImpact": 25
+    },
+    {
+      "id": "baroque",
+      "name": "Barock-Mode",
+      "period": {
+        "start": 1600,
+        "end": 1720
+      },
+      "styles": ["Reifrock", "Perücke", "Justaucorps", "Spitzenmanschetten"],
+      "materials": ["Seide", "Samt", "Goldbrokat", "Spitze"],
+      "characteristics": [
+        "Extreme Opulenz",
+        "Riesige Perücken",
+        "Weite Röcke",
+        "Üppige Verzierungen"
+      ],
+      "classDistinctions": {
+        "nobility": "Riesige Perücken, Reifröcke, Goldstickerei, Juwelen",
+        "middle": "Bescheidenere Perücken, einfachere Röcke",
+        "lower": "Keine Perücken, praktische Arbeitskleidung"
+      },
+      "prestigeBonus": 20,
+      "economicImpact": 35
+    },
+    {
+      "id": "rococo",
+      "name": "Rokoko-Mode",
+      "period": {
+        "start": 1720,
+        "end": 1789
+      },
+      "styles": ["Panier", "Redingote", "Gilet", "Fontange"],
+      "materials": ["Seide", "Taft", "Tüll", "Spitze"],
+      "characteristics": [
+        "Verspielte Eleganz",
+        "Pastellfarben",
+        "Schäferspiel-Motive",
+        "Natürlichere Silhouetten"
+      ],
+      "classDistinctions": {
+        "nobility": "Pastellfarbene Seide, Panier, aufwendige Frisuren",
+        "middle": "Einfachere Versionen, weniger Verzierungen",
+        "lower": "Praktische Kleidung, natürliche Farben"
+      },
+      "prestigeBonus": 18,
+      "economicImpact": 30
+    },
+    {
+      "id": "empire",
+      "name": "Empire-Mode",
+      "period": {
+        "start": 1789,
+        "end": 1820
+      },
+      "styles": ["Empire-Kleid", "Frack", "Spencer", "Zylinder"],
+      "materials": ["Musselin", "Batist", "Seide", "Wolle"],
+      "characteristics": [
+        "Hohe Taille",
+        "Fließende Stoffe",
+        "Griechisch-römische Inspiration",
+        "Natürliche Silhouette"
+      ],
+      "classDistinctions": {
+        "nobility": "Feiner Musselin, Seide, edle Stoffe",
+        "middle": "Baumwolle, einfachere Schnitte",
+        "lower": "Grobe Baumwolle, Arbeitskleidung"
+      },
+      "prestigeBonus": 12,
+      "economicImpact": 20
+    },
+    {
+      "id": "victorian",
+      "name": "Viktorianische Mode",
+      "period": {
+        "start": 1820,
+        "end": 1900
+      },
+      "styles": ["Krinoline", "Gehrock", "Tournüre", "Korsett"],
+      "materials": ["Seide", "Samt", "Taft", "Baumwolle"],
+      "characteristics": [
+        "Extreme Körperbetonung",
+        "Korsetts",
+        "Weite Röcke",
+        "Steife Formalität"
+      ],
+      "classDistinctions": {
+        "nobility": "Seide, Krinoline, aufwendige Verzierungen, Juwelen",
+        "middle": "Baumwolle, einfachere Krinoline, bescheidener",
+        "lower": "Einfache Baumwolle, praktische Arbeitskleidung"
+      },
+      "prestigeBonus": 15,
+      "economicImpact": 40
+    },
+    {
+      "id": "edwardian",
+      "name": "Edwardianische Mode",
+      "period": {
+        "start": 1900,
+        "end": 1914
+      },
+      "styles": ["S-Korsett", "Bluse", "Gehrock", "Hut"],
+      "materials": ["Seide", "Spitze", "Leinen", "Wolle"],
+      "characteristics": [
+        "Elegante S-Silhouette",
+        "Große dekorative Hüte",
+        "Spitzendetails",
+        "Feminine Eleganz"
+      ],
+      "classDistinctions": {
+        "nobility": "Seide, handgefertigte Spitze, große Hüte",
+        "middle": "Einfachere Materialien, maschinelle Spitze",
+        "lower": "Praktische Kleidung, einfache Hüte"
+      },
+      "prestigeBonus": 12,
+      "economicImpact": 45
+    },
+    {
+      "id": "roaring_twenties",
+      "name": "Goldene Zwanziger",
+      "period": {
+        "start": 1920,
+        "end": 1929
+      },
+      "styles": ["Flapper-Kleid", "Cloche-Hut", "Charleston-Look", "Bubikopf"],
+      "materials": ["Seide", "Chiffon", "Samt", "Pailletten"],
+      "characteristics": [
+        "Kurze Röcke",
+        "Androgyne Silhouetten",
+        "Perlenschmuck",
+        "Charleston-Tanz-Kleider"
+      ],
+      "classDistinctions": {
+        "nobility": "Seide, Pailletten, Pelz, Designermode",
+        "middle": "Chiffon, Schmuckimitate, Massenware",
+        "lower": "Einfache Kleider, Secondhand"
+      },
+      "prestigeBonus": 25,
+      "economicImpact": 60
+    },
+    {
+      "id": "postwar",
+      "name": "Nachkriegsmode",
+      "period": {
+        "start": 1945,
+        "end": 1960
+      },
+      "styles": ["New Look", "Petticoat", "Nylonstrümpfe", "Nietenanzug"],
+      "materials": ["Nylon", "Seide", "Baumwolle", "Wolle"],
+      "characteristics": [
+        "Betonung der Weiblichkeit",
+        "Enge Taillen",
+        "Weite Röcke",
+        "Eleganz und Glamour"
+      ],
+      "classDistinctions": {
+        "nobility": "Designer-New-Look, Seide, Pelz",
+        "middle": "Konfektions-New-Look, Nylon",
+        "lower": "Einfache Kleider, Selbstgenähtes"
+      },
+      "prestigeBonus": 20,
+      "economicImpact": 70
+    },
+    {
+      "id": "sixties",
+      "name": "Sechziger Jahre",
+      "period": {
+        "start": 1960,
+        "end": 1970
+      },
+      "styles": ["Mini-Rock", "Beatle-Anzug", "Mod-Look", "Schlaghose"],
+      "materials": ["Kunststoffe", "Vinyl", "Baumwolle", "Polyester"],
+      "characteristics": [
+        "Jugendrevolution",
+        "Mini-Röcke",
+        "Bunte Farben",
+        "Geometrische Muster"
+      ],
+      "classDistinctions": {
+        "nobility": "Designer-Mini, Carnaby Street-Mode",
+        "middle": "Massenmarkt-Mode, Kaufhaus",
+        "lower": "Selbstgemachte Kleidung, Secondhand"
+      },
+      "prestigeBonus": 18,
+      "economicImpact": 90
+    },
+    {
+      "id": "contemporary",
+      "name": "Zeitgenössische Mode",
+      "period": {
+        "start": 1990,
+        "end": null
+      },
+      "styles": ["Streetwear", "Fast Fashion", "Haute Couture", "Sustainable Fashion"],
+      "materials": ["Synthetik", "Bio-Baumwolle", "Recycling-Materialien", "High-Tech-Stoffe"],
+      "characteristics": [
+        "Vielfalt der Stile",
+        "Individualismus",
+        "Nachhaltigkeit",
+        "Digitale Einflüsse"
+      ],
+      "classDistinctions": {
+        "nobility": "Haute Couture, limitierte Designer-Stücke, Luxusmarken",
+        "middle": "Markenbekleidung, Fast Fashion, Online-Shopping",
+        "lower": "Discount-Mode, Secondhand, Fast Fashion"
+      },
+      "prestigeBonus": 15,
+      "economicImpact": 150
+    }
+  ],
+  "fashionHouses": [
+    {
+      "id": "house_chanel",
+      "name": "Chanel",
+      "foundedYear": 1910,
+      "location": "Paris",
+      "prestige": 95,
+      "specialization": "haute_couture",
+      "revenue": 50000,
+      "trendInfluence": 90,
+      "isHistorical": true,
+      "famousCollections": ["Little Black Dress", "Chanel No. 5", "Tweed Jacket"]
+    },
+    {
+      "id": "house_dior",
+      "name": "Christian Dior",
+      "foundedYear": 1946,
+      "location": "Paris",
+      "prestige": 92,
+      "specialization": "haute_couture",
+      "revenue": 45000,
+      "trendInfluence": 88,
+      "isHistorical": true,
+      "famousCollections": ["New Look", "Bar Suit", "Lady Dior"]
+    },
+    {
+      "id": "house_boss",
+      "name": "Hugo Boss",
+      "foundedYear": 1924,
+      "location": "Metzingen",
+      "prestige": 75,
+      "specialization": "ready_to_wear",
+      "revenue": 30000,
+      "trendInfluence": 65,
+      "isHistorical": true,
+      "famousCollections": ["Boss Suits", "Business Wear"]
+    }
+  ],
+  "youthCultures": [
+    {
+      "id": "swing_kids",
+      "name": "Swing-Jugend",
+      "period": {
+        "start": 1935,
+        "end": 1945
+      },
+      "origin": "Deutschland/USA",
+      "values": ["Freiheit", "Jazz-Musik", "Widerstand gegen Uniformität"],
+      "fashionStyle": "Amerikanischer Swing-Stil, weite Hosen, bunte Krawatten",
+      "musicGenre": "Swing Jazz",
+      "adherenceRate": 15,
+      "socialImpact": {
+        "culturalInfluence": 30,
+        "rebellion": 60,
+        "creativity": 50,
+        "commercialization": 20
+      },
+      "parentCulture": null
+    },
+    {
+      "id": "halbstarke",
+      "name": "Halbstarke",
+      "period": {
+        "start": 1950,
+        "end": 1965
+      },
+      "origin": "Deutschland",
+      "values": ["Rebellion", "Rock'n'Roll", "Amerikanisierung"],
+      "fashionStyle": "Lederjacken, Jeans, Elvis-Frisur",
+      "musicGenre": "Rock'n'Roll",
+      "adherenceRate": 25,
+      "socialImpact": {
+        "culturalInfluence": 45,
+        "rebellion": 70,
+        "creativity": 40,
+        "commercialization": 35
+      },
+      "parentCulture": null
+    },
+    {
+      "id": "hippies",
+      "name": "Hippies",
+      "period": {
+        "start": 1965,
+        "end": 1975
+      },
+      "origin": "USA/International",
+      "values": ["Frieden", "Liebe", "Freiheit", "Antikonformismus"],
+      "fashionStyle": "Schlaghosen, Batik, lange Haare, Blumenkränze",
+      "musicGenre": "Psychedelic Rock",
+      "adherenceRate": 30,
+      "socialImpact": {
+        "culturalInfluence": 80,
+        "rebellion": 85,
+        "creativity": 90,
+        "commercialization": 40
+      },
+      "parentCulture": null
+    },
+    {
+      "id": "punks",
+      "name": "Punks",
+      "period": {
+        "start": 1976,
+        "end": null
+      },
+      "origin": "UK/USA",
+      "values": ["Anarchie", "DIY", "Anti-Establishment"],
+      "fashionStyle": "Zerrissene Kleidung, Nieten, Irokesenschnitt, Sicherheitsnadeln",
+      "musicGenre": "Punk Rock",
+      "adherenceRate": 20,
+      "socialImpact": {
+        "culturalInfluence": 70,
+        "rebellion": 95,
+        "creativity": 75,
+        "commercialization": 30
+      },
+      "parentCulture": null
+    },
+    {
+      "id": "new_wave",
+      "name": "New Wave",
+      "period": {
+        "start": 1978,
+        "end": 1990
+      },
+      "origin": "UK/USA",
+      "values": ["Modernität", "Elektronik", "Stil"],
+      "fashionStyle": "Geometrische Muster, Neon-Farben, asymmetrische Schnitte",
+      "musicGenre": "New Wave/Synthpop",
+      "adherenceRate": 35,
+      "socialImpact": {
+        "culturalInfluence": 65,
+        "rebellion": 50,
+        "creativity": 80,
+        "commercialization": 70
+      },
+      "parentCulture": "punks"
+    },
+    {
+      "id": "hip_hop",
+      "name": "Hip-Hop-Kultur",
+      "period": {
+        "start": 1980,
+        "end": null
+      },
+      "origin": "USA",
+      "values": ["Selbstausdruck", "Straßenkultur", "Kreativität"],
+      "fashionStyle": "Baggy Jeans, Sneakers, Baseballkappen, Goldketten",
+      "musicGenre": "Hip-Hop/Rap",
+      "adherenceRate": 45,
+      "socialImpact": {
+        "culturalInfluence": 90,
+        "rebellion": 60,
+        "creativity": 85,
+        "commercialization": 95
+      },
+      "parentCulture": null
+    },
+    {
+      "id": "grunge",
+      "name": "Grunge",
+      "period": {
+        "start": 1990,
+        "end": 2000
+      },
+      "origin": "Seattle/USA",
+      "values": ["Authentizität", "Anti-Kommerz", "Introspection"],
+      "fashionStyle": "Flanellhemden, zerrissene Jeans, Converse, ungepflegter Look",
+      "musicGenre": "Grunge/Alternative Rock",
+      "adherenceRate": 30,
+      "socialImpact": {
+        "culturalInfluence": 70,
+        "rebellion": 65,
+        "creativity": 70,
+        "commercialization": 50
+      },
+      "parentCulture": "punks"
+    },
+    {
+      "id": "rave",
+      "name": "Rave-Kultur",
+      "period": {
+        "start": 1988,
+        "end": 2000
+      },
+      "origin": "UK/Deutschland",
+      "values": ["PLUR (Peace, Love, Unity, Respect)", "Hedonismus", "Gemeinschaft"],
+      "fashionStyle": "Neon-Farben, Kandi-Armbänder, Plateau-Schuhe, Phat Pants",
+      "musicGenre": "Techno/House/Trance",
+      "adherenceRate": 25,
+      "socialImpact": {
+        "culturalInfluence": 60,
+        "rebellion": 55,
+        "creativity": 75,
+        "commercialization": 60
+      },
+      "parentCulture": null
+    },
+    {
+      "id": "emo",
+      "name": "Emo",
+      "period": {
+        "start": 2000,
+        "end": 2010
+      },
+      "origin": "USA",
+      "values": ["Emotionale Ehrlichkeit", "Individualismus", "Introspection"],
+      "fashionStyle": "Schwarze Kleidung, skinny Jeans, seitlicher Pony, Band-Shirts",
+      "musicGenre": "Emo/Pop-Punk",
+      "adherenceRate": 20,
+      "socialImpact": {
+        "culturalInfluence": 50,
+        "rebellion": 40,
+        "creativity": 60,
+        "commercialization": 70
+      },
+      "parentCulture": "punks"
+    },
+    {
+      "id": "hypebeast",
+      "name": "Hypebeast",
+      "period": {
+        "start": 2010,
+        "end": null
+      },
+      "origin": "International",
+      "values": ["Exklusivität", "Streetwear", "Sneaker-Kultur", "Hype"],
+      "fashionStyle": "Supreme, Off-White, limitierte Sneakers, Logomania",
+      "musicGenre": "Trap/Hip-Hop",
+      "adherenceRate": 35,
+      "socialImpact": {
+        "culturalInfluence": 75,
+        "rebellion": 30,
+        "creativity": 50,
+        "commercialization": 98
+      },
+      "parentCulture": "hip_hop"
+    }
+  ]
+}

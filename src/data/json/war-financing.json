@@ -1,0 +1,319 @@
+{
+  "warFinancingMethods": [
+    {
+      "id": "medieval_plunder",
+      "name": "Plünderung und Beute",
+      "era": "Mittelalter",
+      "yearStart": 500,
+      "yearEnd": 1500,
+      "description": "Kriegsfinanzierung durch Plünderung eroberter Gebiete",
+      "goldGainMin": 1000,
+      "goldGainMax": 5000,
+      "popularityEffect": -10,
+      "moralityEffect": -15,
+      "civilUnrest": 0.05,
+      "requirements": {
+        "atWar": true,
+        "victoriesRequired": 1
+      }
+    },
+    {
+      "id": "war_tax",
+      "name": "Kriegssteuer",
+      "era": "Alle Epochen",
+      "yearStart": 500,
+      "yearEnd": 2100,
+      "description": "Erhöhte Steuern zur Kriegsfinanzierung",
+      "goldGainMultiplier": 1.5,
+      "popularityEffect": -15,
+      "civilUnrest": 0.1,
+      "duration": 12,
+      "requirements": {
+        "atWar": true
+      }
+    },
+    {
+      "id": "mercenary_loans",
+      "name": "Söldner-Darlehen",
+      "era": "Mittelalter - Frühe Neuzeit",
+      "yearStart": 1200,
+      "yearEnd": 1800,
+      "description": "Kredite von italienischen Bankiers für Söldnertruppen",
+      "goldAmount": 10000,
+      "interestRate": 0.15,
+      "repaymentPeriod": 60,
+      "popularityEffect": -5,
+      "requirements": {
+        "atWar": true,
+        "tradePower": 30
+      }
+    },
+    {
+      "id": "confiscation",
+      "name": "Vermögensbeschlagnahmung",
+      "era": "Frühe Neuzeit",
+      "yearStart": 1500,
+      "yearEnd": 1900,
+      "description": "Enteignung von Adeligen oder religiösen Orden",
+      "goldGainMin": 5000,
+      "goldGainMax": 20000,
+      "popularityEffect": -25,
+      "moralityEffect": -20,
+      "civilUnrest": 0.15,
+      "requirements": {
+        "atWar": true
+      }
+    },
+    {
+      "id": "war_bonds_ww1",
+      "name": "Kriegsanleihen (1. Weltkrieg)",
+      "era": "Erster Weltkrieg",
+      "yearStart": 1914,
+      "yearEnd": 1918,
+      "description": "Patriotische Kriegsanleihen - Investition in den Sieg",
+      "goldAmount": 50000,
+      "interestRate": 0.05,
+      "repaymentPeriod": 120,
+      "popularityEffect": 10,
+      "patriotismBonus": 0.1,
+      "requirements": {
+        "atWar": true,
+        "year": 1914
+      }
+    },
+    {
+      "id": "war_bonds_ww2",
+      "name": "Kriegsanleihen (2. Weltkrieg)",
+      "era": "Zweiter Weltkrieg",
+      "yearStart": 1939,
+      "yearEnd": 1945,
+      "description": "Kriegsanleihen mit intensiver Propaganda-Kampagne",
+      "goldAmount": 100000,
+      "interestRate": 0.025,
+      "repaymentPeriod": 240,
+      "popularityEffect": 15,
+      "patriotismBonus": 0.15,
+      "requirements": {
+        "atWar": true,
+        "year": 1939
+      }
+    },
+    {
+      "id": "modern_war_bonds",
+      "name": "Moderne Staatsanleihen",
+      "era": "Moderne",
+      "yearStart": 1950,
+      "yearEnd": 2100,
+      "description": "Staatsanleihen zur Kriegsfinanzierung auf internationalen Märkten",
+      "goldAmount": 200000,
+      "interestRate": 0.03,
+      "repaymentPeriod": 360,
+      "popularityEffect": 5,
+      "requirements": {
+        "atWar": true,
+        "year": 1950,
+        "tradePower": 50
+      }
+    },
+    {
+      "id": "print_money",
+      "name": "Gelddrucken",
+      "era": "Moderne",
+      "yearStart": 1900,
+      "yearEnd": 2100,
+      "description": "Finanzierung durch Geldmengenerweiterung - riskant!",
+      "goldAmount": 50000,
+      "inflationEffect": 0.15,
+      "popularityEffect": -10,
+      "civilUnrest": 0.08,
+      "requirements": {
+        "atWar": true,
+        "year": 1900
+      }
+    },
+    {
+      "id": "lend_lease",
+      "name": "Leih- und Pachtabkommen",
+      "era": "Zweiter Weltkrieg",
+      "yearStart": 1941,
+      "yearEnd": 1945,
+      "description": "Material-Lieferungen von Verbündeten ohne sofortige Bezahlung",
+      "goldAmount": 0,
+      "materialValue": 150000,
+      "diplomaticBonus": 20,
+      "requirements": {
+        "atWar": true,
+        "year": 1941,
+        "alliances": 1
+      }
+    },
+    {
+      "id": "forced_labor",
+      "name": "Zwangsarbeit",
+      "era": "Alle Epochen",
+      "yearStart": 500,
+      "yearEnd": 1945,
+      "description": "Kriegsgefangene und Zivilisten zur Arbeit zwingen",
+      "productionBonus": 0.2,
+      "popularityEffect": -30,
+      "moralityEffect": -40,
+      "civilUnrest": 0.2,
+      "warCrimes": true,
+      "requirements": {
+        "atWar": true
+      }
+    },
+    {
+      "id": "requisition",
+      "name": "Requirierung",
+      "era": "Alle Epochen",
+      "yearStart": 1500,
+      "yearEnd": 2100,
+      "description": "Beschlagnahme von Nahrung, Pferden und Gütern für die Armee",
+      "resourceGain": {
+        "food": 5000,
+        "wood": 1000
+      },
+      "popularityEffect": -20,
+      "civilUnrest": 0.12,
+      "requirements": {
+        "atWar": true
+      }
+    },
+    {
+      "id": "sale_of_honors",
+      "name": "Verkauf von Adelstiteln",
+      "era": "Frühe Neuzeit - Moderne",
+      "yearStart": 1600,
+      "yearEnd": 1900,
+      "description": "Adelstitel an reiche Bürger verkaufen",
+      "goldGainMin": 10000,
+      "goldGainMax": 50000,
+      "popularityEffect": -8,
+      "socialMobility": 0.05,
+      "requirements": {
+        "atWar": true,
+        "year": 1600
+      }
+    }
+  ],
+  "warBonds": [
+    {
+      "id": "liberty_bonds_ww1",
+      "name": "Liberty Bonds",
+      "year": 1917,
+      "country": "USA",
+      "totalRaised": 17000000000,
+      "description": "Amerikanische Kriegsanleihen im 1. Weltkrieg",
+      "historicalImpact": "Finanzierte die amerikanische Kriegsbeteiligung"
+    },
+    {
+      "id": "kriegsanleihen_germany_ww1",
+      "name": "Deutsche Kriegsanleihen",
+      "year": 1914,
+      "country": "Deutschland",
+      "totalRaised": 97000000000,
+      "description": "9 Kriegsanleihen zwischen 1914-1918",
+      "historicalImpact": "Führte nach dem Krieg zur Hyperinflation"
+    },
+    {
+      "id": "war_bonds_uk_ww2",
+      "name": "British War Bonds",
+      "year": 1939,
+      "country": "Großbritannien",
+      "totalRaised": 10000000000,
+      "description": "Kriegsanleihen mit intensiver Propaganda",
+      "historicalImpact": "Finanzierte den Kriegseinsatz gegen Nazi-Deutschland"
+    },
+    {
+      "id": "reichsschatzanweisungen",
+      "name": "Reichsschatzanweisungen",
+      "year": 1939,
+      "country": "Deutschland",
+      "totalRaised": 40000000000,
+      "description": "Kurzfristige Schuldverschreibungen des NS-Regimes",
+      "historicalImpact": "Zwangsanleihen und Enteignung nach dem Krieg"
+    }
+  ],
+  "historicalEvents": [
+    {
+      "id": "hyperinflation_1923",
+      "name": "Hyperinflation 1923",
+      "year": 1923,
+      "description": "Deutsche Hyperinflation nach dem 1. Weltkrieg",
+      "cause": "Kriegsschulden und Reparationszahlungen",
+      "effect": {
+        "inflationRate": 1000000,
+        "goldValue": 0.01,
+        "civilUnrest": 0.5,
+        "economicCollapse": true
+      }
+    },
+    {
+      "id": "bretton_woods",
+      "name": "Bretton-Woods-System",
+      "year": 1944,
+      "description": "Neues internationales Währungssystem nach dem 2. Weltkrieg",
+      "cause": "Kriegsfinanzierung und Neuordnung der Weltwirtschaft",
+      "effect": {
+        "stabilityBonus": 0.2,
+        "tradePowerBonus": 0.15
+      }
+    },
+    {
+      "id": "marshall_plan",
+      "name": "Marshall-Plan",
+      "year": 1948,
+      "description": "Amerikanisches Wiederaufbauprogramm für Europa",
+      "cause": "Kriegszerstörung und wirtschaftlicher Wiederaufbau",
+      "effect": {
+        "goldInflow": 100000,
+        "economicGrowth": 0.3,
+        "diplomaticRelations": 30
+      }
+    }
+  ],
+  "debtRepaymentStrategies": [
+    {
+      "id": "standard_repayment",
+      "name": "Reguläre Rückzahlung",
+      "description": "Normale Rückzahlung mit Zinsen",
+      "popularityEffect": 0,
+      "diplomaticEffect": 10
+    },
+    {
+      "id": "austerity",
+      "name": "Sparpolitik",
+      "description": "Strikte Ausgabenkürzungen zur schnelleren Tilgung",
+      "repaymentSpeedMultiplier": 1.5,
+      "popularityEffect": -20,
+      "civilUnrest": 0.15
+    },
+    {
+      "id": "default",
+      "name": "Zahlungsausfall",
+      "description": "Weigerung zur Rückzahlung - drastische Konsequenzen",
+      "debtCancelled": true,
+      "popularityEffect": 10,
+      "diplomaticEffect": -50,
+      "tradePenalty": 0.5,
+      "warRisk": 0.3
+    },
+    {
+      "id": "renegotiation",
+      "name": "Neuverhandlung",
+      "description": "Versuch, bessere Konditionen auszuhandeln",
+      "interestReduction": 0.3,
+      "diplomaticCost": -10,
+      "requiresDiplomacy": 60
+    },
+    {
+      "id": "inflation_erosion",
+      "name": "Inflationserosion",
+      "description": "Schulden durch Inflation entwerten",
+      "inflationEffect": 0.1,
+      "realDebtReduction": 0.2,
+      "popularityEffect": -15
+    }
+  ]
+}

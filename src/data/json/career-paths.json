@@ -1,0 +1,315 @@
+{
+  "careerPaths": [
+    {
+      "id": "crafts_path",
+      "name": "Handwerker-Pfad",
+      "category": "crafts",
+      "description": "Vom Lehrling zum Wirtschaftsrat - Der Weg des Handwerks",
+      "stages": [
+        {
+          "rank": "Lehrling",
+          "minYearsExperience": 0,
+          "requiredSkills": {
+            "handwerk": 10
+          },
+          "prestigeRequired": 0,
+          "specialTasks": ["Meisterstück vorbereiten"]
+        },
+        {
+          "rank": "Geselle",
+          "minYearsExperience": 3,
+          "requiredSkills": {
+            "handwerk": 40
+          },
+          "prestigeRequired": 20,
+          "specialTasks": ["Wanderjahre absolvieren"]
+        },
+        {
+          "rank": "Meister",
+          "minYearsExperience": 7,
+          "requiredSkills": {
+            "handwerk": 70,
+            "verwaltung": 30
+          },
+          "prestigeRequired": 50,
+          "specialTasks": ["Meisterstück vollenden", "Lehrlinge ausbilden"]
+        },
+        {
+          "rank": "Gildenmeister",
+          "minYearsExperience": 15,
+          "requiredSkills": {
+            "handwerk": 85,
+            "verwaltung": 60,
+            "handel": 50
+          },
+          "prestigeRequired": 80,
+          "specialTasks": ["Gilde leiten", "Handelswege etablieren"]
+        },
+        {
+          "rank": "Wirtschaftsrat",
+          "minYearsExperience": 25,
+          "requiredSkills": {
+            "handwerk": 90,
+            "verwaltung": 80,
+            "handel": 70,
+            "politik": 50
+          },
+          "prestigeRequired": 95,
+          "specialTasks": ["Stadtrat beraten", "Wirtschaftspolitik gestalten"]
+        }
+      ]
+    },
+    {
+      "id": "politics_path",
+      "name": "Bürgermeister-Pfad",
+      "category": "politics",
+      "description": "Vom Stadtrat zum Minister - Der Weg der Verwaltung",
+      "stages": [
+        {
+          "rank": "Stadtrat",
+          "minYearsExperience": 0,
+          "requiredSkills": {
+            "verwaltung": 30,
+            "politik": 20
+          },
+          "prestigeRequired": 25,
+          "specialTasks": []
+        },
+        {
+          "rank": "Bürgermeister",
+          "minYearsExperience": 5,
+          "requiredSkills": {
+            "verwaltung": 60,
+            "politik": 50,
+            "diplomatie": 40
+          },
+          "prestigeRequired": 60,
+          "specialTasks": ["Stadt modernisieren", "Haushalt sanieren"]
+        },
+        {
+          "rank": "Oberbürgermeister",
+          "minYearsExperience": 12,
+          "requiredSkills": {
+            "verwaltung": 80,
+            "politik": 70,
+            "diplomatie": 60
+          },
+          "prestigeRequired": 85,
+          "specialTasks": ["Große Stadt regieren", "Prestigeprojekte realisieren"]
+        },
+        {
+          "rank": "Landesrat",
+          "minYearsExperience": 20,
+          "requiredSkills": {
+            "verwaltung": 90,
+            "politik": 85,
+            "diplomatie": 75
+          },
+          "prestigeRequired": 90,
+          "specialTasks": ["Landespolitik mitgestalten"]
+        },
+        {
+          "rank": "Minister",
+          "minYearsExperience": 30,
+          "requiredSkills": {
+            "verwaltung": 95,
+            "politik": 95,
+            "diplomatie": 85
+          },
+          "prestigeRequired": 98,
+          "specialTasks": ["Ressort führen", "Gesetze initiieren"]
+        }
+      ]
+    },
+    {
+      "id": "military_path",
+      "name": "Militär-Pfad",
+      "category": "military",
+      "description": "Vom Rekruten zum Feldmarschall - Der Weg des Kriegers",
+      "stages": [
+        {
+          "rank": "Rekrut",
+          "minYearsExperience": 0,
+          "requiredSkills": {
+            "kampf": 20
+          },
+          "prestigeRequired": 0,
+          "specialTasks": ["Grundausbildung"]
+        },
+        {
+          "rank": "Unteroffizier",
+          "minYearsExperience": 3,
+          "requiredSkills": {
+            "kampf": 50,
+            "führung": 30
+          },
+          "prestigeRequired": 30,
+          "specialTasks": ["Truppe führen"]
+        },
+        {
+          "rank": "Offizier",
+          "minYearsExperience": 8,
+          "requiredSkills": {
+            "kampf": 70,
+            "führung": 60,
+            "strategie": 50
+          },
+          "prestigeRequired": 60,
+          "specialTasks": ["Kompanie befehligen", "Taktische Einsätze planen"]
+        },
+        {
+          "rank": "General",
+          "minYearsExperience": 18,
+          "requiredSkills": {
+            "kampf": 85,
+            "führung": 85,
+            "strategie": 80,
+            "politik": 50
+          },
+          "prestigeRequired": 85,
+          "specialTasks": ["Division kommandieren", "Schlachten leiten"]
+        },
+        {
+          "rank": "Feldmarschall",
+          "minYearsExperience": 30,
+          "requiredSkills": {
+            "kampf": 95,
+            "führung": 95,
+            "strategie": 95,
+            "politik": 75
+          },
+          "prestigeRequired": 98,
+          "specialTasks": ["Armee führen", "Kriegsstrategie entwickeln"]
+        }
+      ]
+    },
+    {
+      "id": "clergy_path",
+      "name": "Klerikaler Pfad",
+      "category": "clergy",
+      "description": "Vom Novizen zum Kardinal - Der Weg des Glaubens",
+      "stages": [
+        {
+          "rank": "Novize",
+          "minYearsExperience": 0,
+          "requiredSkills": {
+            "theologie": 20,
+            "bildung": 20
+          },
+          "prestigeRequired": 10,
+          "specialTasks": ["Gelübde ablegen"]
+        },
+        {
+          "rank": "Priester",
+          "minYearsExperience": 5,
+          "requiredSkills": {
+            "theologie": 60,
+            "bildung": 50,
+            "seelsorge": 50
+          },
+          "prestigeRequired": 40,
+          "specialTasks": ["Gemeinde betreuen", "Sakramente spenden"]
+        },
+        {
+          "rank": "Abt/Bischof",
+          "minYearsExperience": 15,
+          "requiredSkills": {
+            "theologie": 80,
+            "bildung": 70,
+            "seelsorge": 70,
+            "verwaltung": 60
+          },
+          "prestigeRequired": 75,
+          "specialTasks": ["Kloster/Diözese leiten", "Missionieren"]
+        },
+        {
+          "rank": "Erzbischof",
+          "minYearsExperience": 25,
+          "requiredSkills": {
+            "theologie": 90,
+            "bildung": 85,
+            "seelsorge": 80,
+            "verwaltung": 80,
+            "politik": 60
+          },
+          "prestigeRequired": 90,
+          "specialTasks": ["Kirchenprovinz führen", "Konzilien teilnehmen"]
+        },
+        {
+          "rank": "Kardinal",
+          "minYearsExperience": 35,
+          "requiredSkills": {
+            "theologie": 98,
+            "bildung": 95,
+            "seelsorge": 90,
+            "verwaltung": 90,
+            "politik": 85
+          },
+          "prestigeRequired": 98,
+          "specialTasks": ["Papst wählen", "Glaubensfragen entscheiden"]
+        }
+      ]
+    },
+    {
+      "id": "scholar_path",
+      "name": "Gelehrten-Pfad",
+      "category": "education",
+      "description": "Vom Studenten zum Akademiepräsidenten - Der Weg der Wissenschaft",
+      "stages": [
+        {
+          "rank": "Student",
+          "minYearsExperience": 0,
+          "requiredSkills": {
+            "bildung": 30,
+            "forschung": 10
+          },
+          "prestigeRequired": 5,
+          "specialTasks": ["Studium absolvieren"]
+        },
+        {
+          "rank": "Magister",
+          "minYearsExperience": 4,
+          "requiredSkills": {
+            "bildung": 60,
+            "forschung": 40
+          },
+          "prestigeRequired": 30,
+          "specialTasks": ["Magisterarbeit schreiben"]
+        },
+        {
+          "rank": "Doktor",
+          "minYearsExperience": 8,
+          "requiredSkills": {
+            "bildung": 80,
+            "forschung": 70
+          },
+          "prestigeRequired": 60,
+          "specialTasks": ["Dissertation verteidigen", "Forschen"]
+        },
+        {
+          "rank": "Professor",
+          "minYearsExperience": 15,
+          "requiredSkills": {
+            "bildung": 90,
+            "forschung": 85,
+            "lehre": 70
+          },
+          "prestigeRequired": 85,
+          "specialTasks": ["Lehrstuhl innehaben", "Doktoranden betreuen", "Publizieren"]
+        },
+        {
+          "rank": "Akademiepräsident",
+          "minYearsExperience": 30,
+          "requiredSkills": {
+            "bildung": 98,
+            "forschung": 95,
+            "lehre": 85,
+            "verwaltung": 80
+          },
+          "prestigeRequired": 98,
+          "specialTasks": ["Akademie leiten", "Wissenschaftspolitik gestalten"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,270 @@
+{
+  "culturalEvents": [
+    {
+      "id": "oktoberfest",
+      "name": "Oktoberfest",
+      "category": "festival",
+      "period": {
+        "start": 1810,
+        "end": null
+      },
+      "frequency": "annual",
+      "month": 9,
+      "duration": 16,
+      "region": "Bayern",
+      "description": "Das größte Volksfest der Welt",
+      "effects": {
+        "population_happiness": 0.15,
+        "tourism": 0.3,
+        "economy": 0.1,
+        "cultural_prestige": 0.2
+      },
+      "cost": 5000,
+      "requiredPopulation": 50000,
+      "requiredTechnology": null
+    },
+    {
+      "id": "christmas_market",
+      "name": "Weihnachtsmarkt",
+      "category": "seasonal",
+      "period": {
+        "start": 1434,
+        "end": null
+      },
+      "frequency": "annual",
+      "month": 12,
+      "duration": 30,
+      "region": "all",
+      "description": "Traditioneller Weihnachtsmarkt",
+      "effects": {
+        "population_happiness": 0.2,
+        "tourism": 0.15,
+        "economy": 0.15,
+        "social_cohesion": 0.1
+      },
+      "cost": 2000,
+      "requiredPopulation": 5000,
+      "requiredTechnology": null
+    },
+    {
+      "id": "karneval",
+      "name": "Karneval",
+      "category": "festival",
+      "period": {
+        "start": 1234,
+        "end": null
+      },
+      "frequency": "annual",
+      "month": 2,
+      "duration": 6,
+      "region": "Rheinland",
+      "description": "Die fünfte Jahreszeit",
+      "effects": {
+        "population_happiness": 0.25,
+        "tourism": 0.2,
+        "social_cohesion": 0.15
+      },
+      "cost": 3000,
+      "requiredPopulation": 10000,
+      "requiredTechnology": null
+    },
+    {
+      "id": "bayreuther_festspiele",
+      "name": "Bayreuther Festspiele",
+      "category": "cultural",
+      "period": {
+        "start": 1876,
+        "end": null
+      },
+      "frequency": "annual",
+      "month": 7,
+      "duration": 30,
+      "region": "Bayern",
+      "description": "Richard Wagner Festspiele",
+      "effects": {
+        "cultural_prestige": 0.4,
+        "tourism": 0.2,
+        "population_happiness": 0.1
+      },
+      "cost": 8000,
+      "requiredPopulation": 20000,
+      "requiredTechnology": "opera_house"
+    },
+    {
+      "id": "berlinale",
+      "name": "Berlinale",
+      "category": "cultural",
+      "period": {
+        "start": 1951,
+        "end": null
+      },
+      "frequency": "annual",
+      "month": 2,
+      "duration": 11,
+      "region": "Berlin",
+      "description": "Internationale Filmfestspiele",
+      "effects": {
+        "cultural_prestige": 0.35,
+        "tourism": 0.25,
+        "international_reputation": 0.2
+      },
+      "cost": 10000,
+      "requiredPopulation": 500000,
+      "requiredTechnology": "cinema"
+    },
+    {
+      "id": "tag_der_deutschen_einheit",
+      "name": "Tag der Deutschen Einheit",
+      "category": "national",
+      "period": {
+        "start": 1990,
+        "end": null
+      },
+      "frequency": "annual",
+      "month": 10,
+      "duration": 1,
+      "region": "all",
+      "description": "Nationalfeiertag der Wiedervereinigung",
+      "effects": {
+        "national_unity": 0.3,
+        "population_happiness": 0.15,
+        "political_stability": 0.1
+      },
+      "cost": 5000,
+      "requiredPopulation": 0,
+      "requiredTechnology": null
+    },
+    {
+      "id": "documenta",
+      "name": "documenta",
+      "category": "cultural",
+      "period": {
+        "start": 1955,
+        "end": null
+      },
+      "frequency": "every_5_years",
+      "month": 6,
+      "duration": 100,
+      "region": "Hessen",
+      "description": "Weltausstellung zeitgenössischer Kunst",
+      "effects": {
+        "cultural_prestige": 0.5,
+        "tourism": 0.3,
+        "art_development": 0.4
+      },
+      "cost": 15000,
+      "requiredPopulation": 200000,
+      "requiredTechnology": "modern_art"
+    },
+    {
+      "id": "luthers_reformation_day",
+      "name": "Reformationstag",
+      "category": "religious",
+      "period": {
+        "start": 1517,
+        "end": null
+      },
+      "frequency": "annual",
+      "month": 10,
+      "duration": 1,
+      "region": "Protestant regions",
+      "description": "Gedenken an die Reformation",
+      "effects": {
+        "religious_unity": 0.2,
+        "population_happiness": 0.1,
+        "cultural_identity": 0.15
+      },
+      "cost": 1000,
+      "requiredPopulation": 0,
+      "requiredTechnology": null
+    },
+    {
+      "id": "maifest",
+      "name": "Maifest",
+      "category": "seasonal",
+      "period": {
+        "start": 1200,
+        "end": null
+      },
+      "frequency": "annual",
+      "month": 5,
+      "duration": 1,
+      "region": "all",
+      "description": "Traditionelles Frühlingsfest",
+      "effects": {
+        "population_happiness": 0.15,
+        "social_cohesion": 0.15,
+        "tradition": 0.1
+      },
+      "cost": 1500,
+      "requiredPopulation": 1000,
+      "requiredTechnology": null
+    },
+    {
+      "id": "reichstag_opening",
+      "name": "Reichstagseröffnung",
+      "category": "political",
+      "period": {
+        "start": 1871,
+        "end": 1918
+      },
+      "frequency": "irregular",
+      "month": null,
+      "duration": 1,
+      "region": "Berlin",
+      "description": "Feierliche Eröffnung des Reichstags",
+      "effects": {
+        "political_prestige": 0.3,
+        "national_unity": 0.2,
+        "population_happiness": 0.1
+      },
+      "cost": 8000,
+      "requiredPopulation": 100000,
+      "requiredTechnology": "parliamentary_system"
+    },
+    {
+      "id": "hansetag",
+      "name": "Hansetag",
+      "category": "trade",
+      "period": {
+        "start": 1356,
+        "end": 1669
+      },
+      "frequency": "irregular",
+      "month": null,
+      "duration": 7,
+      "region": "Hanseatic cities",
+      "description": "Versammlung der Hansestädte",
+      "effects": {
+        "trade": 0.25,
+        "diplomatic_relations": 0.3,
+        "economic_cooperation": 0.2
+      },
+      "cost": 3000,
+      "requiredPopulation": 50000,
+      "requiredTechnology": null
+    },
+    {
+      "id": "osterfeuer",
+      "name": "Osterfeuer",
+      "category": "seasonal",
+      "period": {
+        "start": 800,
+        "end": null
+      },
+      "frequency": "annual",
+      "month": 4,
+      "duration": 1,
+      "region": "all",
+      "description": "Traditionelle Osterfeuer",
+      "effects": {
+        "population_happiness": 0.1,
+        "tradition": 0.15,
+        "social_cohesion": 0.1
+      },
+      "cost": 500,
+      "requiredPopulation": 500,
+      "requiredTechnology": null
+    }
+  ]
+}

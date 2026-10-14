@@ -1,0 +1,257 @@
+{
+  "colonies": [
+    {
+      "id": "german_east_africa",
+      "name": "Deutsch-Ostafrika",
+      "region": "East Africa",
+      "established": 1885,
+      "dissolved": 1919,
+      "area": 995000,
+      "population": 7500000,
+      "capital": "Daressalam",
+      "resources": ["Coffee", "Cotton", "Sisal", "Rubber"],
+      "establishmentCost": {
+        "gold": 100000,
+        "militaryUnits": 1000
+      },
+      "annualRevenue": 15000,
+      "maintenanceCost": 8000,
+      "description": "Tansania, Ruanda, Burundi"
+    },
+    {
+      "id": "german_southwest_africa",
+      "name": "Deutsch-Südwestafrika",
+      "region": "Southwest Africa",
+      "established": 1884,
+      "dissolved": 1915,
+      "area": 835100,
+      "population": 200000,
+      "capital": "Windhoek",
+      "resources": ["Diamonds", "Copper", "Cattle"],
+      "establishmentCost": {
+        "gold": 80000,
+        "militaryUnits": 800
+      },
+      "annualRevenue": 12000,
+      "maintenanceCost": 6000,
+      "description": "Namibia"
+    },
+    {
+      "id": "cameroon",
+      "name": "Kamerun",
+      "region": "West Africa",
+      "established": 1884,
+      "dissolved": 1916,
+      "area": 790000,
+      "population": 3500000,
+      "capital": "Buea",
+      "resources": ["Cocoa", "Palm Oil", "Rubber", "Timber"],
+      "establishmentCost": {
+        "gold": 90000,
+        "militaryUnits": 900
+      },
+      "annualRevenue": 18000,
+      "maintenanceCost": 7000,
+      "description": "Kamerun und Teile von Nigeria"
+    },
+    {
+      "id": "togo",
+      "name": "Togoland",
+      "region": "West Africa",
+      "established": 1884,
+      "dissolved": 1914,
+      "area": 87200,
+      "population": 1000000,
+      "capital": "Lomé",
+      "resources": ["Palm Oil", "Cocoa", "Coffee"],
+      "establishmentCost": {
+        "gold": 40000,
+        "militaryUnits": 400
+      },
+      "annualRevenue": 8000,
+      "maintenanceCost": 3000,
+      "description": "Togo und Teile von Ghana"
+    },
+    {
+      "id": "german_new_guinea",
+      "name": "Deutsch-Neuguinea",
+      "region": "Pacific",
+      "established": 1884,
+      "dissolved": 1914,
+      "area": 240000,
+      "population": 600000,
+      "capital": "Rabaul",
+      "resources": ["Copra", "Rubber", "Timber"],
+      "establishmentCost": {
+        "gold": 50000,
+        "militaryUnits": 300
+      },
+      "annualRevenue": 6000,
+      "maintenanceCost": 4000,
+      "description": "Nordost-Neuguinea und Bismarck-Archipel"
+    },
+    {
+      "id": "jiaozhou",
+      "name": "Kiautschou",
+      "region": "East Asia",
+      "established": 1898,
+      "dissolved": 1914,
+      "area": 552,
+      "population": 200000,
+      "capital": "Qingdao",
+      "resources": ["Strategic Port", "Beer"],
+      "establishmentCost": {
+        "gold": 60000,
+        "militaryUnits": 2000
+      },
+      "annualRevenue": 10000,
+      "maintenanceCost": 5000,
+      "description": "Hafen Tsingtau in China"
+    }
+  ],
+  "colonialAdministration": [
+    {
+      "id": "governor_general",
+      "name": "Generalgouverneur",
+      "rank": 1,
+      "salary": 10000,
+      "authority": 0.9,
+      "description": "Oberster Kolonialverwalter"
+    },
+    {
+      "id": "district_officer",
+      "name": "Bezirksamtmann",
+      "rank": 2,
+      "salary": 3000,
+      "authority": 0.6,
+      "description": "Regionaler Administrator"
+    },
+    {
+      "id": "native_chief",
+      "name": "Eingeborenen-Häuptling",
+      "rank": 3,
+      "salary": 500,
+      "authority": 0.3,
+      "description": "Lokaler indigener Führer unter deutscher Kontrolle"
+    }
+  ],
+  "colonialEconomics": [
+    {
+      "id": "plantation_economy",
+      "name": "Plantagenwirtschaft",
+      "description": "Monokulturen für Export",
+      "profitability": 0.8,
+      "laborIntensity": 0.9,
+      "sustainabilityRisk": 0.7,
+      "products": ["Cotton", "Coffee", "Rubber", "Cocoa"]
+    },
+    {
+      "id": "mining_operations",
+      "name": "Bergbau-Operationen",
+      "description": "Ausbeutung mineralischer Ressourcen",
+      "profitability": 0.9,
+      "laborIntensity": 0.8,
+      "environmentalDamage": 0.8,
+      "products": ["Diamonds", "Copper", "Gold"]
+    },
+    {
+      "id": "trade_monopoly",
+      "name": "Handelsmonopol",
+      "description": "Exklusiver Handel mit Kolonie",
+      "profitability": 0.7,
+      "popularityEffect": -0.4,
+      "description2": "Kolonialwaren nur über Mutterland"
+    }
+  ],
+  "independenceMovements": [
+    {
+      "id": "early_resistance",
+      "name": "Früher Widerstand",
+      "year": 1890,
+      "strength": 0.3,
+      "type": "Armed Uprising",
+      "description": "Lokale Aufstände gegen koloniale Herrschaft"
+    },
+    {
+      "id": "maji_maji",
+      "name": "Maji-Maji-Aufstand",
+      "year": 1905,
+      "strength": 0.7,
+      "type": "Major Rebellion",
+      "colony": "german_east_africa",
+      "description": "Großer Aufstand in Deutsch-Ostafrika",
+      "casualties": 250000
+    },
+    {
+      "id": "nationalism",
+      "name": "Nationalismus",
+      "year": 1920,
+      "strength": 0.5,
+      "type": "Political Movement",
+      "description": "Bildung nationalistischer Parteien"
+    },
+    {
+      "id": "decolonization",
+      "name": "Entkolonialisierung",
+      "year": 1960,
+      "strength": 0.9,
+      "type": "Independence Movement",
+      "description": "Friedliche oder gewaltsame Unabhängigkeit",
+      "internationalSupport": 0.8
+    }
+  ],
+  "colonialPolicies": [
+    {
+      "id": "direct_rule",
+      "name": "Direkte Herrschaft",
+      "description": "Deutsche Beamte kontrollieren alles",
+      "cost": {
+        "gold": 20000
+      },
+      "effects": {
+        "control": 0.8,
+        "resistance": 0.6,
+        "efficiency": 0.5
+      }
+    },
+    {
+      "id": "indirect_rule",
+      "name": "Indirekte Herrschaft",
+      "description": "Einheimische Eliten als Mittelsmänner",
+      "cost": {
+        "gold": 10000
+      },
+      "effects": {
+        "control": 0.5,
+        "resistance": 0.3,
+        "efficiency": 0.7
+      }
+    },
+    {
+      "id": "civilizing_mission",
+      "name": "Zivilisierungsmission",
+      "description": "Kulturelle Assimilation und Bildung",
+      "cost": {
+        "gold": 30000
+      },
+      "effects": {
+        "education": 0.4,
+        "culturalResistance": 0.5,
+        "legitimacy": 0.3
+      }
+    },
+    {
+      "id": "economic_exploitation",
+      "name": "Wirtschaftliche Ausbeutung",
+      "description": "Maximale Ressourcengewinnung",
+      "cost": {
+        "gold": 5000
+      },
+      "effects": {
+        "revenue": 0.9,
+        "resistance": 0.8,
+        "sustainability": -0.6
+      }
+    }
+  ]
+}

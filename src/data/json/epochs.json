@@ -1,0 +1,85 @@
+{
+  "epochs": [
+    {
+      "id": "antique_early_medieval",
+      "name": "Antike/Frühmittelalter",
+      "description": "Die Zeit der Völkerwanderung und ersten Reichsbildungen. Stammeskulturen, Christianisierung und der Übergang von der Antike zum Mittelalter.",
+      "yearStart": 500,
+      "yearEnd": 1000,
+      "availableRoles": ["Bauer", "Handwerker", "Krieger", "Mönch", "Adeliger", "König"],
+      "historicalContext": "Merowinger, Karolinger, Heiliges Römisches Reich in Gründung"
+    },
+    {
+      "id": "high_medieval",
+      "name": "Hochmittelalter",
+      "description": "Blütezeit des Rittertums, Kreuzzüge, und die Entstehung der ersten Städte. Feudalismus auf seinem Höhepunkt.",
+      "yearStart": 1000,
+      "yearEnd": 1350,
+      "availableRoles": ["Bauer", "Handwerker", "Händler", "Ritter", "Mönch", "Bischof", "Herzog", "König"],
+      "historicalContext": "Kreuzzüge, Staufer, erste Universitäten, Hanse-Gründung"
+    },
+    {
+      "id": "late_medieval",
+      "name": "Spätmittelalter",
+      "description": "Zeit des Wandels: Pest, Hundertjähriger Krieg, Krise des Feudalismus. Aufstieg der Städte und des Handels.",
+      "yearStart": 1350,
+      "yearEnd": 1500,
+      "availableRoles": ["Bauer", "Handwerker", "Händler", "Gildenmeister", "Bürgermeister", "Gelehrter", "Herzog", "König"],
+      "historicalContext": "Schwarzer Tod, Goldene Bulle, Hanse-Blüte, Renaissance-Beginn"
+    },
+    {
+      "id": "early_modern",
+      "name": "Frühe Neuzeit",
+      "description": "Reformation, Dreißigjähriger Krieg, Absolutismus. Wissenschaftliche Revolution und Aufklärung beginnen.",
+      "yearStart": 1500,
+      "yearEnd": 1800,
+      "availableRoles": ["Bauer", "Handwerker", "Händler", "Bankier", "Minister", "Gelehrter", "Offizier", "Herzog", "König"],
+      "historicalContext": "Luther, Karl V., Dreißigjähriger Krieg, Friedrich der Große, Aufklärung"
+    },
+    {
+      "id": "industrialization",
+      "name": "Industrialisierung",
+      "description": "Dampfmaschine, Eisenbahn, Fabriken. Soziale Umwälzungen, Nationalstaatsbildung, Imperialismus.",
+      "yearStart": 1800,
+      "yearEnd": 1914,
+      "availableRoles": ["Arbeiter", "Handwerker", "Fabrikbesitzer", "Bankier", "Minister", "Gelehrter", "General", "Kaiser", "Kanzler"],
+      "historicalContext": "Napoleon, Wiener Kongress, Deutsche Einigung 1871, Bismarck, Kaiserreich"
+    },
+    {
+      "id": "world_wars",
+      "name": "Weltkriege",
+      "description": "Die katastrophale Ära der beiden Weltkriege. Totalitarismus, Holocaust, atomare Bedrohung.",
+      "yearStart": 1914,
+      "yearEnd": 1945,
+      "availableRoles": ["Arbeiter", "Soldat", "Offizier", "General", "Diplomat", "Minister", "Widerstandskämpfer"],
+      "historicalContext": "Erster Weltkrieg, Weimarer Republik, NS-Zeit, Zweiter Weltkrieg"
+    },
+    {
+      "id": "economic_miracle",
+      "name": "Wirtschaftswunder",
+      "description": "Wiederaufbau nach dem Krieg, Teilung Deutschlands, Kalter Krieg, beispielloses Wirtschaftswachstum.",
+      "yearStart": 1945,
+      "yearEnd": 1989,
+      "availableRoles": ["Arbeiter", "Unternehmer", "Bürgermeister", "Minister", "Kanzler", "Wissenschaftler"],
+      "historicalContext": "Besatzungszonen, BRD/DDR, Wirtschaftswunder, Adenauer, Brandt, Kohl"
+    },
+    {
+      "id": "modern",
+      "name": "Moderne",
+      "description": "Wiedervereinigung, Europäische Integration, Digitalisierung, Globalisierung.",
+      "yearStart": 1990,
+      "yearEnd": 2024,
+      "availableRoles": ["Arbeiter", "Unternehmer", "Programmierer", "Bürgermeister", "Minister", "Kanzler", "EU-Politiker"],
+      "historicalContext": "Wiedervereinigung, EU-Erweiterung, Euro, Internet-Revolution, Flüchtlingskrise"
+    },
+    {
+      "id": "future",
+      "name": "Zukunft",
+      "description": "Spekulative Zukunft: KI-Revolution, Klimawandel-Bekämpfung, Raumfahrt, technologische Singularität.",
+      "yearStart": 2025,
+      "yearEnd": 2100,
+      "availableRoles": ["KI-Entwickler", "Klimawissenschaftler", "Raumfahrt-Ingenieur", "Transhumanist", "Kanzler", "EU-Präsident"],
+      "historicalContext": "KI-Durchbruch, Mars-Kolonisierung, Klimaneutralität, Post-Arbeit-Gesellschaft"
+    }
+  ]
+}

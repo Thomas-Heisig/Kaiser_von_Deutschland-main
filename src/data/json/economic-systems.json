@@ -1,0 +1,157 @@
+{
+  "inflationSystems": [
+    {
+      "id": "early_medieval",
+      "name": "Frühmittelalterliche Währung",
+      "era": "Frühmittelalter",
+      "yearStart": 500,
+      "yearEnd": 1000,
+      "baseInflationRate": 0.5,
+      "volatility": 0.2,
+      "description": "Münzverschlechterung durch Herrscher",
+      "causes": ["Münzverschlechterung", "Silberknappheit", "Kriegskosten"],
+      "effects": {
+        "economicGrowth": -0.1,
+        "tradeVolume": -0.05,
+        "civilUnrest": 0.1
+      }
+    },
+    {
+      "id": "late_medieval",
+      "name": "Spätmittelalterliche Währung",
+      "era": "Spätmittelalter",
+      "yearStart": 1000,
+      "yearEnd": 1500,
+      "baseInflationRate": 1.0,
+      "volatility": 0.3,
+      "description": "Goldene Gulden und Silbertaler",
+      "causes": ["Edelmetallknappheit", "Handelswachstum", "Pestepidemien"],
+      "effects": {
+        "economicGrowth": -0.15,
+        "tradeVolume": -0.1,
+        "civilUnrest": 0.15
+      }
+    },
+    {
+      "id": "early_modern",
+      "name": "Frühneuzeitliche Währung",
+      "era": "Frühe Neuzeit",
+      "yearStart": 1500,
+      "yearEnd": 1800,
+      "baseInflationRate": 2.0,
+      "volatility": 0.5,
+      "description": "Preisrevolution durch amerikanisches Silber",
+      "causes": ["Silberinflux aus Amerika", "Bevölkerungswachstum", "Kriege"],
+      "effects": {
+        "economicGrowth": -0.2,
+        "tradeVolume": -0.15,
+        "civilUnrest": 0.2
+      }
+    },
+    {
+      "id": "industrial",
+      "name": "Industrielle Währung",
+      "era": "Industrialisierung",
+      "yearStart": 1800,
+      "yearEnd": 1900,
+      "baseInflationRate": 1.5,
+      "volatility": 0.4,
+      "description": "Goldstandard und Zentralbanken",
+      "causes": ["Industrieexpansion", "Kolonialhandel", "Technologiefortschritt"],
+      "effects": {
+        "economicGrowth": -0.1,
+        "tradeVolume": -0.05,
+        "civilUnrest": 0.1
+      }
+    },
+    {
+      "id": "modern",
+      "name": "Moderne Währung",
+      "era": "Moderne",
+      "yearStart": 1900,
+      "yearEnd": 1970,
+      "baseInflationRate": 3.0,
+      "volatility": 0.8,
+      "description": "Fiatgeld und Weltkriegsinflation",
+      "causes": ["Kriegsfinanzierung", "Gelddrucken", "Wirtschaftskrisen"],
+      "effects": {
+        "economicGrowth": -0.25,
+        "tradeVolume": -0.2,
+        "civilUnrest": 0.3
+      }
+    },
+    {
+      "id": "contemporary",
+      "name": "Zeitgenössische Währung",
+      "era": "Gegenwart",
+      "yearStart": 1970,
+      "yearEnd": 2050,
+      "baseInflationRate": 2.0,
+      "volatility": 0.3,
+      "description": "Zentralbank-gesteuerte Inflation",
+      "causes": ["Geldpolitik", "Globalisierung", "Energiepreise"],
+      "effects": {
+        "economicGrowth": -0.08,
+        "tradeVolume": -0.05,
+        "civilUnrest": 0.05
+      }
+    }
+  ],
+  "deflationEvents": [
+    {
+      "id": "black_death_deflation",
+      "name": "Schwarzer Tod Deflation",
+      "year": 1350,
+      "duration": 50,
+      "severity": 0.7,
+      "description": "Massive Bevölkerungsverluste führen zu Preisverfall",
+      "causes": ["Pestepidemi", "Arbeitskräftemangel", "Nachfragerückgang"],
+      "effects": {
+        "priceLevel": -0.3,
+        "wageLevel": 0.5,
+        "economicActivity": -0.4
+      }
+    },
+    {
+      "id": "great_depression",
+      "name": "Große Depression",
+      "year": 1929,
+      "duration": 10,
+      "severity": 0.9,
+      "description": "Weltwirtschaftskrise mit massiver Deflation",
+      "causes": ["Börsencrash", "Bankenkrise", "Nachfrageeinbruch"],
+      "effects": {
+        "priceLevel": -0.25,
+        "unemployment": 0.25,
+        "economicActivity": -0.3
+      }
+    }
+  ],
+  "monetaryPolicies": [
+    {
+      "id": "tight_money",
+      "name": "Strenge Geldpolitik",
+      "description": "Hohe Zinsen zur Inflationsbekämpfung",
+      "inflationEffect": -0.02,
+      "growthEffect": -0.01,
+      "popularityEffect": -5
+    },
+    {
+      "id": "loose_money",
+      "name": "Lockere Geldpolitik",
+      "description": "Niedrige Zinsen zur Wachstumsförderung",
+      "inflationEffect": 0.02,
+      "growthEffect": 0.015,
+      "popularityEffect": 5
+    },
+    {
+      "id": "quantitative_easing",
+      "name": "Quantitative Lockerung",
+      "description": "Geldmengenerweiterung durch Zentralbank",
+      "inflationEffect": 0.03,
+      "growthEffect": 0.02,
+      "popularityEffect": -2,
+      "yearAvailable": 2008
+    }
+  ]
+}

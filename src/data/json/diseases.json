@@ -1,0 +1,164 @@
+{
+  "diseases": [
+    {
+      "id": "black_death",
+      "name": "Schwarzer Tod (Pest)",
+      "category": "epidemic",
+      "firstAppearance": 1347,
+      "lastMajorOutbreak": 1720,
+      "mortality": 0.6,
+      "infectivity": 0.8,
+      "duration": 14,
+      "symptoms": ["Fieber", "Beulen", "innere Blutungen"],
+      "treatment": {
+        "medieval": 0.05,
+        "renaissance": 0.1,
+        "industrial": 0.3,
+        "modern": 0.95
+      },
+      "economicImpact": -0.4,
+      "socialImpact": -0.5,
+      "requiredTechnology": null
+    },
+    {
+      "id": "smallpox",
+      "name": "Pocken",
+      "category": "epidemic",
+      "firstAppearance": 165,
+      "lastMajorOutbreak": 1977,
+      "mortality": 0.3,
+      "infectivity": 0.7,
+      "duration": 21,
+      "symptoms": ["Hautausschlag", "Fieber", "Narbenbildung"],
+      "treatment": {
+        "medieval": 0.02,
+        "renaissance": 0.05,
+        "industrial": 0.15,
+        "modern": 0.99
+      },
+      "economicImpact": -0.25,
+      "socialImpact": -0.3,
+      "requiredTechnology": "vaccination"
+    },
+    {
+      "id": "cholera",
+      "name": "Cholera",
+      "category": "epidemic",
+      "firstAppearance": 1817,
+      "lastMajorOutbreak": 1923,
+      "mortality": 0.5,
+      "infectivity": 0.6,
+      "duration": 7,
+      "symptoms": ["Durchfall", "Dehydration", "Erbrechen"],
+      "treatment": {
+        "medieval": 0.01,
+        "renaissance": 0.03,
+        "industrial": 0.25,
+        "modern": 0.98
+      },
+      "economicImpact": -0.3,
+      "socialImpact": -0.35,
+      "requiredTechnology": "sanitation"
+    },
+    {
+      "id": "spanish_flu",
+      "name": "Spanische Grippe",
+      "category": "pandemic",
+      "firstAppearance": 1918,
+      "lastMajorOutbreak": 1920,
+      "mortality": 0.1,
+      "infectivity": 0.9,
+      "duration": 14,
+      "symptoms": ["Fieber", "Husten", "Atemnot"],
+      "treatment": {
+        "medieval": 0.0,
+        "renaissance": 0.0,
+        "industrial": 0.05,
+        "modern": 0.85
+      },
+      "economicImpact": -0.2,
+      "socialImpact": -0.25,
+      "requiredTechnology": null
+    },
+    {
+      "id": "tuberculosis",
+      "name": "Tuberkulose",
+      "category": "endemic",
+      "firstAppearance": -3000,
+      "lastMajorOutbreak": null,
+      "mortality": 0.15,
+      "infectivity": 0.3,
+      "duration": 180,
+      "symptoms": ["Husten", "Gewichtsverlust", "Fieber"],
+      "treatment": {
+        "medieval": 0.01,
+        "renaissance": 0.02,
+        "industrial": 0.1,
+        "modern": 0.95
+      },
+      "economicImpact": -0.15,
+      "socialImpact": -0.2,
+      "requiredTechnology": "antibiotics"
+    },
+    {
+      "id": "typhus",
+      "name": "Typhus",
+      "category": "epidemic",
+      "firstAppearance": 1489,
+      "lastMajorOutbreak": 1945,
+      "mortality": 0.2,
+      "infectivity": 0.5,
+      "duration": 21,
+      "symptoms": ["Fieber", "Hautausschlag", "Kopfschmerzen"],
+      "treatment": {
+        "medieval": 0.02,
+        "renaissance": 0.05,
+        "industrial": 0.2,
+        "modern": 0.98
+      },
+      "economicImpact": -0.2,
+      "socialImpact": -0.25,
+      "requiredTechnology": "antibiotics"
+    },
+    {
+      "id": "measles",
+      "name": "Masern",
+      "category": "endemic",
+      "firstAppearance": 900,
+      "lastMajorOutbreak": null,
+      "mortality": 0.05,
+      "infectivity": 0.9,
+      "duration": 14,
+      "symptoms": ["Hautausschlag", "Fieber", "Husten"],
+      "treatment": {
+        "medieval": 0.03,
+        "renaissance": 0.05,
+        "industrial": 0.15,
+        "modern": 0.99
+      },
+      "economicImpact": -0.1,
+      "socialImpact": -0.15,
+      "requiredTechnology": "vaccination"
+    },
+    {
+      "id": "leprosy",
+      "name": "Lepra",
+      "category": "endemic",
+      "firstAppearance": -300,
+      "lastMajorOutbreak": null,
+      "mortality": 0.1,
+      "infectivity": 0.2,
+      "duration": 3650,
+      "symptoms": ["Hautverletzungen", "Nervenschäden", "Deformationen"],
+      "treatment": {
+        "medieval": 0.0,
+        "renaissance": 0.0,
+        "industrial": 0.05,
+        "modern": 0.95
+      },
+      "economicImpact": -0.15,
+      "socialImpact": -0.4,
+      "requiredTechnology": "antibiotics"
+    }
+  ]
+}

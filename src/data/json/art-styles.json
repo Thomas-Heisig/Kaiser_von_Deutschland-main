@@ -1,0 +1,245 @@
+{
+  "artStyles": [
+    {
+      "id": "romanesque",
+      "name": "Romanik",
+      "period": {
+        "start": 1000,
+        "end": 1250
+      },
+      "characteristics": [
+        "Rundbogen",
+        "Massive Bauweise",
+        "Klosterarchitektur"
+      ],
+      "famousWorks": [
+        "Dom zu Speyer",
+        "Kloster Maria Laach",
+        "Bamberger Dom"
+      ],
+      "culturalImpact": 75,
+      "prestige": 60,
+      "cost": 5000,
+      "requiredTechnology": "masonry"
+    },
+    {
+      "id": "gothic",
+      "name": "Gotik",
+      "period": {
+        "start": 1250,
+        "end": 1500
+      },
+      "characteristics": [
+        "Spitzbogen",
+        "Strebepfeiler",
+        "Große Fenster"
+      ],
+      "famousWorks": [
+        "Kölner Dom",
+        "Ulmer Münster",
+        "Freiburger Münster"
+      ],
+      "culturalImpact": 90,
+      "prestige": 80,
+      "cost": 10000,
+      "requiredTechnology": "advanced_masonry"
+    },
+    {
+      "id": "renaissance",
+      "name": "Renaissance",
+      "period": {
+        "start": 1400,
+        "end": 1600
+      },
+      "characteristics": [
+        "Symmetrie",
+        "Perspektive",
+        "Humanismus"
+      ],
+      "famousWorks": [
+        "Heidelberger Schloss",
+        "Residenz Würzburg",
+        "Augsburger Rathaus"
+      ],
+      "culturalImpact": 95,
+      "prestige": 90,
+      "cost": 15000,
+      "requiredTechnology": "humanism"
+    },
+    {
+      "id": "baroque",
+      "name": "Barock",
+      "period": {
+        "start": 1600,
+        "end": 1750
+      },
+      "characteristics": [
+        "Prunk",
+        "Bewegung",
+        "Theatralik"
+      ],
+      "famousWorks": [
+        "Dresdner Zwinger",
+        "Schloss Sanssouci",
+        "Würzburger Residenz"
+      ],
+      "culturalImpact": 92,
+      "prestige": 95,
+      "cost": 20000,
+      "requiredTechnology": "classical_education"
+    },
+    {
+      "id": "classicism",
+      "name": "Klassizismus",
+      "period": {
+        "start": 1750,
+        "end": 1840
+      },
+      "characteristics": [
+        "Einfachheit",
+        "Antike Vorbilder",
+        "Säulen"
+      ],
+      "famousWorks": [
+        "Brandenburger Tor",
+        "Altes Museum Berlin",
+        "Walhalla"
+      ],
+      "culturalImpact": 85,
+      "prestige": 88,
+      "cost": 18000,
+      "requiredTechnology": "enlightenment"
+    },
+    {
+      "id": "romanticism",
+      "name": "Romantik",
+      "period": {
+        "start": 1800,
+        "end": 1850
+      },
+      "characteristics": [
+        "Emotion",
+        "Natur",
+        "Mittelalter-Sehnsucht"
+      ],
+      "famousWorks": [
+        "Schloss Neuschwanstein",
+        "Caspar David Friedrich Gemälde",
+        "Grimm Märchen"
+      ],
+      "culturalImpact": 88,
+      "prestige": 85,
+      "cost": 16000,
+      "requiredTechnology": "modern_philosophy"
+    },
+    {
+      "id": "impressionism",
+      "name": "Impressionismus",
+      "period": {
+        "start": 1860,
+        "end": 1900
+      },
+      "characteristics": [
+        "Lichteffekte",
+        "Augenblick",
+        "Farbe"
+      ],
+      "famousWorks": [
+        "Max Liebermann Gemälde",
+        "Lovis Corinth Werke"
+      ],
+      "culturalImpact": 82,
+      "prestige": 80,
+      "cost": 12000,
+      "requiredTechnology": "modern_art"
+    },
+    {
+      "id": "expressionism",
+      "name": "Expressionismus",
+      "period": {
+        "start": 1905,
+        "end": 1925
+      },
+      "characteristics": [
+        "Verzerrung",
+        "Emotion",
+        "Sozialkritik"
+      ],
+      "famousWorks": [
+        "Die Brücke",
+        "Der Blaue Reiter",
+        "Ernst Ludwig Kirchner"
+      ],
+      "culturalImpact": 90,
+      "prestige": 88,
+      "cost": 14000,
+      "requiredTechnology": "modern_art"
+    },
+    {
+      "id": "bauhaus",
+      "name": "Bauhaus",
+      "period": {
+        "start": 1919,
+        "end": 1933
+      },
+      "characteristics": [
+        "Funktionalismus",
+        "Geometrie",
+        "Moderne Materialien"
+      ],
+      "famousWorks": [
+        "Bauhaus Dessau",
+        "Weißenhofsiedlung",
+        "Walter Gropius Bauten"
+      ],
+      "culturalImpact": 95,
+      "prestige": 92,
+      "cost": 18000,
+      "requiredTechnology": "industrial_design"
+    },
+    {
+      "id": "modernism",
+      "name": "Moderne",
+      "period": {
+        "start": 1950,
+        "end": 2000
+      },
+      "characteristics": [
+        "Abstraktion",
+        "Minimalismus",
+        "Neue Technologien"
+      ],
+      "famousWorks": [
+        "Neue Nationalgalerie Berlin",
+        "Deutsche Oper Berlin",
+        "Olympiapark München"
+      ],
+      "culturalImpact": 85,
+      "prestige": 85,
+      "cost": 25000,
+      "requiredTechnology": "modern_architecture"
+    },
+    {
+      "id": "postmodernism",
+      "name": "Postmoderne",
+      "period": {
+        "start": 1980,
+        "end": null
+      },
+      "characteristics": [
+        "Ironie",
+        "Vielfalt",
+        "Dekonstruktion"
+      ],
+      "famousWorks": [
+        "Jüdisches Museum Berlin",
+        "BMW Welt München",
+        "Elbphilharmonie Hamburg"
+      ],
+      "culturalImpact": 88,
+      "prestige": 90,
+      "cost": 30000,
+      "requiredTechnology": "contemporary_architecture"
+    }
+  ]
+}

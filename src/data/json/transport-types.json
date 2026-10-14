@@ -1,0 +1,296 @@
+{
+  "transportTypes": [
+    {
+      "id": "walking",
+      "name": "Zu Fuß",
+      "era": "ancient",
+      "category": "pedestrian",
+      "speed": 5,
+      "capacity": 1,
+      "cost": 0,
+      "maintenance": 0,
+      "range": 30,
+      "requiredTechnology": null,
+      "availableFrom": -3000,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "plains": 1.0,
+        "hills": 0.7,
+        "mountains": 0.4,
+        "forest": 0.8,
+        "desert": 0.6
+      }
+    },
+    {
+      "id": "horse",
+      "name": "Pferd",
+      "era": "ancient",
+      "category": "animal",
+      "speed": 15,
+      "capacity": 2,
+      "cost": 100,
+      "maintenance": 10,
+      "range": 80,
+      "requiredTechnology": "animal_husbandry",
+      "availableFrom": -2000,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "plains": 1.2,
+        "hills": 0.8,
+        "mountains": 0.5,
+        "forest": 0.7,
+        "desert": 0.9
+      }
+    },
+    {
+      "id": "cart",
+      "name": "Fuhrwerk",
+      "era": "ancient",
+      "category": "animal_drawn",
+      "speed": 8,
+      "capacity": 10,
+      "cost": 200,
+      "maintenance": 15,
+      "range": 40,
+      "requiredTechnology": "wheel",
+      "availableFrom": -3000,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "plains": 1.0,
+        "hills": 0.6,
+        "mountains": 0.2,
+        "forest": 0.5,
+        "desert": 0.7
+      }
+    },
+    {
+      "id": "sailing_ship",
+      "name": "Segelschiff",
+      "era": "medieval",
+      "category": "naval",
+      "speed": 12,
+      "capacity": 50,
+      "cost": 5000,
+      "maintenance": 200,
+      "range": 500,
+      "requiredTechnology": "sailing",
+      "availableFrom": 800,
+      "availableUntil": 1850,
+      "terrainModifiers": {
+        "river": 0.8,
+        "sea": 1.0,
+        "ocean": 1.2
+      }
+    },
+    {
+      "id": "stagecoach",
+      "name": "Postkutsche",
+      "era": "renaissance",
+      "category": "animal_drawn",
+      "speed": 12,
+      "capacity": 8,
+      "cost": 800,
+      "maintenance": 50,
+      "range": 100,
+      "requiredTechnology": "road_network",
+      "availableFrom": 1650,
+      "availableUntil": 1900,
+      "terrainModifiers": {
+        "plains": 1.2,
+        "hills": 0.7,
+        "mountains": 0.3,
+        "road": 1.5
+      }
+    },
+    {
+      "id": "steam_locomotive",
+      "name": "Dampflokomotive",
+      "era": "industrial",
+      "category": "rail",
+      "speed": 60,
+      "capacity": 200,
+      "cost": 50000,
+      "maintenance": 1000,
+      "range": 500,
+      "requiredTechnology": "steam_engine",
+      "availableFrom": 1835,
+      "availableUntil": 1960,
+      "terrainModifiers": {
+        "railroad": 1.0
+      },
+      "infrastructureRequired": "railroad"
+    },
+    {
+      "id": "steamship",
+      "name": "Dampfschiff",
+      "era": "industrial",
+      "category": "naval",
+      "speed": 25,
+      "capacity": 500,
+      "cost": 80000,
+      "maintenance": 2000,
+      "range": 2000,
+      "requiredTechnology": "steam_engine",
+      "availableFrom": 1850,
+      "availableUntil": 1950,
+      "terrainModifiers": {
+        "river": 1.0,
+        "sea": 1.1,
+        "ocean": 1.0
+      }
+    },
+    {
+      "id": "bicycle",
+      "name": "Fahrrad",
+      "era": "industrial",
+      "category": "human_powered",
+      "speed": 18,
+      "capacity": 1,
+      "cost": 50,
+      "maintenance": 5,
+      "range": 80,
+      "requiredTechnology": "machinery",
+      "availableFrom": 1880,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "plains": 1.2,
+        "hills": 0.6,
+        "mountains": 0.3,
+        "road": 1.3
+      }
+    },
+    {
+      "id": "tram",
+      "name": "Straßenbahn",
+      "era": "industrial",
+      "category": "rail",
+      "speed": 25,
+      "capacity": 100,
+      "cost": 30000,
+      "maintenance": 500,
+      "range": 50,
+      "requiredTechnology": "electricity",
+      "availableFrom": 1880,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "urban": 1.0
+      },
+      "infrastructureRequired": "tram_lines"
+    },
+    {
+      "id": "automobile",
+      "name": "Automobil",
+      "era": "modern",
+      "category": "motor_vehicle",
+      "speed": 80,
+      "capacity": 5,
+      "cost": 5000,
+      "maintenance": 200,
+      "range": 400,
+      "requiredTechnology": "combustion_engine",
+      "availableFrom": 1900,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "plains": 1.0,
+        "hills": 0.9,
+        "road": 1.5,
+        "highway": 2.0
+      }
+    },
+    {
+      "id": "airplane",
+      "name": "Flugzeug",
+      "era": "modern",
+      "category": "aircraft",
+      "speed": 800,
+      "capacity": 200,
+      "cost": 500000,
+      "maintenance": 10000,
+      "range": 5000,
+      "requiredTechnology": "aviation",
+      "availableFrom": 1920,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "all": 1.0
+      },
+      "infrastructureRequired": "airport"
+    },
+    {
+      "id": "subway",
+      "name": "U-Bahn",
+      "era": "modern",
+      "category": "rail",
+      "speed": 40,
+      "capacity": 1000,
+      "cost": 200000,
+      "maintenance": 5000,
+      "range": 30,
+      "requiredTechnology": "electricity",
+      "availableFrom": 1900,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "urban": 1.0
+      },
+      "infrastructureRequired": "subway_system"
+    },
+    {
+      "id": "truck",
+      "name": "Lastwagen",
+      "era": "modern",
+      "category": "motor_vehicle",
+      "speed": 70,
+      "capacity": 50,
+      "cost": 15000,
+      "maintenance": 500,
+      "range": 600,
+      "requiredTechnology": "combustion_engine",
+      "availableFrom": 1920,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "plains": 1.0,
+        "hills": 0.8,
+        "road": 1.3,
+        "highway": 1.8
+      }
+    },
+    {
+      "id": "high_speed_train",
+      "name": "Hochgeschwindigkeitszug",
+      "era": "contemporary",
+      "category": "rail",
+      "speed": 300,
+      "capacity": 500,
+      "cost": 1000000,
+      "maintenance": 20000,
+      "range": 1000,
+      "requiredTechnology": "advanced_engineering",
+      "availableFrom": 1990,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "railroad": 1.0
+      },
+      "infrastructureRequired": "high_speed_rail"
+    },
+    {
+      "id": "electric_car",
+      "name": "Elektroauto",
+      "era": "contemporary",
+      "category": "motor_vehicle",
+      "speed": 100,
+      "capacity": 5,
+      "cost": 8000,
+      "maintenance": 100,
+      "range": 400,
+      "requiredTechnology": "battery_technology",
+      "availableFrom": 2010,
+      "availableUntil": null,
+      "terrainModifiers": {
+        "plains": 1.0,
+        "hills": 0.9,
+        "road": 1.5,
+        "highway": 2.0
+      },
+      "environmentalBenefit": 0.8
+    }
+  ]
+}

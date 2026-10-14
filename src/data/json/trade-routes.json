@@ -1,0 +1,219 @@
+{
+  "tradeRoutes": [
+    {
+      "id": "amber_road",
+      "name": "Bernsteinstraße",
+      "period": {
+        "start": -1600,
+        "end": 400
+      },
+      "origin": "Baltikum",
+      "destination": "Mittelmeer",
+      "mainGoods": ["amber", "fur", "slaves"],
+      "length": 2800,
+      "profitability": 0.7,
+      "danger": 0.4,
+      "culturalExchange": 0.6,
+      "requiredTechnology": null,
+      "effects": {
+        "trade_income": 500,
+        "prestige": 100,
+        "cultural_influence": 0.3
+      }
+    },
+    {
+      "id": "salt_road",
+      "name": "Salzstraße",
+      "period": {
+        "start": 1200,
+        "end": 1600
+      },
+      "origin": "Lüneburg",
+      "destination": "Lübeck",
+      "mainGoods": ["salt", "fish", "grain"],
+      "length": 100,
+      "profitability": 0.8,
+      "danger": 0.2,
+      "culturalExchange": 0.5,
+      "requiredTechnology": null,
+      "effects": {
+        "trade_income": 800,
+        "prestige": 150,
+        "regional_development": 0.4
+      }
+    },
+    {
+      "id": "hanseatic_routes",
+      "name": "Hanserouten",
+      "period": {
+        "start": 1200,
+        "end": 1669
+      },
+      "origin": "Lübeck",
+      "destination": "Novgorod",
+      "mainGoods": ["cloth", "timber", "furs", "grain"],
+      "length": 1500,
+      "profitability": 0.9,
+      "danger": 0.3,
+      "culturalExchange": 0.8,
+      "requiredTechnology": "sailing",
+      "effects": {
+        "trade_income": 1500,
+        "prestige": 300,
+        "cultural_influence": 0.5,
+        "diplomatic_relations": 0.3
+      }
+    },
+    {
+      "id": "rhine_trade",
+      "name": "Rheinhandel",
+      "period": {
+        "start": 800,
+        "end": null
+      },
+      "origin": "Basel",
+      "destination": "Rotterdam",
+      "mainGoods": ["wine", "grain", "iron", "coal"],
+      "length": 1200,
+      "profitability": 0.85,
+      "danger": 0.15,
+      "culturalExchange": 0.7,
+      "requiredTechnology": null,
+      "effects": {
+        "trade_income": 1200,
+        "prestige": 200,
+        "regional_integration": 0.6
+      }
+    },
+    {
+      "id": "silk_road_german",
+      "name": "Seidenstraße (Deutsche Verbindung)",
+      "period": {
+        "start": 1300,
+        "end": 1700
+      },
+      "origin": "Nürnberg",
+      "destination": "Venedig/Konstantinopel",
+      "mainGoods": ["silk", "spices", "luxury_goods"],
+      "length": 2000,
+      "profitability": 0.95,
+      "danger": 0.6,
+      "culturalExchange": 0.9,
+      "requiredTechnology": null,
+      "effects": {
+        "trade_income": 2000,
+        "prestige": 500,
+        "cultural_influence": 0.7,
+        "technology_transfer": 0.3
+      }
+    },
+    {
+      "id": "baltic_trade",
+      "name": "Ostseehandel",
+      "period": {
+        "start": 1000,
+        "end": null
+      },
+      "origin": "Danzig",
+      "destination": "Stockholm",
+      "mainGoods": ["timber", "pitch", "grain", "fish"],
+      "length": 800,
+      "profitability": 0.75,
+      "danger": 0.3,
+      "culturalExchange": 0.6,
+      "requiredTechnology": "sailing",
+      "effects": {
+        "trade_income": 1000,
+        "prestige": 180,
+        "naval_power": 0.2
+      }
+    },
+    {
+      "id": "colonial_trade",
+      "name": "Kolonialhandel",
+      "period": {
+        "start": 1880,
+        "end": 1918
+      },
+      "origin": "Hamburg",
+      "destination": "Afrika/Pazifik",
+      "mainGoods": ["rubber", "coffee", "tropical_goods"],
+      "length": 8000,
+      "profitability": 0.9,
+      "danger": 0.5,
+      "culturalExchange": 0.4,
+      "requiredTechnology": "steamship",
+      "effects": {
+        "trade_income": 3000,
+        "prestige": 400,
+        "colonial_influence": 0.8
+      }
+    },
+    {
+      "id": "zollverein_trade",
+      "name": "Deutscher Zollverein",
+      "period": {
+        "start": 1834,
+        "end": 1871
+      },
+      "origin": "Alle deutschen Staaten",
+      "destination": "Alle deutschen Staaten",
+      "mainGoods": ["industrial_goods", "coal", "iron", "textiles"],
+      "length": 500,
+      "profitability": 0.85,
+      "danger": 0.1,
+      "culturalExchange": 0.9,
+      "requiredTechnology": "railroad",
+      "effects": {
+        "trade_income": 2500,
+        "prestige": 600,
+        "national_unity": 0.7,
+        "industrialization": 0.5
+      }
+    },
+    {
+      "id": "autobahn_trade",
+      "name": "Autobahnhandel",
+      "period": {
+        "start": 1935,
+        "end": null
+      },
+      "origin": "Gesamtes Deutschland",
+      "destination": "Gesamtes Deutschland",
+      "mainGoods": ["automobiles", "machinery", "chemicals"],
+      "length": 13000,
+      "profitability": 0.8,
+      "danger": 0.05,
+      "culturalExchange": 0.7,
+      "requiredTechnology": "automobile",
+      "effects": {
+        "trade_income": 5000,
+        "prestige": 500,
+        "mobility": 0.8,
+        "economic_integration": 0.9
+      }
+    },
+    {
+      "id": "eu_single_market",
+      "name": "EU-Binnenmarkt",
+      "period": {
+        "start": 1993,
+        "end": null
+      },
+      "origin": "Deutschland",
+      "destination": "EU-Staaten",
+      "mainGoods": ["all_goods", "services"],
+      "length": 5000,
+      "profitability": 0.95,
+      "danger": 0.01,
+      "culturalExchange": 0.95,
+      "requiredTechnology": "european_integration",
+      "effects": {
+        "trade_income": 10000,
+        "prestige": 800,
+        "economic_growth": 0.6,
+        "political_integration": 0.7
+      }
+    }
+  ]
+}

@@ -1,0 +1,388 @@
+{
+  "regions": [
+    {
+      "id": "preussen",
+      "name": "Preußen",
+      "description": "Militärische Großmacht mit legendärer Disziplin",
+      "icon": "⚔️",
+      "bonuses": {
+        "militaryStrength": 30,
+        "discipline": 40,
+        "trainingEfficiency": 25,
+        "martialSkill": 20
+      },
+      "penalties": {
+        "culturalInfluence": -10,
+        "happiness": -5
+      },
+      "uniqueUnits": [
+        "prussian_grenadier",
+        "hussar",
+        "general_staff"
+      ],
+      "uniqueBuildings": [
+        "military_academy",
+        "drill_ground"
+      ],
+      "historicalPeriod": {
+        "start": 1525,
+        "peak": 1871
+      },
+      "traits": [
+        "militaristic",
+        "disciplined",
+        "efficient"
+      ]
+    },
+    {
+      "id": "bayern",
+      "name": "Bayern",
+      "description": "Kulturzentrum mit reichen Traditionen und Braukunst",
+      "icon": "🍺",
+      "bonuses": {
+        "culturalInfluence": 35,
+        "happiness": 20,
+        "foodProduction": 15,
+        "prestige": 25
+      },
+      "penalties": {
+        "militaryStrength": -5
+      },
+      "uniqueUnits": [
+        "bavarian_infantry"
+      ],
+      "uniqueBuildings": [
+        "brewery",
+        "beer_hall",
+        "alpine_resort"
+      ],
+      "specialResources": [
+        "beer",
+        "salt"
+      ],
+      "historicalPeriod": {
+        "start": 555,
+        "continuous": true
+      },
+      "traits": [
+        "cultural",
+        "traditional",
+        "festive"
+      ]
+    },
+    {
+      "id": "hanse",
+      "name": "Hansestädte",
+      "description": "Mächtiger Handelsbund der norddeutschen Städte",
+      "icon": "⚓",
+      "bonuses": {
+        "tradePower": 50,
+        "navalStrength": 35,
+        "shipbuildingSpeed": 40,
+        "merchantIncome": 30
+      },
+      "penalties": {
+        "landMilitary": -15
+      },
+      "uniqueUnits": [
+        "hanseatic_cog",
+        "merchant_fleet"
+      ],
+      "uniqueBuildings": [
+        "hanseatic_kontor",
+        "shipyard",
+        "warehouse_district"
+      ],
+      "specialResources": [
+        "amber",
+        "fish",
+        "timber"
+      ],
+      "historicalPeriod": {
+        "start": 1159,
+        "end": 1669
+      },
+      "traits": [
+        "mercantile",
+        "maritime",
+        "independent"
+      ]
+    },
+    {
+      "id": "rheinland",
+      "name": "Rheinland",
+      "description": "Industrielles Herzland Deutschlands mit reichen Bodenschätzen",
+      "icon": "⚙️",
+      "bonuses": {
+        "industrialProduction": 40,
+        "miningEfficiency": 35,
+        "coalProduction": 50,
+        "steelProduction": 45
+      },
+      "penalties": {
+        "environmentalQuality": -20
+      },
+      "uniqueUnits": [
+        "industrial_worker_militia"
+      ],
+      "uniqueBuildings": [
+        "coal_mine",
+        "steel_mill",
+        "industrial_complex",
+        "railroad_hub"
+      ],
+      "specialResources": [
+        "coal",
+        "iron",
+        "steel"
+      ],
+      "historicalPeriod": {
+        "start": 1815,
+        "peak": 1900
+      },
+      "traits": [
+        "industrial",
+        "productive",
+        "urbanized"
+      ]
+    },
+    {
+      "id": "sachsen",
+      "name": "Sachsen",
+      "description": "Zentrum der Wissenschaft und des Bergbaus",
+      "icon": "⛏️",
+      "bonuses": {
+        "researchSpeed": 30,
+        "miningEfficiency": 40,
+        "technologicalLevel": 25,
+        "silverProduction": 50
+      },
+      "penalties": {},
+      "uniqueUnits": [
+        "saxon_miners"
+      ],
+      "uniqueBuildings": [
+        "bergakademie",
+        "porcelain_manufactory",
+        "silver_mine"
+      ],
+      "specialResources": [
+        "silver",
+        "porcelain",
+        "minerals"
+      ],
+      "historicalPeriod": {
+        "start": 1423,
+        "continuous": true
+      },
+      "traits": [
+        "scientific",
+        "industrious",
+        "cultured"
+      ]
+    },
+    {
+      "id": "oesterreich",
+      "name": "Österreich",
+      "description": "Kaiserreich mit diplomatischem Geschick und musikalischer Tradition",
+      "icon": "🎻",
+      "bonuses": {
+        "diplomaticPower": 40,
+        "culturalInfluence": 35,
+        "musicPrestige": 50,
+        "imperialAuthority": 30
+      },
+      "penalties": {
+        "ethnicTension": 25
+      },
+      "uniqueUnits": [
+        "austrian_dragoon",
+        "imperial_guard"
+      ],
+      "uniqueBuildings": [
+        "imperial_palace",
+        "opera_house",
+        "coffee_house"
+      ],
+      "specialResources": [
+        "music",
+        "coffee",
+        "wine"
+      ],
+      "historicalPeriod": {
+        "start": 976,
+        "continuous": true
+      },
+      "traits": [
+        "diplomatic",
+        "imperial",
+        "multicultural"
+      ]
+    },
+    {
+      "id": "schwaben",
+      "name": "Schwaben",
+      "description": "Land der Erfinder und Tüftler",
+      "icon": "🔧",
+      "bonuses": {
+        "innovationRate": 30,
+        "engineeringBonus": 35,
+        "manufacturingEfficiency": 25,
+        "precision": 40
+      },
+      "penalties": {},
+      "uniqueUnits": [],
+      "uniqueBuildings": [
+        "engineering_workshop",
+        "precision_manufactory"
+      ],
+      "specialResources": [
+        "machinery",
+        "tools"
+      ],
+      "historicalPeriod": {
+        "start": 1079,
+        "continuous": true
+      },
+      "traits": [
+        "innovative",
+        "precise",
+        "industrious"
+      ]
+    },
+    {
+      "id": "pfalz",
+      "name": "Pfalz",
+      "description": "Weinregion mit mildem Klima und Lebensfreude",
+      "icon": "🍷",
+      "bonuses": {
+        "wineProduction": 50,
+        "happiness": 25,
+        "tourism": 30,
+        "agricultureBonus": 20
+      },
+      "penalties": {},
+      "uniqueUnits": [],
+      "uniqueBuildings": [
+        "vineyard",
+        "wine_cellar"
+      ],
+      "specialResources": [
+        "wine",
+        "grapes"
+      ],
+      "historicalPeriod": {
+        "start": 1085,
+        "continuous": true
+      },
+      "traits": [
+        "agricultural",
+        "hospitable",
+        "scenic"
+      ]
+    },
+    {
+      "id": "brandenburg",
+      "name": "Brandenburg",
+      "description": "Kernland Preußens mit strategischer Bedeutung",
+      "icon": "🦅",
+      "bonuses": {
+        "militaryOrganization": 25,
+        "administrativeEfficiency": 30,
+        "centralLocation": 20
+      },
+      "penalties": {
+        "naturalResources": -15
+      },
+      "uniqueUnits": [
+        "brandenburg_marksmen"
+      ],
+      "uniqueBuildings": [
+        "administrative_center"
+      ],
+      "specialResources": [],
+      "historicalPeriod": {
+        "start": 1157,
+        "continuous": true
+      },
+      "traits": [
+        "administrative",
+        "strategic",
+        "central"
+      ]
+    },
+    {
+      "id": "westfalen",
+      "name": "Westfalen",
+      "description": "Industrieregion mit starker Handwerkstradition",
+      "icon": "🔨",
+      "bonuses": {
+        "craftsmanship": 30,
+        "industrialGrowth": 25,
+        "workerProductivity": 20
+      },
+      "penalties": {},
+      "uniqueUnits": [],
+      "uniqueBuildings": [
+        "craftsman_guild",
+        "industrial_forge"
+      ],
+      "specialResources": [
+        "iron_goods",
+        "crafts"
+      ],
+      "historicalPeriod": {
+        "start": 1180,
+        "continuous": true
+      },
+      "traits": [
+        "industrial",
+        "hardworking",
+        "traditional"
+      ]
+    }
+  ],
+  "regionalMechanics": {
+    "description": "Regionale Unterschiede beeinflussen Spielweise und Strategie",
+    "mechanics": [
+      {
+        "id": "regional_identity",
+        "name": "Regionale Identität",
+        "description": "Jede Region hat eine einzigartige kulturelle und wirtschaftliche Identität"
+      },
+      {
+        "id": "resource_specialization",
+        "name": "Ressourcenspezialisierung",
+        "description": "Regionen produzieren spezielle Ressourcen effizienter"
+      },
+      {
+        "id": "historical_events",
+        "name": "Regionalspezifische Ereignisse",
+        "description": "Bestimmte historische Ereignisse betreffen nur spezifische Regionen"
+      },
+      {
+        "id": "trade_networks",
+        "name": "Handelsnetzwerke",
+        "description": "Regionen können untereinander Handel treiben für gegenseitigen Nutzen"
+      },
+      {
+        "id": "cultural_exchange",
+        "name": "Kulturaustausch",
+        "description": "Benachbarte Regionen beeinflussen sich gegenseitig kulturell"
+      }
+    ]
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2024-12-26",
+    "totalRegions": 10,
+    "categories": [
+      "militaristic",
+      "cultural",
+      "mercantile",
+      "industrial",
+      "scientific",
+      "diplomatic"
+    ]
+  }
+}

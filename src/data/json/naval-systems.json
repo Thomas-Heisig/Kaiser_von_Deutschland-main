@@ -1,0 +1,337 @@
+{
+  "navalTechnologies": [
+    {
+      "id": "rowing",
+      "name": "Rudertechnik",
+      "era": "Antike",
+      "yearAvailable": 0,
+      "cost": {
+        "gold": 100
+      },
+      "description": "Grundlegende Ruderboote",
+      "effects": {
+        "navalSpeed": 0.1,
+        "navalRange": 0.1
+      }
+    },
+    {
+      "id": "sailing",
+      "name": "Segeltechnik",
+      "era": "Frühmittelalter",
+      "yearAvailable": 500,
+      "cost": {
+        "gold": 500
+      },
+      "description": "Nutzung von Wind für Antrieb",
+      "prerequisite": "rowing",
+      "effects": {
+        "navalSpeed": 0.3,
+        "navalRange": 0.4
+      }
+    },
+    {
+      "id": "navigation",
+      "name": "Navigation",
+      "era": "Spätmittelalter",
+      "yearAvailable": 1200,
+      "cost": {
+        "gold": 1000
+      },
+      "description": "Kompass und Seekarten",
+      "prerequisite": "sailing",
+      "effects": {
+        "navalRange": 0.5,
+        "explorationSpeed": 0.3
+      }
+    },
+    {
+      "id": "shipbuilding",
+      "name": "Schiffsbau",
+      "era": "Frühe Neuzeit",
+      "yearAvailable": 1500,
+      "cost": {
+        "gold": 2000,
+        "wood": 500
+      },
+      "description": "Verbesserte Schiffskonstruktion",
+      "prerequisite": "navigation",
+      "effects": {
+        "navalStrength": 0.3,
+        "cargoCapacity": 0.4
+      }
+    },
+    {
+      "id": "steam_power",
+      "name": "Dampfkraft",
+      "era": "Industrialisierung",
+      "yearAvailable": 1820,
+      "cost": {
+        "gold": 5000,
+        "iron": 1000,
+        "coal": 500
+      },
+      "description": "Dampfbetriebene Schiffe",
+      "prerequisite": "shipbuilding",
+      "effects": {
+        "navalSpeed": 0.6,
+        "independence": 0.8
+      }
+    },
+    {
+      "id": "ironclads",
+      "name": "Panzerschiffe",
+      "era": "Industrialisierung",
+      "yearAvailable": 1860,
+      "cost": {
+        "gold": 10000,
+        "iron": 3000,
+        "coal": 1000
+      },
+      "description": "Gepanzerte Kriegsschiffe",
+      "prerequisite": "steam_power",
+      "effects": {
+        "navalStrength": 0.8,
+        "defense": 0.7
+      }
+    },
+    {
+      "id": "dreadnoughts",
+      "name": "Schlachtschiffe",
+      "era": "Moderne",
+      "yearAvailable": 1906,
+      "cost": {
+        "gold": 30000,
+        "iron": 8000,
+        "coal": 3000
+      },
+      "description": "Moderne Großkampfschiffe",
+      "prerequisite": "ironclads",
+      "effects": {
+        "navalStrength": 1.5,
+        "range": 0.9
+      }
+    },
+    {
+      "id": "submarines",
+      "name": "U-Boote",
+      "era": "Moderne",
+      "yearAvailable": 1900,
+      "cost": {
+        "gold": 15000,
+        "iron": 5000,
+        "coal": 2000
+      },
+      "description": "Unterwasser-Kriegsführung",
+      "prerequisite": "steam_power",
+      "effects": {
+        "stealth": 0.9,
+        "commerce_raiding": 0.8
+      }
+    },
+    {
+      "id": "aircraft_carriers",
+      "name": "Flugzeugträger",
+      "era": "Moderne",
+      "yearAvailable": 1920,
+      "cost": {
+        "gold": 80000,
+        "iron": 15000,
+        "coal": 5000
+      },
+      "description": "Mobile Luftwaffenbasis",
+      "prerequisite": "dreadnoughts",
+      "effects": {
+        "airPower": 1.0,
+        "projection": 1.2
+      }
+    },
+    {
+      "id": "nuclear_propulsion",
+      "name": "Nuklearantrieb",
+      "era": "Gegenwart",
+      "yearAvailable": 1955,
+      "cost": {
+        "gold": 200000,
+        "iron": 20000
+      },
+      "description": "Unbegrenzte Reichweite",
+      "prerequisite": "submarines",
+      "effects": {
+        "navalRange": 2.0,
+        "independence": 2.0
+      }
+    }
+  ],
+  "navalUnits": [
+    {
+      "id": "galley",
+      "name": "Galeere",
+      "era": "Antike",
+      "yearAvailable": 0,
+      "cost": {
+        "gold": 500,
+        "wood": 200
+      },
+      "maintenanceCost": 20,
+      "crewSize": 100,
+      "speed": 15,
+      "strength": 10,
+      "range": 200,
+      "description": "Rudergetriebenes Kriegsschiff"
+    },
+    {
+      "id": "cog",
+      "name": "Kogge",
+      "era": "Mittelalter",
+      "yearAvailable": 1000,
+      "cost": {
+        "gold": 1000,
+        "wood": 400
+      },
+      "maintenanceCost": 40,
+      "crewSize": 50,
+      "speed": 20,
+      "strength": 20,
+      "range": 500,
+      "cargoCapacity": 200,
+      "description": "Handelsschiff der Hanse"
+    },
+    {
+      "id": "carrack",
+      "name": "Karacke",
+      "era": "Frühe Neuzeit",
+      "yearAvailable": 1400,
+      "cost": {
+        "gold": 3000,
+        "wood": 800
+      },
+      "maintenanceCost": 80,
+      "crewSize": 200,
+      "speed": 25,
+      "strength": 40,
+      "range": 2000,
+      "cargoCapacity": 500,
+      "description": "Ozeanfähiges Segelschiff"
+    },
+    {
+      "id": "ship_of_line",
+      "name": "Linienschiff",
+      "era": "Frühe Neuzeit",
+      "yearAvailable": 1650,
+      "cost": {
+        "gold": 10000,
+        "wood": 2000,
+        "iron": 500
+      },
+      "maintenanceCost": 200,
+      "crewSize": 800,
+      "speed": 20,
+      "strength": 100,
+      "range": 3000,
+      "cannons": 74,
+      "description": "Schweres Kriegsschiff mit Kanonen"
+    },
+    {
+      "id": "ironclad",
+      "name": "Panzerschiff",
+      "era": "Industrialisierung",
+      "yearAvailable": 1860,
+      "cost": {
+        "gold": 25000,
+        "iron": 5000,
+        "coal": 2000
+      },
+      "maintenanceCost": 500,
+      "crewSize": 400,
+      "speed": 30,
+      "strength": 200,
+      "range": 5000,
+      "description": "Gepanzertes Dampfschiff"
+    },
+    {
+      "id": "dreadnought",
+      "name": "Schlachtschiff",
+      "era": "Moderne",
+      "yearAvailable": 1906,
+      "cost": {
+        "gold": 80000,
+        "iron": 15000,
+        "coal": 5000
+      },
+      "maintenanceCost": 1500,
+      "crewSize": 1200,
+      "speed": 40,
+      "strength": 500,
+      "range": 8000,
+      "mainGuns": 10,
+      "description": "Modernes Schlachtschiff"
+    },
+    {
+      "id": "submarine",
+      "name": "U-Boot",
+      "era": "Moderne",
+      "yearAvailable": 1900,
+      "cost": {
+        "gold": 30000,
+        "iron": 8000,
+        "coal": 3000
+      },
+      "maintenanceCost": 600,
+      "crewSize": 50,
+      "speed": 25,
+      "strength": 100,
+      "range": 10000,
+      "stealth": 0.9,
+      "torpedoes": 20,
+      "description": "Unterwasser-Kriegsschiff"
+    },
+    {
+      "id": "carrier",
+      "name": "Flugzeugträger",
+      "era": "Moderne",
+      "yearAvailable": 1920,
+      "cost": {
+        "gold": 200000,
+        "iron": 30000,
+        "coal": 10000
+      },
+      "maintenanceCost": 3000,
+      "crewSize": 3000,
+      "speed": 35,
+      "strength": 300,
+      "range": 15000,
+      "aircraft": 80,
+      "description": "Mobile Luftwaffenbasis"
+    }
+  ],
+  "navalCombatTactics": [
+    {
+      "id": "ramming",
+      "name": "Rammen",
+      "description": "Gegnerisches Schiff rammen",
+      "effectiveness": 0.6,
+      "era": "Antike"
+    },
+    {
+      "id": "boarding",
+      "name": "Entern",
+      "description": "Schiff kapern durch Nahkampf",
+      "effectiveness": 0.7,
+      "era": "Mittelalter"
+    },
+    {
+      "id": "broadside",
+      "name": "Breitseite",
+      "description": "Kanonenfeuer aus allen Geschützen",
+      "effectiveness": 0.8,
+      "era": "Frühe Neuzeit"
+    },
+    {
+      "id": "torpedo_attack",
+      "name": "Torpedoangriff",
+      "description": "Unterwasserangriff mit Torpedos",
+      "effectiveness": 0.9,
+      "era": "Moderne"
+    }
+  ]
+}

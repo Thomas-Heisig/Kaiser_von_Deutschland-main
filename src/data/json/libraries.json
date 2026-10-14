@@ -1,0 +1,188 @@
+{
+  "libraries": [
+    {
+      "id": "monastery_library",
+      "name": "Klosterbibliothek",
+      "era": "Frühmittelalter",
+      "yearAvailable": 500,
+      "capacity": 500,
+      "buildCost": {
+        "gold": 1000,
+        "wood": 200,
+        "stone": 100
+      },
+      "maintenanceCost": 50,
+      "researchBonus": 0.05,
+      "culturalValue": 10,
+      "description": "Bewahrung antiken Wissens durch Mönche",
+      "specializations": ["Religiöse Texte", "Medizin", "Astronomie"]
+    },
+    {
+      "id": "university_library",
+      "name": "Universitätsbibliothek",
+      "era": "Spätmittelalter",
+      "yearAvailable": 1200,
+      "capacity": 5000,
+      "buildCost": {
+        "gold": 5000,
+        "wood": 500,
+        "stone": 300
+      },
+      "maintenanceCost": 200,
+      "researchBonus": 0.15,
+      "culturalValue": 30,
+      "description": "Zentrum der mittelalterlichen Gelehrsamkeit",
+      "specializations": ["Theologie", "Philosophie", "Recht", "Medizin"]
+    },
+    {
+      "id": "royal_library",
+      "name": "Königliche Bibliothek",
+      "era": "Frühe Neuzeit",
+      "yearAvailable": 1500,
+      "capacity": 20000,
+      "buildCost": {
+        "gold": 15000,
+        "wood": 1000,
+        "stone": 800
+      },
+      "maintenanceCost": 500,
+      "researchBonus": 0.25,
+      "culturalValue": 60,
+      "description": "Sammlung königlicher Schätze und Wissen",
+      "specializations": ["Geschichte", "Geographie", "Naturwissenschaften", "Kunst"]
+    },
+    {
+      "id": "national_library",
+      "name": "Nationalbibliothek",
+      "era": "Industrialisierung",
+      "yearAvailable": 1800,
+      "capacity": 100000,
+      "buildCost": {
+        "gold": 50000,
+        "wood": 2000,
+        "stone": 3000,
+        "iron": 1000
+      },
+      "maintenanceCost": 2000,
+      "researchBonus": 0.35,
+      "culturalValue": 100,
+      "description": "Zentrale Sammlung des nationalen Kulturerbes",
+      "specializations": ["Alle Wissenschaften", "Archive", "Kartographie", "Musik"]
+    },
+    {
+      "id": "digital_library",
+      "name": "Digitale Bibliothek",
+      "era": "Moderne",
+      "yearAvailable": 1990,
+      "capacity": 10000000,
+      "buildCost": {
+        "gold": 100000,
+        "iron": 500,
+        "coal": 200
+      },
+      "maintenanceCost": 5000,
+      "researchBonus": 0.50,
+      "culturalValue": 80,
+      "description": "Unbegrenzter digitaler Zugang zu Wissen",
+      "specializations": ["Open Access", "Datenbanken", "E-Books", "Multimedia"],
+      "accessModel": "open_access"
+    },
+    {
+      "id": "paywall_library",
+      "name": "Bezahlbibliothek",
+      "era": "Moderne",
+      "yearAvailable": 2000,
+      "capacity": 5000000,
+      "buildCost": {
+        "gold": 80000,
+        "iron": 300
+      },
+      "maintenanceCost": 3000,
+      "researchBonus": 0.40,
+      "culturalValue": 40,
+      "income": 2000,
+      "description": "Kommerzielle Wissensdatenbank mit Zugangsgebühren",
+      "specializations": ["Wissenschaftliche Journals", "Fachbücher", "Forschungsdaten"],
+      "accessModel": "paywall"
+    }
+  ],
+  "books": [
+    {
+      "id": "bible",
+      "name": "Die Bibel",
+      "author": "Verschiedene",
+      "year": 400,
+      "category": "Religion",
+      "culturalValue": 50,
+      "researchValue": 10
+    },
+    {
+      "id": "summa_theologica",
+      "name": "Summa Theologica",
+      "author": "Thomas von Aquin",
+      "year": 1274,
+      "category": "Philosophie",
+      "culturalValue": 30,
+      "researchValue": 25
+    },
+    {
+      "id": "principia",
+      "name": "Principia Mathematica",
+      "author": "Isaac Newton",
+      "year": 1687,
+      "category": "Physik",
+      "culturalValue": 40,
+      "researchValue": 50
+    },
+    {
+      "id": "origin_of_species",
+      "name": "Über die Entstehung der Arten",
+      "author": "Charles Darwin",
+      "year": 1859,
+      "category": "Biologie",
+      "culturalValue": 35,
+      "researchValue": 45
+    },
+    {
+      "id": "das_kapital",
+      "name": "Das Kapital",
+      "author": "Karl Marx",
+      "year": 1867,
+      "category": "Wirtschaft",
+      "culturalValue": 30,
+      "researchValue": 40
+    }
+  ],
+  "censorshipPolicies": [
+    {
+      "id": "religious_censorship",
+      "name": "Religiöse Zensur",
+      "description": "Verbot ketzerischer Schriften",
+      "yearStart": 1200,
+      "yearEnd": 1800,
+      "popularityEffect": -10,
+      "culturalEffect": -15,
+      "religiousEffect": 10
+    },
+    {
+      "id": "political_censorship",
+      "name": "Politische Zensur",
+      "description": "Verbot regimekritischer Literatur",
+      "yearStart": 1500,
+      "yearEnd": 2050,
+      "popularityEffect": -15,
+      "culturalEffect": -20,
+      "stabilityEffect": 5
+    },
+    {
+      "id": "academic_freedom",
+      "name": "Akademische Freiheit",
+      "description": "Freier Zugang zu allen Wissensquellen",
+      "yearStart": 1800,
+      "yearEnd": 2050,
+      "popularityEffect": 15,
+      "culturalEffect": 25,
+      "researchEffect": 20
+    }
+  ]
+}

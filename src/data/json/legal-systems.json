@@ -1,0 +1,267 @@
+{
+  "legalSystems": [
+    {
+      "id": "tribal_law",
+      "name": "Stammesrecht",
+      "era": "ancient",
+      "period": {
+        "start": -3000,
+        "end": 500
+      },
+      "description": "Gewohnheitsrecht und mündliche Überlieferung",
+      "characteristics": [
+        "Mündliche Tradition",
+        "Blutrache",
+        "Stammesälteste als Richter"
+      ],
+      "justice": 30,
+      "efficiency": 25,
+      "fairness": 20,
+      "stability": 40,
+      "requiredTechnology": null,
+      "effects": {
+        "crime_rate": 0.15,
+        "social_order": 0.3,
+        "population_happiness": 0.4
+      }
+    },
+    {
+      "id": "germanic_law",
+      "name": "Germanisches Recht",
+      "era": "medieval",
+      "period": {
+        "start": 500,
+        "end": 1200
+      },
+      "description": "Thing-Versammlungen und Fehden",
+      "characteristics": [
+        "Thing-Versammlungen",
+        "Wergeld",
+        "Gottesurteil"
+      ],
+      "justice": 40,
+      "efficiency": 35,
+      "fairness": 30,
+      "stability": 50,
+      "requiredTechnology": null,
+      "effects": {
+        "crime_rate": 0.12,
+        "social_order": 0.4,
+        "population_happiness": 0.5
+      }
+    },
+    {
+      "id": "roman_law",
+      "name": "Römisches Recht",
+      "era": "medieval",
+      "period": {
+        "start": 1100,
+        "end": 1800
+      },
+      "description": "Kodifiziertes Recht basierend auf römischer Tradition",
+      "characteristics": [
+        "Geschriebene Gesetze",
+        "Rechtsprechung",
+        "Vertragsrecht"
+      ],
+      "justice": 65,
+      "efficiency": 60,
+      "fairness": 55,
+      "stability": 70,
+      "requiredTechnology": "writing",
+      "effects": {
+        "crime_rate": 0.08,
+        "social_order": 0.6,
+        "population_happiness": 0.6,
+        "trade": 0.2
+      }
+    },
+    {
+      "id": "canon_law",
+      "name": "Kirchenrecht",
+      "era": "medieval",
+      "period": {
+        "start": 800,
+        "end": 1600
+      },
+      "description": "Recht der katholischen Kirche",
+      "characteristics": [
+        "Kirchliche Gerichte",
+        "Moral und Sünde",
+        "Inquisition"
+      ],
+      "justice": 50,
+      "efficiency": 45,
+      "fairness": 40,
+      "stability": 60,
+      "requiredTechnology": null,
+      "effects": {
+        "crime_rate": 0.1,
+        "social_order": 0.5,
+        "religious_authority": 0.7,
+        "population_happiness": 0.4
+      }
+    },
+    {
+      "id": "common_law",
+      "name": "Common Law",
+      "era": "renaissance",
+      "period": {
+        "start": 1200,
+        "end": null
+      },
+      "description": "Präzedenzfallrecht aus England",
+      "characteristics": [
+        "Richterrecht",
+        "Präzedenzfälle",
+        "Geschworene"
+      ],
+      "justice": 70,
+      "efficiency": 65,
+      "fairness": 70,
+      "stability": 75,
+      "requiredTechnology": "legal_tradition",
+      "effects": {
+        "crime_rate": 0.06,
+        "social_order": 0.7,
+        "population_happiness": 0.7,
+        "trade": 0.3
+      }
+    },
+    {
+      "id": "napoleonic_code",
+      "name": "Code Civil (Napoleonisches Recht)",
+      "era": "industrial",
+      "period": {
+        "start": 1804,
+        "end": null
+      },
+      "description": "Moderne Kodifikation des Zivilrechts",
+      "characteristics": [
+        "Gleichheit vor dem Gesetz",
+        "Kodifizierung",
+        "Säkularisierung"
+      ],
+      "justice": 80,
+      "efficiency": 80,
+      "fairness": 75,
+      "stability": 85,
+      "requiredTechnology": "enlightenment",
+      "effects": {
+        "crime_rate": 0.05,
+        "social_order": 0.8,
+        "population_happiness": 0.75,
+        "trade": 0.4,
+        "modernization": 0.5
+      }
+    },
+    {
+      "id": "constitutional_law",
+      "name": "Verfassungsrecht",
+      "era": "modern",
+      "period": {
+        "start": 1848,
+        "end": null
+      },
+      "description": "Recht basierend auf demokratischer Verfassung",
+      "characteristics": [
+        "Grundrechte",
+        "Gewaltenteilung",
+        "Verfassungsgericht"
+      ],
+      "justice": 85,
+      "efficiency": 75,
+      "fairness": 85,
+      "stability": 90,
+      "requiredTechnology": "democracy",
+      "effects": {
+        "crime_rate": 0.04,
+        "social_order": 0.85,
+        "population_happiness": 0.85,
+        "political_stability": 0.8
+      }
+    },
+    {
+      "id": "social_law",
+      "name": "Sozialrecht",
+      "era": "modern",
+      "period": {
+        "start": 1880,
+        "end": null
+      },
+      "description": "Wohlfahrtsstaat und soziale Sicherung",
+      "characteristics": [
+        "Sozialversicherung",
+        "Arbeitnehmerrechte",
+        "Sozialstaat"
+      ],
+      "justice": 75,
+      "efficiency": 70,
+      "fairness": 90,
+      "stability": 85,
+      "requiredTechnology": "industrialization",
+      "effects": {
+        "crime_rate": 0.03,
+        "social_order": 0.8,
+        "population_happiness": 0.9,
+        "worker_satisfaction": 0.8
+      }
+    },
+    {
+      "id": "grundgesetz",
+      "name": "Grundgesetz (Deutsches Recht)",
+      "era": "contemporary",
+      "period": {
+        "start": 1949,
+        "end": null
+      },
+      "description": "Moderne deutsche Verfassung",
+      "characteristics": [
+        "Menschenwürde",
+        "Demokratie",
+        "Föderalismus",
+        "Rechtsstaat"
+      ],
+      "justice": 95,
+      "efficiency": 85,
+      "fairness": 95,
+      "stability": 95,
+      "requiredTechnology": "modern_democracy",
+      "effects": {
+        "crime_rate": 0.02,
+        "social_order": 0.95,
+        "population_happiness": 0.95,
+        "political_stability": 0.9,
+        "international_reputation": 0.8
+      }
+    },
+    {
+      "id": "eu_law",
+      "name": "EU-Recht",
+      "era": "contemporary",
+      "period": {
+        "start": 1993,
+        "end": null
+      },
+      "description": "Supranationales Recht der Europäischen Union",
+      "characteristics": [
+        "Vorrang des EU-Rechts",
+        "Freizügigkeit",
+        "Binnenmarkt",
+        "Menschenrechte"
+      ],
+      "justice": 90,
+      "efficiency": 75,
+      "fairness": 88,
+      "stability": 85,
+      "requiredTechnology": "european_integration",
+      "effects": {
+        "crime_rate": 0.02,
+        "social_order": 0.9,
+        "population_happiness": 0.85,
+        "trade": 0.7,
+        "international_cooperation": 0.9
+      }
+    }
+  ]
+}

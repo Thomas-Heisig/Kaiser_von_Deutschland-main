@@ -1,0 +1,394 @@
+{
+  "weatherForecastTechnologies": [
+    {
+      "id": "basic_weather_observation",
+      "name": "Grundlegende Wetterbeobachtung",
+      "germanName": "Grundlegende Wetterbeobachtung",
+      "era": "medieval",
+      "minYear": 1200,
+      "accuracy": 0.3,
+      "description": "Einfache Beobachtung von Wolken und Wind zur Wettervorhersage"
+    },
+    {
+      "id": "barometer",
+      "name": "Barometer",
+      "germanName": "Barometer",
+      "era": "renaissance",
+      "minYear": 1650,
+      "accuracy": 0.5,
+      "description": "Luftdruckmessung ermöglicht bessere Wettervorhersagen"
+    },
+    {
+      "id": "weather_stations",
+      "name": "Weather Stations",
+      "germanName": "Wetterstationen",
+      "era": "industrial",
+      "minYear": 1850,
+      "accuracy": 0.7,
+      "description": "Netzwerk von Wetterstationen für systematische Vorhersagen"
+    },
+    {
+      "id": "meteorological_satellites",
+      "name": "Meteorological Satellites",
+      "germanName": "Wettersatelliten",
+      "era": "modern",
+      "minYear": 1960,
+      "accuracy": 0.9,
+      "description": "Satellitenbasierte Wetterüberwachung für präzise Vorhersagen"
+    }
+  ],
+  "conservationPolicies": [
+    {
+      "id": "hunting_restrictions",
+      "name": "Hunting Restrictions",
+      "germanName": "Jagdbeschränkungen",
+      "minYear": 1500,
+      "effectiveness": 30,
+      "cost": 1000,
+      "description": "Einschränkungen der Jagd zum Schutz bedrohter Arten"
+    },
+    {
+      "id": "protected_areas",
+      "name": "Protected Areas",
+      "germanName": "Schutzgebiete",
+      "minYear": 1800,
+      "effectiveness": 50,
+      "cost": 5000,
+      "description": "Ausgewiesene Schutzgebiete für bedrohte Arten und Ökosysteme"
+    },
+    {
+      "id": "breeding_programs",
+      "name": "Breeding Programs",
+      "germanName": "Zuchtprogramme",
+      "minYear": 1900,
+      "effectiveness": 70,
+      "cost": 10000,
+      "description": "Gezielte Zuchtprogramme zur Arterhaltung"
+    },
+    {
+      "id": "ecological_restoration",
+      "name": "Ecological Restoration",
+      "germanName": "Ökologische Wiederherstellung",
+      "minYear": 1970,
+      "effectiveness": 80,
+      "cost": 20000,
+      "description": "Umfassende Wiederherstellung geschädigter Ökosysteme"
+    }
+  ],
+  "terraformingProjects": [
+    {
+      "id": "marsh_drainage",
+      "name": "Marsh Drainage",
+      "germanName": "Sumpftrockenlegung",
+      "minYear": 1200,
+      "duration": 5,
+      "baseCost": 20000,
+      "landGain": 1000,
+      "description": "Trockenlegung von Sümpfen für landwirtschaftliche Nutzung"
+    },
+    {
+      "id": "irrigation_canals",
+      "name": "Irrigation Canals",
+      "germanName": "Bewässerungskanäle",
+      "minYear": 1400,
+      "duration": 3,
+      "baseCost": 15000,
+      "productivityBonus": 50,
+      "description": "Kanalsysteme zur Bewässerung trockener Gebiete"
+    },
+    {
+      "id": "land_reclamation",
+      "name": "Land Reclamation",
+      "germanName": "Landgewinnung",
+      "minYear": 1600,
+      "duration": 10,
+      "baseCost": 50000,
+      "landGain": 2000,
+      "description": "Gewinnung von Land aus dem Meer oder Seen"
+    },
+    {
+      "id": "reforestation",
+      "name": "Reforestation",
+      "germanName": "Wiederaufforstung",
+      "minYear": 1800,
+      "duration": 20,
+      "baseCost": 30000,
+      "forestArea": 5000,
+      "description": "Systematische Wiederaufforstung abgeholzter Gebiete"
+    },
+    {
+      "id": "soil_improvement",
+      "name": "Soil Improvement",
+      "germanName": "Bodenverbesserung",
+      "minYear": 1850,
+      "duration": 2,
+      "baseCost": 10000,
+      "fertilityBonus": 20,
+      "description": "Verbesserung der Bodenfruchtbarkeit durch moderne Methoden"
+    }
+  ],
+  "disasters": {
+    "flood": {
+      "name": "Überschwemmung",
+      "germanName": "Überschwemmung",
+      "baseChance": 0.02,
+      "severityRange": [1, 8],
+      "primarySeasons": ["spring", "autumn"],
+      "economicDamageMultiplier": 1000,
+      "cropDamageMultiplier": 500,
+      "casualtyMultiplier": 50
+    },
+    "drought": {
+      "name": "Dürre",
+      "germanName": "Dürre",
+      "baseChance": 0.015,
+      "severityRange": [2, 10],
+      "primarySeasons": ["summer"],
+      "economicDamageMultiplier": 800,
+      "cropDamageMultiplier": 1000,
+      "casualtyMultiplier": 100
+    },
+    "storm": {
+      "name": "Sturm",
+      "germanName": "Sturm",
+      "baseChance": 0.03,
+      "severityRange": [1, 7],
+      "primarySeasons": ["autumn", "winter"],
+      "economicDamageMultiplier": 600,
+      "cropDamageMultiplier": 300,
+      "casualtyMultiplier": 30
+    },
+    "wildfire": {
+      "name": "Waldbrand",
+      "germanName": "Waldbrand",
+      "baseChance": 0.01,
+      "severityRange": [2, 9],
+      "primarySeasons": ["summer"],
+      "economicDamageMultiplier": 700,
+      "cropDamageMultiplier": 400,
+      "casualtyMultiplier": 40
+    },
+    "locust_plague": {
+      "name": "Heuschreckenplage",
+      "germanName": "Heuschreckenplage",
+      "baseChance": 0.005,
+      "severityRange": [3, 10],
+      "primarySeasons": ["summer", "autumn"],
+      "economicDamageMultiplier": 500,
+      "cropDamageMultiplier": 1500,
+      "casualtyMultiplier": 10
+    },
+    "earthquake": {
+      "name": "Erdbeben",
+      "germanName": "Erdbeben",
+      "baseChance": 0.003,
+      "severityRange": [1, 10],
+      "primarySeasons": ["spring", "summer", "autumn", "winter"],
+      "economicDamageMultiplier": 1500,
+      "cropDamageMultiplier": 200,
+      "casualtyMultiplier": 200
+    }
+  },
+  "climateChangeEffects": {
+    "temperatureThresholds": [
+      {
+        "threshold": 0.5,
+        "description": "Leichte Erwärmung",
+        "effects": {
+          "disasterFrequency": 1.1,
+          "cropYield": 0.95,
+          "seaLevel": 0.1
+        }
+      },
+      {
+        "threshold": 1.0,
+        "description": "Spürbare Erwärmung",
+        "effects": {
+          "disasterFrequency": 1.3,
+          "cropYield": 0.85,
+          "seaLevel": 0.3
+        }
+      },
+      {
+        "threshold": 1.5,
+        "description": "Gefährliche Erwärmung",
+        "effects": {
+          "disasterFrequency": 1.5,
+          "cropYield": 0.7,
+          "seaLevel": 0.5
+        }
+      },
+      {
+        "threshold": 2.0,
+        "description": "Kritische Erwärmung",
+        "effects": {
+          "disasterFrequency": 2.0,
+          "cropYield": 0.5,
+          "seaLevel": 1.0
+        }
+      },
+      {
+        "threshold": 3.0,
+        "description": "Katastrophale Erwärmung",
+        "effects": {
+          "disasterFrequency": 3.0,
+          "cropYield": 0.3,
+          "seaLevel": 2.0
+        }
+      }
+    ]
+  },
+  "animalSpeciesData": {
+    "wildlife": [
+      {
+        "id": "deer",
+        "economicValue": 150,
+        "meatYield": 50,
+        "furValue": 2,
+        "habitatRequirement": "forest"
+      },
+      {
+        "id": "wild_boar",
+        "economicValue": 120,
+        "meatYield": 60,
+        "furValue": 1,
+        "habitatRequirement": "forest"
+      },
+      {
+        "id": "wolf",
+        "economicValue": 200,
+        "meatYield": 30,
+        "furValue": 5,
+        "habitatRequirement": "forest"
+      },
+      {
+        "id": "bear",
+        "economicValue": 300,
+        "meatYield": 100,
+        "furValue": 10,
+        "habitatRequirement": "forest"
+      }
+    ],
+    "livestock": [
+      {
+        "id": "cattle",
+        "economicValue": 200,
+        "meatYield": 200,
+        "milkYield": 200,
+        "leatherValue": 5,
+        "maintenanceCost": 50
+      },
+      {
+        "id": "sheep",
+        "economicValue": 80,
+        "meatYield": 30,
+        "woolYield": 5,
+        "maintenanceCost": 20
+      },
+      {
+        "id": "pig",
+        "economicValue": 100,
+        "meatYield": 80,
+        "maintenanceCost": 30
+      },
+      {
+        "id": "chicken",
+        "economicValue": 10,
+        "meatYield": 2,
+        "eggYield": 250,
+        "maintenanceCost": 5
+      }
+    ],
+    "fish": [
+      {
+        "id": "trout",
+        "economicValue": 15,
+        "catchDifficulty": 0.3,
+        "preferredWater": "rivers"
+      },
+      {
+        "id": "carp",
+        "economicValue": 12,
+        "catchDifficulty": 0.2,
+        "preferredWater": "lakes"
+      },
+      {
+        "id": "pike",
+        "economicValue": 20,
+        "catchDifficulty": 0.5,
+        "preferredWater": "rivers"
+      }
+    ]
+  },
+  "forestTypes": [
+    {
+      "id": "deciduous",
+      "name": "Laubwald",
+      "biodiversityBonus": 1.2,
+      "woodQuality": 1.0,
+      "growthRate": 1.0,
+      "habitatValue": 1.3
+    },
+    {
+      "id": "coniferous",
+      "name": "Nadelwald",
+      "biodiversityBonus": 0.8,
+      "woodQuality": 1.2,
+      "growthRate": 1.2,
+      "habitatValue": 0.9
+    },
+    {
+      "id": "mixed",
+      "name": "Mischwald",
+      "biodiversityBonus": 1.5,
+      "woodQuality": 1.1,
+      "growthRate": 1.1,
+      "habitatValue": 1.5
+    }
+  ],
+  "soilQualityFactors": {
+    "fertility": {
+      "excellent": { "min": 80, "cropBonus": 1.5 },
+      "good": { "min": 60, "cropBonus": 1.2 },
+      "average": { "min": 40, "cropBonus": 1.0 },
+      "poor": { "min": 20, "cropBonus": 0.7 },
+      "depleted": { "min": 0, "cropBonus": 0.3 }
+    },
+    "degradationFactors": {
+      "overfarming": -5,
+      "erosion": -3,
+      "pollution": -4,
+      "drought": -2,
+      "flood": -1
+    },
+    "improvementMethods": {
+      "crop_rotation": { "minYear": 1200, "bonus": 10, "cost": 100 },
+      "fertilizer": { "minYear": 1500, "bonus": 15, "cost": 200 },
+      "irrigation": { "minYear": 1600, "bonus": 20, "cost": 500 },
+      "modern_agriculture": { "minYear": 1900, "bonus": 30, "cost": 1000 }
+    }
+  },
+  "multiplayerEvents": {
+    "sharedDisasters": {
+      "enabled": true,
+      "description": "Naturkatastrophen können mehrere Spieler gleichzeitig betreffen"
+    },
+    "huntingConflicts": {
+      "enabled": true,
+      "description": "Spieler können um Jagdgebiete konkurrieren"
+    },
+    "borderDisputes": {
+      "enabled": true,
+      "description": "Landschaftsveränderungen können zu Grenzstreitigkeiten führen"
+    },
+    "cooperativeConservation": {
+      "enabled": true,
+      "description": "Spieler können gemeinsam Artenschutzprogramme durchführen",
+      "bonusMultiplier": 1.5
+    },
+    "sharedResources": {
+      "enabled": true,
+      "description": "Flüsse und Wälder können von mehreren Spielern genutzt werden"
+    }
+  }
+}

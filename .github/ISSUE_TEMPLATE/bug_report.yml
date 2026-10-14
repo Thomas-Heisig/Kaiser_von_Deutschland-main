@@ -1,0 +1,44 @@
+name: Bug report
+description: Report a bug to help improve the project
+title: "[BUG] Brief summary"
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: What happened? What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide steps so we can reproduce the issue.
+      placeholder: 1) Go to ...\n2) Click on ...\n3) See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
+    validations:
+      required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node.js version, package manager, etc.
+      placeholder: Windows 11, Node 20.x, npm 10.x
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant logs or errors.
+      render: shell
+    validations:
+      required: false

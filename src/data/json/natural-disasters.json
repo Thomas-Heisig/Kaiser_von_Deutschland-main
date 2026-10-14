@@ -1,0 +1,298 @@
+{
+  "disasters": [
+    {
+      "id": "earthquake",
+      "name": "Erdbeben",
+      "category": "seismic",
+      "frequency": "rare",
+      "probability": 0.01,
+      "severity": {
+        "min": 3,
+        "max": 9
+      },
+      "effects": {
+        "buildingDamage": 0.4,
+        "populationLoss": 0.15,
+        "economicImpact": -0.3
+      },
+      "duration": 1,
+      "recoveryTime": 365,
+      "warningPossible": false,
+      "preventionMeasures": ["earthquake_resistant_construction"],
+      "affectedRegions": ["mountainous", "fault_lines"],
+      "historicalExamples": [
+        {
+          "year": 1356,
+          "location": "Basel",
+          "magnitude": 6.5,
+          "deaths": 300
+        },
+        {
+          "year": 1755,
+          "location": "Lissabon (Auswirkungen)",
+          "magnitude": 8.5,
+          "deaths": 100
+        }
+      ]
+    },
+    {
+      "id": "flood",
+      "name": "Überschwemmung",
+      "category": "hydrological",
+      "frequency": "common",
+      "probability": 0.05,
+      "severity": {
+        "min": 2,
+        "max": 7
+      },
+      "effects": {
+        "buildingDamage": 0.25,
+        "populationLoss": 0.08,
+        "economicImpact": -0.2,
+        "farmlandDestruction": 0.35
+      },
+      "duration": 14,
+      "recoveryTime": 180,
+      "warningPossible": true,
+      "preventionMeasures": ["dams", "dikes", "drainage_systems"],
+      "affectedRegions": ["riverside", "lowlands", "coastal"],
+      "seasonality": ["spring", "autumn"],
+      "historicalExamples": [
+        {
+          "year": 1342,
+          "location": "Mitteleuropa",
+          "severity": 8,
+          "deaths": 6000
+        },
+        {
+          "year": 1962,
+          "location": "Norddeutschland",
+          "severity": 7,
+          "deaths": 340
+        }
+      ]
+    },
+    {
+      "id": "drought",
+      "name": "Dürre",
+      "category": "meteorological",
+      "frequency": "common",
+      "probability": 0.08,
+      "severity": {
+        "min": 3,
+        "max": 8
+      },
+      "effects": {
+        "buildingDamage": 0.05,
+        "populationLoss": 0.12,
+        "economicImpact": -0.35,
+        "farmlandDestruction": 0.6,
+        "famine": 0.4
+      },
+      "duration": 180,
+      "recoveryTime": 365,
+      "warningPossible": true,
+      "preventionMeasures": ["irrigation", "water_storage", "drought_resistant_crops"],
+      "affectedRegions": ["agricultural", "plains"],
+      "seasonality": ["summer"],
+      "historicalExamples": [
+        {
+          "year": 1540,
+          "location": "Europa",
+          "severity": 9,
+          "deaths": 10000
+        },
+        {
+          "year": 2018,
+          "location": "Deutschland",
+          "severity": 6,
+          "deaths": 0
+        }
+      ]
+    },
+    {
+      "id": "storm",
+      "name": "Sturm",
+      "category": "meteorological",
+      "frequency": "very_common",
+      "probability": 0.15,
+      "severity": {
+        "min": 2,
+        "max": 6
+      },
+      "effects": {
+        "buildingDamage": 0.15,
+        "populationLoss": 0.03,
+        "economicImpact": -0.1,
+        "farmlandDestruction": 0.15
+      },
+      "duration": 3,
+      "recoveryTime": 60,
+      "warningPossible": true,
+      "preventionMeasures": ["sturdy_construction", "storm_shelters"],
+      "affectedRegions": ["coastal", "plains", "all"],
+      "seasonality": ["autumn", "winter"],
+      "historicalExamples": [
+        {
+          "year": 1362,
+          "location": "Nordsee (Grote Mandränke)",
+          "severity": 8,
+          "deaths": 25000
+        },
+        {
+          "year": 1999,
+          "location": "Europa (Lothar)",
+          "severity": 7,
+          "deaths": 110
+        }
+      ]
+    },
+    {
+      "id": "wildfire",
+      "name": "Waldbrand",
+      "category": "fire",
+      "frequency": "uncommon",
+      "probability": 0.03,
+      "severity": {
+        "min": 3,
+        "max": 7
+      },
+      "effects": {
+        "buildingDamage": 0.3,
+        "populationLoss": 0.05,
+        "economicImpact": -0.25,
+        "forestDestruction": 0.7
+      },
+      "duration": 21,
+      "recoveryTime": 1825,
+      "warningPossible": true,
+      "preventionMeasures": ["firebreaks", "fire_brigades", "forest_management"],
+      "affectedRegions": ["forest", "mountainous"],
+      "seasonality": ["summer"],
+      "historicalExamples": [
+        {
+          "year": 1540,
+          "location": "Deutschland",
+          "severity": 7,
+          "deaths": 100
+        },
+        {
+          "year": 1975,
+          "location": "Niedersachsen",
+          "severity": 6,
+          "deaths": 5
+        }
+      ]
+    },
+    {
+      "id": "locust_plague",
+      "name": "Heuschreckenplage",
+      "category": "biological",
+      "frequency": "rare",
+      "probability": 0.02,
+      "severity": {
+        "min": 4,
+        "max": 8
+      },
+      "effects": {
+        "buildingDamage": 0.0,
+        "populationLoss": 0.0,
+        "economicImpact": -0.4,
+        "farmlandDestruction": 0.9,
+        "famine": 0.6
+      },
+      "duration": 60,
+      "recoveryTime": 365,
+      "warningPossible": false,
+      "preventionMeasures": ["pesticides", "early_detection"],
+      "affectedRegions": ["agricultural", "plains"],
+      "seasonality": ["summer"],
+      "historicalExamples": [
+        {
+          "year": 1338,
+          "location": "Europa",
+          "severity": 8,
+          "deaths": 0
+        },
+        {
+          "year": 1693,
+          "location": "Deutschland",
+          "severity": 7,
+          "deaths": 0
+        }
+      ]
+    },
+    {
+      "id": "avalanche",
+      "name": "Lawine",
+      "category": "snow",
+      "frequency": "uncommon",
+      "probability": 0.04,
+      "severity": {
+        "min": 3,
+        "max": 7
+      },
+      "effects": {
+        "buildingDamage": 0.35,
+        "populationLoss": 0.1,
+        "economicImpact": -0.15
+      },
+      "duration": 1,
+      "recoveryTime": 90,
+      "warningPossible": true,
+      "preventionMeasures": ["avalanche_barriers", "early_warning_systems"],
+      "affectedRegions": ["mountainous"],
+      "seasonality": ["winter", "spring"],
+      "historicalExamples": [
+        {
+          "year": 1689,
+          "location": "Alpen",
+          "severity": 6,
+          "deaths": 120
+        },
+        {
+          "year": 1999,
+          "location": "Österreich/Deutschland",
+          "severity": 7,
+          "deaths": 38
+        }
+      ]
+    },
+    {
+      "id": "tornado",
+      "name": "Tornado",
+      "category": "meteorological",
+      "frequency": "rare",
+      "probability": 0.02,
+      "severity": {
+        "min": 2,
+        "max": 5
+      },
+      "effects": {
+        "buildingDamage": 0.5,
+        "populationLoss": 0.05,
+        "economicImpact": -0.2
+      },
+      "duration": 1,
+      "recoveryTime": 120,
+      "warningPossible": true,
+      "preventionMeasures": ["storm_shelters", "early_warning"],
+      "affectedRegions": ["plains", "all"],
+      "seasonality": ["summer"],
+      "historicalExamples": [
+        {
+          "year": 1968,
+          "location": "Pforzheim",
+          "severity": 4,
+          "deaths": 2
+        },
+        {
+          "year": 2016,
+          "location": "Hamburg",
+          "severity": 3,
+          "deaths": 0
+        }
+      ]
+    }
+  ]
+}

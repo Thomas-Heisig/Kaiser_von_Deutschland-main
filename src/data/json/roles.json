@@ -1,0 +1,1025 @@
+{
+  "roles": [
+    {
+      "id": "kaiser",
+      "name": "Kaiser",
+      "femaleName": "Kaiserin",
+      "rank": 10,
+      "category": "imperial",
+      "description": "Der höchste Herrscher des Heiligen Römischen Reiches",
+      "startingResources": {
+        "gold": 100000,
+        "land": 50000,
+        "population": 100000
+      },
+      "abilities": [
+        "appoint_kings",
+        "declare_war",
+        "call_diet",
+        "issue_imperial_decrees",
+        "crown_pope",
+        "grant_titles"
+      ],
+      "requirements": {
+        "prestige": 10000,
+        "authority": 95,
+        "kingdomScore": 100000,
+        "previousTitle": "koenig"
+      }
+    },
+    {
+      "id": "koenig",
+      "name": "König",
+      "femaleName": "Königin",
+      "rank": 9,
+      "category": "royal",
+      "description": "Herrscher eines Königreichs",
+      "startingResources": {
+        "gold": 50000,
+        "land": 25000,
+        "population": 50000
+      },
+      "abilities": [
+        "appoint_nobles",
+        "declare_war",
+        "levy_taxes",
+        "grant_lands",
+        "host_tournaments"
+      ],
+      "requirements": {
+        "prestige": 5000,
+        "authority": 85,
+        "kingdomScore": 50000,
+        "previousTitle": "herzog"
+      }
+    },
+    {
+      "id": "papst",
+      "name": "Papst",
+      "femaleName": "Päpstin",
+      "rank": 10,
+      "category": "religious",
+      "description": "Oberhaupt der Katholischen Kirche",
+      "startingResources": {
+        "gold": 75000,
+        "land": 15000,
+        "population": 30000
+      },
+      "abilities": [
+        "excommunicate",
+        "crown_emperor",
+        "call_crusade",
+        "issue_papal_bulls",
+        "canonize_saints",
+        "appoint_bishops"
+      ],
+      "requirements": {
+        "prestige": 8000,
+        "piety": 95,
+        "authority": 90,
+        "previousTitle": "kardinal"
+      }
+    },
+    {
+      "id": "herzog",
+      "name": "Herzog",
+      "femaleName": "Herzogin",
+      "rank": 8,
+      "category": "noble",
+      "description": "Hoher Adliger mit großem Herrschaftsgebiet",
+      "startingResources": {
+        "gold": 25000,
+        "land": 15000,
+        "population": 25000
+      },
+      "abilities": [
+        "appoint_counts",
+        "raise_army",
+        "levy_taxes",
+        "grant_fiefs"
+      ],
+      "requirements": {
+        "prestige": 2500,
+        "authority": 75,
+        "kingdomScore": 25000
+      }
+    },
+    {
+      "id": "minister",
+      "name": "Minister",
+      "femaleName": "Ministerin",
+      "rank": 7,
+      "category": "administrative",
+      "description": "Hoher Regierungsbeamter mit spezialisiertem Aufgabenbereich",
+      "startingResources": {
+        "gold": 10000,
+        "land": 5000,
+        "population": 5000
+      },
+      "abilities": [
+        "manage_treasury",
+        "conduct_diplomacy",
+        "oversee_military",
+        "regulate_trade",
+        "manage_infrastructure"
+      ],
+      "requirements": {
+        "prestige": 1500,
+        "stewardship": 70,
+        "authority": 60
+      },
+      "specializations": [
+        "Finanzminister",
+        "Außenminister",
+        "Kriegsminister",
+        "Innenminister",
+        "Handelsminister",
+        "Bildungsminister"
+      ]
+    },
+    {
+      "id": "bischof",
+      "name": "Bischof",
+      "femaleName": "Bischöfin",
+      "rank": 6,
+      "category": "religious",
+      "description": "Geistlicher Würdenträger einer Diözese",
+      "startingResources": {
+        "gold": 8000,
+        "land": 3000,
+        "population": 8000
+      },
+      "abilities": [
+        "bless_marriages",
+        "collect_tithes",
+        "build_churches",
+        "educate_clergy",
+        "grant_indulgences"
+      ],
+      "requirements": {
+        "prestige": 1000,
+        "piety": 80,
+        "learning": 65
+      }
+    },
+    {
+      "id": "buergermeister",
+      "name": "Bürgermeister",
+      "femaleName": "Bürgermeisterin",
+      "rank": 5,
+      "category": "administrative",
+      "description": "Gewählter Verwalter einer Stadt",
+      "startingResources": {
+        "gold": 5000,
+        "land": 2000,
+        "population": 10000
+      },
+      "abilities": [
+        "manage_city",
+        "collect_taxes",
+        "build_infrastructure",
+        "regulate_markets",
+        "maintain_order"
+      ],
+      "requirements": {
+        "prestige": 500,
+        "stewardship": 60,
+        "popularity": 70
+      }
+    },
+    {
+      "id": "gildenmeister",
+      "name": "Gildenmeister",
+      "femaleName": "Gildenmeisterin",
+      "rank": 4,
+      "category": "economic",
+      "description": "Leiter einer Handwerksgilde",
+      "startingResources": {
+        "gold": 3000,
+        "land": 500,
+        "population": 1000
+      },
+      "abilities": [
+        "train_apprentices",
+        "regulate_trade",
+        "set_prices",
+        "quality_control",
+        "protect_secrets"
+      ],
+      "requirements": {
+        "prestige": 300,
+        "stewardship": 50,
+        "wealth": 5000
+      }
+    },
+    {
+      "id": "ritter",
+      "name": "Ritter",
+      "femaleName": "Ritterin",
+      "rank": 4,
+      "category": "military",
+      "description": "Berittener Krieger von Stand",
+      "startingResources": {
+        "gold": 2000,
+        "land": 1000,
+        "population": 500
+      },
+      "abilities": [
+        "lead_cavalry",
+        "participate_tournaments",
+        "collect_taxes",
+        "administer_fief"
+      ],
+      "requirements": {
+        "prestige": 250,
+        "martial": 60,
+        "courage": 70
+      }
+    },
+    {
+      "id": "gelehrter",
+      "name": "Gelehrter",
+      "femaleName": "Gelehrte",
+      "rank": 3,
+      "category": "academic",
+      "description": "Wissenschaftler und Lehrer an einer Universität",
+      "startingResources": {
+        "gold": 1500,
+        "land": 0,
+        "population": 0
+      },
+      "abilities": [
+        "teach_students",
+        "conduct_research",
+        "write_books",
+        "advise_rulers",
+        "discover_technologies"
+      ],
+      "requirements": {
+        "prestige": 200,
+        "learning": 80,
+        "education": "university"
+      }
+    },
+    {
+      "id": "haendler",
+      "name": "Händler",
+      "femaleName": "Händlerin",
+      "rank": 3,
+      "category": "economic",
+      "description": "Wohlhabender Kaufmann",
+      "startingResources": {
+        "gold": 4000,
+        "land": 100,
+        "population": 200
+      },
+      "abilities": [
+        "trade_goods",
+        "establish_routes",
+        "negotiate_deals",
+        "invest_ventures",
+        "hire_guards"
+      ],
+      "requirements": {
+        "prestige": 150,
+        "stewardship": 55,
+        "wealth": 3000
+      }
+    },
+    {
+      "id": "handwerker",
+      "name": "Handwerker",
+      "femaleName": "Handwerkerin",
+      "rank": 2,
+      "category": "economic",
+      "description": "Ausgebildeter Facharbeiter",
+      "startingResources": {
+        "gold": 500,
+        "land": 50,
+        "population": 50
+      },
+      "abilities": [
+        "craft_goods",
+        "train_apprentice",
+        "sell_products",
+        "maintain_tools"
+      ],
+      "requirements": {
+        "prestige": 50,
+        "skill": 60
+      },
+      "specializations": [
+        "Schmied",
+        "Zimmermann",
+        "Weber",
+        "Bäcker",
+        "Schneider",
+        "Töpfer"
+      ]
+    },
+    {
+      "id": "bauer",
+      "name": "Bauer",
+      "femaleName": "Bäuerin",
+      "rank": 2,
+      "category": "agricultural",
+      "description": "Landwirt der das Land bestellt",
+      "startingResources": {
+        "gold": 300,
+        "land": 200,
+        "population": 100
+      },
+      "abilities": [
+        "farm_land",
+        "raise_livestock",
+        "harvest_crops",
+        "pay_tithes",
+        "serve_militia"
+      ],
+      "requirements": {
+        "prestige": 10,
+        "land": 100
+      }
+    },
+    {
+      "id": "arbeiter",
+      "name": "Arbeiter",
+      "femaleName": "Arbeiterin",
+      "rank": 1,
+      "category": "labor",
+      "description": "Einfacher Lohnarbeiter",
+      "startingResources": {
+        "gold": 100,
+        "land": 0,
+        "population": 10
+      },
+      "abilities": [
+        "perform_labor",
+        "earn_wages",
+        "join_guild"
+      ],
+      "requirements": {
+        "prestige": 0
+      },
+      "specializations": [
+        "Tagelöhner",
+        "Bergarbeiter",
+        "Hafenarbeiter",
+        "Bauarbeiter"
+      ]
+    },
+    {
+      "id": "moench",
+      "name": "Mönch",
+      "femaleName": "Nonne",
+      "rank": 2,
+      "category": "religious",
+      "description": "Geweihter im Klosterleben",
+      "startingResources": {
+        "gold": 200,
+        "land": 0,
+        "population": 0
+      },
+      "abilities": [
+        "pray",
+        "copy_manuscripts",
+        "brew_beer",
+        "provide_charity",
+        "teach"
+      ],
+      "requirements": {
+        "prestige": 20,
+        "piety": 70
+      }
+    },
+    {
+      "id": "diplomat",
+      "name": "Diplomat",
+      "femaleName": "Diplomatin",
+      "rank": 6,
+      "category": "diplomatic",
+      "description": "Botschafter für internationale Beziehungen und Handelsabkommen",
+      "startingResources": {
+        "gold": 8000,
+        "land": 1000,
+        "population": 2000
+      },
+      "abilities": [
+        "negotiate_treaties",
+        "establish_embassies",
+        "trade_agreements",
+        "cultural_exchange",
+        "prevent_wars"
+      ],
+      "requirements": {
+        "prestige": 1200,
+        "diplomacy": 75,
+        "learning": 60
+      }
+    },
+    {
+      "id": "spion",
+      "name": "Spion",
+      "femaleName": "Spionin",
+      "rank": 5,
+      "category": "espionage",
+      "description": "Meisterspion für Geheimoperationen, Sabotage und Informationsbeschaffung",
+      "startingResources": {
+        "gold": 5000,
+        "land": 0,
+        "population": 100
+      },
+      "abilities": [
+        "gather_intelligence",
+        "sabotage_operations",
+        "assassination",
+        "steal_technology",
+        "uncover_plots",
+        "disguise"
+      ],
+      "requirements": {
+        "prestige": 800,
+        "intrigue": 80,
+        "stealth": 75
+      }
+    },
+    {
+      "id": "architekt",
+      "name": "Architekt",
+      "femaleName": "Architektin",
+      "rank": 4,
+      "category": "construction",
+      "description": "Stadtplaner mit speziellen Gebäudeboni und Stadtlayout-Optimierung",
+      "startingResources": {
+        "gold": 6000,
+        "land": 500,
+        "population": 1000
+      },
+      "abilities": [
+        "design_buildings",
+        "optimize_city_layout",
+        "reduce_construction_cost",
+        "improve_aesthetics",
+        "plan_infrastructure"
+      ],
+      "requirements": {
+        "prestige": 600,
+        "learning": 70,
+        "stewardship": 65
+      },
+      "bonuses": {
+        "buildingCostReduction": 15,
+        "buildingTimeReduction": 20,
+        "cityEfficiency": 10
+      }
+    },
+    {
+      "id": "medicus",
+      "name": "Medicus",
+      "femaleName": "Medica",
+      "rank": 4,
+      "category": "medical",
+      "description": "Arzt für Bevölkerungsgesundheit und Seuchenbekämpfung",
+      "startingResources": {
+        "gold": 4000,
+        "land": 200,
+        "population": 500
+      },
+      "abilities": [
+        "heal_sick",
+        "combat_plagues",
+        "improve_sanitation",
+        "train_physicians",
+        "research_medicine"
+      ],
+      "requirements": {
+        "prestige": 500,
+        "learning": 75,
+        "medicine": 80
+      },
+      "bonuses": {
+        "healthBonus": 25,
+        "plagueResistance": 40,
+        "populationGrowth": 10
+      }
+    },
+    {
+      "id": "kunstmaezen",
+      "name": "Kunstmäzen",
+      "femaleName": "Kunstmäzenin",
+      "rank": 5,
+      "category": "cultural",
+      "description": "Förderer kultureller Entwicklung und Prestige durch Kunstwerke",
+      "startingResources": {
+        "gold": 15000,
+        "land": 1000,
+        "population": 2000
+      },
+      "abilities": [
+        "commission_artworks",
+        "host_exhibitions",
+        "patronize_artists",
+        "build_museums",
+        "cultural_festivals"
+      ],
+      "requirements": {
+        "prestige": 1000,
+        "wealth": 10000,
+        "culturalInfluence": 50
+      },
+      "bonuses": {
+        "prestigeBonus": 30,
+        "culturalInfluence": 40,
+        "happiness": 15
+      }
+    },
+    {
+      "id": "bergbauingenieur",
+      "name": "Bergbauingenieur",
+      "femaleName": "Bergbauingenieurin",
+      "rank": 4,
+      "category": "industrial",
+      "description": "Spezialist für Ressourcen-Extraktionsboni im Bergbau",
+      "startingResources": {
+        "gold": 7000,
+        "land": 2000,
+        "population": 3000
+      },
+      "abilities": [
+        "optimize_mining",
+        "discover_veins",
+        "improve_extraction",
+        "manage_miners",
+        "geological_survey"
+      ],
+      "requirements": {
+        "prestige": 700,
+        "learning": 65,
+        "stewardship": 60
+      },
+      "bonuses": {
+        "miningEfficiency": 35,
+        "resourceProduction": 25,
+        "mineralDiscovery": 20
+      }
+    },
+    {
+      "id": "rechtsgelehrter",
+      "name": "Rechtsgelehrter",
+      "femaleName": "Rechtsgelehrte",
+      "rank": 5,
+      "category": "legal",
+      "description": "Jurist für Gesetzesreformen und das Gerichtssystem",
+      "startingResources": {
+        "gold": 6000,
+        "land": 500,
+        "population": 1000
+      },
+      "abilities": [
+        "draft_laws",
+        "reform_justice",
+        "arbitrate_disputes",
+        "establish_courts",
+        "codify_laws"
+      ],
+      "requirements": {
+        "prestige": 900,
+        "learning": 80,
+        "justice": 75
+      },
+      "bonuses": {
+        "stability": 20,
+        "authority": 15,
+        "corruptionReduction": 25
+      }
+    },
+    {
+      "id": "hofnarr",
+      "name": "Hofnarr",
+      "femaleName": "Hofnärrin",
+      "rank": 3,
+      "category": "entertainment",
+      "description": "Unterhalter mit einzigartigen Interaktionsmöglichkeiten am Hof",
+      "startingResources": {
+        "gold": 1000,
+        "land": 0,
+        "population": 10
+      },
+      "abilities": [
+        "entertain_court",
+        "speak_truth",
+        "lift_spirits",
+        "mock_enemies",
+        "unique_insights"
+      ],
+      "requirements": {
+        "prestige": 100,
+        "charisma": 70,
+        "wit": 80
+      },
+      "bonuses": {
+        "courtHappiness": 20,
+        "stressReduction": 30,
+        "uniqueEvents": 15
+      }
+    },
+    {
+      "id": "revolutionsfuehrer",
+      "name": "Revolutionsführer",
+      "femaleName": "Revolutionsführerin",
+      "rank": 4,
+      "category": "revolutionary",
+      "description": "Anführer von Aufständen mit alternativer Spielweise",
+      "startingResources": {
+        "gold": 2000,
+        "land": 0,
+        "population": 5000
+      },
+      "abilities": [
+        "incite_rebellion",
+        "organize_protests",
+        "spread_ideology",
+        "recruit_followers",
+        "overthrow_government"
+      ],
+      "requirements": {
+        "prestige": 400,
+        "charisma": 75,
+        "radicalism": 70
+      },
+      "bonuses": {
+        "rebellionChance": 40,
+        "followerLoyalty": 35,
+        "popularSupport": 30
+      }
+    },
+    {
+      "id": "umweltaktivist",
+      "name": "Umweltaktivist",
+      "femaleName": "Umweltaktivistin",
+      "rank": 3,
+      "category": "environmental",
+      "description": "Verfechter von Nachhaltigkeitsmechaniken für spätere Epochen",
+      "startingResources": {
+        "gold": 3000,
+        "land": 1000,
+        "population": 2000
+      },
+      "abilities": [
+        "promote_sustainability",
+        "protect_nature",
+        "renewable_energy",
+        "environmental_laws",
+        "green_technology"
+      ],
+      "requirements": {
+        "prestige": 300,
+        "learning": 65,
+        "environmentalism": 80,
+        "minYear": 1970
+      },
+      "bonuses": {
+        "sustainability": 50,
+        "publicApproval": 25,
+        "longTermStability": 20
+      }
+    },
+    {
+      "id": "bankier",
+      "name": "Bankier",
+      "femaleName": "Bankierin",
+      "rank": 6,
+      "category": "economic",
+      "description": "Finanzexperte und Geldverleiher",
+      "startingResources": {
+        "gold": 80000,
+        "land": 2000,
+        "population": 5000
+      },
+      "abilities": [
+        "grant_loans",
+        "manage_treasury",
+        "currency_trading",
+        "establish_bank",
+        "financial_speculation"
+      ],
+      "requirements": {
+        "prestige": 2000,
+        "wealth": 50000,
+        "economicSkill": 80,
+        "minYear": 1400
+      },
+      "bonuses": {
+        "tradePower": 30,
+        "goldIncome": 40,
+        "economicInfluence": 35
+      }
+    },
+    {
+      "id": "architekt",
+      "name": "Architekt",
+      "femaleName": "Architektin",
+      "rank": 5,
+      "category": "construction",
+      "description": "Meister des Bauens und Stadtplanung",
+      "startingResources": {
+        "gold": 25000,
+        "land": 5000,
+        "population": 8000
+      },
+      "abilities": [
+        "design_buildings",
+        "urban_planning",
+        "construct_wonders",
+        "improve_infrastructure",
+        "architectural_innovation"
+      ],
+      "requirements": {
+        "prestige": 1200,
+        "learning": 70,
+        "buildingSkill": 85,
+        "minYear": 1000
+      },
+      "bonuses": {
+        "buildingEfficiency": 40,
+        "culturalInfluence": 25,
+        "constructionSpeed": 30
+      }
+    },
+    {
+      "id": "spion",
+      "name": "Spion",
+      "femaleName": "Spionin",
+      "rank": 4,
+      "category": "espionage",
+      "description": "Meister der Täuschung und Geheimdienstarbeit",
+      "startingResources": {
+        "gold": 15000,
+        "land": 1000,
+        "population": 2000
+      },
+      "abilities": [
+        "gather_intelligence",
+        "sabotage_operations",
+        "infiltrate_enemy",
+        "assassinate_target",
+        "spread_misinformation"
+      ],
+      "requirements": {
+        "prestige": 800,
+        "stealth": 90,
+        "intrigue": 85,
+        "minYear": 1200
+      },
+      "bonuses": {
+        "espionageEffectiveness": 50,
+        "enemyIntelligence": 40,
+        "secretOperations": 45
+      }
+    },
+    {
+      "id": "admiral",
+      "name": "Admiral",
+      "femaleName": "Admiralin",
+      "rank": 7,
+      "category": "military",
+      "description": "Kommandant der Kriegsflotte",
+      "startingResources": {
+        "gold": 35000,
+        "land": 3000,
+        "population": 10000
+      },
+      "abilities": [
+        "command_fleet",
+        "naval_battles",
+        "blockade_ports",
+        "protect_trade_routes",
+        "amphibious_assault"
+      ],
+      "requirements": {
+        "prestige": 1500,
+        "martial": 75,
+        "navalSkill": 85,
+        "minYear": 1500
+      },
+      "bonuses": {
+        "navalStrength": 50,
+        "tradePowerSea": 30,
+        "marineRecruitment": 35
+      }
+    },
+    {
+      "id": "general",
+      "name": "General",
+      "femaleName": "Generalin",
+      "rank": 7,
+      "category": "military",
+      "description": "Oberbefehlshaber der Landstreitkräfte",
+      "startingResources": {
+        "gold": 40000,
+        "land": 5000,
+        "population": 15000
+      },
+      "abilities": [
+        "command_army",
+        "tactical_warfare",
+        "siege_warfare",
+        "military_reform",
+        "inspire_troops"
+      ],
+      "requirements": {
+        "prestige": 2000,
+        "martial": 85,
+        "leadership": 80,
+        "minYear": 1600
+      },
+      "bonuses": {
+        "armyMorale": 40,
+        "combatEffectiveness": 45,
+        "militaryDiscipline": 35
+      }
+    },
+    {
+      "id": "journalist",
+      "name": "Journalist",
+      "femaleName": "Journalistin",
+      "rank": 4,
+      "category": "cultural",
+      "description": "Nachrichtenverbreiter und Meinungsmacher",
+      "startingResources": {
+        "gold": 8000,
+        "land": 500,
+        "population": 3000
+      },
+      "abilities": [
+        "publish_news",
+        "investigate_scandals",
+        "influence_opinion",
+        "establish_newspaper",
+        "freedom_of_press"
+      ],
+      "requirements": {
+        "prestige": 400,
+        "learning": 70,
+        "charisma": 65,
+        "minYear": 1800
+      },
+      "bonuses": {
+        "publicOpinion": 35,
+        "informationSpread": 45,
+        "culturalInfluence": 25
+      }
+    },
+    {
+      "id": "erfinder",
+      "name": "Erfinder",
+      "femaleName": "Erfinderin",
+      "rank": 5,
+      "category": "academic",
+      "description": "Innovativer Schöpfer neuer Technologien",
+      "startingResources": {
+        "gold": 12000,
+        "land": 1000,
+        "population": 4000
+      },
+      "abilities": [
+        "develop_technology",
+        "patent_invention",
+        "scientific_breakthrough",
+        "industrial_innovation",
+        "research_funding"
+      ],
+      "requirements": {
+        "prestige": 600,
+        "learning": 85,
+        "innovation": 90,
+        "minYear": 1700
+      },
+      "bonuses": {
+        "technologicalProgress": 50,
+        "scientificDiscovery": 45,
+        "industrialOutput": 30
+      }
+    },
+    {
+      "id": "diplomat",
+      "name": "Diplomat",
+      "femaleName": "Diplomatin",
+      "rank": 6,
+      "category": "diplomatic",
+      "description": "Vermittler zwischen Nationen",
+      "startingResources": {
+        "gold": 20000,
+        "land": 1500,
+        "population": 5000
+      },
+      "abilities": [
+        "negotiate_treaties",
+        "establish_embassy",
+        "mediate_conflicts",
+        "diplomatic_immunity",
+        "international_relations"
+      ],
+      "requirements": {
+        "prestige": 1000,
+        "diplomacy": 85,
+        "charisma": 75,
+        "minYear": 1500
+      },
+      "bonuses": {
+        "diplomaticPower": 45,
+        "treatySuccess": 40,
+        "internationalPrestige": 35
+      }
+    },
+    {
+      "id": "fabrikbesitzer",
+      "name": "Fabrikbesitzer",
+      "femaleName": "Fabrikbesitzerin",
+      "rank": 6,
+      "category": "industrial",
+      "description": "Industrieller Großproduzent",
+      "startingResources": {
+        "gold": 60000,
+        "land": 10000,
+        "population": 20000
+      },
+      "abilities": [
+        "mass_production",
+        "employ_workers",
+        "industrial_expansion",
+        "automation",
+        "labor_management"
+      ],
+      "requirements": {
+        "prestige": 1500,
+        "wealth": 40000,
+        "management": 80,
+        "minYear": 1800
+      },
+      "bonuses": {
+        "productionOutput": 50,
+        "economicGrowth": 40,
+        "employmentCapacity": 45
+      }
+    },
+    {
+      "id": "philosoph",
+      "name": "Philosoph",
+      "femaleName": "Philosophin",
+      "rank": 5,
+      "category": "academic",
+      "description": "Denker und Weltweiser",
+      "startingResources": {
+        "gold": 10000,
+        "land": 800,
+        "population": 3000
+      },
+      "abilities": [
+        "philosophical_discourse",
+        "influence_ideology",
+        "write_treatise",
+        "teach_wisdom",
+        "challenge_dogma"
+      ],
+      "requirements": {
+        "prestige": 700,
+        "learning": 90,
+        "wisdom": 85,
+        "minYear": 500
+      },
+      "bonuses": {
+        "culturalInfluence": 40,
+        "ideologicalImpact": 45,
+        "intellectualMovement": 35
+      }
+    }
+  ],
+  "metadata": {
+    "version": "2.3.0",
+    "lastUpdated": "2025-12-27",
+    "totalRoles": 35,
+    "categories": [
+      "imperial",
+      "royal",
+      "noble",
+      "religious",
+      "administrative",
+      "military",
+      "economic",
+      "academic",
+      "agricultural",
+      "labor",
+      "diplomatic",
+      "espionage",
+      "construction",
+      "medical",
+      "cultural",
+      "industrial",
+      "legal",
+      "entertainment",
+      "revolutionary",
+      "environmental"
+    ]
+  }
+}

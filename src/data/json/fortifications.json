@@ -1,0 +1,256 @@
+{
+  "fortifications": [
+    {
+      "id": "wooden_palisade",
+      "name": "Holzpalisade",
+      "era": "Frühmittelalter",
+      "yearAvailable": 500,
+      "strength": 10,
+      "buildCost": {
+        "gold": 500,
+        "wood": 500
+      },
+      "maintenanceCost": 20,
+      "height": 3,
+      "thickness": 0.5,
+      "description": "Einfache Holzbefestigung gegen Räuber",
+      "vulnerabilities": ["Feuer", "Rammböcke"],
+      "defenseBonus": 0.2
+    },
+    {
+      "id": "stone_wall_basic",
+      "name": "Einfache Steinmauer",
+      "era": "Frühmittelalter",
+      "yearAvailable": 800,
+      "strength": 30,
+      "buildCost": {
+        "gold": 2000,
+        "stone": 1000,
+        "wood": 200
+      },
+      "maintenanceCost": 50,
+      "height": 5,
+      "thickness": 2,
+      "description": "Solide Steinmauer mit Wehrgang",
+      "vulnerabilities": ["Belagerungstürme", "Unterminierung"],
+      "defenseBonus": 0.5
+    },
+    {
+      "id": "castle_walls",
+      "name": "Burgmauern",
+      "era": "Hochmittelalter",
+      "yearAvailable": 1100,
+      "strength": 60,
+      "buildCost": {
+        "gold": 8000,
+        "stone": 3000,
+        "wood": 500
+      },
+      "maintenanceCost": 150,
+      "height": 8,
+      "thickness": 3,
+      "description": "Massive Burgmauern mit Türmen",
+      "vulnerabilities": ["Katapulte", "Unterminierung"],
+      "defenseBonus": 1.0,
+      "towers": 4
+    },
+    {
+      "id": "concentric_walls",
+      "name": "Konzentrische Mauern",
+      "era": "Spätmittelalter",
+      "yearAvailable": 1250,
+      "strength": 90,
+      "buildCost": {
+        "gold": 20000,
+        "stone": 8000,
+        "wood": 1000
+      },
+      "maintenanceCost": 300,
+      "height": 10,
+      "thickness": 4,
+      "description": "Doppelte Mauern für maximale Verteidigung",
+      "vulnerabilities": ["Kanonen"],
+      "defenseBonus": 1.5,
+      "towers": 8,
+      "layers": 2
+    },
+    {
+      "id": "star_fortress",
+      "name": "Sternfestung",
+      "era": "Frühe Neuzeit",
+      "yearAvailable": 1500,
+      "strength": 120,
+      "buildCost": {
+        "gold": 40000,
+        "stone": 15000,
+        "iron": 2000
+      },
+      "maintenanceCost": 500,
+      "height": 8,
+      "thickness": 6,
+      "description": "Moderne Festung gegen Artillerie",
+      "vulnerabilities": ["Schwere Artillerie", "Lange Belagerungen"],
+      "defenseBonus": 2.0,
+      "bastions": 5
+    },
+    {
+      "id": "modern_fortifications",
+      "name": "Moderne Befestigungen",
+      "era": "Industrialisierung",
+      "yearAvailable": 1850,
+      "strength": 150,
+      "buildCost": {
+        "gold": 80000,
+        "stone": 20000,
+        "iron": 10000,
+        "coal": 5000
+      },
+      "maintenanceCost": 1000,
+      "height": 6,
+      "thickness": 8,
+      "description": "Beton und Stahl gegen moderne Artillerie",
+      "vulnerabilities": ["Luftangriffe", "Panzerdurchbruch"],
+      "defenseBonus": 2.5,
+      "bunkers": 10
+    }
+  ],
+  "siegeWeapons": [
+    {
+      "id": "battering_ram",
+      "name": "Rammbock",
+      "era": "Antike",
+      "yearAvailable": 0,
+      "cost": {
+        "gold": 200,
+        "wood": 100
+      },
+      "effectiveness": 0.3,
+      "range": 0,
+      "crewSize": 20,
+      "description": "Einfaches Werkzeug zum Durchbrechen von Toren",
+      "targetTypes": ["Gates", "Doors"]
+    },
+    {
+      "id": "catapult",
+      "name": "Katapult",
+      "era": "Frühmittelalter",
+      "yearAvailable": 500,
+      "cost": {
+        "gold": 1000,
+        "wood": 300,
+        "iron": 50
+      },
+      "effectiveness": 0.5,
+      "range": 200,
+      "crewSize": 10,
+      "description": "Wurfmaschine für Steine und Feuertöpfe",
+      "targetTypes": ["Walls", "Buildings"]
+    },
+    {
+      "id": "trebuchet",
+      "name": "Trebuchet",
+      "era": "Hochmittelalter",
+      "yearAvailable": 1100,
+      "cost": {
+        "gold": 2500,
+        "wood": 500,
+        "iron": 150
+      },
+      "effectiveness": 0.8,
+      "range": 300,
+      "crewSize": 15,
+      "description": "Schweres Wurfgeschütz mit Gegengewicht",
+      "targetTypes": ["Walls", "Towers", "Buildings"]
+    },
+    {
+      "id": "siege_tower",
+      "name": "Belagerungsturm",
+      "era": "Mittelalter",
+      "yearAvailable": 900,
+      "cost": {
+        "gold": 3000,
+        "wood": 800,
+        "iron": 200
+      },
+      "effectiveness": 0.6,
+      "range": 0,
+      "crewSize": 30,
+      "description": "Mobiler Turm zum Überwinden von Mauern",
+      "targetTypes": ["Walls"],
+      "allowsScaling": true
+    },
+    {
+      "id": "cannon",
+      "name": "Kanone",
+      "era": "Frühe Neuzeit",
+      "yearAvailable": 1400,
+      "cost": {
+        "gold": 5000,
+        "iron": 500,
+        "coal": 100
+      },
+      "effectiveness": 1.2,
+      "range": 500,
+      "crewSize": 8,
+      "description": "Pulverkanone zur Zerstörung von Mauern",
+      "targetTypes": ["Walls", "Gates", "Buildings"],
+      "requiresGunpowder": true
+    },
+    {
+      "id": "heavy_artillery",
+      "name": "Schwere Artillerie",
+      "era": "Industrialisierung",
+      "yearAvailable": 1850,
+      "cost": {
+        "gold": 15000,
+        "iron": 2000,
+        "coal": 500
+      },
+      "effectiveness": 2.0,
+      "range": 2000,
+      "crewSize": 12,
+      "description": "Moderne Kanonen mit großer Reichweite",
+      "targetTypes": ["All"],
+      "requiresGunpowder": true
+    }
+  ],
+  "siegeTactics": [
+    {
+      "id": "undermining",
+      "name": "Unterminierung",
+      "description": "Tunnel unter Mauern graben und einstürzen lassen",
+      "effectiveness": 0.7,
+      "duration": 30,
+      "cost": {
+        "gold": 1000
+      },
+      "crewSize": 50,
+      "counterMeasures": ["Listening Posts", "Counter-Tunnels"]
+    },
+    {
+      "id": "starvation",
+      "name": "Aushungern",
+      "description": "Belagerung bis die Vorräte ausgehen",
+      "effectiveness": 0.9,
+      "duration": 180,
+      "cost": {
+        "gold": 500
+      },
+      "crewSize": 200,
+      "counterMeasures": ["Relief Army", "Sorties"]
+    },
+    {
+      "id": "escalade",
+      "name": "Erstürmung",
+      "description": "Direkter Angriff mit Leitern",
+      "effectiveness": 0.4,
+      "duration": 1,
+      "cost": {
+        "gold": 200
+      },
+      "crewSize": 500,
+      "casualties": "high",
+      "counterMeasures": ["Boiling Oil", "Archers"]
+    }
+  ]
+}

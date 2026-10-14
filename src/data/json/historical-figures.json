@@ -1,0 +1,164 @@
+{
+  "figures": [
+    {
+      "id": "karl_der_grosse",
+      "name": "Karl der Große",
+      "birthYear": 742,
+      "deathYear": 814,
+      "category": "ruler",
+      "culture": "frankish",
+      "achievements": [
+        "Gründung des Fränkischen Reiches",
+        "Kaiserkrönung 800 n. Chr.",
+        "Karolingische Renaissance"
+      ],
+      "traits": ["visionary", "warrior", "administrator"],
+      "prestige": 10000,
+      "influence": 95
+    },
+    {
+      "id": "otto_von_bismarck",
+      "name": "Otto von Bismarck",
+      "birthYear": 1815,
+      "deathYear": 1898,
+      "category": "statesman",
+      "culture": "german",
+      "achievements": [
+        "Einigung Deutschlands 1871",
+        "Eiserner Kanzler",
+        "Sozialgesetzgebung"
+      ],
+      "traits": ["strategist", "diplomat", "conservative"],
+      "prestige": 9500,
+      "influence": 90
+    },
+    {
+      "id": "martin_luther",
+      "name": "Martin Luther",
+      "birthYear": 1483,
+      "deathYear": 1546,
+      "category": "religious",
+      "culture": "german",
+      "achievements": [
+        "95 Thesen",
+        "Reformation",
+        "Bibelübersetzung"
+      ],
+      "traits": ["reformer", "scholar", "revolutionary"],
+      "prestige": 9000,
+      "influence": 85
+    },
+    {
+      "id": "friedrich_der_grosse",
+      "name": "Friedrich der Große",
+      "birthYear": 1712,
+      "deathYear": 1786,
+      "category": "ruler",
+      "culture": "prussian",
+      "achievements": [
+        "Aufgeklärter Absolutismus",
+        "Preußische Militärreformen",
+        "Siebenjähriger Krieg"
+      ],
+      "traits": ["enlightened", "military_genius", "philosopher"],
+      "prestige": 9200,
+      "influence": 88
+    },
+    {
+      "id": "goethe",
+      "name": "Johann Wolfgang von Goethe",
+      "birthYear": 1749,
+      "deathYear": 1832,
+      "category": "artist",
+      "culture": "german",
+      "achievements": [
+        "Faust",
+        "Weimarer Klassik",
+        "Naturwissenschaftliche Forschung"
+      ],
+      "traits": ["genius", "polymath", "romantic"],
+      "prestige": 8500,
+      "influence": 80
+    },
+    {
+      "id": "beethoven",
+      "name": "Ludwig van Beethoven",
+      "birthYear": 1770,
+      "deathYear": 1827,
+      "category": "artist",
+      "culture": "german",
+      "achievements": [
+        "9. Symphonie",
+        "Revolutionierung der Musik",
+        "Überwindung der Taubheit"
+      ],
+      "traits": ["genius", "revolutionary", "determined"],
+      "prestige": 8800,
+      "influence": 82
+    },
+    {
+      "id": "gutenberg",
+      "name": "Johannes Gutenberg",
+      "birthYear": 1400,
+      "deathYear": 1468,
+      "category": "inventor",
+      "culture": "german",
+      "achievements": [
+        "Erfindung des Buchdrucks",
+        "Gutenberg-Bibel",
+        "Medienrevolution"
+      ],
+      "traits": ["inventor", "visionary", "craftsman"],
+      "prestige": 9500,
+      "influence": 95
+    },
+    {
+      "id": "einstein",
+      "name": "Albert Einstein",
+      "birthYear": 1879,
+      "deathYear": 1955,
+      "category": "scientist",
+      "culture": "german",
+      "achievements": [
+        "Relativitätstheorie",
+        "Nobelpreis für Physik 1921",
+        "Revolution der Physik"
+      ],
+      "traits": ["genius", "pacifist", "revolutionary"],
+      "prestige": 10000,
+      "influence": 98
+    },
+    {
+      "id": "barbarossa",
+      "name": "Friedrich I. Barbarossa",
+      "birthYear": 1122,
+      "deathYear": 1190,
+      "category": "ruler",
+      "culture": "german",
+      "achievements": [
+        "Heiliges Römisches Reich",
+        "Dritter Kreuzzug",
+        "Reichsreformen"
+      ],
+      "traits": ["warrior", "administrator", "charismatic"],
+      "prestige": 8700,
+      "influence": 85
+    },
+    {
+      "id": "hildegard",
+      "name": "Hildegard von Bingen",
+      "birthYear": 1098,
+      "deathYear": 1179,
+      "category": "religious",
+      "culture": "german",
+      "achievements": [
+        "Mystikerin und Gelehrte",
+        "Medizinische Schriften",
+        "Komponistin"
+      ],
+      "traits": ["mystic", "healer", "scholar"],
+      "prestige": 7500,
+      "influence": 75
+    }
+  ]
+}

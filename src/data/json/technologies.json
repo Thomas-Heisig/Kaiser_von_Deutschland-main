@@ -1,0 +1,521 @@
+{
+  "technologies": [
+    {
+      "id": "agriculture",
+      "name": "Landwirtschaft",
+      "description": "Grundlegende Kenntnisse über Ackerbau und Viehzucht",
+      "category": "economic",
+      "era": "ancient",
+      "cost": {
+        "research": 100,
+        "gold": 500
+      },
+      "researchTime": 30,
+      "prerequisites": [],
+      "effects": {
+        "foodProduction": 20,
+        "populationGrowth": 10
+      },
+      "unlocksBuildings": ["farm"],
+      "year": 0
+    },
+    {
+      "id": "writing",
+      "name": "Schrift",
+      "description": "Entwicklung der Schrift zur Aufzeichnung von Wissen",
+      "category": "cultural",
+      "era": "ancient",
+      "cost": {
+        "research": 200,
+        "gold": 1000
+      },
+      "researchTime": 60,
+      "prerequisites": [],
+      "effects": {
+        "literacyRate": 15,
+        "culturalInfluence": 10
+      },
+      "unlocksBuildings": ["library"],
+      "year": 0
+    },
+    {
+      "id": "bronze_working",
+      "name": "Bronzeverarbeitung",
+      "description": "Herstellung von Werkzeugen und Waffen aus Bronze",
+      "category": "military",
+      "era": "ancient",
+      "cost": {
+        "research": 150,
+        "gold": 800
+      },
+      "researchTime": 45,
+      "prerequisites": [],
+      "effects": {
+        "militaryStrength": 15,
+        "productionBonus": 10
+      },
+      "year": 0
+    },
+    {
+      "id": "iron_working",
+      "name": "Eisenverarbeitung",
+      "description": "Fortgeschrittene Metallverarbeitung mit Eisen",
+      "category": "military",
+      "era": "ancient",
+      "cost": {
+        "research": 300,
+        "gold": 1500
+      },
+      "researchTime": 90,
+      "prerequisites": ["bronze_working"],
+      "effects": {
+        "militaryStrength": 30,
+        "productionBonus": 20
+      },
+      "unlocksBuildings": ["mine", "workshop"],
+      "year": 500
+    },
+    {
+      "id": "masonry",
+      "name": "Steinmetzkunst",
+      "description": "Fortgeschrittene Steinbearbeitung für Bauwerke",
+      "category": "infrastructure",
+      "era": "ancient",
+      "cost": {
+        "research": 250,
+        "gold": 1200
+      },
+      "researchTime": 75,
+      "prerequisites": [],
+      "effects": {
+        "buildingDurability": 25,
+        "defense": 15
+      },
+      "unlocksBuildings": ["walls", "church"],
+      "year": 200
+    },
+    {
+      "id": "feudalism",
+      "name": "Feudalismus",
+      "description": "Gesellschaftssystem mit Lehnsherren und Vasallen",
+      "category": "political",
+      "era": "medieval",
+      "cost": {
+        "research": 400,
+        "gold": 2000
+      },
+      "researchTime": 120,
+      "prerequisites": [],
+      "effects": {
+        "authority": 20,
+        "stability": 15,
+        "taxEfficiency": 25
+      },
+      "year": 800
+    },
+    {
+      "id": "guilds",
+      "name": "Gilden",
+      "description": "Organisation von Handwerkern und Händlern",
+      "category": "economic",
+      "era": "medieval",
+      "cost": {
+        "research": 350,
+        "gold": 1800
+      },
+      "researchTime": 105,
+      "prerequisites": ["writing"],
+      "effects": {
+        "tradePower": 20,
+        "goldProduction": 15,
+        "qualityBonus": 10
+      },
+      "unlocksBuildings": ["guildhall"],
+      "year": 1000
+    },
+    {
+      "id": "universities",
+      "name": "Universitäten",
+      "description": "Höhere Bildungseinrichtungen für Gelehrte",
+      "category": "cultural",
+      "era": "medieval",
+      "cost": {
+        "research": 500,
+        "gold": 3000
+      },
+      "researchTime": 150,
+      "prerequisites": ["writing"],
+      "effects": {
+        "literacyRate": 25,
+        "researchSpeed": 30,
+        "culturalInfluence": 20
+      },
+      "unlocksBuildings": ["university"],
+      "year": 1200
+    },
+    {
+      "id": "gunpowder",
+      "name": "Schießpulver",
+      "description": "Explosive Substanz für Waffen und Sprengstoffe",
+      "category": "military",
+      "era": "renaissance",
+      "cost": {
+        "research": 600,
+        "gold": 3500
+      },
+      "researchTime": 180,
+      "prerequisites": ["iron_working"],
+      "effects": {
+        "militaryStrength": 50,
+        "siegePower": 40
+      },
+      "year": 1400
+    },
+    {
+      "id": "printing_press",
+      "name": "Buchdruck",
+      "description": "Mechanische Vervielfältigung von Schriften",
+      "category": "cultural",
+      "era": "renaissance",
+      "cost": {
+        "research": 550,
+        "gold": 3200
+      },
+      "researchTime": 165,
+      "prerequisites": ["universities"],
+      "effects": {
+        "literacyRate": 40,
+        "culturalInfluence": 35,
+        "researchSpeed": 25
+      },
+      "year": 1450
+    },
+    {
+      "id": "banking",
+      "name": "Bankwesen",
+      "description": "Moderne Finanzinstitutionen und Kreditwesen",
+      "category": "economic",
+      "era": "renaissance",
+      "cost": {
+        "research": 500,
+        "gold": 4000
+      },
+      "researchTime": 150,
+      "prerequisites": ["guilds"],
+      "effects": {
+        "goldProduction": 30,
+        "tradePower": 25,
+        "economicGrowth": 20
+      },
+      "year": 1500
+    },
+    {
+      "id": "steam_power",
+      "name": "Dampfkraft",
+      "description": "Nutzung von Dampf als Energiequelle",
+      "category": "industrial",
+      "era": "industrial",
+      "cost": {
+        "research": 800,
+        "gold": 5000
+      },
+      "researchTime": 240,
+      "prerequisites": ["iron_working"],
+      "effects": {
+        "productionBonus": 50,
+        "industrialCapacity": 40
+      },
+      "unlocksBuildings": ["factory"],
+      "year": 1760
+    },
+    {
+      "id": "railways",
+      "name": "Eisenbahn",
+      "description": "Schienengebundener Transport mit Dampflokomotiven",
+      "category": "infrastructure",
+      "era": "industrial",
+      "cost": {
+        "research": 1000,
+        "gold": 6000
+      },
+      "researchTime": 300,
+      "prerequisites": ["steam_power"],
+      "effects": {
+        "tradePower": 40,
+        "tradeDistance": 100,
+        "economicGrowth": 30
+      },
+      "unlocksBuildings": ["railway_station"],
+      "year": 1825
+    },
+    {
+      "id": "electricity",
+      "name": "Elektrizität",
+      "description": "Nutzung elektrischer Energie",
+      "category": "industrial",
+      "era": "industrial",
+      "cost": {
+        "research": 1200,
+        "gold": 7000
+      },
+      "researchTime": 360,
+      "prerequisites": ["steam_power"],
+      "effects": {
+        "productionBonus": 60,
+        "qualityOfLife": 30,
+        "industrialCapacity": 50
+      },
+      "unlocksBuildings": ["power_plant"],
+      "year": 1880
+    },
+    {
+      "id": "radio",
+      "name": "Funktechnik",
+      "description": "Drahtlose Kommunikation über Funkwellen",
+      "category": "technology",
+      "era": "modern",
+      "cost": {
+        "research": 1500,
+        "gold": 8000
+      },
+      "researchTime": 450,
+      "prerequisites": ["electricity"],
+      "effects": {
+        "culturalInfluence": 40,
+        "communicationRange": 100,
+        "stability": 15
+      },
+      "year": 1900
+    },
+    {
+      "id": "aviation",
+      "name": "Luftfahrt",
+      "description": "Entwicklung von Flugzeugen",
+      "category": "infrastructure",
+      "era": "modern",
+      "cost": {
+        "research": 2000,
+        "gold": 10000
+      },
+      "researchTime": 600,
+      "prerequisites": ["electricity"],
+      "effects": {
+        "tradePower": 50,
+        "militaryStrength": 40,
+        "prestige": 35
+      },
+      "unlocksBuildings": ["airport"],
+      "year": 1903
+    },
+    {
+      "id": "nuclear_power",
+      "name": "Kernenergie",
+      "description": "Nutzung der Kernspaltung zur Energiegewinnung",
+      "category": "industrial",
+      "era": "modern",
+      "cost": {
+        "research": 3000,
+        "gold": 15000
+      },
+      "researchTime": 900,
+      "prerequisites": ["electricity"],
+      "effects": {
+        "powerProduction": 200,
+        "industrialCapacity": 80,
+        "prestige": 50
+      },
+      "year": 1945
+    },
+    {
+      "id": "computers",
+      "name": "Computer",
+      "description": "Elektronische Datenverarbeitung",
+      "category": "technology",
+      "era": "modern",
+      "cost": {
+        "research": 2500,
+        "gold": 12000
+      },
+      "researchTime": 750,
+      "prerequisites": ["electricity", "radio"],
+      "effects": {
+        "researchSpeed": 60,
+        "administrativeEfficiency": 40,
+        "economicGrowth": 35
+      },
+      "year": 1946
+    },
+    {
+      "id": "internet",
+      "name": "Internet",
+      "description": "Globales Computernetzwerk",
+      "category": "technology",
+      "era": "digital",
+      "cost": {
+        "research": 3500,
+        "gold": 18000
+      },
+      "researchTime": 1050,
+      "prerequisites": ["computers"],
+      "effects": {
+        "communicationRange": 1000,
+        "culturalInfluence": 60,
+        "tradePower": 55,
+        "researchSpeed": 70
+      },
+      "unlocksBuildings": ["data_center"],
+      "year": 1990
+    },
+    {
+      "id": "renewable_energy",
+      "name": "Erneuerbare Energien",
+      "description": "Nachhaltige Energiegewinnung aus Wind, Sonne und Wasser",
+      "category": "industrial",
+      "era": "digital",
+      "cost": {
+        "research": 4000,
+        "gold": 20000
+      },
+      "researchTime": 1200,
+      "prerequisites": ["electricity"],
+      "effects": {
+        "powerProduction": 150,
+        "environmentalBonus": 50,
+        "sustainability": 80,
+        "publicApproval": 30
+      },
+      "year": 2000
+    },
+    {
+      "id": "artificial_intelligence",
+      "name": "Künstliche Intelligenz",
+      "description": "Selbstlernende Computersysteme",
+      "category": "technology",
+      "era": "digital",
+      "cost": {
+        "research": 5000,
+        "gold": 25000
+      },
+      "researchTime": 1500,
+      "prerequisites": ["internet", "computers"],
+      "effects": {
+        "researchSpeed": 100,
+        "productionBonus": 80,
+        "administrativeEfficiency": 70,
+        "automation": 90
+      },
+      "unlocksBuildings": ["research_lab"],
+      "year": 2020
+    },
+    {
+      "id": "quantum_computing",
+      "name": "Quantencomputer",
+      "description": "Computing auf Basis von Quantenmechanik",
+      "category": "technology",
+      "era": "digital",
+      "cost": {
+        "research": 7000,
+        "gold": 35000
+      },
+      "researchTime": 2100,
+      "prerequisites": ["artificial_intelligence"],
+      "effects": {
+        "researchSpeed": 200,
+        "cryptographyPower": 100,
+        "technologicalLead": 150
+      },
+      "year": 2030
+    },
+    {
+      "id": "fusion_power",
+      "name": "Fusionsenergie",
+      "description": "Energiegewinnung durch Kernfusion wie in der Sonne",
+      "category": "industrial",
+      "era": "digital",
+      "cost": {
+        "research": 10000,
+        "gold": 50000
+      },
+      "researchTime": 3000,
+      "prerequisites": ["nuclear_power", "quantum_computing"],
+      "effects": {
+        "powerProduction": 500,
+        "sustainability": 100,
+        "prestige": 100,
+        "environmentalBonus": 80
+      },
+      "year": 2045
+    },
+    {
+      "id": "space_colonization",
+      "name": "Weltraumkolonisierung",
+      "description": "Besiedlung anderer Himmelskörper",
+      "category": "exploration",
+      "era": "digital",
+      "cost": {
+        "research": 15000,
+        "gold": 100000
+      },
+      "researchTime": 4500,
+      "prerequisites": ["fusion_power", "artificial_intelligence"],
+      "effects": {
+        "prestige": 200,
+        "resourceAccess": 150,
+        "populationCapacity": 100,
+        "scientificBreakthrough": 100
+      },
+      "year": 2050
+    }
+  ],
+  "techCategories": {
+    "economic": {
+      "name": "Wirtschaft",
+      "icon": "💰",
+      "color": "#FFD700"
+    },
+    "military": {
+      "name": "Militär",
+      "icon": "⚔️",
+      "color": "#DC143C"
+    },
+    "cultural": {
+      "name": "Kultur",
+      "icon": "🎭",
+      "color": "#9370DB"
+    },
+    "political": {
+      "name": "Politik",
+      "icon": "⚖️",
+      "color": "#4169E1"
+    },
+    "infrastructure": {
+      "name": "Infrastruktur",
+      "icon": "🏗️",
+      "color": "#8B4513"
+    },
+    "industrial": {
+      "name": "Industrie",
+      "icon": "🏭",
+      "color": "#696969"
+    },
+    "technology": {
+      "name": "Technologie",
+      "icon": "💻",
+      "color": "#00CED1"
+    },
+    "exploration": {
+      "name": "Erforschung",
+      "icon": "🚀",
+      "color": "#FF4500"
+    }
+  },
+  "metadata": {
+    "version": "2.0.0",
+    "lastUpdated": "2024-12-26",
+    "totalTechnologies": 24,
+    "timespan": {
+      "start": 0,
+      "end": 2050
+    }
+  }
+}

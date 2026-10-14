@@ -1,0 +1,309 @@
+{
+  "treatmentPolicies": [
+    {
+      "id": "humane",
+      "name": "Humane Treatment",
+      "description": "Full compliance with Geneva Convention. Good living conditions, medical care, recreation facilities, Red Cross visits.",
+      "availableFrom": 1929,
+      "conditions": 90,
+      "foodRations": 90,
+      "medicalCare": 90,
+      "workHoursPerDay": 0,
+      "monthlyMaintenanceCostPerPrisoner": 50,
+      "diplomaticImpact": 20,
+      "moraleImpact": 5,
+      "escapeChanceModifier": 0.5,
+      "healthDecayRate": -0.1,
+      "internationalLawCompliance": true
+    },
+    {
+      "id": "standard",
+      "name": "Standard Treatment",
+      "description": "Basic necessities provided according to customs of war. Adequate food, shelter, and medical care.",
+      "availableFrom": 0,
+      "conditions": 60,
+      "foodRations": 70,
+      "medicalCare": 50,
+      "workHoursPerDay": 4,
+      "monthlyMaintenanceCostPerPrisoner": 30,
+      "diplomaticImpact": 0,
+      "moraleImpact": 0,
+      "escapeChanceModifier": 1.0,
+      "healthDecayRate": 0.5,
+      "internationalLawCompliance": true
+    },
+    {
+      "id": "harsh",
+      "name": "Harsh Conditions",
+      "description": "Poor living conditions, minimal food, limited medical care. High mortality rate.",
+      "availableFrom": 0,
+      "conditions": 30,
+      "foodRations": 40,
+      "medicalCare": 20,
+      "workHoursPerDay": 8,
+      "monthlyMaintenanceCostPerPrisoner": 15,
+      "diplomaticImpact": -30,
+      "moraleImpact": -10,
+      "escapeChanceModifier": 1.5,
+      "healthDecayRate": 2.0,
+      "internationalLawCompliance": false
+    },
+    {
+      "id": "forced_labor",
+      "name": "Forced Labor Camps",
+      "description": "Prisoners used for construction, mining, agriculture, or war production. Long work hours, inadequate rest.",
+      "availableFrom": 0,
+      "conditions": 40,
+      "foodRations": 60,
+      "medicalCare": 30,
+      "workHoursPerDay": 12,
+      "monthlyMaintenanceCostPerPrisoner": 20,
+      "diplomaticImpact": -50,
+      "moraleImpact": 10,
+      "escapeChanceModifier": 1.2,
+      "healthDecayRate": 3.0,
+      "internationalLawCompliance": false
+    },
+    {
+      "id": "ransom",
+      "name": "Hold for Ransom",
+      "description": "Medieval/Renaissance practice. Keep high-ranking prisoners in reasonable comfort until ransom is paid.",
+      "availableFrom": 0,
+      "conditions": 70,
+      "foodRations": 80,
+      "medicalCare": 70,
+      "workHoursPerDay": 0,
+      "monthlyMaintenanceCostPerPrisoner": 40,
+      "diplomaticImpact": 10,
+      "moraleImpact": 0,
+      "escapeChanceModifier": 0.8,
+      "healthDecayRate": 0.2,
+      "internationalLawCompliance": false
+    },
+    {
+      "id": "execution",
+      "name": "Summary Execution",
+      "description": "War crime. Execute prisoners. Severe diplomatic consequences and international condemnation.",
+      "availableFrom": 0,
+      "conditions": 0,
+      "foodRations": 0,
+      "medicalCare": 0,
+      "workHoursPerDay": 0,
+      "monthlyMaintenanceCostPerPrisoner": 0,
+      "diplomaticImpact": -100,
+      "moraleImpact": -50,
+      "escapeChanceModifier": 0,
+      "healthDecayRate": 100,
+      "internationalLawCompliance": false
+    }
+  ],
+  "historicalCamps": [
+    {
+      "id": "colditz_castle",
+      "name": "Colditz Castle",
+      "location": "Saxony",
+      "capacity": 300,
+      "currentOccupancy": 0,
+      "treatmentPolicy": "standard",
+      "securityLevel": 9,
+      "conditions": 60,
+      "guards": 200,
+      "monthlyMaintenanceCost": 9000,
+      "established": 1940,
+      "historicalNote": "High-security camp for Allied officers with numerous escape attempts"
+    },
+    {
+      "id": "stalag_luft_iii",
+      "name": "Stalag Luft III",
+      "location": "Silesia",
+      "capacity": 10000,
+      "currentOccupancy": 0,
+      "treatmentPolicy": "standard",
+      "securityLevel": 7,
+      "conditions": 55,
+      "guards": 800,
+      "monthlyMaintenanceCost": 300000,
+      "established": 1942,
+      "historicalNote": "Famous for the Great Escape of March 1944"
+    }
+  ],
+  "historicalEvents": [
+    {
+      "year": 1215,
+      "event": "Magna Carta",
+      "description": "Established early principles for treatment of prisoners and ransoms",
+      "impact": "Set precedent for ransom-based prisoner exchanges among nobility"
+    },
+    {
+      "year": 1648,
+      "event": "Peace of Westphalia",
+      "description": "Included provisions for prisoner exchanges at end of Thirty Years' War",
+      "impact": "Formalized diplomatic prisoner exchange protocols"
+    },
+    {
+      "year": 1785,
+      "event": "Prussian-American Treaty",
+      "description": "Frederick the Great and USA agreed to humane treatment of PoWs",
+      "impact": "Early example of bilateral PoW treatment agreement"
+    },
+    {
+      "year": 1863,
+      "event": "Lieber Code",
+      "description": "First modern codification of laws of war including PoW treatment",
+      "impact": "Set standards for PoW treatment in modern warfare"
+    },
+    {
+      "year": 1899,
+      "event": "First Hague Convention",
+      "description": "International agreement on laws and customs of war",
+      "impact": "Established international standards for PoW treatment"
+    },
+    {
+      "year": 1907,
+      "event": "Second Hague Convention",
+      "description": "Expanded regulations on treatment of prisoners of war",
+      "impact": "Required proper food, shelter, and medical care for PoWs"
+    },
+    {
+      "year": 1929,
+      "event": "Geneva Convention (PoWs)",
+      "description": "Comprehensive international treaty on treatment of prisoners of war",
+      "impact": "Established detailed standards: adequate food, medical care, no forced labor for war production, Red Cross inspections, correspondence rights"
+    },
+    {
+      "year": 1949,
+      "event": "Third Geneva Convention",
+      "description": "Updated and expanded PoW protections after WWII",
+      "impact": "Current international standard for PoW treatment, prohibits torture, ensures humane treatment"
+    },
+    {
+      "year": 1977,
+      "event": "Additional Protocols to Geneva Conventions",
+      "description": "Extended protections to guerrilla fighters and irregular combatants",
+      "impact": "Broadened definition of who qualifies for PoW status"
+    }
+  ],
+  "ransomPrices": {
+    "medieval": {
+      "soldier": 0,
+      "officer": 100,
+      "general": 5000,
+      "noble": 10000,
+      "king": 100000
+    },
+    "renaissance": {
+      "soldier": 0,
+      "officer": 200,
+      "general": 10000,
+      "noble": 20000,
+      "king": 200000
+    },
+    "industrial": {
+      "soldier": 0,
+      "officer": 500,
+      "general": 50000,
+      "noble": 100000
+    },
+    "modern": {
+      "comment": "Ransom generally prohibited by international law after 1929"
+    }
+  },
+  "escapeStatistics": {
+    "description": "Historical escape success rates from various types of camps",
+    "medieval_castle": {
+      "attemptRate": 0.05,
+      "successRate": 0.10,
+      "note": "Heavily fortified, limited escape opportunities"
+    },
+    "renaissance_prison": {
+      "attemptRate": 0.08,
+      "successRate": 0.15,
+      "note": "Better security but still escapable"
+    },
+    "wwi_camp": {
+      "attemptRate": 0.10,
+      "successRate": 0.20,
+      "note": "Many tunnel escape attempts"
+    },
+    "wwii_camp": {
+      "attemptRate": 0.15,
+      "successRate": 0.05,
+      "note": "High security, but many creative escape attempts"
+    },
+    "modern_camp": {
+      "attemptRate": 0.02,
+      "successRate": 0.01,
+      "note": "Advanced security technology, very difficult to escape"
+    }
+  },
+  "famousPrisoners": [
+    {
+      "name": "King Richard I of England",
+      "capturedBy": "Leopold V of Austria",
+      "year": 1192,
+      "ransom": 150000,
+      "currency": "marks of silver",
+      "note": "Captured during return from Third Crusade"
+    },
+    {
+      "name": "François I of France",
+      "capturedBy": "Charles V, Holy Roman Emperor",
+      "year": 1525,
+      "ransom": 2000000,
+      "currency": "écus",
+      "note": "Captured at Battle of Pavia"
+    },
+    {
+      "name": "Napoleon Bonaparte",
+      "capturedBy": "British Empire",
+      "year": 1815,
+      "location": "St. Helena",
+      "note": "Exiled rather than imprisoned traditionally"
+    }
+  ],
+  "workTypes": {
+    "description": "Types of work prisoners might be forced to perform",
+    "types": [
+      {
+        "id": "agriculture",
+        "name": "Agricultural Work",
+        "description": "Farming, harvesting crops",
+        "productivityModifier": 0.5,
+        "healthImpact": -0.5,
+        "legalStatus": "allowed_by_geneva"
+      },
+      {
+        "id": "construction",
+        "name": "Construction",
+        "description": "Building roads, fortifications, infrastructure",
+        "productivityModifier": 0.6,
+        "healthImpact": -1.5,
+        "legalStatus": "restricted_by_geneva"
+      },
+      {
+        "id": "mining",
+        "name": "Mining",
+        "description": "Extracting coal, metals, minerals",
+        "productivityModifier": 0.7,
+        "healthImpact": -3.0,
+        "legalStatus": "prohibited_by_geneva"
+      },
+      {
+        "id": "war_production",
+        "name": "War Material Production",
+        "description": "Manufacturing weapons, ammunition",
+        "productivityModifier": 0.4,
+        "healthImpact": -2.0,
+        "legalStatus": "war_crime"
+      },
+      {
+        "id": "domestic_service",
+        "name": "Domestic Service",
+        "description": "Cooking, cleaning, maintenance",
+        "productivityModifier": 0.8,
+        "healthImpact": -0.2,
+        "legalStatus": "allowed_by_geneva"
+      }
+    ]
+  }
+}

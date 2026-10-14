@@ -1,0 +1,244 @@
+{
+  "discoveries": [
+    {
+      "id": "printing_press",
+      "name": "Buchdruck",
+      "year": 1450,
+      "discoverer": "Johannes Gutenberg",
+      "field": "technology",
+      "impact": 100,
+      "description": "Erfindung des Buchdrucks mit beweglichen Lettern",
+      "effects": {
+        "literacy": 0.5,
+        "knowledge_spread": 0.8,
+        "prestige": 1000,
+        "cultural_influence": 0.6
+      },
+      "prerequisite": null,
+      "enablesTechnology": ["mass_printing", "newspapers"]
+    },
+    {
+      "id": "heliocentric_model",
+      "name": "Heliozentrisches Weltbild",
+      "year": 1543,
+      "discoverer": "Nikolaus Kopernikus",
+      "field": "astronomy",
+      "impact": 95,
+      "description": "Die Erde dreht sich um die Sonne",
+      "effects": {
+        "science": 0.4,
+        "prestige": 800,
+        "religious_tension": 0.3
+      },
+      "prerequisite": null,
+      "enablesTechnology": ["astronomy", "navigation"]
+    },
+    {
+      "id": "laws_of_motion",
+      "name": "Bewegungsgesetze",
+      "year": 1687,
+      "discoverer": "Isaac Newton",
+      "field": "physics",
+      "impact": 98,
+      "description": "Newtonsche Mechanik und Gravitation",
+      "effects": {
+        "science": 0.6,
+        "prestige": 1200,
+        "engineering": 0.4
+      },
+      "prerequisite": "heliocentric_model",
+      "enablesTechnology": ["mechanics", "ballistics"]
+    },
+    {
+      "id": "steam_power",
+      "name": "Dampfkraft",
+      "year": 1769,
+      "discoverer": "James Watt",
+      "field": "engineering",
+      "impact": 100,
+      "description": "Praktisch nutzbare Dampfmaschine",
+      "effects": {
+        "industry": 0.8,
+        "economy": 0.6,
+        "prestige": 1500
+      },
+      "prerequisite": null,
+      "enablesTechnology": ["steam_engine", "railroads", "factories"]
+    },
+    {
+      "id": "vaccination",
+      "name": "Impfung",
+      "year": 1796,
+      "discoverer": "Edward Jenner",
+      "field": "medicine",
+      "impact": 92,
+      "description": "Schutz gegen Pocken durch Impfung",
+      "effects": {
+        "health": 0.5,
+        "population_growth": 0.3,
+        "prestige": 1000
+      },
+      "prerequisite": null,
+      "enablesTechnology": ["modern_medicine", "immunology"]
+    },
+    {
+      "id": "electromagnetism",
+      "name": "Elektromagnetismus",
+      "year": 1831,
+      "discoverer": "Michael Faraday",
+      "field": "physics",
+      "impact": 96,
+      "description": "Grundlagen der Elektrizität und Magnetismus",
+      "effects": {
+        "science": 0.5,
+        "industry": 0.6,
+        "prestige": 1200
+      },
+      "prerequisite": null,
+      "enablesTechnology": ["electricity", "telegraph", "electric_motor"]
+    },
+    {
+      "id": "evolution",
+      "name": "Evolutionstheorie",
+      "year": 1859,
+      "discoverer": "Charles Darwin",
+      "field": "biology",
+      "impact": 94,
+      "description": "Natürliche Selektion und Evolution",
+      "effects": {
+        "science": 0.7,
+        "prestige": 1100,
+        "religious_tension": 0.4
+      },
+      "prerequisite": null,
+      "enablesTechnology": ["genetics", "modern_biology"]
+    },
+    {
+      "id": "germ_theory",
+      "name": "Keimtheorie",
+      "year": 1862,
+      "discoverer": "Louis Pasteur",
+      "field": "medicine",
+      "impact": 95,
+      "description": "Mikroorganismen verursachen Krankheiten",
+      "effects": {
+        "health": 0.6,
+        "population_growth": 0.4,
+        "prestige": 1300
+      },
+      "prerequisite": null,
+      "enablesTechnology": ["antibiotics", "surgery", "sanitation"]
+    },
+    {
+      "id": "xrays",
+      "name": "Röntgenstrahlen",
+      "year": 1895,
+      "discoverer": "Wilhelm Conrad Röntgen",
+      "field": "physics",
+      "impact": 88,
+      "description": "Entdeckung der Röntgenstrahlung",
+      "effects": {
+        "science": 0.4,
+        "medicine": 0.5,
+        "prestige": 900
+      },
+      "prerequisite": "electromagnetism",
+      "enablesTechnology": ["medical_imaging", "radiology"]
+    },
+    {
+      "id": "radioactivity",
+      "name": "Radioaktivität",
+      "year": 1896,
+      "discoverer": "Henri Becquerel",
+      "field": "physics",
+      "impact": 90,
+      "description": "Entdeckung radioaktiver Strahlung",
+      "effects": {
+        "science": 0.6,
+        "prestige": 1000
+      },
+      "prerequisite": null,
+      "enablesTechnology": ["nuclear_physics", "atomic_energy"]
+    },
+    {
+      "id": "relativity",
+      "name": "Relativitätstheorie",
+      "year": 1905,
+      "discoverer": "Albert Einstein",
+      "field": "physics",
+      "impact": 100,
+      "description": "Spezielle und allgemeine Relativitätstheorie",
+      "effects": {
+        "science": 0.9,
+        "prestige": 2000
+      },
+      "prerequisite": "electromagnetism",
+      "enablesTechnology": ["nuclear_energy", "space_travel"]
+    },
+    {
+      "id": "penicillin",
+      "name": "Penicillin",
+      "year": 1928,
+      "discoverer": "Alexander Fleming",
+      "field": "medicine",
+      "impact": 97,
+      "description": "Erstes Antibiotikum",
+      "effects": {
+        "health": 0.8,
+        "population_growth": 0.5,
+        "prestige": 1500
+      },
+      "prerequisite": "germ_theory",
+      "enablesTechnology": ["antibiotics", "modern_medicine"]
+    },
+    {
+      "id": "dna_structure",
+      "name": "DNA-Struktur",
+      "year": 1953,
+      "discoverer": "Watson & Crick",
+      "field": "biology",
+      "impact": 98,
+      "description": "Doppelhelix-Struktur der DNA",
+      "effects": {
+        "science": 0.8,
+        "medicine": 0.6,
+        "prestige": 1800
+      },
+      "prerequisite": "evolution",
+      "enablesTechnology": ["genetic_engineering", "biotechnology"]
+    },
+    {
+      "id": "transistor",
+      "name": "Transistor",
+      "year": 1947,
+      "discoverer": "Bardeen, Brattain, Shockley",
+      "field": "engineering",
+      "impact": 99,
+      "description": "Elektronischer Schalter",
+      "effects": {
+        "technology": 0.9,
+        "industry": 0.7,
+        "prestige": 1600
+      },
+      "prerequisite": "electromagnetism",
+      "enablesTechnology": ["computers", "electronics", "digital_age"]
+    },
+    {
+      "id": "internet",
+      "name": "Internet",
+      "year": 1969,
+      "discoverer": "ARPANET Team",
+      "field": "technology",
+      "impact": 100,
+      "description": "Globales Computernetzwerk",
+      "effects": {
+        "technology": 1.0,
+        "economy": 0.8,
+        "communication": 0.9,
+        "prestige": 2000
+      },
+      "prerequisite": "transistor",
+      "enablesTechnology": ["information_age", "ai", "global_communication"]
+    }
+  ]
+}
