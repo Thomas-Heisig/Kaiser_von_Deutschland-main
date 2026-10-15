@@ -743,10 +743,21 @@ export class KingdomGameUI {
       <p>Reich: <strong>${escape(next.kingdom.name)}</strong></p>
       <p class="muted">Bitte das Gerät weitergeben. Die anderen Herrscher schauen weg.</p>
       <button class="primary wide" id="take-turn">Reich übernehmen →</button></div>`;
-    this.root.querySelector('.kingdom-app')?.append(overlay);
+    const app = this.root.querySelector('.kingdom-app');
+    app?.append(overlay);
+    const background = Array.from(app?.children ?? [])
+      .filter((element: Element): element is HTMLElement => element instanceof HTMLElement && element !== overlay);
+    background.forEach((element: HTMLElement): void => { element.inert = true; });
     const button = overlay.querySelector<HTMLButtonElement>('#take-turn');
+    overlay.addEventListener('keydown', (event: KeyboardEvent): void => {
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        button?.focus();
+      }
+    });
     button?.addEventListener('click', (): void => {
       overlay.remove();
+      background.forEach((element: HTMLElement): void => { element.inert = false; });
       this.navigate('overview');
       this.root.querySelector<HTMLButtonElement>('#end-turn')?.focus({ preventScroll: true });
     });

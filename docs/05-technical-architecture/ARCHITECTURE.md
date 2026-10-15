@@ -28,7 +28,15 @@ KingdomGameUI -> GameEngine -> Kingdom / EconomySystem / weitere Systeme
 - Markthandel verwendet die vorhandene Preistabelle von `EconomySystem`.
 - Kampagnenziele werden in `GameEngine.getCampaignGoals()` aus dem Reichszustand
   abgeleitet und benötigen keinen separaten Fortschrittsspeicher.
-- Speichern beinhaltet Bürgerdatensätze; beim Laden werden deren Orts- und
+- `CampaignWarfareSystem` löst Feldzüge und Überfälle statistisch auf und verwaltet
+  Rivalen, Tribut, Monatslimits und maximal 60 Berichte. Die Engine bindet
+  Feldherrenboni aus dem aktuell gespielten Bürger ein.
+- Rollenwechsel nutzt `RoleSwitchingSystem`; persönliche Aktionen sind je Spieler
+  auf eine Aktion pro Monat begrenzt, auch nach einem Rollenwechsel.
+- Mehrere lokale Spieler aktivieren Hotseat: `endTurn()` wechselt den Herrscher
+  und berechnet erst nach dem letzten Spieler einen Monat für alle Reiche.
+  Automatische Zeit ist dabei deaktiviert.
+- Speichern beinhaltet Bürgerdatensätze, Kriegszustand und Zugindex; beim Laden werden deren Orts- und
   Familienindizes rekonstruiert. Laden startet immer pausiert.
 - Daten-URLs verwenden `new URL(..., import.meta.url)`, sodass Vite die JSON-Dateien
   auch im Produktionsbuild ausliefert.
@@ -36,8 +44,8 @@ KingdomGameUI -> GameEngine -> Kingdom / EconomySystem / weitere Systeme
   Einwohner. ResizeObserver, Renderer und Timer werden beim Verwerfen freigegeben.
 
 Es existiert kein notwendiger Anwendungsserver: Simulation und Persistenz laufen
-lokal. Vorhandene Multiplayer-/Lebenssimulationsmodule sind keine vollständig
-bedienbaren Features dieser Aufbaukampagne.
+lokal. Online-Sitzungen und die älteren rollenabhängigen Spezialoberflächen
+sind nicht Bestandteil der Standardkampagne.
 
 ---
 

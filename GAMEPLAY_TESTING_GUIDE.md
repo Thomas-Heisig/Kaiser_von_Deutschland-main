@@ -14,8 +14,10 @@ npm run build
 
 Die Tests decken Kosten, monatliche Prognosen, Hunger, Rekrutierung,
 Kalendergrenzen, Pause/Fortsetzen, Schutz gegen parallele Monatsschritte,
-Handel und Speichern/Laden in eine neue Engine ab. Ein Integrationstest erreicht
-alle fünf Kampagnenziele durch finanzierte Spielaktionen, ohne Ressourcen zu setzen.
+Handel und Speichern/Laden in eine neue Engine ab. Zusätzlich werden Schlachten,
+Tribut, Überfälle, Rollenwechsel, Monatsaktionen und Hotseat-Züge geprüft.
+Ein Integrationstest erreicht alle sechs Kampagnenziele durch finanzierte
+Spielaktionen, ohne Ressourcen zu setzen.
 
 ## Start und Bedienung
 
@@ -55,11 +57,41 @@ Alle Ziele müssen gleichzeitig gelten:
 - Mindestens zwei Schulen.
 - Mindestens 65 % Zufriedenheit.
 - Mindestens 8.000 Gold sowie nichtnegative monatliche Nahrungs- und Goldbilanz.
+- Mindestens einen rivalisierenden Nachbarn unterwerfen.
 
 Verkaufe Überschüsse, importiere bei Bedarf Holz und investiere in Höfe und Märkte.
 Drei Marktplätze sind nur ein Mindestziel; zusätzliche Märkte können für eine
 positive Goldbilanz nötig sein. Es gibt kein Zeitlimit. Nach der Zielmeldung
 kann weitergespielt werden.
+
+## Feldzüge und Charaktere
+
+1. „Feldzüge“ öffnen: Heer, Nachschubkosten, Gegner und Siegchancen müssen erscheinen.
+2. Gegen die Raubritter ausrücken. Gold und Nahrung werden abgebucht; der Bericht
+   zeigt Ergebnis und Verluste. Ein zweiter Feldzug im selben Monat ist gesperrt.
+3. Bei Sieg ist der Gegner unterworfen und zahlt monatlich Tribut. Bei Niederlage
+   bleibt er angreifbar, sobald ein neuer Monat beginnt und genug Nachschub vorhanden ist.
+4. „Charakter“ öffnen und studieren, arbeiten, trainieren oder dem Reich dienen.
+   Genau eine persönliche Aktion pro Spieler und Monat ist möglich.
+5. Eine andere Rolle übernehmen: Name und Fähigkeiten ändern sich. Der Wechsel
+   darf keine zweite Monatsaktion freischalten. Militärische Fähigkeiten beeinflussen
+   den Feldherrenbonus im Kriegsrat.
+6. Speichern und Laden müssen Rollenwahl, Aktionssperre, Gegner und Berichte erhalten.
+   Zufällige Überfälle treten nur bei aktivierten Zufallsereignissen auf.
+
+## Lokaler Mehrspielermodus
+
+1. Auf der Startseite zwei bis vier Spieler wählen und unterschiedliche Reichsnamen eintragen.
+2. Im Hotseat gibt es „Zug beenden“ statt Echtzeitsteuerung. Nach dem ersten Zug
+   bleibt das Datum unverändert; die Übergabe zeigt den nächsten Herrscher.
+3. Während der Übergabe dürfen Tab und Shift+Tab keine Aktionen im Hintergrund erreichen.
+4. „Reich übernehmen“ bestätigt den Wechsel. Ressourcen und Charakter gehören jetzt
+   zum neuen aktiven Herrscher.
+5. Erst nach dem letzten Spielerzug beginnt der nächste Monat für alle Reiche.
+6. Im Kriegsrat kann auch ein Mitspieler angegriffen werden. Beide sehen den Bericht;
+   der Sieger erhält 15 % des gegnerischen Goldes.
+7. Speichern, einen Zug weitergehen und Laden: aktiver Spieler und Datum müssen
+   wiederhergestellt werden, auch nach einem Neuladen der Seite.
 
 ## Persistenz
 
@@ -75,6 +107,8 @@ Die letzten 100 Chronikmeldungen gelten nur für die laufende Sitzung.
 Der neue Speicherstand hat Version 2 und enthält die Bürgerdatensätze, auf die
 gespeicherte Rollen und KI-Controller verweisen. Ältere Spielstände ohne Bürger
 können diesen zuvor nicht gespeicherten Teil nicht rekonstruieren.
+Zusätzlich enthält der Speicherstand Kriegsdaten und den Hotseat-Zugindex.
+Alte Speicherstände ohne Kriegsdaten erhalten die anfänglichen Nachbarn.
 
 ## Darstellung und Zugänglichkeit
 

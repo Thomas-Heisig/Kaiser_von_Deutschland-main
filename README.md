@@ -20,7 +20,10 @@ tastaturbedienbare Verwaltung mit interaktiver PixiJS-Siedlungskarte ersetzt.
 - Markthandel mit sichtbaren Preisen sowie Rekrutierung von drei Truppentypen.
 - Pause, Einzelschritte und 1×/2×/4× Geschwindigkeit; eine gemeinsame Simulationszeit.
 - Manuelles Speichern und Laden im Browser, einschließlich Bürgern und Kalender.
-- Fünf erreichbare Kampagnenziele; danach ist freies Weiterspielen möglich.
+- Feldzüge gegen drei rivalisierende Reiche, Nachschub, Verluste, Überfälle und Tribut.
+- Spielbare Bürger mit Rollenwechsel und vier persönlichen Monatsaktionen.
+- Lokaler Hotseat für zwei bis vier Herrscher mit Spielerübergabe und gegenseitigen Angriffen.
+- Sechs erreichbare Kampagnenziele; danach ist freies Weiterspielen möglich.
 
 **Start:** `npm ci`, danach `npm run dev`, Browser unter `http://localhost:4100`.
 Das Spiel beginnt pausiert. „Monat →“ berechnet genau einen Monat; 1× entspricht
@@ -28,10 +31,13 @@ vier Sekunden pro Monat. Es gibt **kein Autosave**. Laden pausiert immer die Zei
 Spielstände sind an Browserprofil und Origin gebunden und kein Cloud-Backup.
 
 **Abgrenzung:** Die Karte ist schematisch und stellt keine historischen Grenzen dar.
-Die Kampagne bietet noch keine bedienbaren Schlachten, Multiplayer-Sitzungen oder
-Charakter-Rollenwechsel. Die weiter unten beschriebenen älteren Systeme und
-Roadmap-Features sind deshalb **nicht mit vollständig integriertem Gameplay
-gleichzusetzen**. Das Gesamtprojekt bleibt in Entwicklung.
+Schlachten werden statistisch aufgelöst, nicht als taktische Echtzeitkämpfe.
+Mehrspieler bedeutet hier **Hotseat an einem Gerät**, nicht Online-Multiplayer.
+Nach dem letzten Spielerzug vergeht ein Monat; es gibt dabei keine automatische Zeit.
+Rollenwechsel verändert den gespielten Bürger und seinen Feldherrenbonus, nicht die
+Verwaltungsoberfläche. Die weiter unten beschriebenen älteren Systeme und
+Roadmap-Features sind **nicht mit vollständig integriertem Gameplay gleichzusetzen**.
+Das Gesamtprojekt bleibt in Entwicklung.
 
 Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
 Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).

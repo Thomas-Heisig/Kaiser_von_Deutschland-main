@@ -102,6 +102,38 @@ Einkauf kostet `ceil(Basispreis × Menge × 1,2)`, Verkauf bringt
 `floor(Basispreis × Menge × 0,8)`. Kampagnenziele enthalten jeweils `label` und
 `done` und beziehen sich auf den aktuellen Zustand, nicht auf frühere Bestwerte.
 
+### Feldzüge, Rollen und Hotseat
+
+```typescript
+getRivals(playerId: string): RivalRealm[]
+getBattleReports(playerId: string): BattleReport[]
+getArmyOverview(playerId: string): {
+  soldiers: number; attack: number; defense: number;
+  cost: { gold: number; food: number }; canCampaign: boolean; commanderBonus: number;
+}
+getVictoryChance(playerId: string, target: string): number
+attackRival(playerId: string, rivalId: string): BattleReport
+attackPlayer(attackerId: string, defenderId: string): BattleReport
+getCurrentCharacter(playerId: string): Citizen | null
+getPlayableCharacters(limit?: number): Citizen[]
+switchCharacter(playerId: string, citizenId: string): Citizen
+canCharacterAct(playerId: string): boolean
+performCharacterAction(playerId: string, action: CharacterAction): string
+isHotseat(): boolean
+getActivePlayer(): Player
+endTurn(): Promise<TurnResult>
+```
+
+`CharacterAction` ist `'work' | 'study' | 'train' | 'serve'`.
+Persönliche Aktionen und Feldzüge sind jeweils einmal je Spieler und Monat möglich.
+Ein Feldzug benötigt mindestens 20 Soldaten sowie zwei Gold und eine Nahrung je
+Soldat. Fehlender Nachschub, ungültige Gegner und gesperrte Aktionen werfen Fehler.
+Rollenwechsel zu toten oder fremdgesteuerten Bürgern ist nicht möglich.
+
+Mehrere lokale Spieler aktivieren Hotseat ohne Echtzeittimer. `TurnResult` enthält
+`activePlayer` und `monthAdvanced`; erst der letzte Zug verarbeitet einen Monat.
+`getCampaignGoals()` liefert sechs Ziele einschließlich der Unterwerfung eines Rivalen.
+
 ### Speichern und Laden
 
 ```typescript
@@ -114,13 +146,18 @@ on(eventName: string, listener: (detail: unknown) => void): () => void
 
 Standard-Slot der Engine: `default`; Standardoberfläche: `campaign`. Save-Version 2
 ergänzt `citizens` zu den bisherigen Spieler-, Kalender-, Ökologie- und
-Lebenssimulationsdaten. Laden ist immer pausiert. Während eines laufenden
+Lebenssimulationsdaten. `warfare` und `turnIndex` sichern zusätzlich Rivalen,
+Kampfberichte, Monatslimits und den aktiven Hotseat-Spieler. Alte Speicherstände
+ohne diese Felder erhalten neue Nachbarn und beginnen beim ersten Spieler.
+Laden ist immer pausiert. Während eines laufenden
 Monatsschritts werden Speichern/Laden explizit abgewiesen. `on()` liefert eine
 Abmeldefunktion, die Oberflächen beim Verwerfen aufrufen müssen.
 
 Wichtige UI-Ereignisse: `monthAdvanced`, `gameStateChanged`,
 `gameEvent` (`title`, `description`) und `simulationError` (`message`).
 Ein Fehler der automatischen Monatsberechnung pausiert die Simulation.
+Weitere Ereignisse sind `battleResolved` (`report`), `characterSwitched`,
+`characterActed` und `turnChanged`.
 
 ### Kingdom: verbindliche Prognose und Baukosten
 
