@@ -48,6 +48,25 @@ import { RoleSwitchingSystem } from './RoleSwitchingSystem';
 import { TimeSystem, TimeMode } from './TimeSystem';
 import { DynamicGameView } from './DynamicGameView';
 import localforage from 'localforage';
+import { KingdomInfrastructure } from './Kingdom';
+import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
+import type { Citizen } from './CitizenSystem';
+
+export type MarketResource = 'food' | 'wood' | 'stone' | 'iron';
+
+/** Monthly actions a player can take with the character currently played. */
+export type CharacterAction = 'work' | 'study' | 'train' | 'serve';
+
+/** Result of ending a hotseat turn. */
+export interface TurnResult {
+  monthAdvanced: boolean;
+  activePlayer: Player;
+}
+
+export interface CampaignGoal {
+  label: string;
+  done: boolean;
+}
 
 export enum GameState {
   LOBBY = 'LOBBY',
@@ -79,8 +98,6 @@ export class GameEngine {
   private players: Map<string, Player> = new Map();
   private currentYear: number;
   private gameState: GameState;
-  // TODO: Reserved for future economy features
-  // @ts-expect-error - Unused until economy features are implemented
   private _economy: EconomySystem;
   private events: EventSystem;
   private policySystem: PolicySystem;
@@ -142,6 +159,10 @@ export class GameEngine {
   
   private config: GameConfig;
   private eventTarget: EventTarget;
+  private readonly ready: Promise<void>;
+  private processingMonth: boolean = false;
+  private warfare: CampaignWarfareSystem = new CampaignWarfareSystem((): number => Math.random());
+  private turnIndex: number = 0;
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -155,6 +176,11 @@ export class GameEngine {
       enableWiki: true,
       ...config
     };
+    if (!Number.isFinite(this.config.gameSpeed) || this.config.gameSpeed <= 0 ||
+        !Number.isSafeInteger(this.config.startingYear) ||
+        !Number.isSafeInteger(this.config.maxPlayers) || this.config.maxPlayers < 1) {
+      throw new RangeError('Ungültige Spielkonfiguration: Jahr, Spielerzahl oder Geschwindigkeit.');
+    }
 
     this.currentYear = this.config.startingYear;
     this.gameState = GameState.LOBBY;
@@ -163,7 +189,7 @@ export class GameEngine {
     this.policySystem = new PolicySystem();
     this.eventTarget = new EventTarget();
     this.currentMonth = 1;
-    this._tickHandle = null as any;
+    this._tickHandle = null;
     
     // Initialize new population dynamics systems
     this.citizenSystem = new CitizenSystem();
@@ -222,9 +248,7 @@ export class GameEngine {
     this.timeSystem = new TimeSystem(this.config.startingYear, TimeMode.BALANCED);
     this.dynamicGameView = new DynamicGameView();
     
-    // Initialize all data asynchronously (fire-and-forget is intentional - 
-    // systems will be ready before game starts, as startGame() is user-triggered)
-    this.initializeSystems();
+    this.ready = this.initializeSystems();
 
     // Initialize optional systems
     if (this.config.enableOllama) {
@@ -243,7 +267,7 @@ export class GameEngine {
   }
 
   private currentMonth: number;
-  private _tickHandle: any;
+  private _tickHandle: ReturnType<typeof setTimeout> | null;
 
   // Initialize all systems asynchronously
   private async initializeSystems(): Promise<void> {
@@ -268,6 +292,7 @@ export class GameEngine {
       console.log('All roadmap feature systems initialized successfully');
     } catch (error) {
       console.error('Failed to initialize some systems:', error);
+      throw error;
     }
   }
 
@@ -289,11 +314,16 @@ export class GameEngine {
   }
 
   public async startGame(): Promise<void> {
+    await this.ready;
     if (this.players.size === 0) {
       throw new Error('Mindestens ein Spieler benötigt');
     }
 
+    if (this.gameState !== GameState.LOBBY) {
+      throw new Error('Ein Spiel wurde bereits gestartet.');
+    }
     this.gameState = GameState.RUNNING;
+    this.timeSystem.resume();
     this.emit('gameStateChanged', { state: this.gameState });
 
     // Initialize life simulation for the first player (v2.6.0)
@@ -308,53 +338,38 @@ export class GameEngine {
    * Creates player session, generates initial citizens, and assigns first character
    */
   private initializeLifeSimulation(): void {
-    // Get first player
     const players = Array.from(this.players.values());
     if (players.length === 0) return;
-    
-    const player = players[0];
-    const playerId = player.id;
-    
-    console.log('🎮 Initializing Life Simulation for player:', playerId);
-    
-    // 1. Create player session for role switching
-    this.roleSwitchingSystem.createSession(playerId);
-    console.log('✅ Player session created');
-    
-    // 2. Generate initial citizens if none exist
+
     const existingCitizens = this.citizenSystem.getAllCitizens();
     if (existingCitizens.length === 0) {
       this.generateInitialCitizens();
-      console.log('✅ Initial citizens generated');
     }
-    
-    // 3. Assign first living citizen to player
-    const allCitizens = this.citizenSystem.getAllCitizens().filter(c => c.isAlive);
-    if (allCitizens.length > 0) {
-      // Find an interesting starting character (noble or merchant preferred)
-      const preferredCitizen = allCitizens.find(c => 
-        c.socialClass === 'noble' || c.socialClass === 'middle'
-      ) || allCitizens[0];
-      
-      const success = this.roleSwitchingSystem.switchRole(
+
+    // Every player gets an own role session and a distinct starting character.
+    for (const player of players) {
+      const playerId = player.id;
+      if (!this.roleSwitchingSystem.getSession(playerId)) this.roleSwitchingSystem.createSession(playerId);
+      const available = this.citizenSystem.getAllCitizens()
+        .filter((citizen: Citizen): boolean => citizen.isAlive && !citizen.isPlayerCharacter);
+      if (available.length === 0) {
+        console.warn('Keine lebenden Bürger verfügbar');
+        continue;
+      }
+      const preferredCitizen = available.find((citizen: Citizen): boolean =>
+        citizen.socialClass === 'noble' || citizen.socialClass === 'middle') ?? available[0];
+      this.roleSwitchingSystem.switchRole(
         playerId,
         preferredCitizen.id,
-        (id) => this.citizenSystem.getCitizen(id),
-        (id, updates) => this.citizenSystem.updateCitizen(id, updates),
+        (id: string) => this.citizenSystem.getCitizen(id),
+        (id: string, updates: Partial<Citizen>) => this.citizenSystem.updateCitizen(id, updates),
         this.currentYear,
         this.currentMonth,
         'Spielstart - Erster Charakter'
       );
-      
-      if (success) {
-        console.log(`✅ Erster Charakter zugewiesen: ${preferredCitizen.firstName} ${preferredCitizen.lastName} (${preferredCitizen.profession})`);
-      } else {
-        console.error('❌ Fehler beim Zuweisen des ersten Charakters');
-      }
-    } else {
-      console.warn('⚠️ Keine lebenden Bürger verfügbar');
     }
   }
+
   
   /**
    * Generates initial population for the game
@@ -402,24 +417,39 @@ export class GameEngine {
   }
 
   private startAutoTick(): void {
-    // Clear existing
-    if (this._tickHandle) clearInterval(this._tickHandle);
-
-    const msPerMonth = Math.max(200, Math.floor(1000 / (this.config.gameSpeed || 1))); // default 1s per month
-    this._tickHandle = setInterval(() => this.monthlyTick(), msPerMonth);
+    if (this._tickHandle) clearTimeout(this._tickHandle);
+    this._tickHandle = null;
+    // Hotseat games are strictly turn-based; months advance via endTurn().
+    if (this.isHotseat()) return;
+    const mode = this.timeSystem.getMode();
+    const base = mode === TimeMode.DETAIL ? 30000 : mode === TimeMode.STRATEGIC ? 1000 / 12 : 1000;
+    const msPerMonth = Math.max(50, base / this.timeSystem.getSpeed() / this.config.gameSpeed);
+    this._tickHandle = setTimeout(async (): Promise<void> => {
+      this._tickHandle = null;
+      try {
+        if (!this.timeSystem.getPaused()) await this.monthlyTick();
+      } catch (error) {
+        console.error('Monat konnte nicht verarbeitet werden:', error);
+        this.pauseGame();
+        this.emit('simulationError', { message: error instanceof Error ? error.message : String(error) });
+      }
+      if (this.gameState === GameState.RUNNING) this.startAutoTick();
+    }, msPerMonth);
   }
 
   public pauseGame(): void {
     if (this.gameState === GameState.RUNNING) {
       this.gameState = GameState.PAUSED;
-      if (this._tickHandle) { clearInterval(this._tickHandle); this._tickHandle = null; }
+      this.timeSystem.pause();
+      if (this._tickHandle) { clearTimeout(this._tickHandle); this._tickHandle = null; }
       this.emit('gameStateChanged', { state: this.gameState });
     }
   }
 
   public resumeGame(): void {
-    if (this.gameState === GameState.PAUSED) {
+    if (this.gameState === GameState.PAUSED && !this.isHotseat()) {
       this.gameState = GameState.RUNNING;
+      this.timeSystem.resume();
       this.emit('gameStateChanged', { state: this.gameState });
       this.startAutoTick();
     }
@@ -427,7 +457,28 @@ export class GameEngine {
 
   private async monthlyTick(): Promise<void> {
     if (this.gameState !== GameState.RUNNING) return;
+    await this.advanceMonth();
+  }
 
+  /**
+   * Processes one complete month through the same path as automatic play.
+   * @returns Resolves after all monthly systems and year-boundary updates.
+   * @throws Error if no active game exists or another month is in progress.
+   */
+  public async advanceMonth(): Promise<void> {
+    if (this.gameState !== GameState.RUNNING && this.gameState !== GameState.PAUSED) {
+      throw new Error('Kein aktives Spiel vorhanden.');
+    }
+    if (this.processingMonth) throw new Error('Ein Monat wird bereits verarbeitet.');
+    this.processingMonth = true;
+    try {
+      await this.processMonthSystems();
+    } finally {
+      this.processingMonth = false;
+    }
+  }
+
+  private async processMonthSystems(): Promise<void> {
     // Update ecological systems
     const avgIndustrialization = this.getAverageIndustrialization();
     this.climateSystem.updateMonth(this.currentYear, this.currentMonth, avgIndustrialization);
@@ -459,9 +510,6 @@ export class GameEngine {
       this.currentMonth
     );
     
-    // Update time system (v2.6.0)
-    this.timeSystem.update(16); // ~60 FPS update rate
-    
     // Note: Many newly integrated systems don't have processMonth() methods yet
     // They are available via accessor methods for UI and manual triggering
 
@@ -470,6 +518,13 @@ export class GameEngine {
     if (this.currentMonth > 12) {
       this.currentMonth = 1;
       this.currentYear++;
+      for (const player of this.players.values()) {
+        player.kingdom.currentYear = this.currentYear;
+        player.processYear();
+        this.policySystem.applyYearlyEffects(player);
+      }
+      this.roadmapFeaturesManager.update(this.currentYear, 1);
+      this.warfare.processYear();
       this.checkForPromotions();
       
       // Yearly processes for population
@@ -484,15 +539,21 @@ export class GameEngine {
       this.emit('yearAdvanced', { year: this.currentYear });
     }
 
+    this.timeSystem.setDate(this.currentYear, this.currentMonth);
+    const seasons = ['winter', 'spring', 'summer', 'autumn'] as const;
+    for (const player of this.players.values()) {
+      player.kingdom.currentSeason = seasons[Math.floor((this.currentMonth % 12) / 3)];
+    }
     this.emit('monthAdvanced', { month: this.currentMonth, year: this.currentYear });
   }
 
   private async processPlayerMonth(player: Player): Promise<void> {
-    try {
-      player.kingdom.processMonth();
-    } catch (err) {
-      console.warn('kingdom.processMonth failed for', player.id, err);
-    }
+    player.kingdom.processMonth();
+
+    const raid = this.warfare.processMonth(player.id, player.kingdom,
+      { year: this.currentYear, month: this.currentMonth },
+      { raids: this.config.randomEvents, modifiers: this.getCommanderModifiers(player.id) });
+    if (raid) this.emit('battleResolved', { report: raid });
 
     // Apply monthly policy effects
     this.policySystem.applyMonthlyEffects(player);
@@ -506,7 +567,10 @@ export class GameEngine {
     // monthly random events
     if (this.config.randomEvents && Math.random() < 0.05) {
       const event = await this.events.getRandomEvent(player, this.currentYear);
-      if (event) await this.events.applyEvent(event, player, `${this.currentYear}-${this.currentMonth}`);
+      if (event) {
+        await this.events.applyEvent(event, player, null);
+        this.emit('gameEvent', { playerId: player.id, title: event.title, description: event.description });
+      }
     }
     
     // Note: Newly integrated systems are available for manual access via getters
@@ -518,17 +582,7 @@ export class GameEngine {
       throw new Error('Spiel ist nicht aktiv');
     }
 
-    for (const player of this.players.values()) {
-      await this.processPlayerYear(player);
-    }
-
-    this.currentYear++;
-    
-    // Update roadmap features manager (v2.5.0)
-    this.roadmapFeaturesManager.update(this.currentYear, 1.0);
-    
-    this.checkForPromotions();
-    this.emit('yearAdvanced', { year: this.currentYear });
+    for (let month = 0; month < 12; month++) await this.advanceMonth();
   }
 
   public addPlayer(data: PlayerCreationData): Player {
@@ -537,7 +591,11 @@ export class GameEngine {
     }
 
     const player = new Player(data);
+    player.kingdom.foundingYear = this.currentYear;
+    player.kingdom.currentYear = this.currentYear;
+    player.kingdom.currentSeason = 'winter';
     this.players.set(player.id, player);
+    this.warfare.ensureRivals(player.id, data.difficulty ?? this.config.difficulty);
     this.emit('playerAdded', { player: player.serialize() });
 
     return player;
@@ -546,6 +604,8 @@ export class GameEngine {
   public removePlayer(playerId: string): boolean {
     const existed = this.players.delete(playerId);
     if (existed) {
+      this.warfare.removePlayer(playerId);
+      this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
     }
     return existed;
@@ -555,6 +615,7 @@ export class GameEngine {
     const player = this.players.get(playerId);
     if (!player) throw new Error('Spieler nicht gefunden');
 
+    if (!Number.isFinite(rate)) throw new RangeError('Der Steuersatz muss eine endliche Zahl sein.');
     const clampedRate = Math.max(0, Math.min(0.5, rate));
     player.kingdom.taxRate = clampedRate;
     
@@ -592,7 +653,11 @@ export class GameEngine {
         success = player.kingdom.buildStructure('workshops');
         break;
       default:
-        success = false;
+        if (Object.prototype.hasOwnProperty.call(player.kingdom.infrastructure, type)) {
+          success = player.kingdom.buildStructure(type as keyof KingdomInfrastructure);
+        } else {
+          throw new Error(`Unbekanntes Gebäude: ${type}`);
+        }
         break;
     }
 
@@ -617,45 +682,17 @@ export class GameEngine {
   }
 
   // Event System
-  public on(eventName: string, listener: (detail: any) => void): void {
-    this.eventTarget.addEventListener(eventName, (event: Event) => {
+  public on(eventName: string, listener: (detail: any) => void): () => void {
+    const handler = (event: Event): void => {
       const customEvent = event as CustomEvent;
       listener(customEvent.detail);
-    });
+    };
+    this.eventTarget.addEventListener(eventName, handler);
+    return (): void => this.eventTarget.removeEventListener(eventName, handler);
   }
 
   private emit(eventName: string, detail: any): void {
     this.eventTarget.dispatchEvent(new CustomEvent(eventName, { detail }));
-  }
-
-  // Private Hilfsmethoden
-  private async processPlayerYear(player: Player): Promise<void> {
-    // Führe das Jahres-Update für das Königreich und den Spieler aus
-    try {
-      player.kingdom.processYear();
-    } catch (err) {
-      console.warn('kingdom.processYear failed for', player.id, err);
-    }
-
-    try {
-      player.processYear();
-    } catch (err) {
-      console.warn('player.processYear failed for', player.id, err);
-    }
-
-    // Apply yearly policy effects
-    this.policySystem.applyYearlyEffects(player);
-
-    // Zufallsereignisse
-    if (this.config.randomEvents) {
-      const event = await this.events.getRandomEvent(player, this.currentYear);
-      if (event) {
-        await this.events.applyEvent(event, player, this.currentYear.toString());
-      }
-    }
-
-    // Spielerstatistiken aktualisieren
-    this.updatePlayerStats(player);
   }
 
   /**
@@ -683,7 +720,7 @@ export class GameEngine {
     const prestigeBoost = kingdom.calculateTradeRoutePrestige(this.transportSystem) / 12;
     if (prestigeBoost > 0) {
       player.updateStats({
-        prestige: player.stats.prestige + prestigeBoost
+        prestige: prestigeBoost
       });
     }
     
@@ -709,8 +746,8 @@ export class GameEngine {
       player.kingdom.military.infantry * 0.1;
     
     player.updateStats({
-      popularity: player.stats.popularity + popularityChange,
-      prestige: player.stats.prestige + prestigeChange
+      popularity: popularityChange / 12,
+      prestige: prestigeChange / 12
     });
   }
 
@@ -784,7 +821,10 @@ export class GameEngine {
 
   // Speicherfunktionen
   public async saveGame(slot: string = 'default'): Promise<void> {
+    if (this.processingMonth) throw new Error('Bitte den laufenden Monat abwarten.');
     const saveData = {
+      version: 2,
+      citizens: this.citizenSystem.getAllCitizens(),
       players: Array.from(this.players.values()).map(p => p.serialize()),
       currentYear: this.currentYear,
       currentMonth: this.currentMonth,
@@ -798,6 +838,8 @@ export class GameEngine {
       roleSwitchingSessions: this.getRoleSwitchingSnapshots(),
       timeSystem: this.timeSystem.createSnapshot(),
       dynamicGameView: this.dynamicGameView.createSnapshot(),
+      warfare: this.warfare.serialize(),
+      turnIndex: this.turnIndex,
       savedAt: new Date().toISOString()
     };
 
@@ -824,22 +866,46 @@ export class GameEngine {
   }
 
   public async loadGame(slot: string = 'default'): Promise<void> {
+    await this.ready;
+    if (this.processingMonth) throw new Error('Bitte den laufenden Monat abwarten.');
     const saveData = await localforage.getItem<any>(`kaiser-ii-save-${slot}`);
     
     if (!saveData) {
       throw new Error(`Spielstand "${slot}" nicht gefunden`);
     }
 
-    this.players.clear();
-    
-    for (const playerData of saveData.players) {
-      const player = Player.deserialize(playerData);
-      this.players.set(player.id, player);
+    if (!Array.isArray(saveData.players) || saveData.players.length === 0 ||
+        !Number.isSafeInteger(saveData.currentYear) ||
+        !Number.isSafeInteger(saveData.currentMonth ?? 1) ||
+        (saveData.currentMonth ?? 1) < 1 || (saveData.currentMonth ?? 1) > 12 ||
+        !saveData.config || !Number.isFinite(saveData.config.gameSpeed) || saveData.config.gameSpeed <= 0 ||
+        (saveData.version !== undefined && saveData.version !== 2)) {
+      throw new Error('Der Spielstand ist beschädigt oder inkompatibel.');
     }
+    const restoredPlayers = saveData.players.map((data: ReturnType<Player['serialize']>): Player => {
+      if (!data || !data.kingdom || !data.stats || !data.kingdom.resources || !data.kingdom.infrastructure) {
+        throw new Error('Unvollständige Spielerdaten im Spielstand.');
+      }
+      for (const value of Object.values(data.kingdom.resources)) {
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+          throw new Error('Ungültige Ressourcen im Spielstand.');
+        }
+      }
+      return Player.deserialize(data);
+    });
+    const restoredWarfare = new CampaignWarfareSystem((): number => Math.random());
+    if (saveData.warfare) restoredWarfare.load(saveData.warfare);
+    for (const player of restoredPlayers) restoredWarfare.ensureRivals(player.id, saveData.config.difficulty);
+    this.pauseGame();
+    this.players = new Map(restoredPlayers.map((player: Player) => [player.id, player]));
+    this.warfare = restoredWarfare;
+    this.turnIndex = Number.isSafeInteger(saveData.turnIndex) && saveData.turnIndex >= 0
+      ? saveData.turnIndex % restoredPlayers.length : 0;
     
     this.currentYear = saveData.currentYear;
     this.currentMonth = saveData.currentMonth || 1;
-    this.gameState = saveData.gameState;
+    // Loading is deliberately paused so the player can review the restored kingdom.
+    this.gameState = GameState.PAUSED;
     this.config = saveData.config;
     
     // Load ecological systems (v2.2.3)
@@ -857,6 +923,7 @@ export class GameEngine {
     if (saveData.aiControllerManager) {
       this.aiControllerManager.loadSnapshot(saveData.aiControllerManager);
     }
+    this.citizenSystem.restoreCitizens(saveData.citizens ?? []);
     if (saveData.roleSwitchingSessions) {
       for (const sessionSnapshot of saveData.roleSwitchingSessions) {
         this.roleSwitchingSystem.loadSessionSnapshot(sessionSnapshot);
@@ -868,8 +935,355 @@ export class GameEngine {
     if (saveData.dynamicGameView) {
       this.dynamicGameView.loadSnapshot(saveData.dynamicGameView);
     }
+    this.timeSystem.setDate(this.currentYear, this.currentMonth);
+    this.timeSystem.pause();
     
     this.emit('gameLoaded', { slot });
+  }
+
+  /**
+   * Quotes a market exchange using the economy's shared price table.
+   * @param resource Resource to exchange.
+   * @param amount Positive integral resource amount.
+   * @param direction Buy from or sell to the market.
+   * @returns Total gold charged or received.
+   * @throws RangeError for invalid amounts.
+   */
+  public quoteTrade(resource: MarketResource, amount: number, direction: 'buy' | 'sell'): number {
+    if (!['food', 'wood', 'stone', 'iron'].includes(resource) || !['buy', 'sell'].includes(direction)) {
+      throw new RangeError('Unbekannte Ressource oder Handelsrichtung.');
+    }
+    if (!Number.isSafeInteger(amount) || amount <= 0) {
+      throw new RangeError('Die Handelsmenge muss eine positive ganze Zahl sein.');
+    }
+    const price = this._economy.getMarketPrices()[resource];
+    return direction === 'buy' ? Math.ceil(price * amount * 1.2) : Math.floor(price * amount * 0.8);
+  }
+
+  /**
+   * Exchanges resources atomically; failed trades leave the kingdom unchanged.
+   * @param playerId Player owning the resources.
+   * @param resource Resource to exchange.
+   * @param amount Positive integral resource amount.
+   * @param direction Buy or sell.
+   * @returns Whether the exchange could be funded.
+   * @throws Error if the player or amount is invalid.
+   */
+  public tradeForPlayer(playerId: string, resource: MarketResource, amount: number, direction: 'buy' | 'sell'): boolean {
+    const player = this.players.get(playerId);
+    if (!player) throw new Error('Spieler nicht gefunden.');
+    const price = this.quoteTrade(resource, amount, direction);
+    const resources = player.kingdom.resources;
+    if (direction === 'buy') {
+      if (resources.gold < price) return false;
+      resources.gold -= price;
+      resources[resource] += amount;
+    } else {
+      if (resources[resource] < amount) return false;
+      resources[resource] -= amount;
+      resources.gold += price;
+    }
+    this.emit('tradeCompleted', { playerId, resource, amount, direction, price });
+    return true;
+  }
+
+  /**
+   * Stops timers and pauses a discarded engine.
+   * @returns Nothing.
+   */
+  public dispose(): void {
+    if (this._tickHandle) clearTimeout(this._tickHandle);
+    this._tickHandle = null;
+    this.gameState = GameState.PAUSED;
+    this.timeSystem.pause();
+  }
+
+  /**
+   * Evaluates the build campaign's goals from authoritative kingdom state.
+   * @param playerId Owner of the campaign.
+   * @returns Six objectives, complete only when their current thresholds are met.
+   * @throws Error if the player does not exist.
+   */
+  public getCampaignGoals(playerId: string): CampaignGoal[] {
+    const player = this.players.get(playerId);
+    if (!player) throw new Error('Spieler nicht gefunden.');
+    const kingdom = player.kingdom;
+    const balance = kingdom.getMonthlyBalance();
+    const tradeIncome = this.getTradeNetworkStats(player).monthlyIncome;
+    return [
+      { label: '12 Bauernhöfe', done: kingdom.infrastructure.farms >= 12 },
+      { label: '3 Marktplätze', done: kingdom.infrastructure.markets >= 3 },
+      { label: '2 Schulen', done: kingdom.infrastructure.schools >= 2 },
+      { label: '65 % Zufriedenheit', done: kingdom.happiness >= 65 },
+      { label: '8.000 Gold & positive Versorgung',
+        done: kingdom.resources.gold >= 8000 && balance.net.food >= 0 && balance.net.gold + tradeIncome >= 0 },
+      { label: 'Einen Rivalen unterwerfen', done: this.warfare.subjugatedCount(playerId) >= 1 }
+    ];
+  }
+
+  // === Warfare (v3.0) ===
+
+  /**
+   * Rivals neighbouring a player's realm.
+   * @param playerId Player.
+   * @returns Rival realms with their current strength.
+   */
+  public getRivals(playerId: string): RivalRealm[] {
+    this.requirePlayer(playerId);
+    return this.warfare.getRivals(playerId);
+  }
+
+  /**
+   * Battle reports concerning a player, newest first.
+   * @param playerId Player.
+   * @returns Reports.
+   */
+  public getBattleReports(playerId: string): BattleReport[] {
+    return this.warfare.getReports(playerId);
+  }
+
+  /**
+   * Aggregated army information for the war room.
+   * @param playerId Player.
+   * @returns Field soldiers, attack and defense power, supply cost and whether the army can still march this month.
+   */
+  public getArmyOverview(playerId: string): {
+    soldiers: number; attack: number; defense: number; cost: { gold: number; food: number };
+    canCampaign: boolean; commanderBonus: number;
+  } {
+    const player = this.requirePlayer(playerId);
+    const modifiers = this.getCommanderModifiers(playerId);
+    return {
+      soldiers: CampaignWarfareSystem.fieldSoldiers(player.kingdom),
+      attack: CampaignWarfareSystem.armyPower(player.kingdom, modifiers),
+      defense: CampaignWarfareSystem.defensePower(player.kingdom, modifiers),
+      cost: CampaignWarfareSystem.campaignCost(player.kingdom),
+      canCampaign: this.warfare.canCampaign(playerId, this.currentYear * 12 + this.currentMonth),
+      commanderBonus: modifiers.commanderBonus ?? 0
+    };
+  }
+
+  /**
+   * Victory chance of a planned attack.
+   * @param playerId Attacker.
+   * @param target Rival id or another player's id.
+   * @returns Chance between 0 and 1.
+   */
+  public getVictoryChance(playerId: string, target: string): number {
+    const player = this.requirePlayer(playerId);
+    const attack = CampaignWarfareSystem.armyPower(player.kingdom, this.getCommanderModifiers(playerId));
+    const opponent = this.players.get(target);
+    if (opponent) {
+      return CampaignWarfareSystem.victoryChance(attack,
+        CampaignWarfareSystem.defensePower(opponent.kingdom, this.getCommanderModifiers(target)));
+    }
+    const rival = this.warfare.getRivals(playerId).find((entry: RivalRealm): boolean => entry.id === target);
+    if (!rival) throw new Error('Unbekannter Gegner.');
+    return CampaignWarfareSystem.victoryChance(attack, CampaignWarfareSystem.rivalPower(rival));
+  }
+
+  /**
+   * Leads the field army against a rival realm.
+   * @param playerId Attacker.
+   * @param rivalId Rival realm id.
+   * @returns Battle report.
+   * @throws Error if supplies, soldiers or the monthly campaign limit prevent the attack.
+   */
+  public attackRival(playerId: string, rivalId: string): BattleReport {
+    const player = this.requirePlayer(playerId);
+    const report = this.warfare.attackRival(playerId, player.kingdom, rivalId,
+      { year: this.currentYear, month: this.currentMonth }, this.getCommanderModifiers(playerId));
+    if (report.attackerWon) player.updateStats({ prestige: 5 });
+    this.emit('battleResolved', { report });
+    return report;
+  }
+
+  /**
+   * Attacks another human player's realm (hotseat multiplayer).
+   * @param attackerId Attacking player.
+   * @param defenderId Defending player.
+   * @returns Battle report.
+   * @throws Error for invalid targets or missing supplies.
+   */
+  public attackPlayer(attackerId: string, defenderId: string): BattleReport {
+    const attacker = this.requirePlayer(attackerId);
+    const defender = this.requirePlayer(defenderId);
+    const report = this.warfare.attackPlayer(
+      { id: attackerId, kingdom: attacker.kingdom }, { id: defenderId, kingdom: defender.kingdom },
+      { year: this.currentYear, month: this.currentMonth },
+      { attacker: this.getCommanderModifiers(attackerId), defender: this.getCommanderModifiers(defenderId) }
+    );
+    this.emit('battleResolved', { report });
+    return report;
+  }
+
+  private getCommanderModifiers(playerId: string): PowerModifiers {
+    const character = this.getCurrentCharacter(playerId);
+    if (!character) return {};
+    const military = character.profession === 'soldier' || character.profession === 'noble';
+    const skill = (character.skills.leadership + character.skills.combat) / 200;
+    return { commanderBonus: Math.round(skill * (military ? 0.2 : 0.1) * 100) / 100 };
+  }
+
+  // === Character role switching (v3.0) ===
+
+  /**
+   * Character currently played by a player.
+   * @param playerId Player.
+   * @returns Living citizen or null.
+   */
+  public getCurrentCharacter(playerId: string): Citizen | null {
+    const character = this.roleSwitchingSystem.getCurrentCharacter(playerId,
+      (id: string) => this.citizenSystem.getCitizen(id));
+    return character && character.isAlive ? character : null;
+  }
+
+  /**
+   * Living characters a player can switch to, most influential first.
+   * @param limit Maximum number of characters.
+   * @returns Candidate citizens not controlled by any player.
+   */
+  public getPlayableCharacters(limit: number = 12): Citizen[] {
+    const rank: Record<Citizen['socialClass'], number> = { royal: 3, noble: 2, middle: 1, peasant: 0 };
+    return this.citizenSystem.getAliveCitizens()
+      .filter((citizen: Citizen): boolean => !citizen.isPlayerCharacter)
+      .sort((a: Citizen, b: Citizen): number =>
+        rank[b.socialClass] - rank[a.socialClass] || b.reputation - a.reputation || a.age - b.age)
+      .slice(0, Math.max(0, limit));
+  }
+
+  /**
+   * Switches the played character; the previous one returns to AI control.
+   * @param playerId Player.
+   * @param citizenId New character.
+   * @returns The new character.
+   * @throws Error if the character is dead or controlled by another player.
+   */
+  public switchCharacter(playerId: string, citizenId: string): Citizen {
+    this.requirePlayer(playerId);
+    const citizen = this.citizenSystem.getCitizen(citizenId);
+    if (!citizen || !citizen.isAlive) throw new Error('Dieser Charakter lebt nicht mehr.');
+    if (citizen.isPlayerCharacter && citizen.controlledByPlayerId !== playerId) {
+      throw new Error('Dieser Charakter wird bereits von einem anderen Spieler gespielt.');
+    }
+    if (!this.roleSwitchingSystem.getSession(playerId)) this.roleSwitchingSystem.createSession(playerId);
+    const switched = this.roleSwitchingSystem.switchRole(playerId, citizenId,
+      (id: string) => this.citizenSystem.getCitizen(id),
+      (id: string, updates: Partial<Citizen>) => this.citizenSystem.updateCitizen(id, updates),
+      this.currentYear, this.currentMonth, 'Spielerwahl');
+    if (!switched) throw new Error('Der Rollenwechsel ist fehlgeschlagen.');
+    this.emit('characterSwitched', { playerId, citizenId });
+    return citizen;
+  }
+
+  /**
+   * Whether the played character can still act this month.
+   * @param playerId Player.
+   * @returns True if no action was taken in the current month.
+   */
+  public canCharacterAct(playerId: string): boolean {
+    return this.roleSwitchingSystem.getMetaKnowledge(playerId, 'lastActionMonth') !==
+      this.currentYear * 12 + this.currentMonth;
+  }
+
+  /**
+   * Performs the monthly personal action of the played character.
+   * @param playerId Player.
+   * @param action Work, study, weapons training or serving the realm.
+   * @returns Description of the outcome.
+   * @throws Error if no character is played or it already acted this month.
+   */
+  public performCharacterAction(playerId: string, action: CharacterAction): string {
+    const player = this.requirePlayer(playerId);
+    const character = this.getCurrentCharacter(playerId);
+    if (!character) throw new Error('Du spielst gerade keinen lebenden Charakter. Wähle eine neue Rolle.');
+    if (!this.canCharacterAct(playerId)) throw new Error('Dein Charakter hat in diesem Monat bereits gehandelt.');
+    const raise = (value: number, amount: number): number => Math.min(100, value + amount);
+    let message: string;
+    switch (action) {
+      case 'work': {
+        const earned = Math.max(10, Math.round(character.income || 0)) * 3 + Math.round(character.professionLevel / 2);
+        character.wealth += earned;
+        character.professionLevel = raise(character.professionLevel, 3);
+        message = `${character.firstName} arbeitet hart und verdient ${earned} Gold.`;
+        break;
+      }
+      case 'study':
+        character.skills.literacy = raise(character.skills.literacy, 6);
+        character.skills.leadership = raise(character.skills.leadership, 2);
+        player.kingdom.stats.literacyRate = raise(player.kingdom.stats.literacyRate, 0.3);
+        message = `${character.firstName} studiert alte Schriften. Lesen und Führung verbessern sich.`;
+        break;
+      case 'train':
+        character.skills.combat = raise(character.skills.combat, 6);
+        character.skills.leadership = raise(character.skills.leadership, 2);
+        player.kingdom.military.trainingLevel = raise(player.kingdom.military.trainingLevel, 1);
+        message = `${character.firstName} übt mit der Garnison. Kampfkraft und Heerführung steigen.`;
+        break;
+      case 'serve': {
+        const donation = Math.floor(character.wealth / 2);
+        character.wealth -= donation;
+        character.reputation = Math.min(100, character.reputation + 5);
+        player.kingdom.resources.gold += donation;
+        player.updateStats({ prestige: 1 });
+        message = `${character.firstName} dient dem Reich und stiftet ${donation} Gold für die Schatzkammer.`;
+        break;
+      }
+      default:
+        throw new Error('Unbekannte Charakteraktion.');
+    }
+    this.roleSwitchingSystem.storeMetaKnowledge(playerId, 'lastActionMonth', this.currentYear * 12 + this.currentMonth);
+    this.emit('characterActed', { playerId, action, message });
+    return message;
+  }
+
+  // === Local hotseat multiplayer (v3.0) ===
+
+  /**
+   * Whether several local players share this game (turn-based hotseat).
+   * @returns True for more than one player.
+   */
+  public isHotseat(): boolean {
+    return this.players.size > 1;
+  }
+
+  /**
+   * Player whose turn it currently is.
+   * @returns Active player.
+   * @throws Error if no player exists.
+   */
+  public getActivePlayer(): Player {
+    const players = this.getPlayers();
+    if (!players.length) throw new Error('Kein Spieler vorhanden.');
+    return players[this.turnIndex % players.length];
+  }
+
+  /**
+   * Ends the active player's turn. After the last player the month is simulated for all realms.
+   * @returns Whether a month was processed and who acts next.
+   * @throws Error if no game is active.
+   */
+  public async endTurn(): Promise<TurnResult> {
+    if (this.gameState !== GameState.RUNNING && this.gameState !== GameState.PAUSED) {
+      throw new Error('Kein aktives Spiel vorhanden.');
+    }
+    const count = this.players.size;
+    const next = this.turnIndex + 1;
+    let monthAdvanced = false;
+    if (next >= count) {
+      await this.advanceMonth();
+      monthAdvanced = true;
+    }
+    this.turnIndex = next % count;
+    const activePlayer = this.getActivePlayer();
+    this.emit('turnChanged', { playerId: activePlayer.id, monthAdvanced });
+    return { monthAdvanced, activePlayer };
+  }
+
+  private requirePlayer(playerId: string): Player {
+    const player = this.players.get(playerId);
+    if (!player) throw new Error('Spieler nicht gefunden.');
+    return player;
   }
 
   public async listSaves(): Promise<SaveMeta[]> {
@@ -1690,14 +2104,11 @@ export class GameEngine {
     for (const player of this.players.values()) {
       const kingdom = player.kingdom;
       
-      // Apply seasonal effects
-      kingdom.happiness = Math.max(0, Math.min(100, 
-        kingdom.happiness * seasonalEffects.happinessModifier
-      ));
-      
-      // Apply weather effects
+      // Annual winter surveys must not compound a permanent percentage loss every year.
       kingdom.happiness = Math.max(0, Math.min(100,
-        kingdom.happiness * weatherEffects.happinessModifier
+        kingdom.happiness +
+        (seasonalEffects.happinessModifier - 1) * 5 +
+        (weatherEffects.happinessModifier - 1) * 5
       ));
       
       // Apply disaster effects

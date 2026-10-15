@@ -70,7 +70,7 @@ export class CareerPathSystem {
    */
   private async loadCareerPaths(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/career-paths.json');
+      const response = await fetch(new URL('../data/json/career-paths.json', import.meta.url));
       const data = await response.json();
       this.careerPaths = data.careerPaths;
     } catch (error) {

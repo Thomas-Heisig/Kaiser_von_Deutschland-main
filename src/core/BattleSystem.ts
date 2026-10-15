@@ -36,7 +36,7 @@ export class BattleSystem {
 
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/historical-battles.json');
+      const response = await fetch(new URL('../data/json/historical-battles.json', import.meta.url));
       const data = await response.json();
       
       data.battles.forEach((battle: HistoricalBattle) => {

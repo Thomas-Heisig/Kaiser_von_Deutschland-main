@@ -60,8 +60,8 @@ export class ArtSystem {
   async initialize(): Promise<void> {
     try {
       const [stylesResponse, eventsResponse] = await Promise.all([
-        fetch('/src/data/json/art-styles.json'),
-        fetch('/src/data/json/cultural-events.json')
+        fetch(new URL('../data/json/art-styles.json', import.meta.url)),
+        fetch(new URL('../data/json/cultural-events.json', import.meta.url))
       ]);
 
       const stylesData = await stylesResponse.json();

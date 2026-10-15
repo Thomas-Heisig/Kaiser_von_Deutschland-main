@@ -113,7 +113,7 @@ export class RoadmapFeaturesManager {
 
   private async loadUniversities(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/universities.json');
+      const response = await fetch(new URL('../data/json/universities.json', import.meta.url));
       const data = await response.json();
       this.universities = data.universities || [];
       this.nobelPrizes = data.nobelPrizes || [];
@@ -124,7 +124,7 @@ export class RoadmapFeaturesManager {
 
   private async loadWaterways(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/waterways.json');
+      const response = await fetch(new URL('../data/json/waterways.json', import.meta.url));
       const data = await response.json();
       this.waterways = [...(data.waterways || []), ...(data.canals || [])];
     } catch (error) {
@@ -134,7 +134,7 @@ export class RoadmapFeaturesManager {
 
   private async loadColonies(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/colonial-systems.json');
+      const response = await fetch(new URL('../data/json/colonial-systems.json', import.meta.url));
       const data = await response.json();
       this.colonies = data.colonies || [];
     } catch (error) {
@@ -144,7 +144,7 @@ export class RoadmapFeaturesManager {
 
   private async loadUrbanDistricts(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/urban-districts.json');
+      const response = await fetch(new URL('../data/json/urban-districts.json', import.meta.url));
       const data = await response.json();
       this.urbanDistricts = data.urbanDistricts || [];
     } catch (error) {
@@ -154,7 +154,7 @@ export class RoadmapFeaturesManager {
 
   private async loadNavalSystems(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/naval-systems.json');
+      const response = await fetch(new URL('../data/json/naval-systems.json', import.meta.url));
       const data = await response.json();
       this.navalTechnologies = data.navalTechnologies || [];
     } catch (error) {
@@ -164,7 +164,7 @@ export class RoadmapFeaturesManager {
 
   private async loadMilitaryLogistics(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/military-logistics.json');
+      const response = await fetch(new URL('../data/json/military-logistics.json', import.meta.url));
       const data = await response.json();
       this.militaryLogistics = data.supplyLines || [];
     } catch (error) {

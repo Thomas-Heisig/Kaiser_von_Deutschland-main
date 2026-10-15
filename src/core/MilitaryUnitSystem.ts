@@ -44,7 +44,7 @@ export class MilitaryUnitSystem {
 
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/military-units.json');
+      const response = await fetch(new URL('../data/json/military-units.json', import.meta.url));
       const data = await response.json();
       
       data.militaryUnits.forEach((unit: MilitaryUnit) => {

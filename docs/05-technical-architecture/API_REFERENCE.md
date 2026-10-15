@@ -52,11 +52,8 @@ interface GameConfig {
 
 ### Initialisierung
 
-```typescript
-async initialize(): Promise<void>
-```
-
-Initialisiert alle Subsysteme. Muss vor `startGame()` aufgerufen werden.
+Die Initialisierung beginnt intern im Konstruktor. `startGame()` und `loadGame()`
+warten auf die Dateninitialisierung. Eine öffentliche `initialize()`-Methode gibt es nicht.
 
 ### Spiel-Steuerung
 
@@ -64,36 +61,102 @@ Initialisiert alle Subsysteme. Muss vor `startGame()` aufgerufen werden.
 async startGame(): Promise<void>
 pauseGame(): void
 resumeGame(): void
-resetGame(): void
+dispose(): void
 ```
+
+`startGame()` benötigt mindestens einen Spieler und darf nur einmal pro Engine
+aufgerufen werden. `dispose()` beendet den Simulationstimer.
 
 ### Zeit-Management
 
 ```typescript
-advanceMonth(): void
-advanceYear(): void
-getCurrentDate(): { year: number; month: number }
+advanceMonth(): Promise<void>
+nextYear(): Promise<void>
+getCurrentYear(): number
+getCurrentMonth(): number
 ```
+
+`advanceMonth()` funktioniert laufend oder pausiert, verwirft aber parallele
+Aufrufe mit einem Fehler. `nextYear()` benötigt ein laufendes Spiel und verwendet
+zwölf Monatsschritte. Die Standardoberfläche startet mit `gameSpeed: 0.25`
+und bietet die Geschwindigkeitsmultiplikatoren 1, 2 und 4 über `getTimeSystem()`.
+
+### Aktionen und Kampagnenziele
+
+```typescript
+setTaxRate(playerId: string, rate: number): void
+buildForPlayer(playerId: string, type: string): Promise<boolean>
+recruitForPlayer(playerId: string, count: number, type?: 'infantry' | 'cavalry' | 'archers'): boolean
+quoteTrade(resource: MarketResource, amount: number, direction: 'buy' | 'sell'): number
+tradeForPlayer(playerId: string, resource: MarketResource, amount: number, direction: 'buy' | 'sell'): boolean
+getCampaignGoals(playerId: string): CampaignGoal[]
+```
+
+`MarketResource` ist `'food' | 'wood' | 'stone' | 'iron'`. Handelsmengen und
+Rekrutenzahlen sind positive ganze Zahlen. Ungültige Eingaben werfen Fehler;
+fehlende Mittel liefern `false`, ohne Teilkosten abzubuchen. Bauaktionen
+akzeptieren die Infrastruktur-Schlüssel sowie die vorhandenen Singular-Aliase.
+Der Steuersatz ist ein endlicher Wert und wird auf 0–0,5 begrenzt.
+
+Einkauf kostet `ceil(Basispreis × Menge × 1,2)`, Verkauf bringt
+`floor(Basispreis × Menge × 0,8)`. Kampagnenziele enthalten jeweils `label` und
+`done` und beziehen sich auf den aktuellen Zustand, nicht auf frühere Bestwerte.
+
+### Speichern und Laden
+
+```typescript
+saveGame(slot?: string): Promise<void>
+loadGame(slot?: string): Promise<void>
+listSaves(): Promise<SaveMeta[]>
+deleteSave(slot: string): Promise<void>
+on(eventName: string, listener: (detail: unknown) => void): () => void
+```
+
+Standard-Slot der Engine: `default`; Standardoberfläche: `campaign`. Save-Version 2
+ergänzt `citizens` zu den bisherigen Spieler-, Kalender-, Ökologie- und
+Lebenssimulationsdaten. Laden ist immer pausiert. Während eines laufenden
+Monatsschritts werden Speichern/Laden explizit abgewiesen. `on()` liefert eine
+Abmeldefunktion, die Oberflächen beim Verwerfen aufrufen müssen.
+
+Wichtige UI-Ereignisse: `monthAdvanced`, `gameStateChanged`,
+`gameEvent` (`title`, `description`) und `simulationError` (`message`).
+Ein Fehler der automatischen Monatsberechnung pausiert die Simulation.
+
+### Kingdom: verbindliche Prognose und Baukosten
+
+```typescript
+getMonthlyBalance(): MonthlyBalance
+getBuildingData(type: keyof KingdomInfrastructure): StructureDefinition | undefined
+```
+
+Die Prognose enthält `production`, `consumption`, `taxes` und `net`. Ereignisse,
+Handelsrouten sowie jährliche Titelboni werden separat berücksichtigt.
+`StructureDefinition` enthält Gold-, Holz-, Stein- und gegebenenfalls Eisenkosten.
 
 ### Spieler-Management
 
 ```typescript
-addPlayer(config: PlayerConfig): Player
-getPlayer(id: string): Player | null
-getAllPlayers(): Player[]
-removePlayer(id: string): void
+addPlayer(config: PlayerCreationData): Player
+getPlayerById(id: string): Player | undefined
+getPlayers(): Player[]
+removePlayer(id: string): boolean
 ```
 
-**PlayerConfig**:
+**PlayerCreationData** (Auszug):
 ```typescript
-interface PlayerConfig {
+interface PlayerCreationData {
   name: string;
-  gender: 'male' | 'female';
+  gender: 'male' | 'female' | 'other' | 'royal_blood' | 'noble_lineage';
   kingdomName: string;
-  startingRole?: string;      // Standard: 'arbeiter'
-  type?: 'human' | 'ai_basic' | 'ai_ollama';
+  difficulty?: number;
+  startingStats?: Partial<PlayerStats>;
 }
 ```
+
+`Player.updateStats()` erwartet Änderungen, keine absoluten Zielwerte.
+Monatliche Änderungen der Engine sind auf ein Zwölftel der Jahresrate skaliert.
+`minYear` in Erfolgsbedingungen bezeichnet vergangene Regierungsjahre
+(`kingdom.currentYear - kingdom.foundingYear`), nicht das historische Kalenderjahr.
 
 ### System-Zugriff
 
@@ -136,9 +199,6 @@ const engine = new GameEngine({
   enableWiki: true
 });
 
-// Initialisieren
-await engine.initialize();
-
 // Spieler hinzufügen
 const player = engine.addPlayer({
   name: 'Heinrich',
@@ -150,7 +210,8 @@ const player = engine.addPlayer({
 await engine.startGame();
 
 // Monat vorrücken
-engine.advanceMonth();
+engine.pauseGame();
+await engine.advanceMonth();
 ```
 
 ---

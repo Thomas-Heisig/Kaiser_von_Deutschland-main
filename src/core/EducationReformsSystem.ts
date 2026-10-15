@@ -137,7 +137,7 @@ export class EducationReformsSystem {
    */
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/education-reforms-system.json');
+      const response = await fetch(new URL('../data/json/education-reforms-system.json', import.meta.url));
       const data = await response.json();
 
       // Load education systems

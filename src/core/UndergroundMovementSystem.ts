@@ -142,7 +142,7 @@ export class UndergroundMovementSystem {
    */
   private async loadData(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/underground-movements.json');
+      const response = await fetch(new URL('../data/json/underground-movements.json', import.meta.url));
       const data = await response.json();
       
       this.terrorAttackTypes = data.terrorAttackTypes || [];

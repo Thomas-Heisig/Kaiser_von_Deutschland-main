@@ -38,7 +38,7 @@ export class TimeSystem {
   private speed: number;
   private isPaused: boolean;
   
-  // Zeit in Tagen seit Spielstart (Year 0 = Tag 0)
+  // Elapsed days relative to startYear; the calendar uses 365 days without leap years.
   private currentDay: number;
   private startYear: number;
   
@@ -48,12 +48,11 @@ export class TimeSystem {
   private onYearChange?: (year: number) => void;
   
   // Update-Tracking
-  private lastUpdateTime: number = 0;
   private accumulatedTime: number = 0;
   
   constructor(startYear: number = 0, mode: TimeMode = TimeMode.BALANCED) {
     this.startYear = startYear;
-    this.currentDay = startYear * 365; // Vereinfachte Berechnung (ohne Schaltjahre)
+    this.currentDay = 0;
     this.mode = mode;
     this.speed = 1.0;
     this.isPaused = false;
@@ -62,23 +61,15 @@ export class TimeSystem {
   /**
    * Aktualisiert die Zeit basierend auf Delta-Zeit
    */
-  public update(_deltaTime: number): void {
+  public update(deltaTime: number): void {
+    if (!Number.isFinite(deltaTime) || deltaTime < 0) {
+      throw new RangeError('Die verstrichene Zeit muss endlich und nicht negativ sein.');
+    }
     if (this.isPaused) {
       return;
     }
     
-    // Berechne wie viel Zeit seit letztem Update vergangen ist
-    const now = Date.now();
-    if (this.lastUpdateTime === 0) {
-      this.lastUpdateTime = now;
-      return;
-    }
-    
-    const realDeltaMs = now - this.lastUpdateTime;
-    this.lastUpdateTime = now;
-    
-    // Berechne Spielzeit-Delta basierend auf Modus
-    const gameDelta = this.calculateGameTimeDelta(realDeltaMs);
+    const gameDelta = this.calculateGameTimeDelta(deltaTime);
     
     this.accumulatedTime += gameDelta;
     
@@ -161,6 +152,7 @@ export class TimeSystem {
    * Setzt Geschwindigkeitsmultiplikator
    */
   public setSpeed(speed: number): void {
+    if (!Number.isFinite(speed)) throw new RangeError('Die Geschwindigkeit muss endlich sein.');
     this.speed = Math.max(0.1, Math.min(10, speed)); // Begrenzt auf 0.1x - 10x
     console.log(`Geschwindigkeit geändert: ${this.speed}x`);
   }
@@ -185,7 +177,6 @@ export class TimeSystem {
    */
   public resume(): void {
     this.isPaused = false;
-    this.lastUpdateTime = Date.now(); // Reset, um große Zeitsprünge zu vermeiden
     console.log('Zeit fortgesetzt');
   }
   
@@ -208,7 +199,8 @@ export class TimeSystem {
    */
   public getCurrentMonth(): number {
     const dayOfYear = this.currentDay % 365;
-    return Math.floor(dayOfYear / 30) + 1;
+    const starts = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    return starts.filter((start: number) => start <= dayOfYear).length;
   }
   
   /**
@@ -216,22 +208,29 @@ export class TimeSystem {
    */
   public getCurrentDay(): number {
     const dayOfYear = this.currentDay % 365;
-    return (dayOfYear % 30) + 1;
+    const starts = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    return dayOfYear - starts[this.getCurrentMonth() - 1] + 1;
   }
   
   /**
    * Holt aktuellen absoluten Tag
    */
   public getAbsoluteDay(): number {
-    return this.currentDay;
+    return this.startYear * 365 + this.currentDay;
   }
   
   /**
    * Springt zu einem bestimmten Datum
    */
   public setDate(year: number, month: number = 1, day: number = 1): void {
-    this.currentDay = (year - this.startYear) * 365 + (month - 1) * 30 + (day - 1);
-    console.log(`Datum gesetzt: ${day}.${month}.${year}`);
+    const monthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (!Number.isSafeInteger(year) || year < this.startYear || !Number.isSafeInteger(month) ||
+        month < 1 || month > 12 || !Number.isSafeInteger(day) || day < 1 || day > monthDays[month - 1]) {
+      throw new RangeError('Ungültiges Spieldatum.');
+    }
+    this.currentDay = (year - this.startYear) * 365 +
+      monthDays.slice(0, month - 1).reduce((total: number, days: number) => total + days, 0) + day - 1;
+    this.accumulatedTime = 0;
   }
   
   /**
@@ -294,7 +293,7 @@ export class TimeSystem {
       year: this.getCurrentYear(),
       month: this.getCurrentMonth(),
       day: this.getCurrentDay(),
-      absoluteDay: this.currentDay,
+      absoluteDay: this.getAbsoluteDay(),
       mode: this.mode,
       speed: this.speed,
       isPaused: this.isPaused,
@@ -329,7 +328,8 @@ export class TimeSystem {
         daysUntil = 1;
         break;
       case 'month':
-        daysUntil = 30 - (this.currentDay % 30);
+        daysUntil = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][this.getCurrentMonth() - 1] -
+          this.getCurrentDay() + 1;
         break;
       case 'year':
         daysUntil = 365 - (this.currentDay % 365);
@@ -371,7 +371,6 @@ export class TimeSystem {
     this.mode = snapshot.mode;
     this.speed = snapshot.speed;
     this.isPaused = snapshot.isPaused;
-    this.lastUpdateTime = Date.now();
     this.accumulatedTime = 0;
     
     console.log(`Zeit geladen: ${this.getFormattedDate()}, Modus: ${this.mode}`);

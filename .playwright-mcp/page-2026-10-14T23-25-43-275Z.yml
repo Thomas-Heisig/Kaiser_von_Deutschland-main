@@ -1,0 +1,230 @@
+- generic [ref=f15e41]:
+  - banner [ref=f15e42]:
+    - link "Zur Reichsübersicht" [ref=f15e43] [cursor=pointer]:
+      - /url: "#"
+      - generic [ref=f15e44]: ♜
+      - generic [ref=f15e45]:
+        - text: KAISER
+        - generic [ref=f15e46]: VON DEUTSCHLAND
+    - generic [ref=f15e47]:
+      - strong [ref=f15e48]: Mittelreich
+      - generic [ref=f15e49]: Baron Heinrich · spielt Margarete Fischer
+    - generic [ref=f15e50]:
+      - button "Speichern" [ref=f15e51] [cursor=pointer]
+      - button "Laden" [ref=f15e52] [cursor=pointer]
+  - region "Ressourcen und monatliche Änderung" [ref=f15e53]:
+    - generic [ref=f15e54]:
+      - generic [ref=f15e55]:
+        - generic [ref=f15e56]: Gold
+        - strong [ref=f15e57]: "4.250"
+      - generic [ref=f15e58]: "-27/Mo."
+    - generic [ref=f15e59]:
+      - generic [ref=f15e60]:
+        - generic [ref=f15e61]: Nahrung
+        - strong [ref=f15e62]: "10.200"
+      - generic [ref=f15e63]: +142/Mo.
+    - generic [ref=f15e64]:
+      - generic [ref=f15e65]:
+        - generic [ref=f15e66]: Holz
+        - strong [ref=f15e67]: "4.675"
+      - generic [ref=f15e68]: "-25/Mo."
+    - generic [ref=f15e69]:
+      - generic [ref=f15e70]:
+        - generic [ref=f15e71]: Stein
+        - strong [ref=f15e72]: "2.550"
+      - generic [ref=f15e73]: +35/Mo.
+    - generic [ref=f15e74]:
+      - generic [ref=f15e75]:
+        - generic [ref=f15e76]: Eisen
+        - strong [ref=f15e77]: "1.700"
+      - generic [ref=f15e78]: +12/Mo.
+  - generic [ref=f15e79]:
+    - complementary [ref=f15e80]:
+      - navigation "Spielbereiche" [ref=f15e81]:
+        - button "Reichsübersicht" [ref=f15e82] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f15e83]: ◈
+          - text: Reichsübersicht
+        - button "Bauvorhaben" [ref=f15e84] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f15e85]: ♜
+          - text: Bauvorhaben
+        - button "Wirtschaft" [ref=f15e86] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f15e87]: ⚖
+          - text: Wirtschaft
+        - button "Garnison" [ref=f15e88] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f15e89]: ⚑
+          - text: Garnison
+        - button "Feldzüge" [active] [ref=f15e90] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f15e91]: ⚔
+          - text: Feldzüge
+        - button "Charakter" [ref=f15e92] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f15e93]: ♙
+          - text: Charakter
+        - button "Chronik" [ref=f15e94] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f15e95]: ▤
+          - text: Chronik
+        - button "Spielhilfe" [ref=f15e96] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f15e97]: "?"
+          - text: Spielhilfe
+      - region "Reichszustand" [ref=f15e98]:
+        - generic [ref=f15e99]:
+          - generic [ref=f15e100]: Bevölkerung
+          - strong [ref=f15e101]: "2.618"
+        - generic [ref=f15e102]:
+          - generic [ref=f15e103]: Zufriedenheit
+          - strong [ref=f15e104]: 70 %
+        - generic [ref=f15e105]:
+          - generic [ref=f15e106]: Stabilität
+          - strong [ref=f15e107]: 70 %
+    - main [ref=f15e108]:
+      - region "Zeitsteuerung" [ref=f15e109]:
+        - generic [ref=f15e110]:
+          - paragraph [ref=f15e111]: HOCHMITTELALTER · ALTERNATIVE GESCHICHTE
+          - heading "Januar 1200" [level=1] [ref=f15e112]
+        - generic [ref=f15e113]:
+          - generic [ref=f15e114]: "Am Zug: Heinrich (1/2)"
+          - button "Zug beenden →" [ref=f15e115] [cursor=pointer]
+      - region "Interaktive Siedlungsübersicht" [ref=f15e116]:
+        - generic [ref=f15e117]:
+          - generic [ref=f15e118]:
+            - text: DEIN LEHEN
+            - heading "Land & Leute" [level=2] [ref=f15e119]
+          - generic [ref=f15e120]: Siedlungsübersicht
+        - generic "Siedlungskarte. Bezirke auch über die Bauauswahl erreichbar." [ref=f15e122]
+        - generic [ref=f15e123]:
+          - generic [ref=f15e124]: Bezirk anklicken · Ziehen zum Verschieben
+          - generic [ref=f15e125]:
+            - button "Karte verkleinern" [ref=f15e126] [cursor=pointer]: −
+            - button "Karte zentrieren" [ref=f15e127] [cursor=pointer]: Zentrieren
+            - button "Karte vergrößern" [ref=f15e128] [cursor=pointer]: +
+      - region "Verwaltung" [ref=f15e129]:
+        - generic [ref=f15e179]:
+          - paragraph [ref=f15e180]: KRIEGSRAT
+          - heading "Feldzüge & Nachbarn" [level=2] [ref=f15e181]
+          - paragraph [ref=f15e182]: Jeder Feldzug kostet Nachschub und Verluste. Pro Monat kann dein Heer einmal ausrücken.
+        - generic [ref=f15e183]:
+          - article [ref=f15e184]:
+            - generic [ref=f15e185]: Feldheer
+            - strong [ref=f15e186]: "150"
+            - generic [ref=f15e187]: Soldaten
+          - article [ref=f15e188]:
+            - generic [ref=f15e189]: Angriff
+            - strong [ref=f15e190]: "242"
+            - generic [ref=f15e191]: inkl. 0 % Feldherrenbonus
+          - article [ref=f15e192]:
+            - generic [ref=f15e193]: Verteidigung
+            - strong [ref=f15e194]: "242"
+            - generic [ref=f15e195]: mit Mauern & Burgen
+          - article [ref=f15e196]:
+            - generic [ref=f15e197]: Nachschub
+            - strong [ref=f15e198]: "300"
+            - generic [ref=f15e199]: Gold · 150 Nahrung je Feldzug
+        - paragraph [ref=f15e200]: Dein Heer ist marschbereit. Wähle ein Ziel.
+        - heading "Nachbarreiche" [level=3] [ref=f15e201]
+        - generic [ref=f15e202]:
+          - article [ref=f15e203]:
+            - generic [ref=f15e204]:
+              - generic [aria-hidden] [ref=f15e205]: ⚔
+              - heading "Raubritter vom Schwarzwald" [level=3] [ref=f15e206]
+              - generic [ref=f15e207]: Feindlich
+            - paragraph [ref=f15e208]: Eine Bande gepanzerter Reiter, die Handelswege und Dörfer plündert.
+            - generic [ref=f15e209]:
+              - generic [ref=f15e210]:
+                - term [ref=f15e211]: Soldaten
+                - definition [ref=f15e212]: "110"
+              - generic [ref=f15e213]:
+                - term [ref=f15e214]: Stärke
+                - definition [ref=f15e215]: "132"
+              - generic [ref=f15e216]:
+                - term [ref=f15e217]: Siegchance
+                - definition [ref=f15e218]: 86 %
+            - paragraph [ref=f15e219]: "Beute bei Sieg: 1.500 Gold · 150 Siedler"
+            - button "Feldzug gegen Raubritter vom Schwarzwald" [ref=f15e220] [cursor=pointer]
+          - article [ref=f15e221]:
+            - generic [ref=f15e222]:
+              - generic [aria-hidden] [ref=f15e223]: ⚔
+              - heading "Grafschaft Ostmark" [level=3] [ref=f15e224]
+              - generic [ref=f15e225]: Feindlich
+            - paragraph [ref=f15e226]: Ein ehrgeiziger Graf mit befestigten Grenzburgen.
+            - generic [ref=f15e227]:
+              - generic [ref=f15e228]:
+                - term [ref=f15e229]: Soldaten
+                - definition [ref=f15e230]: "420"
+              - generic [ref=f15e231]:
+                - term [ref=f15e232]: Stärke
+                - definition [ref=f15e233]: "605"
+              - generic [ref=f15e234]:
+                - term [ref=f15e235]: Siegchance
+                - definition [ref=f15e236]: 6 %
+            - paragraph [ref=f15e237]: "Beute bei Sieg: 4.500 Gold · 700 Siedler"
+            - button "Feldzug gegen Grafschaft Ostmark" [ref=f15e238] [cursor=pointer]
+          - article [ref=f15e239]:
+            - generic [ref=f15e240]:
+              - generic [aria-hidden] [ref=f15e241]: ⚔
+              - heading "Herzogtum Nordland" [level=3] [ref=f15e242]
+              - generic [ref=f15e243]: Feindlich
+            - paragraph [ref=f15e244]: Der mächtigste Nachbar. Seine Unterwerfung sichert dir die Vorherrschaft.
+            - generic [ref=f15e245]:
+              - generic [ref=f15e246]:
+                - term [ref=f15e247]: Soldaten
+                - definition [ref=f15e248]: "1.100"
+              - generic [ref=f15e249]:
+                - term [ref=f15e250]: Stärke
+                - definition [ref=f15e251]: "1.848"
+              - generic [ref=f15e252]:
+                - term [ref=f15e253]: Siegchance
+                - definition [ref=f15e254]: 3 %
+            - paragraph [ref=f15e255]: "Beute bei Sieg: 10.000 Gold · 1.600 Siedler"
+            - button "Feldzug gegen Herzogtum Nordland" [ref=f15e256] [cursor=pointer]
+        - heading "Mitspieler" [level=3] [ref=f15e257]
+        - article [ref=f15e259]:
+          - generic [ref=f15e260]:
+            - generic [aria-hidden] [ref=f15e261]: ♚
+            - heading "Westmark" [level=3] [ref=f15e262]
+            - generic [ref=f15e263]: Mitspieler
+          - paragraph [ref=f15e264]: "Herrscher: Mathilde"
+          - generic [ref=f15e265]:
+            - generic [ref=f15e266]:
+              - term [ref=f15e267]: Verteidigung
+              - definition [ref=f15e268]: "242"
+            - generic [ref=f15e269]:
+              - term [ref=f15e270]: Siegchance
+              - definition [ref=f15e271]: 50 %
+          - paragraph [ref=f15e272]: Sieger plündert 15 % des gegnerischen Goldes.
+          - button "Westmark angreifen" [ref=f15e273] [cursor=pointer]
+        - heading "Schlachtberichte" [level=3] [ref=f15e274]
+        - paragraph [ref=f15e275]: Noch keine Schlachten geschlagen.
+    - complementary [ref=f15e151]:
+      - generic [ref=f15e152]:
+        - paragraph [ref=f15e153]: DER REICHSRAT
+        - heading "Ein weiser Rat" [level=2] [ref=f15e154]
+        - generic [aria-hidden] [ref=f15e155]: ♙
+        - paragraph [ref=f15e156]: Die Ausgaben übersteigen deine Einnahmen. Erhöhe behutsam die Steuern oder verkaufe Überschüsse.
+        - button "Zur Monatsbilanz →" [ref=f15e157] [cursor=pointer]
+      - generic [ref=f15e158]:
+        - paragraph [ref=f15e159]: DEIN AUFTRAG
+        - heading "Ein blühendes Reich" [level=2] [ref=f15e160]
+        - paragraph [ref=f15e161]: Erfülle alle Ziele gleichzeitig. Ohne Zeitlimit.
+        - generic [ref=f15e162]:
+          - paragraph [ref=f15e276]:
+            - generic [ref=f15e277]: ○
+            - text: 12 Bauernhöfe
+          - paragraph [ref=f15e278]:
+            - generic [ref=f15e279]: ○
+            - text: 3 Marktplätze
+          - paragraph [ref=f15e280]:
+            - generic [ref=f15e281]: ○
+            - text: 2 Schulen
+          - paragraph [ref=f15e282]:
+            - generic [ref=f15e283]: ✓
+            - text: 65 % Zufriedenheit
+          - paragraph [ref=f15e284]:
+            - generic [ref=f15e285]: ○
+            - text: 8.000 Gold & positive Versorgung
+          - paragraph [ref=f15e286]:
+            - generic [ref=f15e287]: ○
+            - text: Einen Rivalen unterwerfen
+        - progressbar "Kampagnenfortschritt" [ref=f15e175]
+        - paragraph [ref=f15e176]: 1 von 6 Zielen erreicht
+  - contentinfo [ref=f15e177]:
+    - text: Jede Entscheidung zählt.
+    - generic [ref=f15e178]: "Zug beenden: nächster Herrscher · Nach dem letzten Zug vergeht ein Monat · Manuell speichern"

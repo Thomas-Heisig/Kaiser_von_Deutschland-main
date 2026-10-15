@@ -45,12 +45,12 @@ export class LifePhaseSystem {
   private async loadData(): Promise<void> {
     try {
       // Philosophische Fragen laden
-      const questionsResponse = await fetch('/src/data/json/philosophical-questions.json');
+      const questionsResponse = await fetch(new URL('../data/json/philosophical-questions.json', import.meta.url));
       const questionsData = await questionsResponse.json();
       this.philosophicalQuestions = questionsData.questions;
 
       // Epochen laden
-      const epochsResponse = await fetch('/src/data/json/epochs.json');
+      const epochsResponse = await fetch(new URL('../data/json/epochs.json', import.meta.url));
       const epochsData = await epochsResponse.json();
       this.epochs = epochsData.epochs;
     } catch (error) {

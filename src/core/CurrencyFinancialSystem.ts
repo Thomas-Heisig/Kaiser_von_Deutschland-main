@@ -170,7 +170,7 @@ export class CurrencyFinancialSystem {
    */
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/currency-financial-system.json');
+      const response = await fetch(new URL('../data/json/currency-financial-system.json', import.meta.url));
       const data = await response.json();
 
       // Load currencies

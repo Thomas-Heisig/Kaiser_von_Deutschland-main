@@ -123,7 +123,7 @@ export class PrisonerOfWarSystem {
 
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/prisoner-of-war.json');
+      const response = await fetch(new URL('../data/json/prisoner-of-war.json', import.meta.url));
       const data = await response.json();
 
       // Load treatment policies

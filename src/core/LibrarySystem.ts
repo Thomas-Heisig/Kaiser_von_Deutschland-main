@@ -64,7 +64,7 @@ export class LibrarySystem {
 
   private async loadData(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/libraries.json');
+      const response = await fetch(new URL('../data/json/libraries.json', import.meta.url));
       const data = await response.json();
       
       this.libraries = data.libraries || [];

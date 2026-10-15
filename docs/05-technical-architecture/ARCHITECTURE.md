@@ -5,6 +5,40 @@
 
 Diese Dokumentation beschreibt die technische Architektur, Design-Patterns und Struktur des Projekts.
 
+## Aktueller Standard-Einstieg: Aufbaukampagne
+
+`src/main.ts` startet `KingdomGameUI`. Die Verwaltung ist semantisches HTML mit
+responsivem CSS; ausschließlich die Siedlungskarte wird mit PixiJS 8 gezeichnet.
+`KingdomMap` wird erst beim Spielstart nachgeladen. Die älteren Oberflächen
+`UIFlowManager`, `GameUI` und `EnhancedPixiRenderer` sind nicht der Standard-Einstieg.
+
+```text
+KingdomGameUI -> GameEngine -> Kingdom / EconomySystem / weitere Systeme
+      |              |
+      v              v
+ KingdomMap     LocalForage (Browserpersistenz, Save-Version 2)
+```
+
+- Die Engine besitzt den verbindlichen Kalender. Automatik und Einzelschritte
+  laufen durch `advanceMonth()`; parallele Monatsberechnungen werden abgewiesen.
+- `nextYear()` berechnet zwölf reguläre Monate statt einer zweiten Wirtschaft.
+- `Kingdom.getMonthlyBalance()` liefert dieselben gerundeten Beträge, die
+  `processMonth()` vor Ereignissen und Handelsrouten verbucht.
+- `Kingdom.getBuildingData()` ist die gemeinsame Kostenquelle für UI und Bau.
+- Markthandel verwendet die vorhandene Preistabelle von `EconomySystem`.
+- Kampagnenziele werden in `GameEngine.getCampaignGoals()` aus dem Reichszustand
+  abgeleitet und benötigen keinen separaten Fortschrittsspeicher.
+- Speichern beinhaltet Bürgerdatensätze; beim Laden werden deren Orts- und
+  Familienindizes rekonstruiert. Laden startet immer pausiert.
+- Daten-URLs verwenden `new URL(..., import.meta.url)`, sodass Vite die JSON-Dateien
+  auch im Produktionsbuild ausliefert.
+- Die Karte zeichnet eine begrenzte Zahl von Bezirksmarkern, keine einzelnen
+  Einwohner. ResizeObserver, Renderer und Timer werden beim Verwerfen freigegeben.
+
+Es existiert kein notwendiger Anwendungsserver: Simulation und Persistenz laufen
+lokal. Vorhandene Multiplayer-/Lebenssimulationsmodule sind keine vollständig
+bedienbaren Features dieser Aufbaukampagne.
+
 ---
 
 ## 📋 Inhaltsverzeichnis

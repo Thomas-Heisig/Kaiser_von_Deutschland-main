@@ -766,6 +766,20 @@ export class CitizenSystem {
   /**
    * Löscht alle Bürger (für Tests oder Neubeginn)
    */
+  /**
+   * Restores saved citizens and rebuilds regional and family indexes.
+   * @param citizens Previously serialized citizen records.
+   * @returns Nothing.
+   */
+  public restoreCitizens(citizens: Citizen[]): void {
+    this.clear();
+    for (const citizen of citizens) {
+      this.citizens.set(citizen.id, citizen);
+      this.addToRegion(citizen.id, citizen.regionId);
+      if (citizen.familyId) this.addToFamily(citizen.id, citizen.familyId);
+    }
+  }
+
   public clear(): void {
     this.citizens.clear();
     this.families.clear();

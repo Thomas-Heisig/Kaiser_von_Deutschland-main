@@ -19,7 +19,7 @@ export class HistoricalFiguresSystem {
 
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/historical-figures.json');
+      const response = await fetch(new URL('../data/json/historical-figures.json', import.meta.url));
       const data = await response.json();
       
       data.figures.forEach((figure: HistoricalFigure) => {

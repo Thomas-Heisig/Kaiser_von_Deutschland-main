@@ -55,7 +55,7 @@ export class NaturalDisasterSystem {
 
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/natural-disasters.json');
+      const response = await fetch(new URL('../data/json/natural-disasters.json', import.meta.url));
       const data = await response.json();
       
       data.disasters.forEach((disaster: NaturalDisaster) => {

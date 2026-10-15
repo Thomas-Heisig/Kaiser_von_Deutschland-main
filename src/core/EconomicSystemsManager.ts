@@ -61,7 +61,7 @@ export class EconomicSystemsManager {
 
   private async loadData(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/economic-systems.json');
+      const response = await fetch(new URL('../data/json/economic-systems.json', import.meta.url));
       const data = await response.json();
       
       this.inflationSystems = data.inflationSystems || [];

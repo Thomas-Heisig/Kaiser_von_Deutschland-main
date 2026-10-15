@@ -79,7 +79,7 @@ export class AdvancedEspionageSystem {
 
   private async loadData(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/espionage-systems.json');
+      const response = await fetch(new URL('../data/json/espionage-systems.json', import.meta.url));
       const data = await response.json();
       
       this.operations = data.espionageOperations || [];

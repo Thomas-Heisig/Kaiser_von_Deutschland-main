@@ -168,7 +168,7 @@ export class NavalSystem {
    */
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/naval-systems.json');
+      const response = await fetch(new URL('../data/json/naval-systems.json', import.meta.url));
       const data = await response.json();
 
       // Load naval technologies

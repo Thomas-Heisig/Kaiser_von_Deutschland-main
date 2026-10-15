@@ -24,17 +24,14 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor': ['localforage', 'uuid'],
-          'core': [
-            './src/core/GameEngine.ts',
-            './src/core/Player.ts',
-            './src/core/Kingdom.ts'
-          ],
-          'ui': [
-            './src/ui/GameUI.ts',
-            './src/ui/Graphics.ts'
-          ]
+        manualChunks(id: string): string | undefined {
+          if (id.includes('node_modules') && (id.includes('pixi.js') || id.includes('@pixi'))) {
+            return 'graphics';
+          }
+          if (id.includes('node_modules') && (id.includes('localforage') || id.includes('uuid'))) {
+            return 'vendor';
+          }
+          return undefined;
         }
       }
     }

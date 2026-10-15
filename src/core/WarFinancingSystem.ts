@@ -135,7 +135,7 @@ export class WarFinancingSystem {
    */
   private async loadData(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/war-financing.json');
+      const response = await fetch(new URL('../data/json/war-financing.json', import.meta.url));
       const data = await response.json();
       
       this.warFinancingMethods = data.warFinancingMethods || [];

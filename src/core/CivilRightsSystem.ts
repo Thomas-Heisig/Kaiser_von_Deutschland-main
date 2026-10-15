@@ -172,7 +172,7 @@ export class CivilRightsSystem {
    */
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/civil-rights-system.json');
+      const response = await fetch(new URL('../data/json/civil-rights-system.json', import.meta.url));
       const data = await response.json();
 
       // Load fundamental rights

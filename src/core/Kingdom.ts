@@ -104,6 +104,21 @@ export interface ConsumptionRates {
   gold: number;
 }
 
+export interface StructureDefinition {
+  cost: number;
+  woodCost?: number;
+  stoneCost?: number;
+  ironCost?: number;
+  effects?: Array<{ type: string; value: number }>;
+}
+
+export interface MonthlyBalance {
+  production: ProductionRates;
+  consumption: ConsumptionRates;
+  taxes: number;
+  net: ProductionRates;
+}
+
 export class Kingdom {
   public id: string;
   public name: string;
@@ -142,7 +157,8 @@ export class Kingdom {
     this.rulerName = cfg.rulerName;
     this.difficulty = cfg.difficulty || 1;
     this.climate = cfg.climate || 'temperate';
-    this.foundingYear = cfg.foundingYear || 1;
+    this.foundingYear = cfg.foundingYear ?? 1;
+    this.currentYear = this.foundingYear;
 
     this.initializeTerrain(cfg.terrain);
     this.initializeResources(cfg.startingResources);
@@ -334,6 +350,9 @@ export class Kingdom {
    * Baut eine Struktur im Königreich
    */
   public buildStructure(type: keyof KingdomInfrastructure, count: number = 1): boolean {
+    if (!Number.isSafeInteger(count) || count <= 0) {
+      throw new RangeError('Die Bauanzahl muss eine positive ganze Zahl sein.');
+    }
     const buildingData = this.getBuildingData(type);
     if (!buildingData) return false;
 
@@ -341,7 +360,8 @@ export class Kingdom {
     
     if (this.resources.gold < totalCost || 
         this.resources.wood < (buildingData.woodCost || 0) * count ||
-        this.resources.stone < (buildingData.stoneCost || 0) * count) {
+        this.resources.stone < (buildingData.stoneCost || 0) * count ||
+        this.resources.iron < (buildingData.ironCost || 0) * count) {
       return false;
     }
 
@@ -349,6 +369,7 @@ export class Kingdom {
     this.resources.gold -= totalCost;
     if (buildingData.woodCost) this.resources.wood -= buildingData.woodCost * count;
     if (buildingData.stoneCost) this.resources.stone -= buildingData.stoneCost * count;
+    if (buildingData.ironCost) this.resources.iron -= buildingData.ironCost * count;
 
     // Gebäude hinzufügen
     this.infrastructure[type] += count;
@@ -409,6 +430,10 @@ export class Kingdom {
    * Rekrutiert Soldaten
    */
   public recruitSoldiers(count: number, type: 'infantry' | 'cavalry' | 'archers' = 'infantry'): boolean {
+    if (!Number.isSafeInteger(count) || count <= 0) {
+      throw new RangeError('Die Rekrutenzahl muss eine positive ganze Zahl sein.');
+    }
+    if (count > this.population.peasants) return false;
     const recruitmentCosts = {
       infantry: { gold: 50, food: 10 },
       cavalry: { gold: 150, food: 30, iron: 5 },
@@ -442,8 +467,8 @@ export class Kingdom {
     
     // Bevölkerungsanpassung
     this.population.soldiers += count;
-    this.population.peasants = Math.max(0, this.population.peasants - Math.floor(count * 0.8));
-    this.population.unemployed = Math.max(0, this.population.unemployed - Math.floor(count * 0.2));
+    this.population.peasants -= count;
+    this.population.unemployed = Math.max(0, this.population.unemployed - count);
 
     return true;
   }
@@ -518,25 +543,58 @@ export class Kingdom {
    * Monthly processing: partial production/consumption and upkeep.
    */
   public processMonth(): void {
-    // Ensure production rates are up to date
-    this.initializeRates();
+    const balance = this.getMonthlyBalance();
+    const foodAvailable = this.resources.food + balance.production.food;
+    const goldAvailable = this.resources.gold + balance.production.gold + balance.taxes;
+    for (const resource of ['gold', 'food', 'wood', 'stone', 'iron'] as const) {
+      this.resources[resource] = Math.max(0, this.resources[resource] + balance.net[resource]);
+    }
 
-    // Add monthly share of production
-    this.resources.food += Math.floor(this.productionRates.food / 12);
-    this.resources.wood += Math.floor(this.productionRates.wood / 12);
-    this.resources.stone += Math.floor(this.productionRates.stone / 12);
-    this.resources.iron += Math.floor(this.productionRates.iron / 12);
-    this.resources.gold += Math.floor(this.productionRates.gold / 12);
-
-    // Consume monthly needs
-    this.resources.food = Math.max(0, this.resources.food - Math.floor(this.consumptionRates.food / 12));
-    this.resources.wood = Math.max(0, this.resources.wood - Math.floor(this.consumptionRates.wood / 12));
-    this.resources.gold = Math.max(0, this.resources.gold - Math.floor(this.consumptionRates.gold / 12));
+    const foodShortage = foodAvailable < balance.consumption.food;
+    const unpaidUpkeep = goldAvailable < balance.consumption.gold;
+    const taxPressure = (0.15 - this.taxRate) * 4;
+    this.happiness = Math.max(0, Math.min(100,
+      this.happiness + taxPressure - (foodShortage ? 5 : 0) - (unpaidUpkeep ? 2 : 0)
+    ));
+    if (foodShortage) {
+      this.population.peasants = Math.max(0, this.population.peasants - Math.ceil(this.population.peasants * 0.01));
+    }
 
     // Small maintenance and morale changes
     this.military.morale = Math.max(0, Math.min(100, this.military.morale + (this.happiness - 50) * 0.02));
-    this.updatePopulation();
-    this.updateStats();
+    this.updatePopulation(1 / 12);
+    this.updateStats(1 / 12);
+  }
+
+  /**
+   * Forecasts the next month's economy before events and trade routes.
+   * @returns Production, consumption, taxes and net changes in resource units.
+   */
+  public getMonthlyBalance(): MonthlyBalance {
+    this.initializeRates();
+    const production: ProductionRates = {
+      food: Math.floor(this.productionRates.food / 12),
+      wood: Math.floor(this.productionRates.wood / 12),
+      stone: Math.floor(this.productionRates.stone / 12),
+      iron: Math.floor(this.productionRates.iron / 12),
+      gold: Math.floor(this.productionRates.gold / 12)
+    };
+    const consumption: ConsumptionRates = {
+      food: Math.floor(this.consumptionRates.food / 12),
+      wood: Math.floor(this.consumptionRates.wood / 12),
+      gold: Math.floor(this.consumptionRates.gold / 12)
+    };
+    const taxes = Math.floor(this.calculateTaxRevenue() * this.calculateTaxEfficiency() / 12);
+    return {
+      production, consumption, taxes,
+      net: {
+        food: production.food - consumption.food,
+        wood: production.wood - consumption.wood,
+        stone: production.stone,
+        iron: production.iron,
+        gold: production.gold + taxes - consumption.gold
+      }
+    };
   }
 
   /**
@@ -678,13 +736,12 @@ export class Kingdom {
 
   // ==================== PRIVATE METHODEN ====================
 
-  private getBuildingData(type: keyof KingdomInfrastructure): {
-    cost: number;
-    woodCost?: number;
-    stoneCost?: number;
-    ironCost?: number;
-    effects?: Array<{ type: string; value: number }>;
-  } | undefined {
+  /**
+   * Returns the costs and immediate effects used by construction.
+   * @param type Infrastructure category.
+   * @returns A detached structure definition, or undefined for an unknown category.
+   */
+  public getBuildingData(type: keyof KingdomInfrastructure): StructureDefinition | undefined {
     const buildingData: Record<keyof KingdomInfrastructure, {
       cost: number;
       woodCost?: number;
@@ -727,7 +784,15 @@ export class Kingdom {
       case 'literacy':
         this.stats.literacyRate = Math.min(100, this.stats.literacyRate + effect.value * count);
         break;
-      // Weitere Effekte...
+      case 'trade':
+        this.stats.tradePower = Math.min(100, this.stats.tradePower + effect.value * count);
+        break;
+      case 'training':
+        this.military.trainingLevel = Math.min(100, this.military.trainingLevel + effect.value * count);
+        break;
+      case 'technology':
+        this.stats.technologicalLevel = Math.min(100, this.stats.technologicalLevel + effect.value * count);
+        break;
     }
   }
 
@@ -778,7 +843,7 @@ export class Kingdom {
   }
 
   private calculateFoodProductionRate(): number {
-    const baseRate = this.infrastructure.farms * 250;
+    const baseRate = this.infrastructure.farms * 900;
     const climateBonus = this.climate === 'temperate' || this.climate === 'tropical' ? 1.2 : 1.0;
     const roadBonus = this.infrastructure.roads * 10;
     const peasantEfficiency = this.population.peasants * 0.1;
@@ -867,34 +932,34 @@ export class Kingdom {
     return Math.floor(militaryUpkeep + infrastructureUpkeep + officialSalaries);
   }
 
-  private updatePopulation(): void {
+  private updatePopulation(yearFraction: number = 1): void {
     // Bevölkerungswachstum
     const growthFactor = this.population.growthRate * 
                         (this.happiness / 100) * 
                         (this.resources.food > 10000 ? 1.2 : 1.0);
     
-    const newPeasants = Math.floor(this.population.peasants * growthFactor);
+    const newPeasants = Math.floor(this.population.peasants * growthFactor * yearFraction);
     this.population.peasants += newPeasants;
     
     // Migration basierend auf Zufriedenheit
     if (this.happiness < 40) {
-      const emigration = Math.floor(this.population.peasants * 0.02);
+      const emigration = Math.floor(this.population.peasants * 0.02 * yearFraction);
       this.population.peasants = Math.max(0, this.population.peasants - emigration);
     } else if (this.happiness > 80) {
-      const immigration = Math.floor(this.population.peasants * 0.01);
+      const immigration = Math.floor(this.population.peasants * 0.01 * yearFraction);
       this.population.peasants += immigration;
     }
     
     // Arbeitslosenquote aktualisieren
-    this.updateUnemployment();
+    this.updateUnemployment(yearFraction);
   }
 
-  private updateUnemployment(): void {
+  private updateUnemployment(yearFraction: number = 1): void {
     const availableJobs = (
-      this.infrastructure.farms * 10 +
-      this.infrastructure.mines * 8 +
-      this.infrastructure.workshops * 6 +
-      this.infrastructure.markets * 4
+      this.infrastructure.farms * 250 +
+      this.infrastructure.mines * 80 +
+      this.infrastructure.workshops * 60 +
+      this.infrastructure.markets * 40
     );
     
     const totalWorkers = this.population.peasants + this.population.artisans;
@@ -902,8 +967,8 @@ export class Kingdom {
     
     // Arbeitslosigkeit beeinflusst Zufriedenheit und Kriminalität
     if (this.population.unemployed > totalWorkers * 0.1) {
-      this.happiness = Math.max(0, this.happiness - 5);
-      this.stats.crimeRate = Math.min(100, this.stats.crimeRate + 3);
+      this.happiness = Math.max(0, this.happiness - 5 * yearFraction);
+      this.stats.crimeRate = Math.min(100, this.stats.crimeRate + 3 * yearFraction);
     }
   }
 
@@ -960,7 +1025,7 @@ export class Kingdom {
     }
   }
 
-  private updateStats(): void {
+  private updateStats(yearFraction: number = 1): void {
     // Stabilität basierend auf verschiedenen Faktoren
     const stabilityChange = (
       (this.happiness / 100) * 5 -
@@ -971,18 +1036,18 @@ export class Kingdom {
     );
     
     this.stats.stability = Math.max(0, Math.min(100, 
-      this.stats.stability + stabilityChange
+      this.stats.stability + stabilityChange * yearFraction
     ));
     
     // Kriminalität
     const crimeChange = (
-      (this.population.unemployed / this.population.peasants) * 10 -
+      (this.population.unemployed / Math.max(1, this.population.peasants)) * 10 -
       (this.stats.stability / 100) * 5 -
       (this.infrastructure.churches > 0 ? 2 : 0)
     );
     
     this.stats.crimeRate = Math.max(0, Math.min(100, 
-      this.stats.crimeRate + crimeChange
+      this.stats.crimeRate + crimeChange * yearFraction
     ));
     
     // Alphabetisierungsrate
@@ -992,7 +1057,7 @@ export class Kingdom {
         this.infrastructure.universities * 1.5
       );
       this.stats.literacyRate = Math.min(100, 
-        this.stats.literacyRate + literacyIncrease
+        this.stats.literacyRate + literacyIncrease * yearFraction
       );
     }
     
@@ -1005,7 +1070,7 @@ export class Kingdom {
     );
     
     this.stats.tradePower = Math.max(0, Math.min(100, 
-      this.stats.tradePower + tradeChange
+      this.stats.tradePower + tradeChange * yearFraction
     ));
   }
 
@@ -1257,9 +1322,8 @@ export class Kingdom {
     militaryStrength: number;
     developmentScore: number;
   } {
-    const totalPopulation = Object.values(this.population)
-      .filter(val => typeof val === 'number')
-      .reduce((sum, val) => sum + (val as number), 0) - this.population.unemployed;
+    const { nobles, merchants, soldiers, clergy, peasants, artisans, scholars, slaves = 0 } = this.population;
+    const totalPopulation = nobles + merchants + soldiers + clergy + peasants + artisans + scholars + slaves;
 
     const netWorth = (
       this.resources.gold +

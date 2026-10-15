@@ -63,7 +63,7 @@ export class FortificationSystem {
 
   private async loadData(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/fortifications.json');
+      const response = await fetch(new URL('../data/json/fortifications.json', import.meta.url));
       const data = await response.json();
       
       this.fortifications = data.fortifications || [];

@@ -38,7 +38,7 @@ export class DiseaseSystem {
 
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/diseases.json');
+      const response = await fetch(new URL('../data/json/diseases.json', import.meta.url));
       const data = await response.json();
       
       data.diseases.forEach((disease: Disease) => {

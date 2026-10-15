@@ -36,7 +36,7 @@ export class ScientificDiscoverySystem {
 
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/scientific-discoveries.json');
+      const response = await fetch(new URL('../data/json/scientific-discoveries.json', import.meta.url));
       const data = await response.json();
       
       data.discoveries.forEach((discovery: ScientificDiscovery) => {

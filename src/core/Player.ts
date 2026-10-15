@@ -1011,7 +1011,7 @@ export class Player {
         return false;
       }
       
-      if (req.minYear && this.kingdom.currentYear < req.minYear) {
+      if (req.minYear && this.kingdom.currentYear - this.kingdom.foundingYear < req.minYear) {
         return false;
       }
       
@@ -1042,7 +1042,7 @@ export class Player {
 
   private checkYearEndAchievements(): void {
     // Erfolge die am Jahresende geprüft werden
-    const year = this.kingdom.currentYear;
+    const year = this.kingdom.currentYear - this.kingdom.foundingYear;
     
     if (year === 10) {
       this.unlockAchievement('decade_ruler');

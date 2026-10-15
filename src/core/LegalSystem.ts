@@ -72,8 +72,8 @@ export class LegalSystem {
   async initialize(): Promise<void> {
     try {
       const [legalResponse, taxResponse] = await Promise.all([
-        fetch('/src/data/json/legal-systems.json'),
-        fetch('/src/data/json/tax-systems.json')
+        fetch(new URL('../data/json/legal-systems.json', import.meta.url)),
+        fetch(new URL('../data/json/tax-systems.json', import.meta.url))
       ]);
 
       const legalData = await legalResponse.json();

@@ -155,7 +155,7 @@ export class FashionSystem {
    */
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/src/data/json/fashion-system.json');
+      const response = await fetch(new URL('../data/json/fashion-system.json', import.meta.url));
       const data = await response.json();
 
       // Load fashion eras

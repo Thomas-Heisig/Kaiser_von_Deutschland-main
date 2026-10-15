@@ -8,15 +8,33 @@ Eine umfassende historische Königreichssimulation von Jahr 0 bis in die Zukunft
 
 ## 🚧 Entwicklungsstatus
 
-> **⚠️ WICHTIGER HINWEIS:** Dieses Spiel befindet sich noch in einer **frühen Entwicklungsphase** (Alpha-Stadium).  
-> 
-> - ✅ **Grundlegende Systeme** sind implementiert und funktionsfähig
-> - 🔄 **Aktive Entwicklung** - Neue Features werden kontinuierlich hinzugefügt
-> - 🎮 **Spielbare Version** ist verfügbar, aber noch nicht vollständig ausbalanciert
-> - 🐛 **Bugs und Unvollständigkeiten** sind zu erwarten
-> - 🚀 **Vollständige spielbare Version** wird in den kommenden Monaten verfügbar sein
->
-> Feedback und Bug-Reports sind herzlich willkommen! Siehe [CONTRIBUTING.md](CONTRIBUTING.md) für Details.
+Die Standardoberfläche ist eine **spielbare lokale Aufbaukampagne ab 1200**.
+Die frühere Canvas-Menüführung mit Platzhalteraktionen wurde durch eine responsive,
+tastaturbedienbare Verwaltung mit interaktiver PixiJS-Siedlungskarte ersetzt.
+
+### Jetzt im Hauptspiel bedienbar
+
+- Neuer Spielstart mit eigenen Namen, drei Schwierigkeiten und optionalen Zufallsereignissen.
+- 16 Infrastrukturkategorien mit echten, gemeinsamen Baukosten und Ressourcenprüfung.
+- Monatliche Produktion, Verbrauch, Steuern, Zufriedenheit und Bevölkerungsentwicklung.
+- Markthandel mit sichtbaren Preisen sowie Rekrutierung von drei Truppentypen.
+- Pause, Einzelschritte und 1×/2×/4× Geschwindigkeit; eine gemeinsame Simulationszeit.
+- Manuelles Speichern und Laden im Browser, einschließlich Bürgern und Kalender.
+- Fünf erreichbare Kampagnenziele; danach ist freies Weiterspielen möglich.
+
+**Start:** `npm ci`, danach `npm run dev`, Browser unter `http://localhost:4100`.
+Das Spiel beginnt pausiert. „Monat →“ berechnet genau einen Monat; 1× entspricht
+vier Sekunden pro Monat. Es gibt **kein Autosave**. Laden pausiert immer die Zeit.
+Spielstände sind an Browserprofil und Origin gebunden und kein Cloud-Backup.
+
+**Abgrenzung:** Die Karte ist schematisch und stellt keine historischen Grenzen dar.
+Die Kampagne bietet noch keine bedienbaren Schlachten, Multiplayer-Sitzungen oder
+Charakter-Rollenwechsel. Die weiter unten beschriebenen älteren Systeme und
+Roadmap-Features sind deshalb **nicht mit vollständig integriertem Gameplay
+gleichzusetzen**. Das Gesamtprojekt bleibt in Entwicklung.
+
+Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
+Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 🎮 Spielkonzept
 

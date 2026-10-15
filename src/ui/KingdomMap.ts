@@ -1,0 +1,223 @@
+import { Application, Container, Graphics, Text } from 'pixi.js';
+import { Kingdom, KingdomInfrastructure } from '../core/Kingdom';
+
+interface MapLocation {
+  type: keyof KingdomInfrastructure;
+  name: string;
+  x: number;
+  y: number;
+  color: number;
+}
+
+const LOCATIONS: MapLocation[] = [
+  { type: 'farms', name: 'Ackerland', x: 265, y: 410, color: 0xd0b266 },
+  { type: 'markets', name: 'Marktviertel', x: 530, y: 350, color: 0xc78f68 },
+  { type: 'castles', name: 'Herrschaftssitz', x: 510, y: 195, color: 0xaeb9b0 },
+  { type: 'churches', name: 'Kirchplatz', x: 670, y: 245, color: 0xd4c5a1 },
+  { type: 'mines', name: 'Bergwerke', x: 760, y: 135, color: 0x9fafa3 },
+  { type: 'workshops', name: 'Handwerk', x: 720, y: 405, color: 0xc6a47a },
+  { type: 'barracks', name: 'Garnison', x: 385, y: 265, color: 0xb79279 },
+  { type: 'schools', name: 'Schulviertel', x: 525, y: 480, color: 0xa9bda9 },
+];
+
+/**
+ * PixiJS settlement overview. Counts represent infrastructure, not geographic claims.
+ */
+export class KingdomMap {
+  private readonly app = new Application();
+  private readonly world = new Container();
+  private readonly settlements = new Container();
+  private observer?: ResizeObserver;
+  private zoom: number = 1;
+  private offset = { x: 0, y: 0 };
+  private destroyed: boolean = false;
+  private initialized: boolean = false;
+
+  /**
+   * Initializes the renderer and responsive canvas.
+   * @param host Container for the canvas.
+   * @param onSelect Callback for a selected infrastructure district.
+   * @returns Resolves when the map can be rendered.
+   * @throws Error when no graphics renderer is available.
+   */
+  public async initialize(host: HTMLElement, onSelect: (type: keyof KingdomInfrastructure) => void): Promise<void> {
+    await this.app.init({
+      background: 0x182d2a, antialias: true, autoDensity: true,
+      resolution: Math.min(window.devicePixelRatio || 1, 2),
+      width: Math.max(1, host.clientWidth), height: Math.max(1, host.clientHeight)
+    });
+    this.initialized = true;
+    if (this.destroyed) {
+      this.app.destroy(true, { children: true });
+      return;
+    }
+    host.append(this.app.canvas);
+    this.app.canvas.setAttribute('aria-label', 'Siedlungskarte. Bezirke auch über die Bauauswahl erreichbar.');
+    this.app.stage.addChild(this.world);
+    this.drawLandscape();
+    this.world.addChild(this.settlements);
+    this.observer = new ResizeObserver((): void => {
+      this.app.renderer.resize(Math.max(1, host.clientWidth), Math.max(1, host.clientHeight));
+      this.fit();
+    });
+    this.observer.observe(host);
+    let drag: { x: number; y: number; moved: boolean } | undefined;
+    const canvas = this.app.canvas;
+    canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
+      drag = { x: event.clientX, y: event.clientY, moved: false };
+      canvas.setPointerCapture(event.pointerId);
+    });
+    canvas.addEventListener('pointermove', (event: PointerEvent): void => {
+      if (!drag) return;
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+      if (drag.moved) {
+        this.offset.x += dx;
+        this.offset.y += dy;
+        drag.x = event.clientX;
+        drag.y = event.clientY;
+        this.fit();
+      }
+    });
+    canvas.addEventListener('pointerup', (event: PointerEvent): void => {
+      if (drag && !drag.moved) {
+        const rect = canvas.getBoundingClientRect();
+        const x = (event.clientX - rect.left - this.world.x) / this.world.scale.x;
+        const y = (event.clientY - rect.top - this.world.y) / this.world.scale.y;
+        const location = LOCATIONS.find((place: MapLocation) => Math.hypot(place.x - x, place.y - y) < 65);
+        if (location) onSelect(location.type);
+      }
+      drag = undefined;
+    });
+    canvas.addEventListener('pointercancel', (): void => { drag = undefined; });
+    this.fit();
+    this.app.ticker.stop();
+  }
+
+  /**
+   * Refreshes infrastructure markers without allocating citizens or terrain again.
+   * @param kingdom Current kingdom state.
+   * @param selected Highlighted infrastructure district.
+   * @returns Nothing.
+   */
+  public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure): void {
+    if (!this.initialized || this.destroyed) return;
+    for (const child of this.settlements.removeChildren()) child.destroy({ children: true });
+    for (const location of LOCATIONS) {
+      const count = kingdom.infrastructure[location.type];
+      const group = new Container();
+      group.position.set(location.x, location.y);
+      const ground = new Graphics()
+        .ellipse(0, 10, 62, 30).fill({ color: location.color, alpha: 0.12 })
+        .ellipse(0, 10, 62, 30).stroke({
+          color: selected === location.type ? 0xf0d89f : 0x6b8270,
+          width: selected === location.type ? 2 : 1, alpha: selected === location.type ? 1 : 0.35
+        });
+      group.addChild(ground);
+      if (location.type === 'farms') {
+        const fields = new Graphics();
+        for (let i = 0; i < 5; i++) {
+          fields.poly([-43 + i * 17, -13, -30 + i * 17, -20, -8 + i * 17, 0, -21 + i * 17, 8])
+            .fill({ color: i % 2 ? 0xa99857 : 0x8e9a5c, alpha: 0.85 });
+        }
+        group.addChild(fields);
+      } else if (location.type === 'mines') {
+        group.addChild(new Graphics().poly([-32, 13, 0, -38, 35, 13]).fill(0x6e817b)
+          .poly([0, -38, 9, 13, 35, 13]).fill(0x4a625e)
+          .roundRect(-10, -1, 18, 20, 6).fill(0x182a29));
+      } else {
+        const buildings = Math.min(Math.max(count, 1), 4);
+        for (let i = 0; i < buildings; i++) {
+          const x = (i % 2) * 30 - 25;
+          const y = Math.floor(i / 2) * 20 - 12;
+          const height = location.type === 'castles' || location.type === 'churches' ? 39 : 24;
+          const house = new Graphics()
+            .rect(x, y - height, 25, height).fill({ color: location.color, alpha: count ? 1 : 0.35 })
+            .poly([x - 4, y - height, x + 12, y - height - 16, x + 29, y - height])
+            .fill(count ? 0x6b5550 : 0x425650)
+            .rect(x + 9, y - 13, 6, 13).fill(0x293b35)
+            .rect(x + 4, y - height + 7, 5, 5).fill(0xe6cc8b);
+          group.addChild(house);
+        }
+      }
+      const label = new Text({
+        text: `${location.name} · ${count}`,
+        style: { fontFamily: 'Segoe UI', fontSize: 14, fill: 0xede8d2, fontWeight: '500' }
+      });
+      label.anchor.set(0.5, 0);
+      label.position.set(0, 43);
+      group.addChild(label);
+      this.settlements.addChild(group);
+    }
+    this.fit();
+  }
+
+  /**
+   * Adjusts zoom or resets the map position.
+   * @param change Zoom increment; zero resets the view.
+   * @returns Nothing.
+   */
+  public changeZoom(change: number): void {
+    this.zoom = change === 0 ? 1 : Math.max(0.8, Math.min(2.2, this.zoom + change));
+    if (change === 0) this.offset = { x: 0, y: 0 };
+    this.fit();
+  }
+
+  private fit(): void {
+    if (!this.initialized || this.destroyed) return;
+    const scale = Math.min(this.app.screen.width / 1000, this.app.screen.height / 620) * this.zoom;
+    this.world.scale.set(scale);
+    this.world.position.set(
+      (this.app.screen.width - 1000 * scale) / 2 + this.offset.x,
+      (this.app.screen.height - 620 * scale) / 2 + this.offset.y
+    );
+    this.app.renderer.render(this.app.stage);
+  }
+
+  private drawLandscape(): void {
+    const terrain = new Graphics();
+    terrain.rect(-2000, -2000, 5000, 5000).fill(0x182d2a);
+    terrain.poly([70, 180, 250, 60, 660, 40, 925, 190, 945, 450, 710, 580, 285, 570, 65, 390])
+      .fill(0x2b4438).stroke({ color: 0x728369, width: 2, alpha: 0.35 });
+    terrain.poly([80, 200, 280, 115, 455, 170, 310, 370, 100, 380]).fill(0x314c3d);
+    terrain.poly([300, 385, 520, 295, 810, 400, 700, 540, 350, 525]).fill(0x3c503c);
+    terrain.moveTo(70, 35).bezierCurveTo(400, 140, 120, 230, 240, 310)
+      .bezierCurveTo(365, 390, 130, 440, 170, 630)
+      .stroke({ width: 37, color: 0x1a3436 });
+    terrain.moveTo(70, 35).bezierCurveTo(400, 140, 120, 230, 240, 310)
+      .bezierCurveTo(365, 390, 130, 440, 170, 630)
+      .stroke({ width: 23, color: 0x416d70 });
+    terrain.moveTo(260, 420).lineTo(385, 275).lineTo(510, 205).lineTo(670, 255).lineTo(760, 145)
+      .moveTo(385, 275).lineTo(530, 360).lineTo(720, 415)
+      .moveTo(530, 360).lineTo(525, 490)
+      .stroke({ width: 7, color: 0x8c8266, alpha: 0.65 });
+    terrain.rect(246, 333, 48, 13).fill(0xa79a7d).stroke({ width: 2, color: 0x4b493b });
+    for (let i = 0; i < 90; i++) {
+      const x = 70 + ((i * 137) % 850);
+      const y = 70 + ((i * 83) % 470);
+      if (LOCATIONS.some((place: MapLocation) => Math.hypot(place.x - x, place.y - y) < 85) ||
+          (x > 130 && x < 300)) continue;
+      terrain.rect(x - 2, y, 4, 10).fill(0x22352d);
+      terrain.poly([x - 12, y + 3, x, y - 24, x + 12, y + 3]).fill(i % 2 ? 0x47634b : 0x38573f);
+      terrain.poly([x - 9, y - 6, x, y - 30, x + 9, y - 6]).fill(0x4a654d);
+    }
+    this.world.addChild(terrain);
+    const compass = new Text({
+      text: 'N\n↑',
+      style: { fontFamily: 'Georgia', fontSize: 22, fill: 0xc6c5a1, align: 'center' }
+    });
+    compass.position.set(910, 40);
+    this.world.addChild(compass);
+  }
+
+  /**
+   * Releases the renderer, textures, and resize observer.
+   * @returns Nothing.
+   */
+  public dispose(): void {
+    this.destroyed = true;
+    this.observer?.disconnect();
+    if (this.initialized) this.app.destroy(true, { children: true });
+  }
+}

@@ -52,8 +52,8 @@ export class TransportSystem {
   async initialize(): Promise<void> {
     try {
       const [transportResponse, routesResponse] = await Promise.all([
-        fetch('/src/data/json/transport-types.json'),
-        fetch('/src/data/json/trade-routes.json')
+        fetch(new URL('../data/json/transport-types.json', import.meta.url)),
+        fetch(new URL('../data/json/trade-routes.json', import.meta.url))
       ]);
 
       const transportData = await transportResponse.json();
