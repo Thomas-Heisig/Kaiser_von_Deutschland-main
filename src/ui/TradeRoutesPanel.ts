@@ -177,8 +177,8 @@ export class TradeRoutesPanel {
       }
       
       if (route.requiredTechnology) {
-        // TODO: Check technology when tech system is available
-        const hasTech = false; // Placeholder - assume not unlocked for now
+        const researched = new Set(this.game.getTechnologyProgress(this.currentPlayer.id).researched);
+        const hasTech = researched.has(route.requiredTechnology);
         requirementsMet = requirementsMet && hasTech;
         requirementsHtml += `<div class="requirement ${hasTech ? 'met' : 'unmet'}">
           ${hasTech ? '✅' : '❌'} Technologie: ${route.requiredTechnology}

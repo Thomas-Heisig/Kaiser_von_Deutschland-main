@@ -79,6 +79,23 @@ kann weitergespielt werden.
 6. Speichern und Laden müssen Rollenwahl, Aktionssperre, Gegner und Berichte erhalten.
    Zufällige Überfälle treten nur bei aktivierten Zufallsereignissen auf.
 
+## Forschung und Handelsrouten
+
+1. „Forschung“ öffnen: Die Forschungspunkte und der monatliche Zufluss aus Schulen
+   und Universitäten müssen angezeigt werden.
+2. Ein nicht finanzierbares oder durch Voraussetzungen gesperrtes Projekt lässt sich
+   nicht starten. Ein gestartetes Projekt zieht Gold und Forschungspunkte genau einmal ab.
+3. Charakterstudium erhöht zusätzlich den Forschungsvorrat; pro Monat bleibt die
+   persönliche Aktion trotzdem auf einmal begrenzt.
+4. Forschung schreitet beim Monatswechsel voran. Nach Abschluss erscheint die
+   Technologie im Reichsstand; in Hotseat-Reichen bleibt Forschung getrennt.
+5. Hanserouten sind ohne „Hochseesegeln“ weder in der Routenliste verfügbar noch
+   direkt aktivierbar. Nach Erforschung erscheinen sie für die gültige Epoche.
+6. Handelsrouten benötigen Aktivierungsgold sowie gegebenenfalls einen Hafen.
+   Aktivierung/Deaktivierung muss die Wirtschaftsübersicht und Monatsbilanz aktualisieren.
+7. Speichern/Laden während eines laufenden Forschungsprojekts muss Forschungsvorrat,
+   Fortschritt und abgeschlossene Freischaltungen erhalten.
+
 ## Lokaler Mehrspielermodus
 
 1. Auf der Startseite zwei bis vier Spieler wählen und unterschiedliche Reichsnamen eintragen.
@@ -108,7 +125,9 @@ Der neue Speicherstand hat Version 2 und enthält die Bürgerdatensätze, auf di
 gespeicherte Rollen und KI-Controller verweisen. Ältere Spielstände ohne Bürger
 können diesen zuvor nicht gespeicherten Teil nicht rekonstruieren.
 Zusätzlich enthält der Speicherstand Kriegsdaten und den Hotseat-Zugindex.
-Alte Speicherstände ohne Kriegsdaten erhalten die anfänglichen Nachbarn.
+Der Forschungsstand je Reich enthält Vorrat, abgeschlossene Technologien und das
+laufende Projekt. Alte Speicherstände ohne Kriegs- oder Forschungsdaten erhalten
+anfängliche Nachbarn und einen leeren Forschungsstand.
 
 ## Darstellung und Zugänglichkeit
 

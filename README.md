@@ -23,6 +23,10 @@ tastaturbedienbare Verwaltung mit interaktiver PixiJS-Siedlungskarte ersetzt.
 - Feldzüge gegen drei rivalisierende Reiche, Nachschub, Verluste, Überfälle und Tribut.
 - Spielbare Bürger mit Rollenwechsel und vier persönlichen Monatsaktionen.
 - Lokaler Hotseat für zwei bis vier Herrscher mit Spielerübergabe und gegenseitigen Angriffen.
+- Reichsspezifische Forschung aus Schulen, Universitäten und der persönlichen Studienaktion;
+  Technologien schalten passende Handelsrouten und Transportmittel frei.
+- Handelsrouten im Wirtschaftsbereich aktivieren und beenden; Kosten, Ära, Hafen- und
+  Technologievoraussetzungen werden vor dem Einsatz geprüft.
 - Sechs erreichbare Kampagnenziele; danach ist freies Weiterspielen möglich.
 
 **Start:** `npm ci`, danach `npm run dev`, Browser unter `http://localhost:4100`.

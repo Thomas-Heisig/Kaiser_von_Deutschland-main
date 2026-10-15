@@ -31,6 +31,13 @@ KingdomGameUI -> GameEngine -> Kingdom / EconomySystem / weitere Systeme
 - `CampaignWarfareSystem` löst Feldzüge und Überfälle statistisch auf und verwaltet
   Rivalen, Tribut, Monatslimits und maximal 60 Berichte. Die Engine bindet
   Feldherrenboni aus dem aktuell gespielten Bürger ein.
+- Forschung wird pro Spieler über eine eigene `PlayerTechnologySystem`-Instanz
+  verwaltet. Schulen liefern monatlich 10, Universitäten 25 Forschungspunkte;
+  das persönliche Studium bringt 25 Punkte. Forschungskosten, Voraussetzungen,
+  Epochen und monatlicher Fortschritt werden vor dem Freischalten geprüft.
+- Handelsrouten und Transportmittel erhalten für ihre Verfügbarkeitsprüfung
+  ausschließlich die Technologien ihres Reiches. Route und Forschungsvorrat
+  werden gemeinsam im Spielstand persistiert.
 - Rollenwechsel nutzt `RoleSwitchingSystem`; persönliche Aktionen sind je Spieler
   auf eine Aktion pro Monat begrenzt, auch nach einem Rollenwechsel.
 - Mehrere lokale Spieler aktivieren Hotseat: `endTurn()` wechselt den Herrscher

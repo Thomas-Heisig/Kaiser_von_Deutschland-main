@@ -90,6 +90,11 @@ recruitForPlayer(playerId: string, count: number, type?: 'infantry' | 'cavalry' 
 quoteTrade(resource: MarketResource, amount: number, direction: 'buy' | 'sell'): number
 tradeForPlayer(playerId: string, resource: MarketResource, amount: number, direction: 'buy' | 'sell'): boolean
 getCampaignGoals(playerId: string): CampaignGoal[]
+getTechnologyProgress(playerId: string): TechnologyProgressSnapshot
+getTechnologyOptions(playerId: string): TechnologyOption[]
+startResearch(playerId: string, technologyId: string): TechnologyDefinition
+getAvailableTradeRoutes(player: Player): TradeRoute[]
+activateTradeRoute(player: Player, routeId: string): { success: boolean; message: string }
 ```
 
 `MarketResource` ist `'food' | 'wood' | 'stone' | 'iron'`. Handelsmengen und
@@ -101,6 +106,18 @@ Der Steuersatz ist ein endlicher Wert und wird auf 0–0,5 begrenzt.
 Einkauf kostet `ceil(Basispreis × Menge × 1,2)`, Verkauf bringt
 `floor(Basispreis × Menge × 0,8)`. Kampagnenziele enthalten jeweils `label` und
 `done` und beziehen sich auf den aktuellen Zustand, nicht auf frühere Bestwerte.
+
+Forschung ist reichsspezifisch. Schulen erzeugen monatlich 10 und Universitäten
+25 Punkte; `performCharacterAction(playerId, 'study')` gewährt 25 weitere.
+`startResearch()` prüft Epoche, Voraussetzungen, verfügbare Forschungspunkte und
+Gold, zieht beides ab und startet ein Projekt. Der Fortschritt wird monatlich
+berechnet. `technologyResearched` enthält `playerId` und die abgeschlossene
+Technologie. Forschungsstände werden mit dem Spielstand gespeichert.
+
+`getAvailableTradeRoutes()` und `getAvailableTransportTypes()` filtern nach
+Spieljahr und den im jeweiligen Reich erforschten Technologien. `activateTradeRoute()`
+prüft die Technologie erneut, ebenso Epoche, Infrastruktur und Aktivierungskosten;
+ein direkter API-Aufruf kann Voraussetzungen nicht umgehen.
 
 ### Feldzüge, Rollen und Hotseat
 

@@ -8,8 +8,9 @@ import type { Citizen, CitizenSkills, Profession } from '../core/CitizenSystem';
 import { KingdomInfrastructure } from '../core/Kingdom';
 import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
+import { GameAudio } from './GameAudio';
 
-type View = 'overview' | 'build' | 'economy' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -83,6 +84,12 @@ export class KingdomGameUI {
   private saves: SaveMeta[] = [];
   private journal: JournalEntry[] = [];
   private subscriptions: Array<() => void> = [];
+  private readonly audio: GameAudio;
+  private readonly buttonSoundHandler = (event: MouseEvent): void => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest('button');
+    if (button && !button.hasAttribute('data-audio-toggle')) this.audio.playEffect('click');
+  };
   private readonly keyboardHandler = (event: KeyboardEvent): void => {
     if (event.target instanceof HTMLElement &&
         (event.target.matches('input, select, textarea, button') || event.target.isContentEditable)) return;
@@ -99,6 +106,11 @@ export class KingdomGameUI {
    * @param root Application root.
    */
   public constructor(private readonly root: HTMLElement) {
+    this.audio = new GameAudio((error: unknown): void => {
+      console.error('Audio konnte nicht abgespielt werden:', error);
+      this.notify('Audio konnte nicht abgespielt werden. Prüfe die Browser-Audioeinstellungen.', true);
+    });
+    this.root.addEventListener('click', this.buttonSoundHandler);
     this.showMenu();
     document.addEventListener('keydown', this.keyboardHandler);
   }
@@ -119,6 +131,10 @@ export class KingdomGameUI {
             <strong>Ein neuer Anfang · 1200</strong>
             <p>Freie mittelalterliche Aufbaukampagne. Alternative Geschichte, keine historische Landkarte.</p>
           </div></div>
+          <div class="audio-controls" aria-label="Audioeinstellungen">
+            <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
+            <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
+          </div>
           <form id="new-game">
             <label>Spieler an diesem Gerät<select name="players" id="player-count">
               <option value="1" selected>1 – Einzelspieler-Kampagne</option>
@@ -150,6 +166,7 @@ export class KingdomGameUI {
           <p id="notice" role="status" aria-live="polite"></p>
         </section>
       </main>`;
+    this.bindAudioControls();
     const playerCount = this.root.querySelector<HTMLSelectElement>('#player-count');
     playerCount?.addEventListener('change', (): void => {
       const count = Number(playerCount.value);
@@ -222,6 +239,7 @@ export class KingdomGameUI {
     this.record(engine.isHotseat()
       ? `${players.length} Herrscher teilen sich das Land. ${this.player.name} beginnt.`
       : 'Deine Herrschaft beginnt. Sichere zuerst Nahrung und Einnahmen.');
+    this.audio.playEffect('success');
     this.saves = await engine.listSaves();
     await this.showGame();
   }
@@ -235,7 +253,10 @@ export class KingdomGameUI {
           <a href="#" class="brand" aria-label="Zur Reichsübersicht"><span class="brand-seal">♜</span>
             <span>KAISER<small>VON DEUTSCHLAND</small></span></a>
           <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span></div>
-          <div class="header-actions"><button data-action="save" class="secondary">Speichern</button>
+          <div class="header-actions">
+            <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
+            <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
+            <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button></div>
         </header>
         <section class="resource-bar" aria-label="Ressourcen und monatliche Änderung">
@@ -251,7 +272,7 @@ export class KingdomGameUI {
             <nav aria-label="Spielbereiche">
               ${([
                 ['overview', '◈', 'Reichsübersicht'], ['build', '♜', 'Bauvorhaben'],
-                ['economy', '⚖', 'Wirtschaft'], ['military', '⚑', 'Garnison'],
+                ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['military', '⚑', 'Garnison'],
                 ['war', '⚔', 'Feldzüge'], ['character', '♙', 'Charakter'],
                 ['chronicle', '▤', 'Chronik'], ['help', '?', 'Spielhilfe']
               ] as const).map(([key, symbol, name]) => `
@@ -308,6 +329,7 @@ export class KingdomGameUI {
         </div>
         <footer class="game-footer">Jede Entscheidung zählt.<span id="footer-keys"></span></footer>
       </div>`;
+    this.bindAudioControls();
     this.root.querySelector('.brand')?.addEventListener('click', (event: Event): void => {
       event.preventDefault();
       this.navigate('overview');
@@ -329,6 +351,8 @@ export class KingdomGameUI {
     this.subscriptions = [
       engine.on('monthAdvanced', (): void => {
         this.record('Monat abgeschlossen. Produktion, Verbrauch und Steuern wurden verbucht.');
+        this.audio.playEffect('month');
+        this.renderPanel();
         this.refresh();
       }),
       engine.on('gameStateChanged', (): void => this.refresh()),
@@ -341,9 +365,16 @@ export class KingdomGameUI {
       }),
       engine.on('battleResolved', (detail: { report: BattleReport }): void => {
         this.record(detail.report.summary);
+        this.audio.playEffect('battle');
         if (this.player && detail.report.playerIds.includes(this.player.id) && detail.report.kind === 'raid') {
           this.notify(detail.report.summary, !this.wonBattle(detail.report));
         }
+      }),
+      engine.on('technologyResearched', (detail: { playerId: string; technology: { name: string } }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        const message = `Forschung abgeschlossen: ${detail.technology.name}.`;
+        this.record(message);
+        this.notify(message);
       })
     ];
     this.refresh();
@@ -531,7 +562,39 @@ export class KingdomGameUI {
               <p id="trade-quote" class="cost"></p>
               <div class="quick-actions"><button name="direction" value="buy" class="primary">Kaufen</button>
                 <button name="direction" value="sell" class="secondary">Verkaufen</button></div>
-            </form></section></div>`;
+            </form></section></div>
+        <section class="trade-routes-section"><h3>Handelsrouten</h3>
+          <p class="muted">Führe neue Routen über Aktivierungskosten und gegebenenfalls Forschung ein.</p>
+          ${this.renderTradeRoutes(this.player)}</section>`;
+    } else if (this.view === 'research') {
+      const progress = this.engine.getTechnologyProgress(this.player.id);
+      const current = this.engine.getTechnologyOptions(this.player.id)
+        .find((option) => option.technology.id === progress.currentResearch?.technologyId);
+      const pointsPerMonth = kingdom.infrastructure.schools * 10 + kingdom.infrastructure.universities * 25;
+      panel.innerHTML = heading('WISSEN & ERFINDUNGEN', 'Forschung im Reich',
+        'Schulen und Universitäten erzeugen Forschungspunkte. Pro Reich kann gleichzeitig ein Projekt laufen.') + `
+        <div class="summary-grid"><article><span>Forschungsvorrat</span><strong>${format(progress.researchPoints)}</strong>
+          <small>+${format(pointsPerMonth)} Punkte/Monat aus Bildung</small></article>
+          <article><span>Erforscht</span><strong>${progress.researched.length}</strong>
+            <small>Technologien in diesem Reich</small></article>
+          <article><span>Forschungsstätten</span><strong>${kingdom.infrastructure.schools +
+            kingdom.infrastructure.universities}</strong><small>Schulen & Universitäten</small></article></div>
+        ${current ? `<section class="research-current"><h3>Aktuelles Projekt: ${
+          escape(current.technology.name)}</h3><progress max="${current.technology.researchTime}"
+          value="${progress.currentResearch?.progressDays ?? 0}" aria-label="Forschungsfortschritt"></progress>
+          <p>${format(progress.currentResearch?.progressDays ?? 0)} / ${
+          format(current.technology.researchTime)} Forschungstage</p></section>` : ''}
+        <div class="build-grid">${this.engine.getTechnologyOptions(this.player.id).map((option): string => `
+          <article class="build-card ${option.researched ? 'selected' : ''}">
+            <div class="build-title"><span aria-hidden="true">✧</span><h3>${escape(option.technology.name)}</h3>
+              <small>${escape(option.technology.era)} · ${option.technology.year}</small></div>
+            <p>${escape(option.technology.description)}</p>
+            <div class="cost">${format(option.technology.cost.gold)} Gold · ${
+              format(option.technology.cost.research)} Forschungspunkte · ${format(option.technology.researchTime)} Tage</div>
+            ${option.researched ? '<p class="positive">Erforscht</p>' : option.canStart
+              ? `<button class="primary" data-research="${escape(option.technology.id)}">Forschung beginnen</button>`
+              : `<p class="muted">${option.blockers.map(escape).join(' · ')}</p>`}
+          </article>`).join('')}</div>`;
     } else if (this.view === 'military') {
       panel.innerHTML = heading('SICHERHEIT & VERTEIDIGUNG', 'Die Garnison',
         'Rekruten kommen aus der bäuerlichen Bevölkerung. Mehr Truppen kosten Unterhalt und fehlen auf den Feldern.') + `
@@ -579,13 +642,51 @@ export class KingdomGameUI {
           <article><h3>5. Rollen spielen</h3><p>Unter „Charakter“ handelt deine Figur einmal pro Monat: arbeiten,
           studieren, üben oder dem Reich dienen. Gute Anführer verstärken dein Heer. Stirbt die Figur, wählst du
           eine neue Rolle.</p></article>
-          <article><h3>6. Dein Vermächtnis</h3><p>Erfülle die Ziele rechts. Du kannst danach weiterspielen.
+          <article><h3>6. Wissen entwickeln</h3><p>Schulen erzeugen Forschungspunkte. Unter „Forschung“ kannst du
+          Technologien projektweise entwickeln; Voraussetzungen und verfügbare Epochen werden berücksichtigt.
+          Segeln schaltet beispielsweise die Hanserouten frei.</p></article>
+          <article><h3>7. Dein Vermächtnis</h3><p>Erfülle die Ziele rechts. Du kannst danach weiterspielen.
           Speichere manuell; beim Laden bleibt die Zeit immer pausiert. Es gibt kein Autosave.</p></article></div>
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
     panel.querySelectorAll<HTMLButtonElement>('[data-open]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => this.navigate(button.dataset.open as View));
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-research]').forEach((button: HTMLButtonElement): void => {
+      button.addEventListener('click', (): void => {
+        void this.run((): void => {
+          const technology = this.requireEngine().startResearch(
+            this.requirePlayer().id, button.dataset.research ?? ''
+          );
+          this.record(`Forschung begonnen: ${technology.name}.`);
+          this.notify(`Forschung begonnen: ${technology.name}.`);
+        });
+      });
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-route-activate]').forEach((button: HTMLButtonElement): void => {
+      button.addEventListener('click', (): void => {
+        void this.run((): void => {
+          const result = this.requireEngine().activateTradeRoute(
+            this.requirePlayer(), button.dataset.routeActivate ?? ''
+          );
+          if (!result.success) throw new Error(result.message);
+          this.record(result.message);
+          this.notify(result.message);
+        });
+      });
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-route-deactivate]').forEach((button: HTMLButtonElement): void => {
+      button.addEventListener('click', (): void => {
+        void this.run((): void => {
+          const result = this.requireEngine().deactivateTradeRoute(
+            this.requirePlayer(), button.dataset.routeDeactivate ?? ''
+          );
+          if (!result.success) throw new Error(result.message);
+          this.record(result.message);
+          this.notify(result.message);
+        });
+      });
     });
     panel.querySelectorAll<HTMLButtonElement>('[data-build]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => {
@@ -594,6 +695,7 @@ export class KingdomGameUI {
           if (!await this.requireEngine().buildForPlayer(this.requirePlayer().id, type)) {
             throw new Error('Nicht genügend Ressourcen für dieses Bauvorhaben.');
           }
+          this.audio.playEffect('build');
           this.selected = type;
           this.record(`${STRUCTURES[type].name} fertiggestellt.`);
           this.notify(`${STRUCTURES[type].name} wurde gebaut. Kosten wurden abgezogen.`);
@@ -607,6 +709,7 @@ export class KingdomGameUI {
           if (!this.requireEngine().recruitForPlayer(this.requirePlayer().id, 10, type)) {
             throw new Error('Nicht genügend Vorräte oder verfügbare Rekruten.');
           }
+          this.audio.playEffect('success');
           this.record('10 neue Soldaten wurden in die Garnison aufgenommen.');
           this.notify('10 Soldaten rekrutiert. Beachte den zusätzlichen Unterhalt.');
         });
@@ -616,6 +719,7 @@ export class KingdomGameUI {
       button.addEventListener('click', (): void => {
         void this.run((): void => {
           const report = this.requireEngine().attackRival(this.requirePlayer().id, button.dataset.attackRival ?? '');
+          this.audio.playEffect('battle');
           this.notify(report.summary, !report.attackerWon);
         });
       });
@@ -624,6 +728,7 @@ export class KingdomGameUI {
       button.addEventListener('click', (): void => {
         void this.run((): void => {
           const report = this.requireEngine().attackPlayer(this.requirePlayer().id, button.dataset.attackPlayer ?? '');
+          this.audio.playEffect('battle');
           this.notify(report.summary, !report.attackerWon);
         });
       });
@@ -654,6 +759,7 @@ export class KingdomGameUI {
         const select = panel.querySelector<HTMLSelectElement>('#tax-rate');
         if (!select) return;
         this.requireEngine().setTaxRate(this.requirePlayer().id, Number(select.value) / 100);
+        this.audio.playEffect('success');
         this.record(`Steuersatz auf ${select.value} % festgelegt.`);
         this.notify(`Steuersatz geändert: ${select.value} %.`);
       });
@@ -689,6 +795,7 @@ export class KingdomGameUI {
             throw new Error(direction === 'buy' ? 'Nicht genügend Gold.' : 'Nicht genügend Vorräte zum Verkaufen.');
           }
           const message = `${format(amount)} ${RESOURCE_NAMES[resource]} ${direction === 'buy' ? 'gekauft' : 'verkauft'}.`;
+          this.audio.playEffect('trade');
           this.record(message);
           this.notify(message);
         });
@@ -778,6 +885,35 @@ export class KingdomGameUI {
       return `Nachschub fehlt: ${format(army.cost.gold)} Gold und ${format(army.cost.food)} Nahrung nötig.`;
     }
     return null;
+  }
+
+  private renderTradeRoutes(player: Player): string {
+    const engine = this.requireEngine();
+    const routes = engine.getAvailableTradeRoutes(player);
+    if (!routes.length) {
+      return '<p class="muted">In dieser Epoche sind keine Handelsrouten verfügbar. Spätere Routen können Forschung oder Häfen erfordern.</p>';
+    }
+    return `<div class="build-grid">${routes.map((route): string => {
+      const active = player.kingdom.isTradeRouteActive(route.id);
+      const activationCost = Math.floor(route.length * 10 + route.danger * 100);
+      const needsPort = route.id.includes('sea') || route.id.includes('naval');
+      const canActivate = player.kingdom.resources.gold >= activationCost &&
+        (!needsPort || player.kingdom.infrastructure.ports > 0);
+      return `<article class="build-card ${active ? 'selected' : ''}">
+        <div class="build-title"><span aria-hidden="true">⚓</span><h3>${escape(route.name)}</h3>
+          <small>${route.period.start}–${route.period.end ?? 'Heute'}</small></div>
+        <p>${escape(route.origin)} → ${escape(route.destination)} · ${format(route.length)} km</p>
+        <p class="muted">${escape(route.mainGoods.join(', '))}${
+          route.requiredTechnology ? ` · Technologie: ${escape(route.requiredTechnology)}` : ''}</p>
+        <div class="cost">+${format(route.effects.trade_income)} Gold/Jahr · Aktivierung: ${
+          format(activationCost)} Gold${needsPort ? ' · Hafen erforderlich' : ''}</div>
+        ${active
+          ? `<button class="secondary" data-route-deactivate="${escape(route.id)}">Route beenden</button>`
+          : `<button class="secondary" data-route-activate="${escape(route.id)}" ${
+            canActivate ? '' : 'disabled'}>${canActivate ? 'Route aktivieren' : needsPort &&
+            player.kingdom.infrastructure.ports === 0 ? 'Hafen erforderlich' : 'Zu wenig Gold'}</button>`}
+      </article>`;
+    }).join('')}</div>`;
   }
 
   private renderWarRoom(player: Player): string {
@@ -883,6 +1019,45 @@ export class KingdomGameUI {
     else engine.resumeGame();
   }
 
+  private bindAudioControls(): void {
+    this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
+      button.addEventListener('click', (): void => {
+        if (button.dataset.audioToggle === 'music') void this.toggleMusic();
+        else this.toggleEffects();
+      });
+    });
+    this.updateAudioControls();
+  }
+
+  private async toggleMusic(): Promise<void> {
+    try {
+      await this.audio.toggleMusic();
+      this.updateAudioControls();
+    } catch (error) {
+      console.error('Musik konnte nicht umgeschaltet werden:', error);
+      this.notify('Musik konnte nicht gestartet werden. Prüfe die Browser-Audioeinstellungen.', true);
+    }
+  }
+
+  private toggleEffects(): void {
+    this.audio.toggleEffects();
+    this.updateAudioControls();
+    if (this.audio.effectsEnabled) this.audio.playEffect('success');
+  }
+
+  private updateAudioControls(): void {
+    this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
+      const isMusic = button.dataset.audioToggle === 'music';
+      const enabled = isMusic ? this.audio.musicEnabled : this.audio.effectsEnabled;
+      button.textContent = isMusic
+        ? `♫ Musik: ${enabled ? 'An' : 'Aus'}`
+        : `🔊 Effekte: ${enabled ? 'An' : 'Aus'}`;
+      button.setAttribute('aria-pressed', String(enabled));
+      button.disabled = !this.audio.supported;
+      if (!this.audio.supported) button.title = 'Dieser Browser unterstützt keine Audioausgabe.';
+    });
+  }
+
   private async run(operation: () => void | Promise<void>): Promise<void> {
     if (this.busy) return;
     this.busy = true;
@@ -936,5 +1111,7 @@ export class KingdomGameUI {
     this.map?.dispose();
     for (const unsubscribe of this.subscriptions) unsubscribe();
     document.removeEventListener('keydown', this.keyboardHandler);
+    this.root.removeEventListener('click', this.buttonSoundHandler);
+    this.audio.dispose();
   }
 }

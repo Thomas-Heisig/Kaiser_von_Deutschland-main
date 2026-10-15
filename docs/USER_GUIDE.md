@@ -56,6 +56,13 @@ Willkommen bei Kaiser von Deutschland! Dieses Handbuch führt Sie durch alle Asp
    - Navigieren Sie zu `http://localhost:4100`
    - Das Spiel lädt automatisch
 
+### Musik und Soundeffekte
+
+Über **Musik: Aus/An** und **Effekte: Aus/An** im Startmenü oder Spielkopf lassen sich
+Hintergrundmusik und Spielgeräusche getrennt steuern. Die mittelalterlich angehauchten Klänge werden
+im Browser erzeugt; es werden keine Audiodateien heruntergeladen. Musik startet erst nach einem Klick,
+damit die Audio-Regeln des Browsers eingehalten werden.
+
 ### Neues Spiel beginnen
 
 1. Klicken Sie auf "Neues Spiel"

@@ -82,6 +82,9 @@ export interface CampaignGoal {
   done: boolean;
 }
 
+const formatResearch = (value: number): string =>
+  new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(value);
+
 export enum GameState {
   LOBBY = 'LOBBY',
   RUNNING = 'RUNNING',
@@ -620,7 +623,7 @@ export class GameEngine {
     player.kingdom.currentSeason = 'winter';
     this.players.set(player.id, player);
     this.warfare.ensureRivals(player.id, data.difficulty ?? this.config.difficulty);
-    this.technologySystems.set(player.id, new TechnologySystem());
+    this.technologySystems.set(player.id, new PlayerTechnologySystem());
     this.emit('playerAdded', { player: player.serialize() });
 
     return player;
@@ -929,7 +932,7 @@ export class GameEngine {
     this.players = new Map(restoredPlayers.map((player: Player) => [player.id, player]));
     this.warfare = restoredWarfare;
     this.technologySystems = new Map(restoredPlayers.map((player: Player) => {
-      const system = new TechnologySystem();
+      const system = new PlayerTechnologySystem();
       const snapshot = saveData.technologyProgress?.[player.id] as TechnologyProgressSnapshot | undefined;
       if (snapshot) system.load(snapshot);
       return [player.id, system];
@@ -1019,82 +1022,83 @@ export class GameEngine {
       resources.gold += price;
     }
 
-    /**
-     * Returns the research stock, completed technologies and active research for a realm.
-     * @param playerId Owning player.
-     * @returns A detached research snapshot.
-     * @throws Error if the player does not exist.
-     */
-    public getTechnologyProgress(playerId: string): TechnologyProgressSnapshot {
-      return this.requireTechnologySystem(playerId).serialize();
-    }
-
-    /**
-     * Technologies available in the current era and any blockers to starting research.
-     * @param playerId Owning player.
-     * @returns Era-eligible technologies and their research requirements.
-     * @throws Error if the player does not exist.
-     */
-    public getTechnologyOptions(playerId: string): TechnologyOption[] {
-      const player = this.requirePlayer(playerId);
-      const system = this.requireTechnologySystem(playerId);
-      return TechnologySystem.getAllTechnologies()
-        .filter((technology: TechnologyDefinition): boolean => technology.year <= this.currentYear)
-        .map((technology: TechnologyDefinition): TechnologyOption => {
-          const blockers: string[] = [];
-          const researched = system.isResearched(technology.id);
-          if (researched) blockers.push('Bereits erforscht');
-          if (system.getCurrentResearch()?.tech.id === technology.id) blockers.push('Forschung läuft');
-          if (system.getCurrentResearch() && system.getCurrentResearch()?.tech.id !== technology.id) {
-            blockers.push('Ein anderes Forschungsprojekt läuft');
-          }
-          for (const prerequisiteId of technology.prerequisites) {
-            if (!system.isResearched(prerequisiteId)) {
-              const prerequisite = TechnologySystem.getTechnology(prerequisiteId);
-              blockers.push(`Voraussetzung: ${prerequisite?.name ?? prerequisiteId}`);
-            }
-          }
-          if (system.getResearchPoints() < technology.cost.research) {
-            blockers.push(`Forschungspunkte: ${formatResearch(system.getResearchPoints())}/${formatResearch(technology.cost.research)}`);
-          }
-          if (player.kingdom.resources.gold < technology.cost.gold) {
-            blockers.push(`Gold: ${formatResearch(player.kingdom.resources.gold)}/${formatResearch(technology.cost.gold)}`);
-          }
-          return { technology, researched, canStart: blockers.length === 0, blockers };
-        });
-    }
-
-    /**
-     * Starts a single research project and deducts its gold and research-point costs atomically.
-     * @param playerId Owning player.
-     * @param technologyId Technology to research.
-     * @returns Technology metadata.
-     * @throws Error if the technology is unavailable or the realm cannot pay.
-     */
-    public startResearch(playerId: string, technologyId: string): TechnologyDefinition {
-      const player = this.requirePlayer(playerId);
-      const option = this.getTechnologyOptions(playerId)
-        .find((entry: TechnologyOption): boolean => entry.technology.id === technologyId);
-      if (!option) throw new Error('Diese Technologie gehört nicht zur aktuellen Epoche.');
-      if (!option.canStart) throw new Error(option.blockers.join(' · '));
-      player.kingdom.resources.gold -= option.technology.cost.gold;
-      const started = this.requireTechnologySystem(playerId).startResearch(option.technology);
-      if (!started) {
-        player.kingdom.resources.gold += option.technology.cost.gold;
-        throw new Error('Das Forschungsprojekt konnte nicht gestartet werden.');
-      }
-      this.emit('researchStarted', { playerId, technology: option.technology });
-      return option.technology;
-    }
-
-    private requireTechnologySystem(playerId: string): TechnologySystem {
-      this.requirePlayer(playerId);
-      const system = this.technologySystems.get(playerId);
-      if (!system) throw new Error('Der Forschungsstand dieses Reiches fehlt.');
-      return system;
-    }
     this.emit('tradeCompleted', { playerId, resource, amount, direction, price });
     return true;
+  }
+
+  /**
+   * Returns the research stock, completed technologies and active research for a realm.
+   * @param playerId Owning player.
+   * @returns A detached research snapshot.
+   * @throws Error if the player does not exist.
+   */
+  public getTechnologyProgress(playerId: string): TechnologyProgressSnapshot {
+    return this.requireTechnologySystem(playerId).serialize();
+  }
+
+  /**
+   * Technologies available in the current era and any blockers to starting research.
+   * @param playerId Owning player.
+   * @returns Era-eligible technologies and their research requirements.
+   * @throws Error if the player does not exist.
+   */
+  public getTechnologyOptions(playerId: string): TechnologyOption[] {
+    const player = this.requirePlayer(playerId);
+    const system = this.requireTechnologySystem(playerId);
+    return TechnologySystem.getAllTechnologies()
+      .filter((technology: TechnologyDefinition): boolean => technology.year <= this.currentYear)
+      .map((technology: TechnologyDefinition): TechnologyOption => {
+        const blockers: string[] = [];
+        const researched = system.isResearched(technology.id);
+        if (researched) blockers.push('Bereits erforscht');
+        if (system.getCurrentResearch()?.tech.id === technology.id) blockers.push('Forschung läuft');
+        if (system.getCurrentResearch() && system.getCurrentResearch()?.tech.id !== technology.id) {
+          blockers.push('Ein anderes Forschungsprojekt läuft');
+        }
+        for (const prerequisiteId of technology.prerequisites) {
+          if (!system.isResearched(prerequisiteId)) {
+            const prerequisite = TechnologySystem.getTechnology(prerequisiteId);
+            blockers.push(`Voraussetzung: ${prerequisite?.name ?? prerequisiteId}`);
+          }
+        }
+        if (system.getResearchPoints() < technology.cost.research) {
+          blockers.push(`Forschungspunkte: ${formatResearch(system.getResearchPoints())}/${formatResearch(technology.cost.research)}`);
+        }
+        if (player.kingdom.resources.gold < technology.cost.gold) {
+          blockers.push(`Gold: ${formatResearch(player.kingdom.resources.gold)}/${formatResearch(technology.cost.gold)}`);
+        }
+        return { technology, researched, canStart: blockers.length === 0, blockers };
+      });
+  }
+
+  /**
+   * Starts a single research project and deducts its gold and research-point costs atomically.
+   * @param playerId Owning player.
+   * @param technologyId Technology to research.
+   * @returns Technology metadata.
+   * @throws Error if the technology is unavailable or the realm cannot pay.
+   */
+  public startResearch(playerId: string, technologyId: string): TechnologyDefinition {
+    const player = this.requirePlayer(playerId);
+    const option = this.getTechnologyOptions(playerId)
+      .find((entry: TechnologyOption): boolean => entry.technology.id === technologyId);
+    if (!option) throw new Error('Diese Technologie gehört nicht zur aktuellen Epoche.');
+    if (!option.canStart) throw new Error(option.blockers.join(' · '));
+    player.kingdom.resources.gold -= option.technology.cost.gold;
+    const started = this.requireTechnologySystem(playerId).startResearch(option.technology);
+    if (!started) {
+      player.kingdom.resources.gold += option.technology.cost.gold;
+      throw new Error('Das Forschungsprojekt konnte nicht gestartet werden.');
+    }
+    this.emit('researchStarted', { playerId, technology: option.technology });
+    return option.technology;
+  }
+
+  private requireTechnologySystem(playerId: string): PlayerTechnologySystem {
+    this.requirePlayer(playerId);
+    const system = this.technologySystems.get(playerId);
+    if (!system) throw new Error('Der Forschungsstand dieses Reiches fehlt.');
+    return system;
   }
 
   /**
@@ -1322,6 +1326,7 @@ export class GameEngine {
         character.skills.literacy = raise(character.skills.literacy, 6);
         character.skills.leadership = raise(character.skills.leadership, 2);
         player.kingdom.stats.literacyRate = raise(player.kingdom.stats.literacyRate, 0.3);
+        this.requireTechnologySystem(playerId).addResearchPoints(25);
         message = `${character.firstName} studiert alte Schriften. Lesen und Führung verbessern sich.`;
         break;
       case 'train':

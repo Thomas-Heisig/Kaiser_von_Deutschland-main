@@ -65,6 +65,8 @@ h3 { font-size: 1.16rem; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .checkbox { display: flex; gap: 10px; align-items: center; }
 .checkbox input { width: 18px; min-height: 18px; accent-color: var(--gold); }
+.audio-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.audio-controls button { min-height: 36px; padding: 6px 12px; font-size: 0.76rem; }
 .wide { width: 100%; display: flex; justify-content: space-between; padding: 13px 18px; }
 .continue-row { display: flex; align-items: center; gap: 18px; margin-top: 18px; }
 .continue-row span, .menu-note { font-size: 0.73rem; color: var(--muted); }
@@ -80,6 +82,7 @@ h3 { font-size: 1.16rem; }
 .realm-heading strong { font: 20px Georgia, serif; color: #ece7d2; }
 .realm-heading span { font-size: 0.72rem; color: var(--muted); }
 .header-actions { display: flex; gap: 8px; }
+.header-actions button[data-audio-toggle] { min-height: 36px; padding: 6px 10px; font-size: 0.72rem; }
 .resource-bar { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--border); background: #1b2c25; padding: 0 20px; }
 .resource { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-right: 1px solid var(--border); }
 .resource:last-child { border: 0; }
@@ -237,7 +240,7 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
   .brand-seal { font-size: 32px; }
   .realm-heading { text-align: right; margin-left: auto; }
   .realm-heading strong { font-size: 18px; }
-  .header-actions { width: 100%; justify-content: flex-end; }
+  .header-actions { width: 100%; justify-content: flex-end; flex-wrap: wrap; }
   .header-actions button { min-height: 36px; padding: 6px 14px; }
   .resource-bar { padding: 0 8px; }
   .resource { display: grid; justify-content: center; padding: 12px 5px; gap: 4px; }

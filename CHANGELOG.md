@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Offene Aufgaben und Planung: siehe [TODO.md](./TODO.md).
+
+### Hinzugefügt – Spielbare Aufbaukampagne (Oktober 2026)
+- **KingdomGameUI** als neuer Standard-Einstieg (`src/main.ts`): semantische HTML-Verwaltung mit responsivem CSS
+  (`styles/kingdom.css`), Ansichten für Übersicht, Bauen, Wirtschaft, Garnison, Feldzüge, Charakter, Chronik, Hilfe
+- **KingdomMap** (PixiJS 8): Siedlungskarte mit Bezirksmarkern, Zoom und Zentrieren, wird erst beim Spielstart nachgeladen
+- **Aufbaukampagne ab 1200** mit sechs Kampagnenzielen (`GameEngine.getCampaignGoals()`), danach freies Weiterspielen
+- **CampaignWarfareSystem**: statistische Feldzüge und Überfälle, Rivalen, Tribut, Monatslimits, max. 60 Berichte,
+  Feldherrenboni aus dem gespielten Charakter
+- **Lokaler Hotseat** für 2–4 Herrscher: `endTurn()`, Übergabedialog, gegenseitige Angriffe (Sieger erhält 15 % Gold)
+- Persönliche Charakteraktionen (eine pro Spieler und Monat) und Rollenwechsel über `RoleSwitchingSystem`
+- Markthandel über die Preistabelle von `EconomySystem`, monatliche Bilanzprognose `Kingdom.getMonthlyBalance()`
+- Tests: `GameEngine.test.ts`, `Kingdom.test.ts`, `CampaignWarfareSystem.test.ts`, `TimeSystem.test.ts`,
+  `Player.test.ts`, inkl. Integrationstest, der alle Kampagnenziele erreicht
+- **Forschung pro Reich** (in Arbeit): `PlayerTechnologySystem` mit Forschungspunkten aus Schulen und Universitäten,
+  ein Projekt pro Reich, `getTechnologyProgress()`, `getTechnologyOptions()`, `startResearch()`, Event
+  `technologyResearched`, neue Technologie „Hochseesegeln“, Handelsrouten prüfen erforschte Technologien
+
+### Geändert
+- Engine besitzt den verbindlichen Kalender: `advanceMonth()` mit Schutz gegen parallele Monatsberechnungen,
+  `nextYear()` berechnet zwölf reguläre Monate
+- Spielstand-Version 2: enthält Bürgerdatensätze, Kriegszustand, Hotseat-Zugindex und Forschungsstand;
+  Laden startet immer pausiert
+- Daten-URLs nutzen `new URL(..., import.meta.url)`, damit JSON-Daten auch im Produktionsbuild ausgeliefert werden
+- TypeScript-Konfiguration und Vite-Setup überarbeitet (Dev-Server auf Port 4100)
+- README, ARCHITECTURE, API_REFERENCE und GAMEPLAY_TESTING_GUIDE auf die Aufbaukampagne aktualisiert
+
+### Bekannte Probleme
+- `npm run check` schlägt fehl: unfertige Forschungsansicht in `KingdomGameUI.ts` (siehe TODO, P0)
+
+## [2.6.0] - 2025-12
+
+> Laut Implementierungsberichten; `package.json` steht noch auf 2.5.1.
+
+### Hinzugefügt – 🚢 Transport-Revolution & Lebenssimulation
+- **Handelsrouten-Management**: Aktivierung von Routen nach Jahr und Technologie, Aktivierungskosten,
+  Einkommen, Kultureinfluss, Prestige und Handelsmacht (`Kingdom`, `GameEngine`)
+- **TradeRoutesPanel** (UI) mit Transportmitteln in 7 Kategorien (zu Fuß bis Flugzeug)
+- Handelsrouten in Save/Load, Wirtschafts-, Infrastruktur- und Stabilitätssystem eingebunden
+- **Lebenssimulation integriert**: Lebensphasen-Systeme in `GameEngine` und `UIFlowManager` eingebunden
+- **UI-Interaktionssystem** (`UIFlowManager`): Startseite, Spieleinstellungen und Hauptbildschirm mit Tastaturnavigation
+
+### Behoben
+- Fehler in `RoleSwitchingPanel`
+
 ## [2.5.1] - 2025-12-28
 
 ### Added - ⚔️ Kriegsgefangene & Behandlung (Prisoners of War System)
@@ -103,6 +148,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Citizens change professions based on system calculations
 - Life events recorded for all career changes
 - Compatible with existing migration and demographic systems
+
+## [2.5.0] - 2025-12-28
+
+### Hinzugefügt – 🎮 Lebensphasen-System
+- `LifePhaseTypes`, `LifePhaseSystem`, `MonthlyPlannerSystem`, `CareerPathSystem`
+- Persönlichkeitssystem, Epochen, Lebensphasen, Zeitmanagement, Karrierepfade, Geschwindigkeitsmodi
+- Daten: `epochs.json`, `philosophical-questions.json`, `career-paths.json`
+- Dokumentation: `GAMEPLAY_SYSTEM.md`
+
+### Hinzugefügt – 🎯 20 Roadmap-Features
+- **Wirtschaft**: Inflation und Deflation (`EconomicSystemsManager`), Büchersammlungen und Open Access vs. Paywalls
+  (`LibrarySystem`)
+- **Militär**: Stadtmauern verschiedener Stärke, Katapulte/Kanonen/Belagerungstürme (`FortificationSystem`),
+  Versorgungslinien, Winterquartiere und Lager, Marine-Technologiebaum
+- **Spionage**: Doppelagenten, Wirtschaftsspionage, revolutionäre Zellen, Attentate und Entführungen, Sabotage,
+  Propaganda und Gegenpropaganda, Verschlüsselung (`AdvancedEspionageSystem`)
+- **Stadt**: Gentrifizierung und Verdrängung
+- **Bildung**: Universitätsgründungen, Nobelpreis-Simulation ab 1901
+- **Handel & Kolonien**: Flussschifffahrt und Kanäle, Kolonialverwaltung, weltweite Handelsrouten
+- `RoadmapFeaturesManager` als Integrationspunkt mit `update(year, deltaTime)` und `getFeaturesSummary()`
+- `RoadmapFeaturesUI` mit Tabs (Universitäten, Bibliotheken, Spionage …) über „🌟 Erweiterte Features“
+- Daten: `economic-systems.json`, `libraries.json`, `fortifications.json`, `military-logistics.json`,
+  `naval-systems.json`, `espionage-systems.json`, `universities.json`, `urban-districts.json`,
+  `colonial-systems.json`, `waterways.json`
+
+### Hinzugefügt – 📚 Dokumentations- & Hilfesystem
+- In-Game-Dokumentationsbetrachter (`HelpSystem`) mit Hilfe-Button, Navigation, Suche und Markdown-Konverter
+- Dokumentation neu strukturiert (`docs/00-meta` bis `docs/99-appendix`, `docs/reports`, `docs/INDEX.md`)
+
+### Behoben
+- TypeScript-Strict-Mode-Fehler; Anwendung startet wieder fehlerfrei
+
+## [2.4.2] - 2025-12-28
+
+### Hinzugefügt – 🕵️ Untergrundbewegungen
+- `UndergroundMovementSystem`: Rebellengruppen, Geheimgesellschaften, revolutionäre Zellen,
+  Terrorismus (ab Industrialisierung)
+- Revolutionsbedrohung, öffentliche Angst und Sicherheit
+- Daten: `underground-movements.json`, Integration in `RoadmapFeaturesManager`
+
+## [2.4.0] - 2025-12-28
+
+### Hinzugefügt – 🗄️ Datenbank-Integration (Grundlage)
+- `DatabaseAdapter`-Schnittstelle und `BrowserDatabaseAdapter`
+- Migrationssystem (`MigrationRunner`, `001_initial_schema`, `002_gameplay_modes`)
+- Repository-Pattern: `CitizenRepository`, `BuildingRepository`, `TechnologyRepository`, `PlayerRepository`
+- Tests (`database.test.ts`), ADR-0001 zur Datenbanktechnologie
+
+### Hinzugefügt – 🎛️ Gameplay-Modi (Grundlage)
+- `GameplayModeTypes` und `GameplayModeManager`: sechs Spielvarianten, vier Intensitätsachsen, fünf Rollenperspektiven
+
+### Hinzugefügt – 📈 Skalierbare Systeme (17 Systeme ins Gameplay integriert)
+- `ScalabilityConfig` mit dreistufiger Simulation (individuell, hybrid, statistisch)
+- **Bevölkerung & Gesellschaft**: `MigrationSystem`, `SocialMobilitySystem`, `FamineSystem`,
+  `EconomicCohortSystem`, `SocialNetworkSystem`, `InformationSpreadSystem`
+- **Militär**: `BattleTerrainWeatherSystem`, `UnitFormationSystem`, `SupplyLogisticsSystem`, `SiegeSystem`,
+  `SiegeWarfareSystem`, `EspionageSystem`
+- **Stadt & Kultur**: `UrbanDistrictsSystem`, `DayNightCycleSystem`, `ArtsAndCultureSystem`, `ArtSystem`
+- **Recht**: `LegalSystem`, `LegalAndCourtSystem`
+- `MigrationPanel` und `SocialMobilityPanel` (UI)
+- Erweiterte Copilot-Instruktionen mit Skalierungsrichtlinien
+
+## [2.3.6] - 2025-12-28
+
+### Hinzugefügt – 💰 Kriegsfinanzierung
+- `WarFinancingSystem`: Finanzierungsmethoden je Epoche, Kriegsanleihen, Kredite, Rückzahlungsstrategien,
+  wirtschaftliche Effekte
+- `WarFinancingPanel` (UI), Daten `war-financing.json` mit historischen Anleihedaten
+
+## [2.3.5] - 2025-12
+
+### Hinzugefügt – ⚓ Marinekriegsführung
+- `NavalSystem` mit 10 Marinetechnologien, 8 Schiffstypen und 4 Kampftaktiken
+- Daten: `naval-systems.json`
+
+## [2.3.1] - 2025-12
+
+### Hinzugefügt – 📜 Datengetriebene Inhalte (12 Datenbanken)
+- Historische Persönlichkeiten (`HistoricalFiguresSystem`), historische Schlachten (10)
+- Krankheiten und Epidemien (`DiseaseSystem`), Naturkatastrophen (`NaturalDisasterSystem`)
+- Transportsysteme (15 Typen) und Handelsrouten (10 Routen, `TransportSystem`)
+- Kunststile (11 Epochen), kulturelle Ereignisse (12 Feste)
+- Wissenschaftliche Entdeckungen (15, `ScientificDiscoverySystem`)
+- Rechtssysteme (10), Steuersysteme (12), Militäreinheiten (`MilitaryUnitSystem`)
+- Schlachtsimulation mit Gelände und Wetter, Belagerungssystem
+
+## [2.3.0] - 2025-12
+
+### Hinzugefügt – 🤝 Diplomatie, Religion & Kultur
+- `DiplomacySystem`: Beziehungen, Verträge, Allianzen, Handelsabkommen, Kriegserklärungen, Friedensverhandlungen
+- `ReligionSystem`: 7 Religionen, 8 kulturelle Identitäten
+
+## [2.2.3] - 2025-12-27
+
+### Hinzugefügt – 🌍 Ökologische Simulation
+- `ClimateSystem`: Jahreszeiten, Wetter, Klimawandel über Jahrhunderte, Naturkatastrophen, Ressourcenerschöpfung,
+  Wettervorhersage (ab Industrialisierung)
+- `LandscapeSystem`: Entwaldung/Aufforstung, Flussläufe, Bodenerosion, Flächenkonkurrenz, Terraforming
+- `AnimalPopulationSystem`: Wildtiermigration, Fischbestände, Jagd und Artenschutz, Viehzucht, Aussterben
+- Daten: `ecology.json`, Dokumentation unter `docs/04-domains/ecology/`
 
 ## [2.1.5] - 2025-12-27
 
@@ -223,30 +368,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## Future Versions
+## Geplante Versionen
 
-### [2.2.0] - Planned
-- Migration system for citizens
-- Career change mechanics
-- Advanced family dynamics
-- Inheritance system
-- AI-driven citizen behavior
-
-### [2.3.0] - Planned
-- Ecological simulation
-- Dynamic climate system
-- Natural disasters
-- Resource depletion
-- Wildlife populations
-
-### [3.0.0] - Planned
-- 3D visualization with Three.js
-- VR/AR support
-- Real-time multiplayer server
-- Persistent worlds
-- Mod support
+Die frühere Liste geplanter Versionen ist überholt (2.2.0/2.3.0 sind umgesetzt).
+Planung und offene Punkte stehen jetzt in [TODO.md](./TODO.md) und der
+[Roadmap](./docs/00-meta/roadmap.md).
 
 ---
 
+[Unreleased]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.5.1...v2.6.0
+[2.5.1]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.5.0...v2.5.1
+[2.5.0]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.4.2...v2.5.0
+[2.4.2]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.4.0...v2.4.2
+[2.4.0]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.3.6...v2.4.0
+[2.3.6]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.3.5...v2.3.6
+[2.3.5]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.3.1...v2.3.5
+[2.3.1]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.3.0...v2.3.1
+[2.3.0]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.2.3...v2.3.0
+[2.2.3]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.1.5...v2.2.3
 [2.1.5]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/compare/v2.0.0...v2.1.5
 [2.0.0]: https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/releases/tag/v2.0.0

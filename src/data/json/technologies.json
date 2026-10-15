@@ -114,6 +114,24 @@
       "year": 800
     },
     {
+      "id": "sailing",
+      "name": "Hochseesegeln",
+      "description": "Verbesserte Segel und nautische Kenntnisse ermöglichen verlässlichen Fernhandel.",
+      "category": "economic",
+      "era": "medieval",
+      "cost": {
+        "research": 120,
+        "gold": 900
+      },
+      "researchTime": 60,
+      "prerequisites": [],
+      "effects": {
+        "tradeDistance": 20,
+        "tradePower": 5
+      },
+      "year": 900
+    },
+    {
       "id": "guilds",
       "name": "Gilden",
       "description": "Organisation von Handwerkern und Händlern",

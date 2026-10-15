@@ -29,6 +29,7 @@
 - **[Roadmap](00-meta/roadmap.md)** - Geplante Features und Entwicklung
 - **[Status](00-meta/status.md)** - Aktueller Entwicklungsstand
 - **[Changelog](../CHANGELOG.md)** - Versionshistorie
+- **[TODO](../TODO.md)** - Konsolidierte, priorisierte Aufgabenliste aus allen Roadmaps
 
 ### 👨‍💻 Für Entwickler
 - **[Architektur](05-technical-architecture/ARCHITECTURE.md)** - System-Architektur

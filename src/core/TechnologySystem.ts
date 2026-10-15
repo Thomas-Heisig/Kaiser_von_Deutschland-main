@@ -68,114 +68,114 @@ export interface TechnologyProgressSnapshot {
   currentResearch: { technologyId: string; progressDays: number } | null;
 }
 
+/** Per-realm research progress; technology definitions remain shared and immutable. */
+export class PlayerTechnologySystem {
+  private researchPoints: number = 0;
+  private researchedTechs: Set<string> = new Set();
+  private currentResearch: { technologyId: string; progressDays: number } | null = null;
+
+  public addResearchPoints(points: number): void {
+    if (!Number.isFinite(points) || points < 0) throw new RangeError('Forschungspunkte müssen positiv sein.');
+    this.researchPoints = Math.min(1_000_000, this.researchPoints + points);
+  }
+
+  public getResearchPoints(): number {
+    return this.researchPoints;
+  }
+
+  public isResearched(technologyId: string): boolean {
+    return this.researchedTechs.has(technologyId);
+  }
+
+  public getResearchedTechnologyIds(): string[] {
+    return Array.from(this.researchedTechs);
+  }
+
+  public getCurrentResearch(): {
+    tech: TechnologyDefinition;
+    progress: number;
+    timeRemaining: number;
+  } | null {
+    if (!this.currentResearch) return null;
+    const tech = TechnologySystem.getTechnology(this.currentResearch.technologyId);
+    if (!tech) throw new Error(`Forschungsdefinition fehlt: ${this.currentResearch.technologyId}`);
+    return {
+      tech,
+      progress: this.currentResearch.progressDays,
+      timeRemaining: Math.max(0, tech.researchTime - this.currentResearch.progressDays)
+    };
+  }
+
+  public startResearch(technology: TechnologyDefinition): boolean {
+    if (this.currentResearch || this.researchedTechs.has(technology.id) ||
+        this.researchPoints < technology.cost.research ||
+        !technology.prerequisites.every((id: string): boolean => this.researchedTechs.has(id))) return false;
+    this.researchPoints -= technology.cost.research;
+    this.currentResearch = { technologyId: technology.id, progressDays: 0 };
+    return true;
+  }
+
+  public updateResearch(daysElapsed: number): TechnologyDefinition | null {
+    if (!Number.isFinite(daysElapsed) || daysElapsed < 0) {
+      throw new RangeError('Forschungszeit muss eine nichtnegative Zahl sein.');
+    }
+    if (!this.currentResearch) return null;
+    const technology = TechnologySystem.getTechnology(this.currentResearch.technologyId);
+    if (!technology) throw new Error(`Forschungsdefinition fehlt: ${this.currentResearch.technologyId}`);
+    this.currentResearch.progressDays += daysElapsed;
+    if (this.currentResearch.progressDays < technology.researchTime) return null;
+    this.researchedTechs.add(technology.id);
+    this.currentResearch = null;
+    return technology;
+  }
+
+  public serialize(): TechnologyProgressSnapshot {
+    return {
+      researchPoints: this.researchPoints,
+      researched: Array.from(this.researchedTechs),
+      currentResearch: this.currentResearch ? { ...this.currentResearch } : null
+    };
+  }
+
+  public load(snapshot: TechnologyProgressSnapshot): void {
+    if (!snapshot || !Number.isFinite(snapshot.researchPoints) || snapshot.researchPoints < 0 ||
+        !Array.isArray(snapshot.researched) ||
+        snapshot.researched.some((id: string): boolean => !TechnologySystem.getTechnology(id))) {
+      throw new Error('Beschädigter Forschungsstand.');
+    }
+    const researched = new Set(snapshot.researched);
+    const current = snapshot.currentResearch;
+    if (current) {
+      const technology = TechnologySystem.getTechnology(current.technologyId);
+      if (!technology || researched.has(current.technologyId) ||
+          !Number.isFinite(current.progressDays) || current.progressDays < 0 ||
+          current.progressDays >= technology.researchTime ||
+          !technology.prerequisites.every((id: string): boolean => researched.has(id))) {
+        throw new Error('Beschädigtes Forschungsprojekt.');
+      }
+    }
+    this.researchPoints = snapshot.researchPoints;
+    this.researchedTechs = researched;
+    this.currentResearch = current ? { ...current } : null;
+  }
+}
+
 export class TechnologySystem {
   private static technologies: Map<string, TechnologyDefinition> = new Map();
   private static categories: Map<string, TechnologyCategory> = new Map();
   private static researchedTechs: Set<string> = new Set();
   private static currentResearch: { techId: string; progress: number } | null = null;
-  
+
   static {
     // Initialize technologies from JSON data
     technologiesData.technologies.forEach((tech: any) => {
       this.technologies.set(tech.id, tech as TechnologyDefinition);
     });
-    
+
     // Initialize categories
     Object.entries(technologiesData.techCategories).forEach(([id, data]: [string, any]) => {
       this.categories.set(id, data as TechnologyCategory);
     });
-  }
-
-  /** Per-realm research progress; technology definitions remain shared and immutable. */
-  export class PlayerTechnologySystem {
-    private researchPoints: number = 0;
-    private researchedTechs: Set<string> = new Set();
-    private currentResearch: { technologyId: string; progressDays: number } | null = null;
-
-    public addResearchPoints(points: number): void {
-      if (!Number.isFinite(points) || points < 0) throw new RangeError('Forschungspunkte müssen positiv sein.');
-      this.researchPoints = Math.min(1_000_000, this.researchPoints + points);
-    }
-
-    public getResearchPoints(): number {
-      return this.researchPoints;
-    }
-
-    public isResearched(technologyId: string): boolean {
-      return this.researchedTechs.has(technologyId);
-    }
-
-    public getResearchedTechnologyIds(): string[] {
-      return Array.from(this.researchedTechs);
-    }
-
-    public getCurrentResearch(): {
-      tech: TechnologyDefinition;
-      progress: number;
-      timeRemaining: number;
-    } | null {
-      if (!this.currentResearch) return null;
-      const tech = TechnologySystem.getTechnology(this.currentResearch.technologyId);
-      if (!tech) throw new Error(`Forschungsdefinition fehlt: ${this.currentResearch.technologyId}`);
-      return {
-        tech,
-        progress: this.currentResearch.progressDays,
-        timeRemaining: Math.max(0, tech.researchTime - this.currentResearch.progressDays)
-      };
-    }
-
-    public startResearch(technology: TechnologyDefinition): boolean {
-      if (this.currentResearch || this.researchedTechs.has(technology.id) ||
-          this.researchPoints < technology.cost.research ||
-          !technology.prerequisites.every((id: string): boolean => this.researchedTechs.has(id))) return false;
-      this.researchPoints -= technology.cost.research;
-      this.currentResearch = { technologyId: technology.id, progressDays: 0 };
-      return true;
-    }
-
-    public updateResearch(daysElapsed: number): TechnologyDefinition | null {
-      if (!Number.isFinite(daysElapsed) || daysElapsed < 0) {
-        throw new RangeError('Forschungszeit muss eine nichtnegative Zahl sein.');
-      }
-      if (!this.currentResearch) return null;
-      const technology = TechnologySystem.getTechnology(this.currentResearch.technologyId);
-      if (!technology) throw new Error(`Forschungsdefinition fehlt: ${this.currentResearch.technologyId}`);
-      this.currentResearch.progressDays += daysElapsed;
-      if (this.currentResearch.progressDays < technology.researchTime) return null;
-      this.researchedTechs.add(technology.id);
-      this.currentResearch = null;
-      return technology;
-    }
-
-    public serialize(): TechnologyProgressSnapshot {
-      return {
-        researchPoints: this.researchPoints,
-        researched: Array.from(this.researchedTechs),
-        currentResearch: this.currentResearch ? { ...this.currentResearch } : null
-      };
-    }
-
-    public load(snapshot: TechnologyProgressSnapshot): void {
-      if (!snapshot || !Number.isFinite(snapshot.researchPoints) || snapshot.researchPoints < 0 ||
-          !Array.isArray(snapshot.researched) ||
-          snapshot.researched.some((id: string): boolean => !TechnologySystem.getTechnology(id))) {
-        throw new Error('Beschädigter Forschungsstand.');
-      }
-      const researched = new Set(snapshot.researched);
-      const current = snapshot.currentResearch;
-      if (current) {
-        const technology = TechnologySystem.getTechnology(current.technologyId);
-        if (!technology || researched.has(current.technologyId) ||
-            !Number.isFinite(current.progressDays) || current.progressDays < 0 ||
-            current.progressDays >= technology.researchTime ||
-            !technology.prerequisites.every((id: string): boolean => researched.has(id))) {
-          throw new Error('Beschädigtes Forschungsprojekt.');
-        }
-      }
-      this.researchPoints = snapshot.researchPoints;
-      this.researchedTechs = researched;
-      this.currentResearch = current ? { ...current } : null;
-    }
   }
   
   /**

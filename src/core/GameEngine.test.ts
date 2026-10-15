@@ -103,17 +103,36 @@ describe('Playable campaign integration', (): void => {
   it('executes atomic market exchanges with no buy/sell profit exploit', async (): Promise<void> => {
     const engine = await campaign();
     const ruler = engine.getPlayers()[0];
+    const tradeCompleted = vi.fn();
+    engine.on('tradeCompleted', tradeCompleted);
     const before = { ...ruler.kingdom.resources };
     expect(engine.tradeForPlayer(ruler.id, 'food', 500, 'buy')).toBe(true);
+    expect(tradeCompleted).toHaveBeenLastCalledWith({
+      playerId: ruler.id, resource: 'food', amount: 500, direction: 'buy',
+      price: engine.quoteTrade('food', 500, 'buy')
+    });
     expect(ruler.kingdom.resources.food).toBe(before.food + 500);
     expect(engine.tradeForPlayer(ruler.id, 'food', 500, 'sell')).toBe(true);
     expect(ruler.kingdom.resources.food).toBe(before.food);
     expect(ruler.kingdom.resources.gold).toBeLessThan(before.gold);
     const after = { ...ruler.kingdom.resources };
     expect(engine.tradeForPlayer(ruler.id, 'food', 1000000, 'buy')).toBe(false);
+    expect(tradeCompleted).toHaveBeenCalledTimes(2);
     expect(ruler.kingdom.resources).toEqual(after);
     expect(() => engine.quoteTrade('food', -100, 'sell')).toThrow(RangeError);
     expect(() => engine.setTaxRate(ruler.id, NaN)).toThrow(RangeError);
+  });
+
+  it('exposes realm research methods without requiring a market exchange', async (): Promise<void> => {
+    const engine = await campaign();
+    const ruler = engine.getPlayers()[0];
+    const before = { ...ruler.kingdom.resources };
+    expect(engine.getTechnologyProgress(ruler.id)).toEqual({
+      researchPoints: 0, researched: [], currentResearch: null
+    });
+    expect(engine.getTechnologyOptions(ruler.id).length).toBeGreaterThan(0);
+    expect(() => engine.startResearch(ruler.id, 'unknown-technology')).toThrow('aktuellen Epoche');
+    expect(ruler.kingdom.resources).toEqual(before);
   });
 
   it('round-trips infrastructure, resources, citizens and role references into a fresh paused engine', async (): Promise<void> => {
@@ -244,6 +263,38 @@ describe('Playable campaign integration', (): void => {
     engines.push(restored);
     await restored.loadGame('character');
     expect(restored.getCurrentCharacter(ruler.id)?.id).toBe(candidate.id);
+  });
+
+  it('accumulates realm-specific research, persists projects and gates trade routes on technology', async (): Promise<void> => {
+    const engine = await campaign();
+    const ruler = engine.getPlayers()[0];
+    const other = engine.addPlayer({ name: 'Mathilde', kingdomName: 'Westmark', gender: 'other' });
+    const sailing = engine.getTechnologyOptions(ruler.id).find((option) =>
+      option.technology.id === 'sailing');
+    expect(sailing?.canStart).toBe(false);
+    expect(engine.getAvailableTradeRoutes(ruler).some((route) => route.id === 'hanseatic_routes')).toBe(false);
+    expect(engine.activateTradeRoute(ruler, 'hanseatic_routes')).toMatchObject({
+      success: false, message: 'Erfordert Technologie: Hochseesegeln'
+    });
+    engine.performCharacterAction(ruler.id, 'study');
+
+    for (let month = 0; month < 12; month++) await engine.advanceMonth();
+    const researchBefore = engine.getTechnologyProgress(ruler.id);
+    expect(researchBefore.researchPoints).toBeGreaterThanOrEqual(120);
+    expect(engine.getTechnologyProgress(other.id).researchPoints).toBeLessThan(researchBefore.researchPoints);
+    expect(engine.startResearch(ruler.id, 'sailing').name).toBe('Hochseesegeln');
+    await engine.advanceMonth();
+    await engine.saveGame('research');
+
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('research');
+    const restoredProgress = restored.getTechnologyProgress(ruler.id);
+    expect(restoredProgress.currentResearch).toMatchObject({ technologyId: 'sailing', progressDays: 30 });
+    await restored.advanceMonth();
+    expect(restored.getTechnologyProgress(ruler.id).researched).toContain('sailing');
+    expect(restored.getAvailableTradeRoutes(restored.getPlayers()[0])
+      .some((route) => route.id === 'hanseatic_routes')).toBe(true);
   });
 
   it('plays local hotseat turns, advances the month after the last player and supports player battles', async (): Promise<void> => {
