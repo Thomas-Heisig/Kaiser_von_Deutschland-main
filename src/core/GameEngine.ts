@@ -47,6 +47,7 @@ import { AIControllerManager } from './AIController';
 import { RoleSwitchingSystem } from './RoleSwitchingSystem';
 import { TimeSystem, TimeMode } from './TimeSystem';
 import { DynamicGameView } from './DynamicGameView';
+import { PlayerTechnologySystem, TechnologyDefinition, TechnologySystem } from './TechnologySystem';
 import localforage from 'localforage';
 import { KingdomInfrastructure } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
@@ -61,6 +62,19 @@ export type CharacterAction = 'work' | 'study' | 'train' | 'serve';
 export interface TurnResult {
   monthAdvanced: boolean;
   activePlayer: Player;
+}
+
+export interface TechnologyProgressSnapshot {
+  researchPoints: number;
+  researched: string[];
+  currentResearch: { technologyId: string; progressDays: number } | null;
+}
+
+export interface TechnologyOption {
+  technology: TechnologyDefinition;
+  researched: boolean;
+  canStart: boolean;
+  blockers: string[];
 }
 
 export interface CampaignGoal {
@@ -163,6 +177,7 @@ export class GameEngine {
   private processingMonth: boolean = false;
   private warfare: CampaignWarfareSystem = new CampaignWarfareSystem((): number => Math.random());
   private turnIndex: number = 0;
+  private technologySystems: Map<string, PlayerTechnologySystem> = new Map();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -555,6 +570,15 @@ export class GameEngine {
       { raids: this.config.randomEvents, modifiers: this.getCommanderModifiers(player.id) });
     if (raid) this.emit('battleResolved', { report: raid });
 
+    const technology = this.requireTechnologySystem(player.id);
+    technology.addResearchPoints(
+      player.kingdom.infrastructure.schools * 10 + player.kingdom.infrastructure.universities * 25
+    );
+    const completedTechnology = technology.updateResearch(30);
+    if (completedTechnology) {
+      this.emit('technologyResearched', { playerId: player.id, technology: completedTechnology });
+    }
+
     // Apply monthly policy effects
     this.policySystem.applyMonthlyEffects(player);
 
@@ -596,6 +620,7 @@ export class GameEngine {
     player.kingdom.currentSeason = 'winter';
     this.players.set(player.id, player);
     this.warfare.ensureRivals(player.id, data.difficulty ?? this.config.difficulty);
+    this.technologySystems.set(player.id, new TechnologySystem());
     this.emit('playerAdded', { player: player.serialize() });
 
     return player;
@@ -605,6 +630,7 @@ export class GameEngine {
     const existed = this.players.delete(playerId);
     if (existed) {
       this.warfare.removePlayer(playerId);
+      this.technologySystems.delete(playerId);
       this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
     }
@@ -839,6 +865,9 @@ export class GameEngine {
       timeSystem: this.timeSystem.createSnapshot(),
       dynamicGameView: this.dynamicGameView.createSnapshot(),
       warfare: this.warfare.serialize(),
+      technologyProgress: Object.fromEntries(
+        Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
+      ),
       turnIndex: this.turnIndex,
       savedAt: new Date().toISOString()
     };
@@ -899,6 +928,12 @@ export class GameEngine {
     this.pauseGame();
     this.players = new Map(restoredPlayers.map((player: Player) => [player.id, player]));
     this.warfare = restoredWarfare;
+    this.technologySystems = new Map(restoredPlayers.map((player: Player) => {
+      const system = new TechnologySystem();
+      const snapshot = saveData.technologyProgress?.[player.id] as TechnologyProgressSnapshot | undefined;
+      if (snapshot) system.load(snapshot);
+      return [player.id, system];
+    }));
     this.turnIndex = Number.isSafeInteger(saveData.turnIndex) && saveData.turnIndex >= 0
       ? saveData.turnIndex % restoredPlayers.length : 0;
     
@@ -982,6 +1017,81 @@ export class GameEngine {
       if (resources[resource] < amount) return false;
       resources[resource] -= amount;
       resources.gold += price;
+    }
+
+    /**
+     * Returns the research stock, completed technologies and active research for a realm.
+     * @param playerId Owning player.
+     * @returns A detached research snapshot.
+     * @throws Error if the player does not exist.
+     */
+    public getTechnologyProgress(playerId: string): TechnologyProgressSnapshot {
+      return this.requireTechnologySystem(playerId).serialize();
+    }
+
+    /**
+     * Technologies available in the current era and any blockers to starting research.
+     * @param playerId Owning player.
+     * @returns Era-eligible technologies and their research requirements.
+     * @throws Error if the player does not exist.
+     */
+    public getTechnologyOptions(playerId: string): TechnologyOption[] {
+      const player = this.requirePlayer(playerId);
+      const system = this.requireTechnologySystem(playerId);
+      return TechnologySystem.getAllTechnologies()
+        .filter((technology: TechnologyDefinition): boolean => technology.year <= this.currentYear)
+        .map((technology: TechnologyDefinition): TechnologyOption => {
+          const blockers: string[] = [];
+          const researched = system.isResearched(technology.id);
+          if (researched) blockers.push('Bereits erforscht');
+          if (system.getCurrentResearch()?.tech.id === technology.id) blockers.push('Forschung läuft');
+          if (system.getCurrentResearch() && system.getCurrentResearch()?.tech.id !== technology.id) {
+            blockers.push('Ein anderes Forschungsprojekt läuft');
+          }
+          for (const prerequisiteId of technology.prerequisites) {
+            if (!system.isResearched(prerequisiteId)) {
+              const prerequisite = TechnologySystem.getTechnology(prerequisiteId);
+              blockers.push(`Voraussetzung: ${prerequisite?.name ?? prerequisiteId}`);
+            }
+          }
+          if (system.getResearchPoints() < technology.cost.research) {
+            blockers.push(`Forschungspunkte: ${formatResearch(system.getResearchPoints())}/${formatResearch(technology.cost.research)}`);
+          }
+          if (player.kingdom.resources.gold < technology.cost.gold) {
+            blockers.push(`Gold: ${formatResearch(player.kingdom.resources.gold)}/${formatResearch(technology.cost.gold)}`);
+          }
+          return { technology, researched, canStart: blockers.length === 0, blockers };
+        });
+    }
+
+    /**
+     * Starts a single research project and deducts its gold and research-point costs atomically.
+     * @param playerId Owning player.
+     * @param technologyId Technology to research.
+     * @returns Technology metadata.
+     * @throws Error if the technology is unavailable or the realm cannot pay.
+     */
+    public startResearch(playerId: string, technologyId: string): TechnologyDefinition {
+      const player = this.requirePlayer(playerId);
+      const option = this.getTechnologyOptions(playerId)
+        .find((entry: TechnologyOption): boolean => entry.technology.id === technologyId);
+      if (!option) throw new Error('Diese Technologie gehört nicht zur aktuellen Epoche.');
+      if (!option.canStart) throw new Error(option.blockers.join(' · '));
+      player.kingdom.resources.gold -= option.technology.cost.gold;
+      const started = this.requireTechnologySystem(playerId).startResearch(option.technology);
+      if (!started) {
+        player.kingdom.resources.gold += option.technology.cost.gold;
+        throw new Error('Das Forschungsprojekt konnte nicht gestartet werden.');
+      }
+      this.emit('researchStarted', { playerId, technology: option.technology });
+      return option.technology;
+    }
+
+    private requireTechnologySystem(playerId: string): TechnologySystem {
+      this.requirePlayer(playerId);
+      const system = this.technologySystems.get(playerId);
+      if (!system) throw new Error('Der Forschungsstand dieses Reiches fehlt.');
+      return system;
     }
     this.emit('tradeCompleted', { playerId, resource, amount, direction, price });
     return true;
@@ -1599,9 +1709,8 @@ export class GameEngine {
    * @param player The player
    * @returns Array of available trade routes
    */
-  public getAvailableTradeRoutes(_player: Player) {
-    // TODO: Integrate with technology system when available
-    const technologies: string[] = []; // Placeholder for technologies
+  public getAvailableTradeRoutes(player: Player) {
+    const technologies = this.requireTechnologySystem(player.id).getResearchedTechnologyIds();
     return this.transportSystem.getAvailableRoutes(this.currentYear, technologies);
   }
   
@@ -1627,10 +1736,13 @@ export class GameEngine {
       return { success: false, message: 'Diese Route ist nicht mehr verfügbar' };
     }
     
-    // TODO: Check technology requirement when technology system is integrated
-    if (route.requiredTechnology) {
-      // For now, allow all routes without technology check
-      // if (!player has tech) return { success: false, message: `Erfordert Technologie: ${route.requiredTechnology}` };
+    if (route.requiredTechnology &&
+        !this.requireTechnologySystem(player.id).isResearched(route.requiredTechnology)) {
+      const required = TechnologySystem.getTechnology(route.requiredTechnology);
+      return {
+        success: false,
+        message: `Erfordert Technologie: ${required?.name ?? route.requiredTechnology}`
+      };
     }
     
     // Check infrastructure requirements (e.g., ports for sea routes)
@@ -1683,9 +1795,8 @@ export class GameEngine {
    * @param player The player
    * @returns Array of available transport types
    */
-  public getAvailableTransportTypes(_player: Player) {
-    // TODO: Integrate with technology system when available
-    const technologies: string[] = []; // Placeholder for technologies
+  public getAvailableTransportTypes(player: Player) {
+    const technologies = this.requireTechnologySystem(player.id).getResearchedTechnologyIds();
     return this.transportSystem.getAvailableTransport(this.currentYear, technologies);
   }
   
