@@ -50,6 +50,18 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('automatically saves the completed month and can restore that checkpoint', async (): Promise<void> => {
+    const engine = await campaign();
+    await engine.advanceMonth();
+    const autosave = (await engine.listSaves()).find((save) => save.slot === 'autosave');
+    expect(autosave).toBeDefined();
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('autosave');
+    expect(restored.getCurrentMonth()).toBe(2);
+    expect(restored.getGameState()).toBe(GameState.PAUSED);
+  });
+
   it('loads bundled game data before starting and uses the same month everywhere', async (): Promise<void> => {
     const engine = await campaign();
     expect(engine.getAvailableTradeRoutes(engine.getPlayers()[0]).length).toBeGreaterThan(0);

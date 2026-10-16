@@ -19,7 +19,7 @@ tastaturbedienbare Verwaltung mit interaktiver PixiJS-Siedlungskarte ersetzt.
 - Monatliche Produktion, Verbrauch, Steuern, Zufriedenheit und Bevölkerungsentwicklung.
 - Markthandel mit sichtbaren Preisen sowie Rekrutierung von drei Truppentypen.
 - Pause, Einzelschritte und 1×/2×/4× Geschwindigkeit; eine gemeinsame Simulationszeit.
-- Manuelles Speichern und Laden im Browser, einschließlich Bürgern und Kalender.
+- Automatisches Speichern nach jedem abgeschlossenen Monat sowie manuelles Speichern und Laden im Browser, einschließlich Bürgern und Kalender.
 - Feldzüge gegen drei rivalisierende Reiche, Nachschub, Verluste, Überfälle und Tribut.
 - Spielbare Bürger mit Rollenwechsel und vier persönlichen Monatsaktionen.
 - Lokaler Hotseat für zwei bis vier Herrscher mit Spielerübergabe und gegenseitigen Angriffen.
@@ -31,7 +31,7 @@ tastaturbedienbare Verwaltung mit interaktiver PixiJS-Siedlungskarte ersetzt.
 
 **Start:** `npm ci`, danach `npm run dev`, Browser unter `http://localhost:4100`.
 Das Spiel beginnt pausiert. „Monat →“ berechnet genau einen Monat; 1× entspricht
-vier Sekunden pro Monat. Es gibt **kein Autosave**. Laden pausiert immer die Zeit.
+vier Sekunden pro Monat. Nach jedem abgeschlossenen Monat wird automatisch im Slot `autosave` gespeichert; manuelles Speichern bleibt möglich. Laden pausiert immer die Zeit.
 Spielstände sind an Browserprofil und Origin gebunden und kein Cloud-Backup.
 
 **Abgrenzung:** Die Karte ist schematisch und stellt keine historischen Grenzen dar.

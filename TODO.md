@@ -117,7 +117,7 @@ Viele Systeme existieren in `src/core/`, sind aber nicht im Standard-Einstieg er
 ### Spielerlebnis & UX
 - [ ] Interaktives Tutorial / Tutorial-Kampagne
 - [ ] Historische Szenarien (z. B. „Der Dreißigjährige Krieg“), Herausforderungs- und Sandbox-Modus
-- [ ] Autosave (aktuell nur manueller Slot `campaign`)
+- [x] Autosave nach jedem abgeschlossenen Monat (`autosave`), manueller Slot `campaign` bleibt erhalten; Fehler werden gemeldet.
 - [ ] Chronik über Sitzungen hinweg speichern (aktuell nur letzte 100 Meldungen pro Sitzung)
 - [ ] KI-Gegner: Schwierigkeitsgrade und Persönlichkeiten (aggressiv, defensiv, diplomatisch)
 - [ ] Automatisierung: Gouverneure, Auto-Handel, Produktionsketten, Vorlagen, Shortcuts
