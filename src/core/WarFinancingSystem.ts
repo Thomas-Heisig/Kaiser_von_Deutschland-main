@@ -130,6 +130,30 @@ export class WarFinancingSystem {
     this.loadData();
   }
 
+  /** Campaign-specific pre-war credit; uses the existing loan and debt machinery. */
+  private static readonly CAMPAIGN_LOAN: WarFinancingMethod = {
+    id: 'campaign_army_loan', name: 'Rüstungsdarlehen', era: 'Mittelalter',
+    yearStart: 1000, yearEnd: 1800,
+    description: 'Ein Vorschuss für die Rüstung, zurückzuzahlen in 24 Monaten.',
+    goldAmount: 3000, interestRate: 0.08, repaymentPeriod: 24,
+    popularityEffect: -2, requirements: { atWar: false }
+  };
+
+  public serialize() {
+    return { loans: this.activeLoans.map((loan) => ({ ...loan })),
+      totalGoldRaised: this.totalGoldRaised, totalPopularityChange: this.totalPopularityChange,
+      totalInflationChange: this.totalInflationChange, activeFinancingMethods: [...this.activeFinancingMethods] };
+  }
+
+  public deserialize(value: ReturnType<WarFinancingSystem['serialize']>): void {
+    if (!value || !Array.isArray(value.loans)) throw new Error('Ungültige Kriegsfinanzierung im Spielstand.');
+    this.activeLoans = value.loans.map((loan) => ({ ...loan }));
+    this.totalGoldRaised = value.totalGoldRaised || 0;
+    this.totalPopularityChange = value.totalPopularityChange || 0;
+    this.totalInflationChange = value.totalInflationChange || 0;
+    this.activeFinancingMethods = new Set(value.activeFinancingMethods ?? []);
+  }
+
   /**
    * Load war financing data from JSON
    */
@@ -189,7 +213,8 @@ export class WarFinancingSystem {
       resources?: Partial<typeof kingdom.resources>;
     };
   } {
-    const method = this.warFinancingMethods.find(m => m.id === methodId);
+    const method = methodId === WarFinancingSystem.CAMPAIGN_LOAN.id
+      ? WarFinancingSystem.CAMPAIGN_LOAN : this.warFinancingMethods.find(m => m.id === methodId);
     if (!method) {
       return {
         success: false,
@@ -266,6 +291,7 @@ export class WarFinancingSystem {
       );
       this.activeLoans.push(loan);
       kingdom.resources.debt += loan.totalOwed;
+      kingdom.resources.gold += goldGained;
     } else {
       // Direct gold gain without debt
       kingdom.resources.gold += goldGained;
@@ -330,10 +356,11 @@ export class WarFinancingSystem {
       // Try to make payment
       if (kingdom.resources.gold >= loan.monthlyPayment) {
         kingdom.resources.gold -= loan.monthlyPayment;
-        kingdom.resources.debt -= loan.monthlyPayment;
+        kingdom.resources.debt = Math.max(0, kingdom.resources.debt - loan.monthlyPayment);
         totalPayment += loan.monthlyPayment;
         loan.monthsRemaining--;
-        loan.totalOwed -= loan.monthlyPayment;
+        loan.totalOwed = Math.max(0, loan.totalOwed - loan.monthlyPayment);
+        if (loan.monthsRemaining === 0) { loansCompleted++; return false; }
         return true;
       } else {
         // Cannot afford payment - accumulate penalty

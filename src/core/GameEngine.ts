@@ -187,6 +187,8 @@ export class GameEngine {
   private council: CouncilDecisionSystem = new CouncilDecisionSystem();
   private rivalDiplomacy = new Map<string, DiplomacySystem>();
   private festivalsHeld = new Map<string, number>();
+  private warFinanceByPlayer = new Map<string, WarFinancingSystem>();
+  private warFinanceUsed = new Map<string, number>();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -607,6 +609,9 @@ export class GameEngine {
 
   private async processPlayerMonth(player: Player): Promise<void> {
     player.kingdom.processMonth();
+    const debtPayment = this.requireWarFinance(player.id).processMonthlyPayments(player.kingdom);
+    if (debtPayment.cannotAfford) this.emit('financeEvent', { playerId: player.id,
+      message: 'Eine Kriegsdarlehensrate konnte nicht bezahlt werden.' });
 
     const raid = this.warfare.processMonth(player.id, player.kingdom,
       { year: this.currentYear, month: this.currentMonth },
@@ -666,6 +671,7 @@ export class GameEngine {
     this.players.set(player.id, player);
     this.warfare.ensureRivals(player.id, data.difficulty ?? this.config.difficulty);
     this.technologySystems.set(player.id, new PlayerTechnologySystem());
+    this.warFinanceByPlayer.set(player.id, new WarFinancingSystem());
     this.initializeRivalDiplomacy(player.id);
     this.emit('playerAdded', { player: player.serialize() });
 
@@ -678,6 +684,8 @@ export class GameEngine {
       this.warfare.removePlayer(playerId);
       this.technologySystems.delete(playerId);
       this.rivalDiplomacy.delete(playerId);
+      this.warFinanceByPlayer.delete(playerId);
+      this.warFinanceUsed.delete(playerId);
       this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
     }
@@ -916,6 +924,8 @@ export class GameEngine {
       rivalDiplomacy: Object.fromEntries(Array.from(this.rivalDiplomacy, ([id, system]) => [id, system.serialize()])),
       festivalsHeld: Array.from(this.festivalsHeld),
       espionage: this.espionageSystem.serialize(),
+      warFinanceByPlayer: Object.fromEntries(Array.from(this.warFinanceByPlayer, ([id, finance]) => [id, finance.serialize()])),
+      warFinanceUsed: Array.from(this.warFinanceUsed),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -997,6 +1007,13 @@ export class GameEngine {
     this.technologySystems = restoredTechnology;
     this.rivalDiplomacy = new Map();
     this.festivalsHeld = new Map(Array.isArray(saveData.festivalsHeld) ? saveData.festivalsHeld : []);
+    this.warFinanceByPlayer = new Map();
+    this.warFinanceUsed = new Map(Array.isArray(saveData.warFinanceUsed) ? saveData.warFinanceUsed : []);
+    for (const player of restoredPlayers) {
+      const finance = new WarFinancingSystem();
+      if (saveData.warFinanceByPlayer?.[player.id]) finance.deserialize(saveData.warFinanceByPlayer[player.id]);
+      this.warFinanceByPlayer.set(player.id, finance);
+    }
     this.espionageSystem = new EspionageSystem();
     if (saveData.espionage) this.espionageSystem.deserialize(saveData.espionage);
     for (const player of restoredPlayers) {
@@ -1439,6 +1456,31 @@ export class GameEngine {
    * @param playerId Player.
    * @returns Field soldiers, attack and defense power, supply cost and whether the army can still march this month.
    */
+  private requireWarFinance(playerId: string): WarFinancingSystem {
+    this.requirePlayer(playerId);
+    const finance = this.warFinanceByPlayer.get(playerId);
+    if (!finance) throw new Error('Kriegsfinanzierung dieses Reiches fehlt.');
+    return finance;
+  }
+
+  /** Borrow against future income; once per year, realm-scoped, with real debt service. */
+  public takeWarLoan(playerId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    if (this.warFinanceUsed.get(playerId) === this.currentYear) throw new Error('Dieses Jahr wurde bereits ein Kriegsdarlehen aufgenommen.');
+    const finance = this.requireWarFinance(playerId);
+    const result = finance.activateFinancingMethod(player.kingdom, 'campaign_army_loan', this.currentYear, this.currentMonth);
+    if (!result.success) throw new Error(result.message);
+    this.warFinanceUsed.set(playerId, this.currentYear);
+    this.emit('financeEvent', { playerId, message: result.message });
+    return result.message;
+  }
+
+  public getWarFinanceOverview(playerId: string) {
+    return { stats: this.requireWarFinance(playerId).getStats(),
+      available: this.warFinanceUsed.get(playerId) !== this.currentYear };
+  }
+
   public getArmyOverview(playerId: string): {
     soldiers: number; attack: number; defense: number; cost: { gold: number; food: number };
     canCampaign: boolean; commanderBonus: number;

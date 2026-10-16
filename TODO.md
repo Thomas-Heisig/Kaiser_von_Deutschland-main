@@ -109,7 +109,7 @@ Viele Systeme existieren in `src/core/`, sind aber nicht im Standard-Einstieg er
 - [~] Religion & Kultur: saisonale Feste aus `ReligionSystem` mit tatsächlichen Kosten/Effekten integriert; Religion, Künste und Kulturkreise noch offen
 - [~] Bevölkerungsdynamik, Migration, soziale Mobilität und Hungersnöte: Weltansicht zeigt Bürger, Migration und Hungersnöte aus bestehenden Systemen; steuerbare Reichsmaßnahmen und kohärente regionale Simulation noch offen
 - [~] Klima, Naturkatastrophen, Landschaft und Tierpopulationen: Spielansicht „Welt & Volk“ zeigt vorhandene Echtzeitstatistiken; stärkere Gameplay-Effekte noch offen
-- [ ] Belagerung, Formationen, Logistik, Marine, Kriegsfinanzierung, Kriegsgefangene
+- [~] Belagerung, Formationen, Logistik, Marine, Kriegsfinanzierung, Kriegsgefangene: spielbare Rüstungsdarlehen mit echten Tilgungsraten und Spielstandintegration; Belagerungen, Logistik, Formationen, Marine und Gefangenenverwaltung noch nicht in der Hauptkampagne spielbar
 - [~] Spionage mit Agentenanwerbung und Informationsmissionen in der Kampagne, pro Spieler getrennt und gespeichert; Sabotage, Untergrundbewegungen und Propaganda noch offen
 - [ ] Universitäten, Bibliotheken, Nobelpreise, Bildungsreformen
 - [ ] Recht & Gerichte, Bürgerrechte, Währung/Finanzen, Mode
