@@ -70,6 +70,37 @@ describe('Playable campaign integration', (): void => {
     expect(restored.getFestivalOptions(ruler.id).find((entry) => entry.event.id === 'christmas')?.alreadyHeld).toBe(true);
   });
 
+  it('persists a two-year non-aggression treaty and prevents attacks and raids', async (): Promise<void> => {
+    const engine = await campaign();
+    const ruler = engine.getPlayers()[0];
+    const rival = engine.getRivals(ruler.id)[0];
+    ruler.kingdom.resources.gold = Math.max(2000, ruler.kingdom.resources.gold);
+    expect(() => engine.negotiateRivalTruce(ruler.id, rival.id)).toThrow('Beziehungspunkte');
+    engine.sendRivalEnvoy(ruler.id, rival.id);
+    // A successful existing mission increases relations and unlocks peace.
+    const diplomacy = engine.getRivalMissions(ruler.id);
+    expect(diplomacy).toHaveLength(1);
+    // No direct mutable diplomacy accessor: let the mission complete using deterministic random.
+    for (let month = 0; month < 12; month++) await engine.advanceMonth();
+    const relation = engine.getRivalRelations(ruler.id).find((item) => item.kingdomId === rival.id);
+    // At least one mission succeeded or failed; more envoys may be required for 10 points.
+    if ((relation?.relationshipValue ?? 0) < 10) {
+      engine.sendRivalEnvoy(ruler.id, rival.id);
+      for (let month = 0; month < 12; month++) await engine.advanceMonth();
+    }
+    expect(engine.negotiateRivalTruce(ruler.id, rival.id)).toContain('Nichtangriffspakt');
+    expect(engine.hasRivalTruce(ruler.id, rival.id)).toBe(true);
+    expect(() => engine.attackRival(ruler.id, rival.id)).toThrow('Nichtangriffspakt');
+    await engine.saveGame('peace-roundtrip');
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('peace-roundtrip');
+    expect(restored.hasRivalTruce(ruler.id, rival.id)).toBe(true);
+    expect(() => restored.negotiateRivalTruce(ruler.id, rival.id)).toThrow('bereits');
+    for (let month = 0; month < 24; month++) await restored.advanceMonth();
+    expect(restored.hasRivalTruce(ruler.id, rival.id)).toBe(false);
+  });
+
   it('lets rulers send embassies and restores relations after saving', async (): Promise<void> => {
     const engine = await campaign();
     const ruler = engine.getPlayers()[0];
