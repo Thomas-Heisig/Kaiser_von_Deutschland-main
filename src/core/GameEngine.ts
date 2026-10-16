@@ -251,13 +251,6 @@ export class GameEngine {
     this.unitFormationSystem = new UnitFormationSystem();
     this.supplyLogisticsSystem = new SupplyLogisticsSystem();
     this.siegeWarfareSystem = new SiegeWarfareSystem();
-    this.warFinanceByPlayer = new Map();
-    this.warFinanceUsed = new Map(Array.isArray(saveData.warFinanceUsed) ? saveData.warFinanceUsed : []);
-    for (const player of restoredPlayers) {
-      const finance = new WarFinancingSystem();
-      if (saveData.warFinanceByPlayer?.[player.id]) finance.deserialize(saveData.warFinanceByPlayer[player.id]);
-      this.warFinanceByPlayer.set(player.id, finance);
-    }
     this.espionageSystem = new EspionageSystem();
     this.urbanDistrictsSystem = new UrbanDistrictsSystem();
     this.dayNightCycleSystem = new DayNightCycleSystem();
@@ -1014,6 +1007,13 @@ export class GameEngine {
     this.technologySystems = restoredTechnology;
     this.rivalDiplomacy = new Map();
     this.festivalsHeld = new Map(Array.isArray(saveData.festivalsHeld) ? saveData.festivalsHeld : []);
+    this.warFinanceByPlayer = new Map();
+    this.warFinanceUsed = new Map(Array.isArray(saveData.warFinanceUsed) ? saveData.warFinanceUsed : []);
+    for (const player of restoredPlayers) {
+      const finance = new WarFinancingSystem();
+      if (saveData.warFinanceByPlayer?.[player.id]) finance.deserialize(saveData.warFinanceByPlayer[player.id]);
+      this.warFinanceByPlayer.set(player.id, finance);
+    }
     this.espionageSystem = new EspionageSystem();
     if (saveData.espionage) this.espionageSystem.deserialize(saveData.espionage);
     for (const player of restoredPlayers) {
