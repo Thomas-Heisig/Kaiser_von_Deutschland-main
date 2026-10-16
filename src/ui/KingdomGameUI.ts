@@ -335,7 +335,7 @@ export class KingdomGameUI {
               <button data-view="economy" class="text-button">Zur Monatsbilanz →</button></section>
             <section class="council-card"><p class="eyebrow">DEIN AUFTRAG</p><h2>Ein blühendes Reich</h2>
               <p class="muted">Erfülle alle Ziele gleichzeitig. Ohne Zeitlimit.</p>
-              <p class="eyebrow" id="campaign-title"></p><div id="objectives"></div><progress id="goal-progress" max="6" aria-label="Kampagnenfortschritt"></progress>
+              <p class="eyebrow" id="campaign-title"></p><p class="muted" id="campaign-story"></p><div id="objectives"></div><progress id="goal-progress" max="6" aria-label="Kampagnenfortschritt"></progress>
               <p id="goal-status"></p></section>
             <section class="council-card latest"><p class="eyebrow">NEUESTES AUS DEM REICH</p>
               <div id="latest"></div><button data-view="chronicle" class="text-button">Chronik öffnen →</button></section>
@@ -432,6 +432,13 @@ export class KingdomGameUI {
           this.record(detail.message);
           this.notify(detail.message);
         }
+      }),
+      engine.on('campaignChapterCompleted', (detail: { playerId: string; chapter: string; reward: number; final: boolean }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        const message = detail.chapter + ' vollendet! +' + format(detail.reward) + ' Gold.';
+        this.record(message);
+        this.showGameAction(detail.final ? '♛ Kampagne abgeschlossen!' : '♜ Neues Kapitel!', message, 'science');
+        this.audio.playEffect('success');
       }),
       engine.on('technologyResearched', (detail: { playerId: string; technology: { name: string } }): void => {
         if (this.player?.id !== detail.playerId) return;
@@ -548,7 +555,10 @@ export class KingdomGameUI {
           ? 'Die Menschen brauchen Zuversicht. Niedrigere Steuern und eine Taverne helfen deinem Reich.'
           : 'Deine Grundversorgung ist gesichert. Investiere Überschüsse in Handel, Bildung und die Zukunft deines Reiches.');
     const goals = this.engine.getCampaignGoals(this.player.id);
-    setText('campaign-title', this.engine.getCampaignDefinition().name);
+    const chapter = this.engine.getCampaignChapterStatus(this.player.id);
+    setText('campaign-title', this.engine.getCampaignDefinition().name + ' · ' +
+      (chapter.finished ? 'Alle Kapitel bestanden' : 'Kapitel ' + (chapter.index + 1) + '/' + chapter.total + ': ' + chapter.title));
+    setText('campaign-story', chapter.narrative);
     const completed = goals.filter((goal: CampaignGoal) => goal.done).length;
     const objectiveHost = this.root.querySelector('#objectives');
     if (objectiveHost) objectiveHost.innerHTML = goals.map((goal: CampaignGoal) =>
