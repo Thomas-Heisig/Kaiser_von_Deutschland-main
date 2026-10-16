@@ -10,7 +10,7 @@ import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
 import { GameAudio } from './GameAudio';
 
-type View = 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -271,7 +271,7 @@ export class KingdomGameUI {
             <p class="eyebrow nav-label">DEINE HERRSCHAFT</p>
             <nav aria-label="Spielbereiche">
               ${([
-                ['overview', '◈', 'Reichsübersicht'], ['build', '♜', 'Bauvorhaben'],
+                ['overview', '◈', 'Reichsübersicht'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
                 ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['military', '⚑', 'Garnison'],
                 ['war', '⚔', 'Feldzüge'], ['character', '♙', 'Charakter'],
                 ['chronicle', '▤', 'Chronik'], ['help', '?', 'Spielhilfe']
@@ -304,6 +304,7 @@ export class KingdomGameUI {
               </div>
             </section>
             <div id="notice" class="notice" role="status" aria-live="polite"></div>
+            <button id="council-prompt" data-view="council" class="council-alert" hidden></button>
             <section class="map-card" aria-label="Interaktive Siedlungsübersicht">
               <div class="map-heading"><div><span class="eyebrow">DEIN LEHEN</span>
                 <h2>Land & Leute</h2></div><span class="map-tag">Siedlungsübersicht</span></div>
@@ -349,6 +350,16 @@ export class KingdomGameUI {
     });
     for (const unsubscribe of this.subscriptions) unsubscribe();
     this.subscriptions = [
+      engine.on('councilDecision', (detail: { playerId: string; title: string }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        this.record('Der Reichsrat ruft: ' + detail.title);
+        this.audio.playEffect('success');
+        this.notify('Dringende Angelegenheit im Reichsrat: ' + detail.title);
+        if (!engine.isHotseat()) this.navigate('council');
+      }),
+      engine.on('councilResolved', (detail: { playerId: string; outcome: { message: string } }): void => {
+        if (this.player?.id === detail.playerId) this.record(detail.outcome.message);
+      }),
       engine.on('monthAdvanced', (): void => {
         this.record('Monat abgeschlossen. Produktion, Verbrauch und Steuern wurden verbucht.');
         this.audio.playEffect('month');
@@ -450,7 +461,15 @@ export class KingdomGameUI {
     setText('time-status', paused ? 'Pausiert' : 'Zeit läuft');
     const speed = this.root.querySelector<HTMLSelectElement>('#speed');
     if (speed && document.activeElement !== speed) speed.value = String(this.engine.getTimeSystem().getSpeed());
-    setText('advice', balance.net.food < 0
+    const pendingCouncil = this.engine.getPendingCouncilDecision(this.player.id);
+    const councilPrompt = this.root.querySelector<HTMLElement>('#council-prompt');
+    if (councilPrompt) {
+      councilPrompt.hidden = !pendingCouncil;
+      if (pendingCouncil) councilPrompt.textContent = '⚠ Offene Ratsentscheidung: ' + pendingCouncil.title;
+    }
+    setText('advice', pendingCouncil
+      ? 'Der Rat erwartet deinen Entschluss! Öffne den Reichsrat und entscheide über ' + pendingCouncil.title + '.'
+      : balance.net.food < 0
       ? 'Dein Volk verbraucht mehr Nahrung als deine Höfe erzeugen. Baue Bauernhöfe oder kaufe Vorräte am Markt.'
       : balance.net.gold + trade < 0
         ? 'Die Ausgaben übersteigen deine Einnahmen. Erhöhe behutsam die Steuern oder verkaufe Überschüsse.'
@@ -498,7 +517,28 @@ export class KingdomGameUI {
     const balance = kingdom.getMonthlyBalance();
     const heading = (eyebrow: string, title: string, description: string): string =>
       `<div class="section-heading"><p class="eyebrow">${eyebrow}</p><h2>${title}</h2><p>${description}</p></div>`;
-    if (this.view === 'overview') {
+    if (this.view === 'council') {
+      const decision = this.engine.getPendingCouncilDecision(this.player.id);
+      const choices = this.engine.getCouncilChoices(this.player.id);
+      const history = this.engine.getCouncilHistory(this.player.id);
+      panel.innerHTML = heading('ENTSCHEIDUNGEN MIT FOLGEN', 'Der königliche Reichsrat',
+        'Jede Entscheidung verändert den Lauf deiner Herrschaft. Riskante Pläne können glücken oder scheitern.') +
+        (decision ? `<article class="council-dilemma">
+          <p class="eyebrow">${escape(decision.category)} · DRINGEND</p>
+          <h3>${escape(decision.title)}</h3><p>${escape(decision.story)}</p>
+          <div class="build-grid">${choices.map((choice) => `<article class="build-card">
+            <h3>${escape(choice.title)}</h3><p>${escape(choice.description)}</p>
+            <p class="cost">${Object.entries(choice.cost).map(([key, value]) =>
+              `${format(value)} ${escape(RESOURCE_NAMES[key as keyof typeof RESOURCE_NAMES])}`).join(' · ') || 'Keine direkten Kosten'}
+              ${choice.probability === null ? ' · Sichere Auswirkung' : ' · Erfolgschance ' + format(choice.probability * 100) + ' %'}</p>
+            <button class="primary" data-council-choice="${escape(choice.id)}"
+              ${choice.affordable ? '' : 'disabled'}>${choice.affordable ? 'Diesen Weg wählen' : 'Nicht genügend Vorräte'}</button>
+          </article>`).join('')}</div>
+        </article>` : '<p class="positive">Im Moment ist der Rat zufrieden. Die nächsten Ereignisse entwickeln sich im Lauf der Monate.</p>') +
+        `<h3>Entscheidungs-Chronik</h3><ol class="journal">${history.slice(0, 20).map((entry) =>
+          `<li><time>${escape(entry.date)}</time><p>${escape(entry.message)}</p></li>`).join('') ||
+          '<li>Noch keine Ratsbeschlüsse gefasst.</li>'}</ol>`;
+    } else if (this.view === 'overview') {
       panel.innerHTML = heading('DAS REICH AUF EINEN BLICK', 'Deine nächste Entscheidung',
         'Sichere die Versorgung, investiere gezielt und beobachte die Folgen im nächsten Monat.') + `
         <div class="summary-grid">
@@ -650,6 +690,16 @@ export class KingdomGameUI {
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
+    panel.querySelectorAll<HTMLButtonElement>('[data-council-choice]').forEach((button) => {
+      button.addEventListener('click', (): void => {
+        void this.run((): void => {
+          const result = this.requireEngine().resolveCouncilDecision(
+            this.requirePlayer().id, button.dataset.councilChoice ?? '');
+          this.notify(result.message, !result.success);
+          this.audio.playEffect(result.success ? 'success' : 'battle');
+        });
+      });
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-open]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => this.navigate(button.dataset.open as View));
     });
@@ -806,6 +856,11 @@ export class KingdomGameUI {
 
   private async action(action: string): Promise<void> {
     const engine = this.requireEngine();
+    if ((action === 'month' || action === 'endturn') &&
+        engine.getPendingCouncilDecision(this.requirePlayer().id)) {
+      this.navigate('council');
+      throw new Error('Der Reichsrat wartet auf deine Entscheidung.');
+    }
     if (action === 'pause') this.togglePause();
     if (action === 'month') {
       engine.pauseGame();
