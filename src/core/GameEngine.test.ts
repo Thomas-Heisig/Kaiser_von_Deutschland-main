@@ -50,6 +50,24 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('lets rulers send embassies and restores relations after saving', async (): Promise<void> => {
+    const engine = await campaign();
+    const ruler = engine.getPlayers()[0];
+    const rival = engine.getRivals(ruler.id)[0];
+    const gold = ruler.kingdom.resources.gold;
+    expect(engine.getRivalRelations(ruler.id)).toHaveLength(3);
+    expect(engine.sendRivalEnvoy(ruler.id, rival.id)).toContain(rival.name);
+    expect(ruler.kingdom.resources.gold).toBe(gold - 350);
+    expect(engine.getRivalMissions(ruler.id)).toHaveLength(1);
+    expect(() => engine.sendRivalEnvoy(ruler.id, rival.id)).toThrow();
+    await engine.saveGame('diplomacy-roundtrip');
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('diplomacy-roundtrip');
+    expect(restored.getRivalMissions(ruler.id)).toHaveLength(1);
+    expect(restored.getRivalRelations(ruler.id)).toHaveLength(3);
+  });
+
   it('automatically saves the completed month and can restore that checkpoint', async (): Promise<void> => {
     const engine = await campaign();
     await engine.advanceMonth();
