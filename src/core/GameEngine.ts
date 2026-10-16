@@ -2,6 +2,7 @@
 import { Player, PlayerCreationData } from './Player';
 import { EconomySystem } from './Economy';
 import { EventSystem } from './Events';
+import { CouncilDecisionSystem, CouncilSnapshot } from './CouncilDecisionSystem';
 import { TitleSystem } from '../data/Titles';
 import { PolicySystem } from './PolicySystem';
 import { OllamaService } from './OllamaService';
@@ -181,6 +182,7 @@ export class GameEngine {
   private warfare: CampaignWarfareSystem = new CampaignWarfareSystem((): number => Math.random());
   private turnIndex: number = 0;
   private technologySystems: Map<string, PlayerTechnologySystem> = new Map();
+  private council: CouncilDecisionSystem = new CouncilDecisionSystem();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -558,6 +560,13 @@ export class GameEngine {
     }
 
     this.timeSystem.setDate(this.currentYear, this.currentMonth);
+    if (this.config.randomEvents) {
+      for (const player of this.players.values()) {
+        const event = this.council.tryGenerate(player, this.currentYear, this.currentMonth, this.config.startingYear);
+        if (event) this.emit('councilDecision', { playerId: player.id, title: event.title });
+      }
+      if (!this.isHotseat() && this.getPendingCouncilDecision(this.getActivePlayer().id)) this.pauseGame();
+    }
     const seasons = ['winter', 'spring', 'summer', 'autumn'] as const;
     for (const player of this.players.values()) {
       player.kingdom.currentSeason = seasons[Math.floor((this.currentMonth % 12) / 3)];
@@ -868,6 +877,7 @@ export class GameEngine {
       timeSystem: this.timeSystem.createSnapshot(),
       dynamicGameView: this.dynamicGameView.createSnapshot(),
       warfare: this.warfare.serialize(),
+      council: this.council.serialize(),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -940,7 +950,10 @@ export class GameEngine {
       if (snapshot) system.load(snapshot);
       restoredTechnology.set(player.id, system);
     }
+    const restoredCouncil = new CouncilDecisionSystem();
+    if (saveData.council !== undefined) restoredCouncil.load(saveData.council as CouncilSnapshot);
     this.pauseGame();
+    this.council = restoredCouncil;
     this.players = new Map(restoredPlayers.map((player: Player) => [player.id, player]));
     this.warfare = restoredWarfare;
     this.technologySystems = restoredTechnology;
@@ -1389,6 +1402,9 @@ export class GameEngine {
     if (this.gameState !== GameState.RUNNING && this.gameState !== GameState.PAUSED) {
       throw new Error('Kein aktives Spiel vorhanden.');
     }
+    if (this.getPendingCouncilDecision(this.getActivePlayer().id)) {
+      throw new Error('Entscheide zuerst über die offene Angelegenheit im Reichsrat.');
+    }
     const count = this.players.size;
     const next = this.turnIndex + 1;
     let monthAdvanced = false;
@@ -1406,6 +1422,30 @@ export class GameEngine {
     const player = this.players.get(playerId);
     if (!player) throw new Error('Spieler nicht gefunden.');
     return player;
+  }
+
+  public getPendingCouncilDecision(playerId: string) {
+    this.requirePlayer(playerId);
+    return this.council.getPending(playerId);
+  }
+
+  public getCouncilChoices(playerId: string) {
+    return this.council.getChoices(this.requirePlayer(playerId));
+  }
+
+  public getCouncilHistory(playerId: string) {
+    this.requirePlayer(playerId);
+    return this.council.getHistory(playerId);
+  }
+
+  public resolveCouncilDecision(playerId: string, choiceId: string) {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) {
+      throw new Error('Nur der aktive Herrscher kann den Rat entscheiden.');
+    }
+    const outcome = this.council.resolve(player, choiceId, this.currentYear, this.currentMonth);
+    this.emit('councilResolved', { playerId, outcome });
+    return outcome;
   }
 
   public async listSaves(): Promise<SaveMeta[]> {
