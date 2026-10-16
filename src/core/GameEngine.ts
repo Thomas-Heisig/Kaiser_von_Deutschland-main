@@ -534,6 +534,24 @@ export class GameEngine {
     // Process Prisoner of War system monthly updates (v2.5.1)
     this.prisonerOfWarSystem.update(this.currentYear, this.currentMonth);
     
+    // Existing espionage missions advance at a monthly granularity (30 in-game days).
+    // A mission may take several months; no background timers or real-world dates control progress.
+    for (const player of this.players.values()) {
+      for (const mission of this.espionageSystem.getMissionsForOwner(player.id)) {
+        if (mission.status !== 'planning' && mission.status !== 'ongoing') continue;
+        let outcome = { completed: false, failed: false, detected: false };
+        for (let day = 0; day < 30; day++) {
+          outcome = this.espionageSystem.processMission(mission.id);
+          if (outcome.completed || outcome.failed) break;
+        }
+        if (outcome.completed || outcome.failed) this.emit('espionageEvent', {
+          playerId: player.id,
+          message: outcome.completed ? 'Ein Kundschafter hat seine Mission abgeschlossen.' :
+            'Ein Kundschafter wurde entdeckt oder die Mission ist fehlgeschlagen.'
+        });
+      }
+    }
+
     // Process AI controllers for all non-player characters (v2.6.0)
     this.aiControllerManager.updateAll(
       (id) => this.citizenSystem.getCitizen(id),
@@ -897,6 +915,7 @@ export class GameEngine {
       council: this.council.serialize(),
       rivalDiplomacy: Object.fromEntries(Array.from(this.rivalDiplomacy, ([id, system]) => [id, system.serialize()])),
       festivalsHeld: Array.from(this.festivalsHeld),
+      espionage: this.espionageSystem.serialize(),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -978,6 +997,8 @@ export class GameEngine {
     this.technologySystems = restoredTechnology;
     this.rivalDiplomacy = new Map();
     this.festivalsHeld = new Map(Array.isArray(saveData.festivalsHeld) ? saveData.festivalsHeld : []);
+    this.espionageSystem = new EspionageSystem();
+    if (saveData.espionage) this.espionageSystem.deserialize(saveData.espionage);
     for (const player of restoredPlayers) {
       const snapshot = saveData.rivalDiplomacy?.[player.id];
       this.rivalDiplomacy.set(player.id, snapshot ? DiplomacySystem.deserialize(snapshot) : new DiplomacySystem(player.id));
@@ -1236,6 +1257,52 @@ export class GameEngine {
     this.festivalsHeld.set(playerId + ':' + eventId, this.currentYear);
     const message = option.event.name + ' gefeiert. Das Volk erinnert sich an diese Feier.';
     this.emit('festivalHeld', { playerId, message });
+    return message;
+  }
+
+  public getCampaignIntelligence(playerId: string) {
+    this.requirePlayer(playerId);
+    return {
+      agents: this.espionageSystem.getAgentsForOwner(playerId),
+      missions: this.espionageSystem.getMissionsForOwner(playerId),
+      reports: this.espionageSystem.getActiveIntelligence().filter((report) =>
+        this.espionageSystem.getAgentsForOwner(playerId).some((agent) => agent.id === report.source))
+    };
+  }
+
+  public recruitCampaignSpy(playerId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    const agents = this.espionageSystem.getAgentsForOwner(playerId);
+    if (agents.length >= 4) throw new Error('Maximal vier Kundschafter je Reich.');
+    if (player.kingdom.resources.gold < 400) throw new Error('Für einen Kundschafter fehlen 400 Gold.');
+    const citizen = this.getCurrentCharacter(playerId);
+    player.kingdom.resources.gold -= 400;
+    const id = 'spy-' + playerId + '-' + (agents.length + 1);
+    this.espionageSystem.recruitAgent(id, playerId, citizen?.firstName ?? 'Kundschafter',
+      { intelligence: 70, stealth: 65, deception: 60 });
+    const message = 'Ein Kundschafter wurde für 400 Gold angeworben.';
+    this.emit('espionageEvent', { playerId, message });
+    return message;
+  }
+
+  public sendCampaignSpy(playerId: string, agentId: string, rivalId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    const rival = this.warfare.getRivals(playerId).find((entry) => entry.id === rivalId && !entry.subjugated);
+    if (!rival) throw new Error('Dieses Zielreich ist nicht verfügbar.');
+    const agent = this.espionageSystem.getAgentsForOwner(playerId)
+      .find((entry) => entry.id === agentId && !entry.captured && !entry.currentMission);
+    if (!agent) throw new Error('Kundschafter nicht verfügbar.');
+    if (player.kingdom.resources.gold < 150) throw new Error('Für den Einsatz fehlen 150 Gold.');
+    const id = 'mission-' + playerId + '-' + this.currentYear + '-' + this.currentMonth +
+      '-' + agentId;
+    const mission = this.espionageSystem.assignMission(id, agentId, 'intelligence', rival.id);
+    if (!mission) throw new Error('Mission konnte nicht gestartet werden.');
+    player.kingdom.resources.gold -= 150;
+    this.espionageSystem.deployAgent(agentId, rival.id);
+    const message = 'Kundschafter wurde nach ' + rival.name + ' entsandt.';
+    this.emit('espionageEvent', { playerId, message });
     return message;
   }
 

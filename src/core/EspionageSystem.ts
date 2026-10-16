@@ -402,6 +402,7 @@ export class EspionageSystem {
     const detected = Math.random() * 100 < mission.detectionRisk / mission.duration;
     if (detected) {
       mission.status = 'compromised';
+      agent.currentMission = undefined;
       agent.detected = true;
       
       // Chance of capture
@@ -539,6 +540,18 @@ export class EspionageSystem {
     campaign.impact = Math.max(0, campaign.impact - strength);
 
     return true;
+  }
+
+  /** Player-scoped read views for the active campaign (never expose internal Maps). */
+  public getAgentsForOwner(owner: string): SpyAgent[] {
+    return Array.from(this.agents.values()).filter((agent) => agent.owner === owner)
+      .map((agent) => ({ ...agent, currentMission: agent.currentMission ? { ...agent.currentMission } : undefined }));
+  }
+
+  public getMissionsForOwner(owner: string): SpyMission[] {
+    const owned = new Set(this.getAgentsForOwner(owner).map((agent) => agent.id));
+    return Array.from(this.missions.values()).filter((mission) => owned.has(mission.agentId))
+      .map((mission) => ({ ...mission }));
   }
 
   /**
