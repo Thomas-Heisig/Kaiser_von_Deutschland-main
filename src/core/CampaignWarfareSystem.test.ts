@@ -9,6 +9,35 @@ const sequence = (...values: number[]): (() => number) => {
 };
 
 describe('CampaignWarfareSystem', (): void => {
+  it('develops rival personalities with bounded forces and preserves them', (): void => {
+    const system = new CampaignWarfareSystem(() => 0.5);
+    system.ensureRivals('p1');
+    const before = system.getRivals('p1');
+    const news = system.processYear(1201);
+    expect(news).toHaveLength(3);
+    const after = system.getRivals('p1');
+    expect(after.find((r) => r.id === 'raubritter')!.soldiers).toBeGreaterThan(
+      before.find((r) => r.id === 'raubritter')!.soldiers);
+    expect(after.find((r) => r.id === 'ostmark')!.fortification).toBeGreaterThan(
+      before.find((r) => r.id === 'ostmark')!.fortification);
+    expect(after.find((r) => r.id === 'nordland')!.loot).toBeGreaterThan(
+      before.find((r) => r.id === 'nordland')!.loot);
+    for (let year = 1202; year < 1800; year++) system.processYear(year);
+    expect(system.getRivals('p1').find((r) => r.id === 'raubritter')!.soldiers).toBeLessThanOrEqual(550);
+    const restored = new CampaignWarfareSystem();
+    restored.load(system.serialize());
+    expect(restored.getRivals('p1')).toEqual(system.getRivals('p1'));
+  });
+
+  it('respects temporary diplomatic protection when picking raiders', (): void => {
+    const system = new CampaignWarfareSystem(sequence(0, 0, 0));
+    system.ensureRivals('p1');
+    const kingdom = createKingdom();
+    const raids = system.processMonth('p1', kingdom, { year: 1200, month: 2 },
+      { raids: true, protectedByTreaty: () => true });
+    expect(raids).toBeUndefined();
+  });
+
   it('makes fortifications and training improve defense', (): void => {
     const kingdom = createKingdom();
     const plain = CampaignWarfareSystem.defensePower(kingdom);

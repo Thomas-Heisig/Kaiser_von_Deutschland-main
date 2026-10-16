@@ -407,6 +407,9 @@ export class KingdomGameUI {
           this.audio.playEffect('success');
         }
       }),
+      engine.on('rivalDeveloped', (detail: { playerId: string; message: string }): void => {
+        if (this.player?.id === detail.playerId) this.record(detail.message);
+      }),
       engine.on('diplomacyEvent', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) {
           this.record(detail.message);
@@ -716,6 +719,7 @@ export class KingdomGameUI {
           const underway = missions.some((mission) => mission.targetKingdomId === rival.id);
           return `<article class="build-card"><h3>${escape(rival.name)}</h3>
             <p>${escape(rival.description)}</p>
+            <p class="eyebrow">Strategie: ${escape(this.engine!.getRivalPersonality(this.player!.id, rival.id))}</p>
             <p>Beziehung: <strong>${format(relation?.relationshipValue ?? 0)}</strong> · Vertrauen:
               ${format(relation?.trust ?? 50)} / 100</p>
             <p class="muted">${rival.subjugated ? 'Vasall' : underway ? 'Gesandtschaft unterwegs' : 'Unabhängiger Nachbar'}</p>

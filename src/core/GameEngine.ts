@@ -554,7 +554,9 @@ export class GameEngine {
         this.policySystem.applyYearlyEffects(player);
       }
       this.roadmapFeaturesManager.update(this.currentYear, 1);
-      this.warfare.processYear();
+      for (const development of this.warfare.processYear(this.currentYear)) {
+        this.emit('rivalDeveloped', development);
+      }
       this.checkForPromotions();
       
       // Yearly processes for population
@@ -1286,6 +1288,14 @@ export class GameEngine {
         }
       }
     }
+  }
+
+  public getRivalPersonality(playerId: string, rivalId: string) {
+    this.requirePlayer(playerId);
+    const rival = this.warfare.getRivals(playerId).find((entry) => entry.id === rivalId);
+    if (!rival) throw new Error('Unbekannter Nachbar.');
+    return rival.id === 'raubritter' ? 'Räuberisch' :
+      rival.id === 'ostmark' ? 'Wehrhaft' : 'Handelsorientiert';
   }
 
   public getRivals(playerId: string): RivalRealm[] {
