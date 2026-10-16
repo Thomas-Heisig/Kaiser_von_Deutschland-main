@@ -1,6 +1,6 @@
 # ✅ TODO – Kaiser von Deutschland
 
-**Stand**: 15. Oktober 2026 · **Paketversion**: 2.5.1 · **Standard-Einstieg**: Aufbaukampagne (`KingdomGameUI`)
+**Stand**: 16. Oktober 2026 · **Paketversion**: 2.5.1 · **Standard-Einstieg**: Aufbaukampagne (`KingdomGameUI`)
 
 Konsolidierte Aufgabenliste aus allen Roadmaps, Statusberichten und Implementierungsreports.
 Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
@@ -14,7 +14,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 
 ---
 
-## ✅ Erste Gameplay-Ausbaustufe – Reichsrat (Branch in Review)
+## ✅ Erste Gameplay-Ausbaustufe – Reichsrat (PR #1 bereits gemergt)
 
 - [x] Sechs spielbare Ratsdilemmata (Ernte, Grenze, Gilden, Intrige, Winter, Gelehrte).
 - [x] Jeweils drei Entscheidungen mit überprüften Kosten, konkreten Folgen und teils Erfolgschance.
@@ -22,32 +22,32 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 - [x] Reichsspezifische offene Beschlüsse und Verlauf im Savegame; alte Spielstände bleiben ladbar.
 - [x] Hotseat: keine Weitergabe des Zuges bei ungeklärtem Beschluss.
 - [x] Unit-Tests für das neue Ratssystem hinzugefügt (lokale Ausführung und CI noch prüfen).
-- [ ] CI, Typecheck, Build und Browser-Smoke-Test des neuen Branches ausführen.
-- [ ] Erfolgswahrscheinlichkeiten im Balancing mit Langläufen prüfen und Ereignispool ausbauen.
+- [~] CI, Typecheck und Build für PR #1 erfolgreich; neuer Workflow trennt Check und Build explizit. Echter Browser-Smoke-Test noch offen.
+- [~] Ereignispool von 6 auf 12 Dilemmata erweitert; deterministische 10.000er Kalibrierungstests für Risikowahrscheinlichkeiten ergänzt. Langzeit-Kampagnensimulation und ökonomisches Balancing noch offen.
 
-## ✅ Lebendige Welt – neuer Entwicklungsstand (PR in Prüfung)
+## ✅ Lebendige Welt – PR #3 gemergt, Erweiterung in Prüfung
 
 - [x] Prozedurale Umgebungsgeräusche mit Ein-/Ausschalter und szenenbezogener Umschaltung.
 - [x] Dezente Kartenbewegungen mit Pausenmechanismus, 30-FPS-Limit und Reduced-Motion-Unterstützung.
 - [x] Bereits vorhandenes Diplomatiesystem in NPC-Nachbarschaft eingebunden (Gesandtschaften/Beziehungen).
 - [x] Diplomatie wird im Spielstand persistiert; Integrationstest hinzugefügt.
-- [ ] CI/Build, Browsertest, Audio-Lautstärke und Zugänglichkeit vor Merge überprüfen.
-- [ ] Echte Gebäude- und Bürgeranimationen sowie differenzierte Geräuschquellen ergänzen.
+- [~] CI/Build für PR #3 erfolgreich; Lautstärkeregler für Umgebung ergänzt, Reduced Motion und stumme Voreinstellung vorhanden. Browser-, Hör- und WCAG-Prüfung noch offen.
+- [~] Pfadgebundene animierte Passanten und Schornsteinrauch ergänzt; zusätzliche Kulturklänge und Lautstärke steuerbar. Vollständige Gebäudeanimationen, realistische Sample-Geräusche und echte Bürgerpositionsdaten noch offen.
 
-## ✅ Kulturkalender in der Aufbaukampagne (PR in Prüfung)
+## ✅ Kulturkalender in der Aufbaukampagne – PR #4 gemergt, Integration fortgesetzt
 
 - [x] Bestehende Kulturevent-Daten für Jahrestage und Jahreszeiten spielbar.
 - [x] Feste verbrauchen Gold und Nahrung und beeinflussen Zufriedenheit/Stabilität.
 - [x] Jährliche Obergrenze pro Reich, Save/Load und Integrationstest ergänzt.
-- [ ] CI- und Browsertests prüfen; weiterführende Kultur- und Religionssysteme integrieren.
+- [~] CI/Build von PR #4 erfolgreich; Religion (dominanter Glaube, Einfluss, Religionsfreiheit) im Kulturpanel lesbar. Browser-Test und echte reichsspezifische Religions- und Kulturverwaltung noch offen.
 
-## ✅ Rivalen-Dynamik (PR in Prüfung)
+## ✅ Rivalen-Dynamik – PR #5/#6 gemergt
 - [x] Drei strategische NPC-Profile mit unterschiedlicher jährlicher Entwicklung.
 - [x] Militärisches Wachstum auf das Fünffache des Ausgangswertes begrenzt.
 - [x] NPC-Entwicklung als Chronikmeldung angezeigt und im vorhandenen Kriegsspeicher gesichert.
 - [x] Tests für Strategievarianten, Speicherstände und vorbereitete Angriffsunterdrückung ergänzt.
 - [x] Verhandelte zweijährige Nichtangriffspakte mit realer Angriffssperre und Überfallschutz integriert; Ablauffrist und Save/Load berücksichtigt.
-- [ ] CI und visuelle Prüfung vor Merge.
+- [~] CI für PR #5/#6 bestanden; echte visuelle Browserabnahme bleibt offen.
 
 ## 🔴 P0 – Sofort (Build & laufende Arbeit)
 
