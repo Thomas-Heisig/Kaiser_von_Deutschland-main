@@ -36,9 +36,29 @@ export class KingdomMap {
   private readonly animation = new Container();
   private elapsed = 0;
   private readonly animatedMarkers: Container[] = [];
+  private readonly citizens: Container[] = [];
+  private readonly chimneys: Graphics[] = [];
   private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
     if (this.destroyed || !this.motionEnabled || document.hidden) return;
     this.elapsed += Math.min(ticker.deltaMS, 50) / 1000;
+    this.citizens.forEach((citizen, i) => {
+      const road = [
+        [[265, 410], [385, 265], [510, 205]],
+        [[510, 205], [530, 350], [720, 415]],
+        [[530, 350], [525, 490]]
+      ][i % 3];
+      const progress = (this.elapsed * (0.027 + i * 0.004) + i * 0.19) % 1;
+      const segment = Math.min(road.length - 2, Math.floor(progress * (road.length - 1)));
+      const fraction = progress * (road.length - 1) - segment;
+      citizen.position.set(
+        road[segment][0] + (road[segment + 1][0] - road[segment][0]) * fraction,
+        road[segment][1] + (road[segment + 1][1] - road[segment][1]) * fraction
+      );
+    });
+    this.chimneys.forEach((smoke, i) => {
+      smoke.alpha = 0.25 + Math.abs(Math.sin(this.elapsed + i)) * 0.35;
+      smoke.y = -((this.elapsed * 5 + i * 6) % 18);
+    });
     this.animatedMarkers.forEach((marker, i) => {
       marker.x = 220 + ((this.elapsed * (11 + i * 3) + i * 147) % 570);
       marker.y = 310 + Math.sin(this.elapsed * 0.8 + i) * 32 + i * 15;
@@ -80,6 +100,17 @@ export class KingdomMap {
       marker.addChild(new Graphics().circle(0, 0, 3).fill({ color: 0xf0d89f, alpha: 0.75 }));
       this.animatedMarkers.push(marker);
       this.animation.addChild(marker);
+    }
+    // Animated villagers follow existing paths; they represent activity, not actual citizen records.
+    for (let i = 0; i < 9; i++) {
+      const walker = new Container();
+      walker.addChild(new Graphics()
+        .circle(0, -7, 3).fill(0xe5c79b)
+        .roundRect(-3, -4, 6, 9, 2).fill(i % 3 === 0 ? 0x9db8a8 : 0xb9996e)
+        .moveTo(-2, 5).lineTo(-3, 9).moveTo(2, 5).lineTo(3, 9)
+        .stroke({ color: 0xbba992, width: 2 }));
+      this.citizens.push(walker);
+      this.animation.addChild(walker);
     }
     this.animation.visible = false;
     this.app.ticker.maxFPS = 30;
@@ -141,6 +172,7 @@ export class KingdomMap {
    */
   public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure): void {
     if (!this.initialized || this.destroyed) return;
+    this.chimneys.length = 0;
     for (const child of this.settlements.removeChildren()) child.destroy({ children: true });
     for (const location of LOCATIONS) {
       const count = kingdom.infrastructure[location.type];
@@ -177,6 +209,13 @@ export class KingdomMap {
             .rect(x + 9, y - 13, 6, 13).fill(0x293b35)
             .rect(x + 4, y - height + 7, 5, 5).fill(0xe6cc8b);
           group.addChild(house);
+          if (count > 0 && (location.type === 'workshops' || location.type === 'markets')) {
+            const smoke = new Graphics()
+              .circle(x + 22, y - height - 20, 5).fill({ color: 0xc5d1c5, alpha: 0.55 })
+              .circle(x + 18, y - height - 27, 7).fill({ color: 0xc5d1c5, alpha: 0.28 });
+            group.addChild(smoke);
+            this.chimneys.push(smoke);
+          }
         }
       }
       const label = new Text({
