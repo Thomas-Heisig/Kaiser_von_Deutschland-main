@@ -367,6 +367,9 @@ export class KingdomGameUI {
         this.refresh();
       }),
       engine.on('gameStateChanged', (): void => this.refresh()),
+      engine.on('autosaveError', (detail: { message: string }): void => {
+        this.notify('Automatische Sicherung fehlgeschlagen: ' + detail.message, true);
+      }),
       engine.on('simulationError', (detail: { message: string }): void => {
         this.notify(`Simulation pausiert: ${detail.message}`, true);
       }),
@@ -435,7 +438,7 @@ export class KingdomGameUI {
     setText('mode-label', hotseat ? `Hotseat · ${players.length} Herrscher` : 'Lokale Einzelspieler-Kampagne');
     setText('footer-keys', hotseat
       ? 'Zug beenden: nächster Herrscher · Nach dem letzten Zug vergeht ein Monat · Manuell speichern'
-      : 'Leertaste: Pause · Escape: pausieren · Fortschritt manuell speichern');
+      : 'Leertaste: Pause · Escape: pausieren · Automatische Sicherung nach jedem Monat · zusätzlich manuell speichern');
     const character = this.engine.getCurrentCharacter(this.player.id);
     setText('realm-name', kingdom.name);
     setText('ruler-name', `${this.player.title.name} ${this.player.name}${
@@ -686,7 +689,7 @@ export class KingdomGameUI {
           Technologien projektweise entwickeln; Voraussetzungen und verfügbare Epochen werden berücksichtigt.
           Segeln schaltet beispielsweise die Hanserouten frei.</p></article>
           <article><h3>7. Dein Vermächtnis</h3><p>Erfülle die Ziele rechts. Du kannst danach weiterspielen.
-          Speichere manuell; beim Laden bleibt die Zeit immer pausiert. Es gibt kein Autosave.</p></article></div>
+          Speichere manuell; beim Laden bleibt die Zeit immer pausiert. Nach jedem abgeschlossenen Monat wird automatisch gespeichert.</p></article></div>
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
