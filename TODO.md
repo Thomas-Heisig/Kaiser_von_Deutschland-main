@@ -22,7 +22,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 - [x] Reichsspezifische offene Beschlüsse und Verlauf im Savegame; alte Spielstände bleiben ladbar.
 - [x] Hotseat: keine Weitergabe des Zuges bei ungeklärtem Beschluss.
 - [x] Unit-Tests für das neue Ratssystem hinzugefügt (lokale Ausführung und CI noch prüfen).
-- [~] CI, Typecheck und Build für PR #1 erfolgreich; neuer Workflow trennt Check und Build explizit. Echter Browser-Smoke-Test noch offen.
+- [x] CI, Typecheck und Build bestanden; automatisierter Chromium-Smoke-Test für Desktop und 320 × 740 mit Navigation in PR #8 erfolgreich. Vollständige manuelle Abnahme separat offen.
 - [~] Ereignispool von 6 auf 12 Dilemmata erweitert; deterministische 10.000er Kalibrierungstests für Risikowahrscheinlichkeiten ergänzt. Langzeit-Kampagnensimulation und ökonomisches Balancing noch offen.
 
 ## ✅ Lebendige Welt – PR #3 gemergt, Erweiterung in Prüfung
@@ -31,7 +31,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 - [x] Dezente Kartenbewegungen mit Pausenmechanismus, 30-FPS-Limit und Reduced-Motion-Unterstützung.
 - [x] Bereits vorhandenes Diplomatiesystem in NPC-Nachbarschaft eingebunden (Gesandtschaften/Beziehungen).
 - [x] Diplomatie wird im Spielstand persistiert; Integrationstest hinzugefügt.
-- [~] CI/Build für PR #3 erfolgreich; Lautstärkeregler für Umgebung ergänzt, Reduced Motion und stumme Voreinstellung vorhanden. Browser-, Hör- und WCAG-Prüfung noch offen.
+- [~] CI/Build und Desktop/320px Chromium-Smoke-Test erfolgreich; Lautstärkeregler, Reduced Motion und stumme Voreinstellung vorhanden. Hör- und vollständige WCAG-Prüfung noch offen.
 - [~] Pfadgebundene animierte Passanten und Schornsteinrauch ergänzt; zusätzliche Kulturklänge und Lautstärke steuerbar. Vollständige Gebäudeanimationen, realistische Sample-Geräusche und echte Bürgerpositionsdaten noch offen.
 
 ## ✅ Kulturkalender in der Aufbaukampagne – PR #4 gemergt, Integration fortgesetzt
@@ -39,7 +39,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 - [x] Bestehende Kulturevent-Daten für Jahrestage und Jahreszeiten spielbar.
 - [x] Feste verbrauchen Gold und Nahrung und beeinflussen Zufriedenheit/Stabilität.
 - [x] Jährliche Obergrenze pro Reich, Save/Load und Integrationstest ergänzt.
-- [~] CI/Build von PR #4 erfolgreich; Religion (dominanter Glaube, Einfluss, Religionsfreiheit) im Kulturpanel lesbar. Browser-Test und echte reichsspezifische Religions- und Kulturverwaltung noch offen.
+- [~] CI/Build und Chromium-Smoke-Test der Kulturansicht erfolgreich; Religion (dominanter Glaube, Einfluss, Religionsfreiheit) im Kulturpanel lesbar. Reichsspezifische Verwaltung noch offen.
 
 ## ✅ Rivalen-Dynamik – PR #5/#6 gemergt
 - [x] Drei strategische NPC-Profile mit unterschiedlicher jährlicher Entwicklung.
@@ -47,7 +47,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 - [x] NPC-Entwicklung als Chronikmeldung angezeigt und im vorhandenen Kriegsspeicher gesichert.
 - [x] Tests für Strategievarianten, Speicherstände und vorbereitete Angriffsunterdrückung ergänzt.
 - [x] Verhandelte zweijährige Nichtangriffspakte mit realer Angriffssperre und Überfallschutz integriert; Ablauffrist und Save/Load berücksichtigt.
-- [~] CI für PR #5/#6 bestanden; echte visuelle Browserabnahme bleibt offen.
+- [~] CI für PR #5/#6 bestanden; Chromium-Smoke-Test Desktop/320px für PR #8 erfolgreich; umfassende visuelle QA und manuelle Abnahme offen.
 
 ## 🔴 P0 – Sofort (Build & laufende Arbeit)
 
@@ -71,10 +71,10 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 ## 🟠 P1 – Stabilisierung & Konsistenz
 
 ### Bekannte Probleme (aus Status-Bericht)
-- [~] Soziale jährliche Beziehungsbildung: quadratische Gesamtsuche durch regional begrenztes Sampling ersetzt; Lasttest für >5.000, 100.000+ Bürger und vollständige Simulation noch offen.
+- [~] Soziale jährliche Beziehungsbildung: quadratische Gesamtsuche durch regional begrenztes Sampling ersetzt (PR #8); Lasttest für >5.000, 100.000+ Bürger und vollständige Simulation noch offen.
 - [~] Ablauf alter Gerüchte und Begrenzung der Verbreitungsereignisse implementiert; systemweites Profiling und Objekt-Pooling noch offen.
 - [ ] ⚠️ Spielstände werden bei großen Reichen zu groß (Kompression / Kohorten statt Einzelbürger)
-- [ ] ⚠️ UI-Responsivität auf kleinen Bildschirmen (320 × 740) prüfen
+- [~] Chromium-Smoke-Test bei 320 × 740 prüft Layoutüberlauf und Navigation erfolgreich (PR #8); manuelle Detailprüfung weiterer Screens offen.
 - [ ] ⚠️ Einige historische Events fehlen
 - [~] Erste spielbare Anleitung im Hilfebereich und Handelsrouten-Voraussetzungen ergänzt; interaktiver mehrstufiger Tutorial-Modus noch offen.
 
