@@ -35,6 +35,8 @@ export class KingdomMap {
   private motionEnabled = false;
   private readonly animation = new Container();
   private elapsed = 0;
+  private actionVisual?: Container;
+  private actionTimer?: number;
   private readonly animatedMarkers: Container[] = [];
   private readonly citizens: Container[] = [];
   private readonly chimneys: Graphics[] = [];
@@ -153,6 +155,29 @@ export class KingdomMap {
     canvas.addEventListener('pointercancel', (): void => { drag = undefined; });
     this.fit();
     this.app.ticker.stop();
+  }
+
+  /** Temporary, bounded effects; no changes to the battle or research simulation. */
+  public playAction(kind: 'raid' | 'science'): void {
+    if (!this.initialized || this.destroyed) return;
+    this.actionVisual?.destroy({ children: true });
+    window.clearTimeout(this.actionTimer);
+    const visual = new Container();
+    const color = kind === 'raid' ? 0xe98159 : 0xe8d498;
+    const x = kind === 'raid' ? 385 : 525;
+    const y = kind === 'raid' ? 265 : 480;
+    visual.addChild(new Graphics().circle(x, y, 63)
+      .stroke({ color, width: 6, alpha: 0.8 })
+      .circle(x, y, 29).fill({ color, alpha: 0.25 }));
+    this.world.addChild(visual);
+    this.actionVisual = visual;
+    this.fit();
+    this.actionTimer = window.setTimeout(() => {
+      if (this.destroyed) return;
+      if (this.actionVisual === visual) this.actionVisual = undefined;
+      visual.destroy({ children: true });
+      this.fit();
+    }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 800 : 2600);
   }
 
   /** Enable bounded ambient movement, without changing the game simulation. */
@@ -293,6 +318,8 @@ export class KingdomMap {
    * @returns Nothing.
    */
   public dispose(): void {
+    window.clearTimeout(this.actionTimer);
+    this.actionVisual = undefined;
     this.destroyed = true;
     this.observer?.disconnect();
     document.removeEventListener('visibilitychange', this.visibility);
