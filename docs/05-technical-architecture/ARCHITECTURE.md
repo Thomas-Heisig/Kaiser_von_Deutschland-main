@@ -1,9 +1,9 @@
 # 🏗️ Kaiser von Deutschland - Architektur-Dokumentation
 
-**Version**: 2.0.0  
-**Letzte Aktualisierung**: Dezember 2025
+**Paketversion**: 2.5.1  
+**Letzte Überprüfung des Laufzeitpfades**: 17. Oktober 2026
 
-Diese Dokumentation beschreibt die technische Architektur, Design-Patterns und Struktur des Projekts.
+Diese Dokumentation enthält auch historische Architekturabschnitte. Für die verbindliche Zuordnung der doppelten Implementierungen siehe [Systemkonsolidierung](./system-consolidation.md). Für die tatsächlich ausgelieferte Version gilt package.json; alte Versionsangaben im Fließtext bezeichnen Entwicklungsstände, keine separaten Releases.
 
 ## Aktueller Standard-Einstieg: Aufbaukampagne
 
