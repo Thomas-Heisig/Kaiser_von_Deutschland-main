@@ -11,7 +11,7 @@ import type { KingdomMap } from './KingdomMap';
 import { GameAudio } from './GameAudio';
 import { GameAmbience, Soundscape } from './GameAmbience';
 
-type View = 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -279,7 +279,7 @@ export class KingdomGameUI {
               ${([
                 ['overview', '◈', 'Reichsübersicht'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
                 ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['military', '⚑', 'Garnison'],
-                ['war', '⚔', 'Feldzüge'], ['culture', '♫', 'Kultur & Feste'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
+                ['war', '⚔', 'Feldzüge'], ['intelligence', '◉', 'Geheimdienst'], ['world', '☼', 'Welt & Volk'], ['culture', '♫', 'Kultur & Feste'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
                 ['chronicle', '▤', 'Chronik'], ['help', '?', 'Spielhilfe']
               ] as const).map(([key, symbol, name]) => `
                 <button data-view="${key}"><span aria-hidden="true">${symbol}</span>${name}</button>`).join('')}
@@ -409,6 +409,9 @@ export class KingdomGameUI {
         }
       }),
       engine.on('rivalDeveloped', (detail: { playerId: string; message: string }): void => {
+        if (this.player?.id === detail.playerId) this.record(detail.message);
+      }),
+      engine.on('espionageEvent', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) this.record(detail.message);
       }),
       engine.on('diplomacyEvent', (detail: { playerId: string; message: string }): void => {
@@ -717,6 +720,46 @@ export class KingdomGameUI {
             </button>
           </article>`).join('')}</div>` :
           '<p class="muted">Diesen Monat sind keine Feste im Jahreskreis vorgesehen.</p>');
+    } else if (this.view === 'intelligence') {
+      const intel = this.engine.getCampaignIntelligence(this.player.id);
+      const rivals = this.engine.getRivals(this.player.id).filter((rival) => !rival.subjugated);
+      panel.innerHTML = heading('KUNDSCHAFTER', 'Der königliche Geheimdienst',
+        'Wirb Kundschafter an und lasse Nachbarreiche ausspähen. Der vorhandene Spionagesimulator berechnet Entdeckung und Erfolg.') +
+        `<p>Kundschafter: ${format(intel.agents.length)} / 4</p>
+        <button class="primary" data-spy-recruit
+          ${intel.agents.length >= 4 || kingdom.resources.gold < 400 ? 'disabled' : ''}>Kundschafter anwerben · 400 Gold</button>
+        <div class="build-grid">${intel.agents.map((agent) => `<article class="build-card">
+          <h3>${escape(agent.name)}</h3><p>Erfahrung: ${format(agent.experience)} ·
+          ${agent.captured ? 'Gefangen' : agent.currentMission ? 'Im Einsatz' : 'Einsatzbereit'}</p>
+          ${rivals.map((rival) => `<button data-spy-agent="${escape(agent.id)}"
+            data-spy-target="${escape(rival.id)}"
+            ${agent.captured || agent.currentMission || kingdom.resources.gold < 150 ? 'disabled' : ''}>
+            ${escape(rival.name)} ausspähen · 150 Gold</button>`).join('')}
+        </article>`).join('')}</div>
+        <h3>Berichte</h3><ol class="journal">${intel.reports.slice(-12).map((report) => `
+          <li><p>${escape(report.subject)} – ${escape(report.details)}
+          (Zuverlässigkeit ${format(report.reliability)} %)</p></li>`).join('') ||
+          '<li>Keine aktuellen Berichte.</li>'}</ol>`;
+    } else if (this.view === 'world') {
+      const world = this.engine.getEcologicalStats();
+      const people = this.engine.getPopulationStats();
+      const movements = this.engine.getMigrationSystem().getMigrationStats();
+      const famine = this.engine.getFamineSystem().getActiveFamines();
+      panel.innerHTML = heading('LEBENDIGE WELT', 'Land, Klima und Bevölkerung',
+        'Aktuelle Werte aus den bestehenden Klima-, Tier-, Bevölkerungs- und Migrationssystemen.') +
+        `<div class="summary-grid">
+          <article><span>Wetter</span><strong>${escape(world.climate.currentWeather)}</strong><small>${escape(world.climate.currentSeason)}</small></article>
+          <article><span>Individuelle Bürger</span><strong>${format(people.total)}</strong><small>Erfasste Simulationspersonen</small></article>
+          <article><span>Wilde Tiere</span><strong>${format(world.animals.totalWildlife)}</strong><small>Tierpopulation</small></article>
+          <article><span>Nutztiere</span><strong>${format(world.animals.totalLivestock)}</strong><small>Tierhaltung</small></article>
+          <article><span>Wanderungsbewegungen</span><strong>${format(movements.totalMigrations)}</strong><small>Historische Summe</small></article>
+          <article><span>Aktive Hungersnöte</span><strong>${format(famine.length)}</strong><small>Regional erfasst</small></article>
+        </div><h3>Aktuelle Naturkatastrophen</h3>
+        <ol class="journal">${world.climate.activeDisasters.map((event) =>
+          `<li>${escape(event.type)} · Schwere ${format(event.severity)}</li>`).join('') ||
+          '<li>Keine derzeit aktiven Katastrophen.</li>'}</ol>
+        <p class="muted">Die Weltstatistik nutzt vorhandene globale Systeme. Eine vollständige,
+        pro Reich getrennte Bevölkerungssimulation und Hungersnot-Bilanzierung folgen später.</p>`;
     } else if (this.view === 'diplomacy') {
       const relations = this.engine.getRivalRelations(this.player.id);
       const missions = this.engine.getRivalMissions(this.player.id);
@@ -780,6 +823,17 @@ export class KingdomGameUI {
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
+    panel.querySelectorAll<HTMLButtonElement>('[data-spy-recruit]').forEach((button) => {
+      button.addEventListener('click', () => void this.run(() => {
+        this.notify(this.requireEngine().recruitCampaignSpy(this.requirePlayer().id));
+      }));
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-spy-agent]').forEach((button) => {
+      button.addEventListener('click', () => void this.run(() => {
+        this.notify(this.requireEngine().sendCampaignSpy(this.requirePlayer().id,
+          button.dataset.spyAgent ?? '', button.dataset.spyTarget ?? ''));
+      }));
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-festival]').forEach((button) => {
       button.addEventListener('click', (): void => {
         void this.run((): void => {
