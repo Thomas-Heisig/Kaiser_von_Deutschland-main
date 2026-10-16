@@ -138,6 +138,7 @@ export class KingdomGameUI {
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
             <button type="button" class="secondary" data-audio-toggle="ambience" aria-pressed="false">🌿 Umgebung: Aus</button>
+            <label class="ambience-volume">Umgebung: Lautstärke <input type="range" data-ambience-volume min="0" max="100" value="45" step="5" aria-label="Lautstärke der Umgebungsgeräusche"></label>
           </div>
           <form id="new-game">
             <label>Spieler an diesem Gerät<select name="players" id="player-count">
@@ -533,6 +534,7 @@ export class KingdomGameUI {
     });
     this.map?.update(kingdom, this.selected);
     const scene: Soundscape = this.view === 'war' ? 'battle' :
+      this.view === 'culture' ? 'culture' :
       this.view === 'economy' ? 'market' :
       kingdom.currentSeason === 'winter' ? 'winter' : 'village';
     this.ambience.setScene(scene);
@@ -694,8 +696,15 @@ export class KingdomGameUI {
         <div class="quick-actions"><button data-open="war" class="primary">Zum Kriegsrat →</button></div>`;
     } else if (this.view === 'culture') {
       const events = this.engine.getFestivalOptions(this.player.id);
+      const faith = this.engine.getReligiousOverview(this.player.id);
       panel.innerHTML = heading('KULTUR & VOLK', 'Feste im Jahreskreis',
         'Feiere saisonale und historische Anlässe aus dem bestehenden Kultur- und Religionssystem. Kosten und Folgen sind verbindlich.') +
+        `<article class="build-card" aria-label="Religionsübersicht">
+        <h3>Glauben im Reich</h3><p>Vorherrschend: ${escape(faith.dominant)}</p>
+        <p>Kultureller Einfluss: ${format(faith.culturalInfluence)} / 100 · Religionsfreiheit:
+        ${format(faith.religiousFreedom)} / 100</p>
+        <p class="muted">Die Religionsdaten stammen aus dem bestehenden Religionssystem und sind
+        derzeit weltweite Werte, keine getrennte Religionsverwaltung einzelner Reiche.</p></article>` +
         (events.length ? `<div class="build-grid">${events.map(({ event, affordable, alreadyHeld }) => `
           <article class="build-card"><h3>${escape(event.name)}</h3>
             <p>${escape(event.description)}</p>
@@ -1196,6 +1205,12 @@ export class KingdomGameUI {
               this.notify(error instanceof Error ? error.message : 'Umgebungsgeräusche nicht verfügbar.', true);
             });
         } else this.toggleEffects();
+      });
+    });
+    this.root.querySelectorAll<HTMLInputElement>('[data-ambience-volume]').forEach((input) => {
+      input.value = String(Math.round(this.ambience.getVolume() * 100));
+      input.addEventListener('input', () => {
+        this.ambience.setVolume(Number(input.value) / 100);
       });
     });
     this.updateAudioControls();

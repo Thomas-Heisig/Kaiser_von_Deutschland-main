@@ -1189,6 +1189,19 @@ export class GameEngine {
    */
   /** Expose the existing diplomacy model for each player's NPC neighbours. */
   /** Seasonal cultural events are read from the pre-existing ReligionSystem data. */
+  /** Existing religion data is now available to the playable cultural screen. */
+  public getReligiousOverview(playerId: string) {
+    this.requirePlayer(playerId);
+    return {
+      dominant: this.religionSystem.getReligion(this.religionSystem.getDominantReligion())?.name ?? 'Unbekannt',
+      culturalInfluence: this.religionSystem.getCulturalInfluence(),
+      religiousFreedom: this.religionSystem.getReligiousFreedom(),
+      religions: this.religionSystem.getAllReligions().map((religion) => ({
+        id: religion.id, name: religion.name, influence: religion.influence, followers: religion.followers
+      }))
+    };
+  }
+
   public getFestivalOptions(playerId: string): Array<{
     event: CulturalEvent; affordable: boolean; alreadyHeld: boolean;
   }> {

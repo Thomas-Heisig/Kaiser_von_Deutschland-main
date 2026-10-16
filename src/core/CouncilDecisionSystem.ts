@@ -126,6 +126,82 @@ export const COUNCIL_DECISIONS: readonly CouncilDecision[] = [
         cost: { gold: 450, iron: 70 }, effect: { gold: 1200, prestige: 5 },
         successChance: 0.5, failure: { gold: -350, stability: -3 } }
     ]
+  },
+  {
+    id: 'bridge_collapse', category: 'INFRASTRUKTUR', title: 'Die Brücke ist eingestürzt',
+    story: 'Der einzige Übergang über den Fluss ist zerstört. Händler und Bauern bitten dringend um Hilfe.',
+    choices: [
+      { id: 'rebuild', title: 'Neue Brücke errichten', description: 'Teuer, doch Handel und Ordnung erholen sich.',
+        cost: { wood: 350, stone: 200, gold: 450 }, effect: { happiness: 6, stability: 4, prestige: 2 } },
+      { id: 'ferry', title: 'Fährverkehr einrichten', description: 'Günstige Übergangslösung.',
+        cost: { wood: 80, gold: 180 }, effect: { happiness: 2, stability: 1 } },
+      { id: 'shortcut', title: 'Eine riskante Furt suchen', description: 'Die Abkürzung könnte den Handel retten.',
+        cost: { food: 150 }, effect: { gold: 950, prestige: 2 },
+        successChance: 0.58, failure: { happiness: -4, stability: -3 } }
+    ]
+  },
+  {
+    id: 'pilgrims', category: 'GLAUBE', title: 'Pilger vor den Toren',
+    story: 'Hunderte Reisende ersuchen Unterkunft. Die Geistlichkeit und Kaufleute sind uneins.',
+    choices: [
+      { id: 'welcome', title: 'Pilger aufnehmen', description: 'Versorge Gäste und gewinne Ansehen.',
+        cost: { food: 380, gold: 180 }, effect: { happiness: 4, prestige: 3 } },
+      { id: 'market', title: 'Pilgermarkt erlauben', description: 'Ein Fest bringt Einnahmen, aber auch Unruhe.',
+        cost: { food: 150 }, effect: { gold: 650, stability: -2 } },
+      { id: 'escort', title: 'Schutzgeleit stellen', description: 'Eine Eskorte kann Geschenke und Ruhm heimbringen.',
+        cost: { gold: 300, iron: 30 }, effect: { gold: 850, prestige: 4 },
+        successChance: 0.7, failure: { stability: -4, happiness: -2 } }
+    ]
+  },
+  {
+    id: 'miners_dispute', category: 'HANDWERK', title: 'Streit im Bergwerk',
+    story: 'Bergleute verweigern die Arbeit. Sie fordern höhere Löhne und sichere Stollen.',
+    choices: [
+      { id: 'safety', title: 'Stollen sichern', description: 'Material und Gold schützen die Arbeitenden.',
+        cost: { wood: 240, gold: 280 }, effect: { stability: 3, happiness: 5, iron: 140 } },
+      { id: 'wages', title: 'Löhne erhöhen', description: 'Ein schneller Vergleich bewahrt den Frieden.',
+        cost: { gold: 420 }, effect: { happiness: 4, stability: 2 } },
+      { id: 'force', title: 'Die Arbeit erzwingen', description: 'Kostet wenig, doch Unruhe droht.',
+        cost: {}, effect: { iron: 280, happiness: -8, stability: -5 } }
+    ]
+  },
+  {
+    id: 'merchant_caravan', category: 'HANDEL', title: 'Eine fremde Karawane',
+    story: 'Ein Händlerzug mit seltenen Waren bittet um Handelsrechte und Schutz.',
+    choices: [
+      { id: 'tariff', title: 'Zoll verlangen', description: 'Schnelle Einnahmen zulasten des Ansehens.',
+        cost: {}, effect: { gold: 650, happiness: -2 } },
+      { id: 'welcome_trade', title: 'Freien Handel gestatten', description: 'Offene Tore beleben die Stadt.',
+        cost: { food: 250 }, effect: { gold: 480, happiness: 3, prestige: 1 } },
+      { id: 'investment', title: 'In die Karawane investieren', description: 'Eine riskante Reise mit Aussicht auf reiche Gewinne.',
+        cost: { gold: 500 }, effect: { gold: 1650, prestige: 2 },
+        successChance: 0.55, failure: { happiness: -2, stability: -2 } }
+    ]
+  },
+  {
+    id: 'village_fire', category: 'NOTLAGE', title: 'Feuer im Dorf',
+    story: 'Mehrere Höfe stehen in Flammen. Die Dorfbewohner warten auf die Hilfe der Krone.',
+    choices: [
+      { id: 'firefighters', title: 'Löschtrupps ausrüsten', description: 'Eine sofortige Hilfsaktion.',
+        cost: { gold: 250, wood: 180 }, effect: { happiness: 6, stability: 3 } },
+      { id: 'shelter_fire', title: 'Obdachlose unterbringen', description: 'Versorgung vor Wiederaufbau.',
+        cost: { food: 300 }, effect: { happiness: 3, stability: 1 } },
+      { id: 'fire_gamble', title: 'Wertvolle Vorräte bergen', description: 'Gefährlicher Einsatz mitten in den Flammen.',
+        cost: { gold: 100 }, effect: { gold: 1000, prestige: 2 },
+        successChance: 0.52, failure: { food: -350, happiness: -5 } }
+    ]
+  },
+  {
+    id: 'noble_wedding', category: 'HOF', title: 'Eine Hochzeit am Hof',
+    story: 'Zwei Adelsfamilien möchten mit einer großen Feier ihre Fehde beenden.',
+    choices: [
+      { id: 'sponsor', title: 'Die Feier ausrichten', description: 'Luxus kostet Geld, stärkt jedoch die politische Ordnung.',
+        cost: { gold: 620, food: 200 }, effect: { prestige: 5, stability: 5, happiness: 2 } },
+      { id: 'blessing', title: 'Einen schlichten Segen geben', description: 'Die Krone wahrt Abstand.',
+        cost: { gold: 100 }, effect: { prestige: 1, stability: 1 } },
+      { id: 'refuse', title: 'Eine Vermählung untersagen', description: 'Bewahre die Staatskasse, riskiere einen Aufruhr.',
+        cost: {}, effect: { stability: -7, happiness: -3 } }
+    ]
   }
 ];
 
