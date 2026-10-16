@@ -19,6 +19,20 @@ export interface RivalRealm {
 }
 
 /** Outcome of a single resolved battle. */
+export type RivalPersonality = 'raider' | 'fortifier' | 'merchant';
+export interface RivalDevelopment {
+  playerId: string;
+  rivalId: string;
+  name: string;
+  personality: RivalPersonality;
+  year: number;
+  message: string;
+}
+
+/** Opponents retain recognizable strategies instead of simply gaining generic resources. */
+export const rivalPersonality = (id: string): RivalPersonality =>
+  id === 'raubritter' ? 'raider' : id === 'ostmark' ? 'fortifier' : 'merchant';
+
 export interface BattleReport {
   id: string;
   year: number;
@@ -325,14 +339,15 @@ export class CampaignWarfareSystem {
    */
   public processMonth(
     playerId: string, kingdom: Kingdom, date: { year: number; month: number },
-    options: { raids: boolean; modifiers?: PowerModifiers }
+    options: { raids: boolean; modifiers?: PowerModifiers; protectedByTreaty?: (rivalId: string) => boolean }
   ): BattleReport | undefined {
     const own = this.rivals.filter((rival: RivalRealm): boolean => rival.playerId === playerId);
     for (const rival of own.filter((entry: RivalRealm): boolean => entry.subjugated)) {
       kingdom.resources.gold += Math.floor(rival.loot / 24);
     }
     if (!options.raids) return undefined;
-    const hostile = own.filter((rival: RivalRealm): boolean => !rival.subjugated && rival.soldiers > 0);
+    const hostile = own.filter((rival: RivalRealm): boolean =>
+      !rival.subjugated && rival.soldiers > 0 && !options.protectedByTreaty?.(rival.id));
     if (!hostile.length || this.random() >= MONTHLY_RAID_CHANCE) return undefined;
     const raider = hostile[Math.min(hostile.length - 1, Math.floor(this.random() * hostile.length))];
     const raidPower = Math.round(CampaignWarfareSystem.rivalPower(raider) * 0.4 / raider.fortification);
@@ -367,10 +382,30 @@ export class CampaignWarfareSystem {
    * Yearly processing: hostile rivals rebuild their armies.
    * @returns Nothing.
    */
-  public processYear(): void {
+  public processYear(year: number = 0): RivalDevelopment[] {
+    const news: RivalDevelopment[] = [];
     for (const rival of this.rivals) {
-      if (!rival.subjugated) rival.soldiers = Math.round(rival.soldiers * 1.08 + 5);
+      if (rival.subjugated) continue;
+      // A bounded baseline prevents exponential opponent scaling after long campaigns.
+      const base = RIVAL_TEMPLATES.find((template) => template.id === rival.id)?.soldiers ?? 200;
+      const limit = base * 5;
+      rival.soldiers = Math.min(limit, Math.round(rival.soldiers * 1.04 + 4));
+      if (!year) continue;
+      const personality = rivalPersonality(rival.id);
+      let message: string;
+      if (personality === 'raider') {
+        rival.soldiers = Math.min(limit, rival.soldiers + Math.round(base * 0.05));
+        message = `${rival.name} sammelt weitere Söldner an seiner Grenze.`;
+      } else if (personality === 'fortifier') {
+        rival.fortification = Math.min(1.8, Math.round((rival.fortification + 0.025) * 1000) / 1000);
+        message = `${rival.name} verstärkt die Grenzbefestigungen.`;
+      } else {
+        rival.loot = Math.min(25000, rival.loot + 225);
+        message = `${rival.name} erweitert seine Handelswege und füllt die Schatzkammer.`;
+      }
+      news.push({ playerId: rival.playerId, rivalId: rival.id, name: rival.name, personality, year, message });
     }
+    return news;
   }
 
   /**
