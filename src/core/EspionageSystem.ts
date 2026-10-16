@@ -402,6 +402,7 @@ export class EspionageSystem {
     const detected = Math.random() * 100 < mission.detectionRisk / mission.duration;
     if (detected) {
       mission.status = 'compromised';
+      agent.currentMission = undefined;
       agent.detected = true;
       
       // Chance of capture
