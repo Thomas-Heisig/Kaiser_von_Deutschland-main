@@ -591,7 +591,8 @@ export class GameEngine {
 
     const raid = this.warfare.processMonth(player.id, player.kingdom,
       { year: this.currentYear, month: this.currentMonth },
-      { raids: this.config.randomEvents, modifiers: this.getCommanderModifiers(player.id) });
+      { raids: this.config.randomEvents, modifiers: this.getCommanderModifiers(player.id),
+        protectedByTreaty: (rivalId: string): boolean => this.hasRivalTruce(player.id, rivalId) });
     if (raid) this.emit('battleResolved', { report: raid });
     this.processRivalDiplomacy(player);
 
@@ -1234,6 +1235,46 @@ export class GameEngine {
     return this.requireRivalDiplomacy(playerId).getActiveMissions();
   }
 
+  /** An active non-aggression treaty blocks raids and offensive campaigns. */
+  public hasRivalTruce(playerId: string, rivalId: string): boolean {
+    this.requirePlayer(playerId);
+    return this.requireRivalDiplomacy(playerId).getActiveTreaties().some((treaty) =>
+      treaty.type === 'non_aggression' && treaty.parties.includes(playerId) &&
+      treaty.parties.includes(rivalId) && (treaty.expiryYear === undefined ||
+        treaty.expiryYear > this.currentYear));
+  }
+
+  public getRivalTreaties(playerId: string) {
+    this.requirePlayer(playerId);
+    return this.requireRivalDiplomacy(playerId).getActiveTreaties()
+      .filter((treaty) => treaty.expiryYear === undefined || treaty.expiryYear > this.currentYear);
+  }
+
+  public negotiateRivalTruce(playerId: string, rivalId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    const rival = this.warfare.getRivals(playerId).find((entry) => entry.id === rivalId && !entry.subjugated);
+    if (!rival) throw new Error('Mit diesem Reich ist kein Pakt möglich.');
+    if (this.hasRivalTruce(playerId, rivalId)) throw new Error('Es besteht bereits ein Nichtangriffspakt.');
+    const diplomacy = this.requireRivalDiplomacy(playerId);
+    const relation = diplomacy.getRelation(rivalId);
+    if (!relation || relation.relationshipValue < 10) {
+      throw new Error('Mindestens 10 Beziehungspunkte erforderlich. Entsende zunächst Gesandte.');
+    }
+    const cost = 500;
+    if (player.kingdom.resources.gold < cost) throw new Error('Für den Friedenspakt fehlen 500 Gold.');
+    // Verified, two-way treaty: both the player's attacks and rival raids are blocked.
+    player.kingdom.resources.gold -= cost;
+    diplomacy.proposeTreaty({
+      type: 'non_aggression', parties: [playerId, rivalId],
+      signedYear: this.currentYear, expiryYear: this.currentYear + 2,
+      terms: {}, active: true
+    });
+    const message = `Nichtangriffspakt mit ${rival.name} geschlossen (500 Gold, zwei Jahre).`;
+    this.emit('diplomacyEvent', { playerId, message });
+    return message;
+  }
+
   public sendRivalEnvoy(playerId: string, rivalId: string): string {
     const player = this.requirePlayer(playerId);
     if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
@@ -1360,6 +1401,7 @@ export class GameEngine {
    * @throws Error if supplies, soldiers or the monthly campaign limit prevent the attack.
    */
   public attackRival(playerId: string, rivalId: string): BattleReport {
+    if (this.hasRivalTruce(playerId, rivalId)) throw new Error('Ein Nichtangriffspakt verbietet diesen Feldzug.');
     const player = this.requirePlayer(playerId);
     const report = this.warfare.attackRival(playerId, player.kingdom, rivalId,
       { year: this.currentYear, month: this.currentMonth }, this.getCommanderModifiers(playerId));
