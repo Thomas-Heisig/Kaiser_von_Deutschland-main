@@ -11,7 +11,7 @@ import type { KingdomMap } from './KingdomMap';
 import { GameAudio } from './GameAudio';
 import { GameAmbience, Soundscape } from './GameAmbience';
 
-type View = 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -278,7 +278,7 @@ export class KingdomGameUI {
               ${([
                 ['overview', '◈', 'Reichsübersicht'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
                 ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['military', '⚑', 'Garnison'],
-                ['war', '⚔', 'Feldzüge'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
+                ['war', '⚔', 'Feldzüge'], ['culture', '♫', 'Kultur & Feste'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
                 ['chronicle', '▤', 'Chronik'], ['help', '?', 'Spielhilfe']
               ] as const).map(([key, symbol, name]) => `
                 <button data-view="${key}"><span aria-hidden="true">${symbol}</span>${name}</button>`).join('')}
@@ -398,6 +398,13 @@ export class KingdomGameUI {
         this.audio.playEffect('battle');
         if (this.player && detail.report.playerIds.includes(this.player.id) && detail.report.kind === 'raid') {
           this.notify(detail.report.summary, !this.wonBattle(detail.report));
+        }
+      }),
+      engine.on('festivalHeld', (detail: { playerId: string; message: string }): void => {
+        if (this.player?.id === detail.playerId) {
+          this.record(detail.message);
+          this.notify(detail.message);
+          this.audio.playEffect('success');
         }
       }),
       engine.on('diplomacyEvent', (detail: { playerId: string; message: string }): void => {
@@ -682,6 +689,22 @@ export class KingdomGameUI {
         <p class="muted tip">Mit deiner Garnison ziehst du unter „Feldzüge“ gegen rivalisierende Nachbarn.
           Kasernen, Ausbildung und Ausrüstung erhöhen die Kampfkraft, Mauern und Burgen die Verteidigung.</p>
         <div class="quick-actions"><button data-open="war" class="primary">Zum Kriegsrat →</button></div>`;
+    } else if (this.view === 'culture') {
+      const events = this.engine.getFestivalOptions(this.player.id);
+      panel.innerHTML = heading('KULTUR & VOLK', 'Feste im Jahreskreis',
+        'Feiere saisonale und historische Anlässe aus dem bestehenden Kultur- und Religionssystem. Kosten und Folgen sind verbindlich.') +
+        (events.length ? `<div class="build-grid">${events.map(({ event, affordable, alreadyHeld }) => `
+          <article class="build-card"><h3>${escape(event.name)}</h3>
+            <p>${escape(event.description)}</p>
+            <p class="cost">${format(event.effects.goldCost ?? 0)} Gold ·
+              ${format(event.effects.foodConsumption ?? 0)} Nahrung</p>
+            <p>Zufriedenheit +${format(event.effects.happiness ?? 0)} ·
+              Stabilität +${format(event.effects.stability ?? 0)}</p>
+            <button data-festival="${escape(event.id)}" ${alreadyHeld || !affordable ? 'disabled' : ''}>
+              ${alreadyHeld ? 'Bereits gefeiert' : affordable ? 'Fest veranstalten' : 'Nicht genug Vorräte'}
+            </button>
+          </article>`).join('')}</div>` :
+          '<p class="muted">Diesen Monat sind keine Feste im Jahreskreis vorgesehen.</p>');
     } else if (this.view === 'diplomacy') {
       const relations = this.engine.getRivalRelations(this.player.id);
       const missions = this.engine.getRivalMissions(this.player.id);
@@ -738,6 +761,15 @@ export class KingdomGameUI {
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
+    panel.querySelectorAll<HTMLButtonElement>('[data-festival]').forEach((button) => {
+      button.addEventListener('click', (): void => {
+        void this.run((): void => {
+          const message = this.requireEngine().holdFestival(
+            this.requirePlayer().id, button.dataset.festival ?? '');
+          this.notify(message);
+        });
+      });
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-send-envoy]').forEach((button) => {
       button.addEventListener('click', (): void => {
         void this.run((): void => {
