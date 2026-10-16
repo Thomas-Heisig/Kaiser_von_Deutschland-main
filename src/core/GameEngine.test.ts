@@ -50,6 +50,26 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('can hold seasonal festivals once per year and preserve them in a savegame', async (): Promise<void> => {
+    const engine = await campaign();
+    const ruler = engine.getPlayers()[0];
+    // December contains the Christmas festival in the existing historical catalog.
+    for (let month = 1; month < 12; month++) await engine.advanceMonth();
+    const option = engine.getFestivalOptions(ruler.id).find((entry) => entry.event.id === 'christmas');
+    expect(option).toBeDefined();
+    ruler.kingdom.resources.gold = Math.max(ruler.kingdom.resources.gold, 1000);
+    ruler.kingdom.resources.food = Math.max(ruler.kingdom.resources.food, 1500);
+    const message = engine.holdFestival(ruler.id, 'christmas');
+    expect(message).toContain('Weihnachten');
+    expect(engine.getFestivalOptions(ruler.id).find((item) => item.event.id === 'christmas')?.alreadyHeld).toBe(true);
+    expect(() => engine.holdFestival(ruler.id, 'christmas')).toThrow();
+    await engine.saveGame('festival');
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('festival');
+    expect(restored.getFestivalOptions(ruler.id).find((entry) => entry.event.id === 'christmas')?.alreadyHeld).toBe(true);
+  });
+
   it('lets rulers send embassies and restores relations after saving', async (): Promise<void> => {
     const engine = await campaign();
     const ruler = engine.getPlayers()[0];
