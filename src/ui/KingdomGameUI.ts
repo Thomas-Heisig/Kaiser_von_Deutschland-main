@@ -11,7 +11,7 @@ import type { KingdomMap } from './KingdomMap';
 import { GameAudio } from './GameAudio';
 import { GameAmbience, Soundscape } from './GameAmbience';
 
-type View = 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -278,7 +278,7 @@ export class KingdomGameUI {
               ${([
                 ['overview', '◈', 'Reichsübersicht'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
                 ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['military', '⚑', 'Garnison'],
-                ['war', '⚔', 'Feldzüge'], ['character', '♙', 'Charakter'],
+                ['war', '⚔', 'Feldzüge'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
                 ['chronicle', '▤', 'Chronik'], ['help', '?', 'Spielhilfe']
               ] as const).map(([key, symbol, name]) => `
                 <button data-view="${key}"><span aria-hidden="true">${symbol}</span>${name}</button>`).join('')}
@@ -398,6 +398,12 @@ export class KingdomGameUI {
         this.audio.playEffect('battle');
         if (this.player && detail.report.playerIds.includes(this.player.id) && detail.report.kind === 'raid') {
           this.notify(detail.report.summary, !this.wonBattle(detail.report));
+        }
+      }),
+      engine.on('diplomacyEvent', (detail: { playerId: string; message: string }): void => {
+        if (this.player?.id === detail.playerId) {
+          this.record(detail.message);
+          this.notify(detail.message);
         }
       }),
       engine.on('technologyResearched', (detail: { playerId: string; technology: { name: string } }): void => {
@@ -676,6 +682,24 @@ export class KingdomGameUI {
         <p class="muted tip">Mit deiner Garnison ziehst du unter „Feldzüge“ gegen rivalisierende Nachbarn.
           Kasernen, Ausbildung und Ausrüstung erhöhen die Kampfkraft, Mauern und Burgen die Verteidigung.</p>
         <div class="quick-actions"><button data-open="war" class="primary">Zum Kriegsrat →</button></div>`;
+    } else if (this.view === 'diplomacy') {
+      const relations = this.engine.getRivalRelations(this.player.id);
+      const missions = this.engine.getRivalMissions(this.player.id);
+      const rivals = this.engine.getRivals(this.player.id);
+      panel.innerHTML = heading('GESANDTSCHAFT & NACHBARN', 'Der diplomatische Hof',
+        'Verhandle mit benachbarten Reichen. Gesandtschaften kosten 350 Gold und bringen im Folgejahr eine Chance auf bessere Beziehungen.') +
+        `<div class="build-grid">${rivals.map((rival) => {
+          const relation = relations.find((entry) => entry.kingdomId === rival.id);
+          const underway = missions.some((mission) => mission.targetKingdomId === rival.id);
+          return `<article class="build-card"><h3>${escape(rival.name)}</h3>
+            <p>${escape(rival.description)}</p>
+            <p>Beziehung: <strong>${format(relation?.relationshipValue ?? 0)}</strong> · Vertrauen:
+              ${format(relation?.trust ?? 50)} / 100</p>
+            <p class="muted">${rival.subjugated ? 'Vasall' : underway ? 'Gesandtschaft unterwegs' : 'Unabhängiger Nachbar'}</p>
+            <button data-send-envoy="${escape(rival.id)}" ${rival.subjugated || underway ||
+              kingdom.resources.gold < 350 ? 'disabled' : ''}>Gesandtschaft entsenden · 350 Gold</button>
+          </article>`;
+        }).join('')}</div>`;
     } else if (this.view === 'war') {
       panel.innerHTML = heading('KRIEGSRAT', 'Feldzüge & Nachbarn',
         'Jeder Feldzug kostet Nachschub und Verluste. Pro Monat kann dein Heer einmal ausrücken.') +
@@ -714,6 +738,16 @@ export class KingdomGameUI {
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
+    panel.querySelectorAll<HTMLButtonElement>('[data-send-envoy]').forEach((button) => {
+      button.addEventListener('click', (): void => {
+        void this.run((): void => {
+          const message = this.requireEngine().sendRivalEnvoy(
+            this.requirePlayer().id, button.dataset.sendEnvoy ?? '');
+          this.notify(message);
+          this.audio.playEffect('trade');
+        });
+      });
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-council-choice]').forEach((button) => {
       button.addEventListener('click', (): void => {
         void this.run((): void => {
