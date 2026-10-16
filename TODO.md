@@ -73,7 +73,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 ### Bekannte Probleme (aus Status-Bericht)
 - [~] Soziale jährliche Beziehungsbildung: quadratische Gesamtsuche durch regional begrenztes Sampling ersetzt (PR #8); Lasttest für >5.000, 100.000+ Bürger und vollständige Simulation noch offen.
 - [~] Ablauf alter Gerüchte und Begrenzung der Verbreitungsereignisse implementiert; systemweites Profiling und Objekt-Pooling noch offen.
-- [ ] ⚠️ Spielstände werden bei großen Reichen zu groß (Kompression / Kohorten statt Einzelbürger)
+- [~] Große Spielstände: gzip-Kompression mit Rückwärtskompatibilität implementiert; vollständige Kohortenmigration und Größen-/Latenzbenchmarks stehen noch aus.
 - [~] Chromium-Smoke-Test bei 320 × 740 prüft Layoutüberlauf und Navigation erfolgreich (PR #8); manuelle Detailprüfung weiterer Screens offen.
 - [ ] ⚠️ Einige historische Events fehlen
 - [~] Erste spielbare Anleitung im Hilfebereich und Handelsrouten-Voraussetzungen ergänzt; interaktiver mehrstufiger Tutorial-Modus noch offen.
