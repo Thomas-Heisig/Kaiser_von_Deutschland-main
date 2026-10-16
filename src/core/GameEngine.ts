@@ -496,6 +496,13 @@ export class GameEngine {
     } finally {
       this.processingMonth = false;
     }
+    // Only checkpoint completed months, after releasing the processing lock.
+    // Do not interrupt the game if the browser's persistent storage is unavailable.
+    try {
+      await this.saveGame('autosave');
+    } catch (error) {
+      this.emit('autosaveError', { message: error instanceof Error ? error.message : String(error) });
+    }
   }
 
   private async processMonthSystems(): Promise<void> {
