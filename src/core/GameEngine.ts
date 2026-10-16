@@ -51,6 +51,7 @@ import { TimeSystem, TimeMode } from './TimeSystem';
 import { DynamicGameView } from './DynamicGameView';
 import { PlayerTechnologySystem, TechnologyDefinition, TechnologySystem } from './TechnologySystem';
 import localforage from 'localforage';
+import { encodeSave, decodeSave } from './SaveCodec';
 import { KingdomInfrastructure } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
 import type { Citizen } from './CitizenSystem';
@@ -903,7 +904,7 @@ export class GameEngine {
       savedAt: new Date().toISOString()
     };
 
-    await localforage.setItem(`kaiser-ii-save-${slot}`, saveData);
+    await localforage.setItem(`kaiser-ii-save-${slot}`, await encodeSave(saveData));
     
     // Save-Index aktualisieren
     const index: SaveMeta[] = (await localforage.getItem('kaiser-ii-saves-index')) || [];
@@ -928,7 +929,7 @@ export class GameEngine {
   public async loadGame(slot: string = 'default'): Promise<void> {
     await this.ready;
     if (this.processingMonth) throw new Error('Bitte den laufenden Monat abwarten.');
-    const saveData = await localforage.getItem<any>(`kaiser-ii-save-${slot}`);
+    const saveData = await decodeSave(await localforage.getItem<any>(`kaiser-ii-save-${slot}`)) as any;
     
     if (!saveData) {
       throw new Error(`Spielstand "${slot}" nicht gefunden`);
