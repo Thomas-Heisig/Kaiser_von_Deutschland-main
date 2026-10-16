@@ -19,7 +19,9 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci || npm install
-      - name: Build (if present)
-        run: npm run build --if-present
-      - name: Test (if present)
-        run: npm test --if-present
+      - name: TypeScript typecheck
+        run: npm run check
+      - name: Production build
+        run: npm run build
+      - name: Automated tests (non-watch)
+        run: npx vitest run
