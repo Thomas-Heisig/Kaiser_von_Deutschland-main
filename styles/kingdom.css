@@ -304,3 +304,15 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 .council-dilemma > h3 { color: #f0d79f; font-size: 1.7rem; margin: 10px 0; }
 .council-dilemma > p { margin-bottom: 20px; }
 .council-dilemma .build-grid { grid-template-columns: repeat(auto-fit,minmax(min(230px,100%),1fr)); }
+
+
+/* Event actions are decorative only; live-region text remains accessible. */
+.game-action-banner { display:grid; gap:6px; padding:14px 18px; margin-bottom:15px;
+  border:2px solid #c9b36e; border-radius:8px; background:#243a31;
+  color:#f6ecd0; animation:action-arrive 350ms ease-out; }
+.game-action-banner strong { font: 21px Georgia,serif; }
+.game-action-banner span { font-size:0.85rem; }
+.game-action-banner.raid { border-color:#e89173; background:#492c2a; }
+.game-action-banner.science { border-color:#d9c786; background:#293d3a; }
+@keyframes action-arrive { from { opacity:0; transform:translateY(-7px); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce) { .game-action-banner { animation:none; } }
