@@ -1,12 +1,25 @@
 # 🌟 Kaiser von Deutschland - Massive Roadmap Expansion 🚀
 
-**Letzte Aktualisierung**: Dezember 2025  
-**Version**: 2.5.0 → Vision 2030  
+**Roadmap-Bestandsaufnahme**: 17. Oktober 2026 (historische Pläne beibehalten)  
+**Paketversion**: 2.5.1 · **Historische Planungsstände**: v2.0–v4.1 / Vision 2030  
 **Aktuelle Implementierung**: Lebensphasen-System (v2.5.0) + 20 Roadmap Features + Dokumentations-System + **Umfangreiche v2.4.0 Systeme** ✅
 
 Diese erweiterte Roadmap transformiert "Kaiser von Deutschland" von einem Spiel in eine Plattform, von einer Simulation in eine lebendige, atmende historische Welt. Die Vision ist ehrgeizig, aber modular genug, um schrittweise realisiert zu werden.
 
 ---
+
+## Verbindliche Interpretation der Release-Pläne
+Die Kapitel I–VIII bilden den **Funktionskatalog**; die Episoden 1–7 die
+**Erzähl-/Content-Roadmap**, und die Blöcke „Kurzfristig–Langfristig“ sind
+historische Planstände von 2025. Diese drei Darstellungen sind **keine**
+unabhängigen Release-Verpflichtungen. Aktuelle Prioritäten und die tatsächliche
+Integration stehen ausschließlich in [TODO](../../TODO.md) und
+[Status](./status.md). Historische Termine werden nicht stillschweigend als
+erfüllt behandelt.
+
+Die Implementierung von Modulklassen (z. B. Kolonialverwaltung, Belagerung,
+Spionage) wird von der Benutzbarkeit in der Standardkampagne unterschieden.
+Eine vorhandene Klasse reicht nicht für ein abgeschlossenes Gameplay-Ticket.
 
 ## 🌐 Kernphilosophie-Erweiterung
 

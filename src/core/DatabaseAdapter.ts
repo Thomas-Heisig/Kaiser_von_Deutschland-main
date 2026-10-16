@@ -1,4 +1,10 @@
 /**
+ * @deprecated LEGACY / ALTERNATIVE IMPLEMENTATION.
+ * Not used by the production entry src/main.ts -> KingdomGameUI.
+ * Retained for historical behavior and schema compatibility; do not add new features here.
+ * See docs/05-technical-architecture/system-consolidation.md before migration/removal.
+ */
+/**
  * Database Abstraction Layer for Kaiser von Deutschland
  * 
  * Provides a unified interface for database operations across different platforms:
