@@ -711,20 +711,25 @@ export class KingdomGameUI {
     } else if (this.view === 'diplomacy') {
       const relations = this.engine.getRivalRelations(this.player.id);
       const missions = this.engine.getRivalMissions(this.player.id);
+      const treaties = this.engine.getRivalTreaties(this.player.id);
       const rivals = this.engine.getRivals(this.player.id);
       panel.innerHTML = heading('GESANDTSCHAFT & NACHBARN', 'Der diplomatische Hof',
         'Verhandle mit benachbarten Reichen. Gesandtschaften kosten 350 Gold und bringen im Folgejahr eine Chance auf bessere Beziehungen.') +
         `<div class="build-grid">${rivals.map((rival) => {
           const relation = relations.find((entry) => entry.kingdomId === rival.id);
           const underway = missions.some((mission) => mission.targetKingdomId === rival.id);
+          const truce = treaties.find((treaty) => treaty.parties.includes(rival.id));
           return `<article class="build-card"><h3>${escape(rival.name)}</h3>
             <p>${escape(rival.description)}</p>
             <p class="eyebrow">Strategie: ${escape(this.engine!.getRivalPersonality(this.player!.id, rival.id))}</p>
             <p>Beziehung: <strong>${format(relation?.relationshipValue ?? 0)}</strong> · Vertrauen:
               ${format(relation?.trust ?? 50)} / 100</p>
-            <p class="muted">${rival.subjugated ? 'Vasall' : underway ? 'Gesandtschaft unterwegs' : 'Unabhängiger Nachbar'}</p>
+            <p class="muted">${rival.subjugated ? 'Vasall' : truce ? `Friedenspakt bis ${truce.expiryYear}` : underway ? 'Gesandtschaft unterwegs' : 'Unabhängiger Nachbar'}</p>
             <button data-send-envoy="${escape(rival.id)}" ${rival.subjugated || underway ||
               kingdom.resources.gold < 350 ? 'disabled' : ''}>Gesandtschaft entsenden · 350 Gold</button>
+            <button data-negotiate-truce="${escape(rival.id)}" ${rival.subjugated || truce ||
+              (relation?.relationshipValue ?? 0) < 10 || kingdom.resources.gold < 500 ? 'disabled' : ''}>
+              ${truce ? 'Nichtangriffspakt aktiv' : 'Frieden verhandeln · 500 Gold'}</button>
           </article>`;
         }).join('')}</div>`;
     } else if (this.view === 'war') {
@@ -771,6 +776,16 @@ export class KingdomGameUI {
           const message = this.requireEngine().holdFestival(
             this.requirePlayer().id, button.dataset.festival ?? '');
           this.notify(message);
+        });
+      });
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-negotiate-truce]').forEach((button) => {
+      button.addEventListener('click', (): void => {
+        void this.run((): void => {
+          const message = this.requireEngine().negotiateRivalTruce(
+            this.requirePlayer().id, button.dataset.negotiateTruce ?? '');
+          this.notify(message);
+          this.audio.playEffect('success');
         });
       });
     });
@@ -1072,6 +1087,7 @@ export class KingdomGameUI {
     const percent = (value: number): string => `${Math.round(value * 100)} %`;
     const rivals = engine.getRivals(player.id).map((rival: RivalRealm): string => {
       const chance = engine.getVictoryChance(player.id, rival.id);
+      const truce = engine.hasRivalTruce(player.id, rival.id);
       return `<article class="build-card rival-card ${rival.subjugated ? 'subjugated' : ''}">
         <div class="build-title"><span aria-hidden="true">${rival.subjugated ? '⚐' : '⚔'}</span>
           <h3>${escape(rival.name)}</h3><small>${rival.subjugated ? 'Unterworfen' : 'Feindlich'}</small></div>
@@ -1084,7 +1100,8 @@ export class KingdomGameUI {
         ${rival.subjugated ? '' : `<p class="cost">Beute bei Sieg: ${format(rival.loot)} Gold · ${
           format(rival.settlers)} Siedler</p>`}
         <button class="${chance >= 0.5 ? 'primary' : 'secondary'}" data-attack-rival="${escape(rival.id)}"
-          ${rival.subjugated || blocker ? 'disabled' : ''}>${rival.subjugated ? 'Bereits unterworfen'
+          ${rival.subjugated || blocker || truce ? 'disabled' : ''}>${rival.subjugated ? 'Bereits unterworfen'
+            : truce ? 'Nichtangriffspakt aktiv'
             : `Feldzug gegen ${escape(rival.name)}`}</button></article>`;
     }).join('');
     const opponents = engine.isHotseat()
