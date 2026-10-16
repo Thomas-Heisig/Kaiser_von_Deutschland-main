@@ -50,6 +50,24 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('loads each campaign with six independent objectives and retains selection after saving', async (): Promise<void> => {
+    for (const campaignId of ['aufbau', 'hanse', 'wissenschaft', 'grenzland'] as const) {
+      const engine = new GameEngine({ enableWiki: false, randomEvents: false, campaignId });
+      engines.push(engine);
+      const ruler = engine.addPlayer({ name: 'Anna', kingdomName: 'Testmark', gender: 'other' });
+      await engine.startGame();
+      engine.pauseGame();
+      expect(engine.getCampaignId()).toBe(campaignId);
+      expect(engine.getCampaignGoals(ruler.id)).toHaveLength(6);
+      await engine.saveGame('scenario-' + campaignId);
+      const restored = new GameEngine({ enableWiki: false });
+      engines.push(restored);
+      await restored.loadGame('scenario-' + campaignId);
+      expect(restored.getCampaignId()).toBe(campaignId);
+      expect(restored.getCampaignGoals(ruler.id)).toEqual(engine.getCampaignGoals(ruler.id));
+    }
+  });
+
   it('can hold seasonal festivals once per year and preserve them in a savegame', async (): Promise<void> => {
     const engine = await campaign();
     const ruler = engine.getPlayers()[0];
