@@ -291,6 +291,7 @@ export class WarFinancingSystem {
       );
       this.activeLoans.push(loan);
       kingdom.resources.debt += loan.totalOwed;
+      kingdom.resources.gold += goldGained;
     } else {
       // Direct gold gain without debt
       kingdom.resources.gold += goldGained;
