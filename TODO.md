@@ -1,8 +1,8 @@
-## 🎮 Mehr Kampagnen und Game-Actions (PR in Prüfung)
+## 🎮 Mehr Kampagnen und Game-Actions (PR #14 gemergt, Kapitel-Fortsetzung in Prüfung)
 - [x] Vier auswählbare Kampagnen: Aufbau, Hanse, Wissenschaft, Grenzland, mit jeweils sechs Live-Zielen.
 - [x] Wissenschaftliche Errungenschaften erscheinen als sichtbare Ereignisaktion mit Map-Puls und Klang.
 - [x] Überfälle und Feldschlachten lösen Game-Action-Banner und Kartenmarkierung aus.
-- [ ] Mehrstufige Kampagnenhandlungen, echte animierte Truppen und Geräusch-Samples erweitern.
+- [~] Alle vier Kampagnen erhalten je drei aufeinanderfolgende Kapitel mit persistiertem Fortschritt, einmaliger Gold-/Prestigebelohnung und Kapitelnachricht; komplexe Verzweigungen, echte animierte Truppen und Geräusch-Samples bleiben offen.
 
 # ✅ TODO – Kaiser von Deutschland
 
