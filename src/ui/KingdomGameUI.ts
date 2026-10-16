@@ -9,6 +9,7 @@ import { KingdomInfrastructure } from '../core/Kingdom';
 import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
 import { GameAudio } from './GameAudio';
+import { GameAmbience, Soundscape } from './GameAmbience';
 
 type View = 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
@@ -85,6 +86,8 @@ export class KingdomGameUI {
   private journal: JournalEntry[] = [];
   private subscriptions: Array<() => void> = [];
   private readonly audio: GameAudio;
+  private readonly ambience = new GameAmbience();
+  private motionEnabled = false;
   private readonly buttonSoundHandler = (event: MouseEvent): void => {
     if (!(event.target instanceof Element)) return;
     const button = event.target.closest('button');
@@ -134,6 +137,7 @@ export class KingdomGameUI {
           <div class="audio-controls" aria-label="Audioeinstellungen">
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
+            <button type="button" class="secondary" data-audio-toggle="ambience" aria-pressed="false">🌿 Umgebung: Aus</button>
           </div>
           <form id="new-game">
             <label>Spieler an diesem Gerät<select name="players" id="player-count">
@@ -256,6 +260,7 @@ export class KingdomGameUI {
           <div class="header-actions">
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
+            <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button></div>
         </header>
@@ -331,6 +336,17 @@ export class KingdomGameUI {
         <footer class="game-footer">Jede Entscheidung zählt.<span id="footer-keys"></span></footer>
       </div>`;
     this.bindAudioControls();
+    const motionToggle = this.root.querySelector<HTMLButtonElement>('#motion-toggle');
+    motionToggle?.addEventListener('click', (): void => {
+      this.motionEnabled = !this.motionEnabled;
+      this.map?.setMotion(this.motionEnabled);
+      motionToggle.textContent = this.motionEnabled ? '✨ Animation: An' : '✨ Animation: Aus';
+      motionToggle.setAttribute('aria-pressed', String(this.motionEnabled));
+    });
+    if (motionToggle && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      motionToggle.disabled = true;
+      motionToggle.title = 'Reduzierte Bewegung ist im Betriebssystem aktiviert.';
+    }
     this.root.querySelector('.brand')?.addEventListener('click', (event: Event): void => {
       event.preventDefault();
       this.navigate('overview');
@@ -401,6 +417,7 @@ export class KingdomGameUI {
           this.selected = type;
           this.navigate('build');
         });
+        this.map.setMotion(this.motionEnabled);
         this.refresh();
       } catch (error) {
         console.error('Karte konnte nicht gestartet werden:', error);
@@ -499,6 +516,10 @@ export class KingdomGameUI {
       button.setAttribute('aria-current', button.dataset.view === this.view ? 'page' : 'false');
     });
     this.map?.update(kingdom, this.selected);
+    const scene: Soundscape = this.view === 'war' ? 'battle' :
+      this.view === 'economy' ? 'market' :
+      kingdom.currentSeason === 'winter' ? 'winter' : 'village';
+    this.ambience.setScene(scene);
     const panel = this.root.querySelector('#panel');
     if (!panel?.contains(document.activeElement)) this.renderPanel();
   }
@@ -1081,7 +1102,13 @@ export class KingdomGameUI {
     this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => {
         if (button.dataset.audioToggle === 'music') void this.toggleMusic();
-        else this.toggleEffects();
+        else if (button.dataset.audioToggle === 'ambience') {
+          void this.ambience.toggle()
+            .then((): void => this.updateAudioControls())
+            .catch((error: unknown): void => {
+              this.notify(error instanceof Error ? error.message : 'Umgebungsgeräusche nicht verfügbar.', true);
+            });
+        } else this.toggleEffects();
       });
     });
     this.updateAudioControls();
@@ -1106,12 +1133,15 @@ export class KingdomGameUI {
   private updateAudioControls(): void {
     this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
       const isMusic = button.dataset.audioToggle === 'music';
-      const enabled = isMusic ? this.audio.musicEnabled : this.audio.effectsEnabled;
+      const isAmbience = button.dataset.audioToggle === 'ambience';
+      const enabled = isMusic ? this.audio.musicEnabled
+        : isAmbience ? this.ambience.enabled : this.audio.effectsEnabled;
       button.textContent = isMusic
         ? `♫ Musik: ${enabled ? 'An' : 'Aus'}`
+        : isAmbience ? `🌿 Umgebung: ${enabled ? 'An' : 'Aus'}`
         : `🔊 Effekte: ${enabled ? 'An' : 'Aus'}`;
       button.setAttribute('aria-pressed', String(enabled));
-      button.disabled = !this.audio.supported;
+      button.disabled = isAmbience ? !this.ambience.supported : !this.audio.supported;
       if (!this.audio.supported) button.title = 'Dieser Browser unterstützt keine Audioausgabe.';
     });
   }
@@ -1171,5 +1201,6 @@ export class KingdomGameUI {
     document.removeEventListener('keydown', this.keyboardHandler);
     this.root.removeEventListener('click', this.buttonSoundHandler);
     this.audio.dispose();
+    this.ambience.dispose();
   }
 }
