@@ -5,7 +5,7 @@ import { Player } from './Player';
 
 // Structural fixture: the council only requires the same kingdom fields as a real Player.
 const player = (id: string) => {
-  const kingdom = new Kingdom({ name: 'Testreich', rulerName: 'Anna', startingYear: 1200 });
+  const kingdom = new Kingdom({ name: 'Testreich', rulerName: 'Anna', foundingYear: 1200 });
   const stats = { prestige: 0 };
   return {
     id, kingdom, stats,
