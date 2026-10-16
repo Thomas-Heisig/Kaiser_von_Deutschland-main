@@ -9,8 +9,9 @@ import { KingdomInfrastructure } from '../core/Kingdom';
 import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
 import { GameAudio } from './GameAudio';
+import { GameAmbience, Soundscape } from './GameAmbience';
 
-type View = 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -85,6 +86,8 @@ export class KingdomGameUI {
   private journal: JournalEntry[] = [];
   private subscriptions: Array<() => void> = [];
   private readonly audio: GameAudio;
+  private readonly ambience = new GameAmbience();
+  private motionEnabled = false;
   private readonly buttonSoundHandler = (event: MouseEvent): void => {
     if (!(event.target instanceof Element)) return;
     const button = event.target.closest('button');
@@ -134,6 +137,7 @@ export class KingdomGameUI {
           <div class="audio-controls" aria-label="Audioeinstellungen">
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
+            <button type="button" class="secondary" data-audio-toggle="ambience" aria-pressed="false">🌿 Umgebung: Aus</button>
           </div>
           <form id="new-game">
             <label>Spieler an diesem Gerät<select name="players" id="player-count">
@@ -256,6 +260,7 @@ export class KingdomGameUI {
           <div class="header-actions">
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
+            <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button></div>
         </header>
@@ -273,7 +278,7 @@ export class KingdomGameUI {
               ${([
                 ['overview', '◈', 'Reichsübersicht'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
                 ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['military', '⚑', 'Garnison'],
-                ['war', '⚔', 'Feldzüge'], ['character', '♙', 'Charakter'],
+                ['war', '⚔', 'Feldzüge'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
                 ['chronicle', '▤', 'Chronik'], ['help', '?', 'Spielhilfe']
               ] as const).map(([key, symbol, name]) => `
                 <button data-view="${key}"><span aria-hidden="true">${symbol}</span>${name}</button>`).join('')}
@@ -331,6 +336,17 @@ export class KingdomGameUI {
         <footer class="game-footer">Jede Entscheidung zählt.<span id="footer-keys"></span></footer>
       </div>`;
     this.bindAudioControls();
+    const motionToggle = this.root.querySelector<HTMLButtonElement>('#motion-toggle');
+    motionToggle?.addEventListener('click', (): void => {
+      this.motionEnabled = !this.motionEnabled;
+      this.map?.setMotion(this.motionEnabled);
+      motionToggle.textContent = this.motionEnabled ? '✨ Animation: An' : '✨ Animation: Aus';
+      motionToggle.setAttribute('aria-pressed', String(this.motionEnabled));
+    });
+    if (motionToggle && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      motionToggle.disabled = true;
+      motionToggle.title = 'Reduzierte Bewegung ist im Betriebssystem aktiviert.';
+    }
     this.root.querySelector('.brand')?.addEventListener('click', (event: Event): void => {
       event.preventDefault();
       this.navigate('overview');
@@ -384,6 +400,12 @@ export class KingdomGameUI {
           this.notify(detail.report.summary, !this.wonBattle(detail.report));
         }
       }),
+      engine.on('diplomacyEvent', (detail: { playerId: string; message: string }): void => {
+        if (this.player?.id === detail.playerId) {
+          this.record(detail.message);
+          this.notify(detail.message);
+        }
+      }),
       engine.on('technologyResearched', (detail: { playerId: string; technology: { name: string } }): void => {
         if (this.player?.id !== detail.playerId) return;
         const message = `Forschung abgeschlossen: ${detail.technology.name}.`;
@@ -401,6 +423,7 @@ export class KingdomGameUI {
           this.selected = type;
           this.navigate('build');
         });
+        this.map.setMotion(this.motionEnabled);
         this.refresh();
       } catch (error) {
         console.error('Karte konnte nicht gestartet werden:', error);
@@ -499,6 +522,10 @@ export class KingdomGameUI {
       button.setAttribute('aria-current', button.dataset.view === this.view ? 'page' : 'false');
     });
     this.map?.update(kingdom, this.selected);
+    const scene: Soundscape = this.view === 'war' ? 'battle' :
+      this.view === 'economy' ? 'market' :
+      kingdom.currentSeason === 'winter' ? 'winter' : 'village';
+    this.ambience.setScene(scene);
     const panel = this.root.querySelector('#panel');
     if (!panel?.contains(document.activeElement)) this.renderPanel();
   }
@@ -655,6 +682,24 @@ export class KingdomGameUI {
         <p class="muted tip">Mit deiner Garnison ziehst du unter „Feldzüge“ gegen rivalisierende Nachbarn.
           Kasernen, Ausbildung und Ausrüstung erhöhen die Kampfkraft, Mauern und Burgen die Verteidigung.</p>
         <div class="quick-actions"><button data-open="war" class="primary">Zum Kriegsrat →</button></div>`;
+    } else if (this.view === 'diplomacy') {
+      const relations = this.engine.getRivalRelations(this.player.id);
+      const missions = this.engine.getRivalMissions(this.player.id);
+      const rivals = this.engine.getRivals(this.player.id);
+      panel.innerHTML = heading('GESANDTSCHAFT & NACHBARN', 'Der diplomatische Hof',
+        'Verhandle mit benachbarten Reichen. Gesandtschaften kosten 350 Gold und bringen im Folgejahr eine Chance auf bessere Beziehungen.') +
+        `<div class="build-grid">${rivals.map((rival) => {
+          const relation = relations.find((entry) => entry.kingdomId === rival.id);
+          const underway = missions.some((mission) => mission.targetKingdomId === rival.id);
+          return `<article class="build-card"><h3>${escape(rival.name)}</h3>
+            <p>${escape(rival.description)}</p>
+            <p>Beziehung: <strong>${format(relation?.relationshipValue ?? 0)}</strong> · Vertrauen:
+              ${format(relation?.trust ?? 50)} / 100</p>
+            <p class="muted">${rival.subjugated ? 'Vasall' : underway ? 'Gesandtschaft unterwegs' : 'Unabhängiger Nachbar'}</p>
+            <button data-send-envoy="${escape(rival.id)}" ${rival.subjugated || underway ||
+              kingdom.resources.gold < 350 ? 'disabled' : ''}>Gesandtschaft entsenden · 350 Gold</button>
+          </article>`;
+        }).join('')}</div>`;
     } else if (this.view === 'war') {
       panel.innerHTML = heading('KRIEGSRAT', 'Feldzüge & Nachbarn',
         'Jeder Feldzug kostet Nachschub und Verluste. Pro Monat kann dein Heer einmal ausrücken.') +
@@ -693,6 +738,16 @@ export class KingdomGameUI {
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
+    panel.querySelectorAll<HTMLButtonElement>('[data-send-envoy]').forEach((button) => {
+      button.addEventListener('click', (): void => {
+        void this.run((): void => {
+          const message = this.requireEngine().sendRivalEnvoy(
+            this.requirePlayer().id, button.dataset.sendEnvoy ?? '');
+          this.notify(message);
+          this.audio.playEffect('trade');
+        });
+      });
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-council-choice]').forEach((button) => {
       button.addEventListener('click', (): void => {
         void this.run((): void => {
@@ -1081,7 +1136,13 @@ export class KingdomGameUI {
     this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => {
         if (button.dataset.audioToggle === 'music') void this.toggleMusic();
-        else this.toggleEffects();
+        else if (button.dataset.audioToggle === 'ambience') {
+          void this.ambience.toggle()
+            .then((): void => this.updateAudioControls())
+            .catch((error: unknown): void => {
+              this.notify(error instanceof Error ? error.message : 'Umgebungsgeräusche nicht verfügbar.', true);
+            });
+        } else this.toggleEffects();
       });
     });
     this.updateAudioControls();
@@ -1106,12 +1167,15 @@ export class KingdomGameUI {
   private updateAudioControls(): void {
     this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
       const isMusic = button.dataset.audioToggle === 'music';
-      const enabled = isMusic ? this.audio.musicEnabled : this.audio.effectsEnabled;
+      const isAmbience = button.dataset.audioToggle === 'ambience';
+      const enabled = isMusic ? this.audio.musicEnabled
+        : isAmbience ? this.ambience.enabled : this.audio.effectsEnabled;
       button.textContent = isMusic
         ? `♫ Musik: ${enabled ? 'An' : 'Aus'}`
+        : isAmbience ? `🌿 Umgebung: ${enabled ? 'An' : 'Aus'}`
         : `🔊 Effekte: ${enabled ? 'An' : 'Aus'}`;
       button.setAttribute('aria-pressed', String(enabled));
-      button.disabled = !this.audio.supported;
+      button.disabled = isAmbience ? !this.ambience.supported : !this.audio.supported;
       if (!this.audio.supported) button.title = 'Dieser Browser unterstützt keine Audioausgabe.';
     });
   }
@@ -1171,5 +1235,6 @@ export class KingdomGameUI {
     document.removeEventListener('keydown', this.keyboardHandler);
     this.root.removeEventListener('click', this.buttonSoundHandler);
     this.audio.dispose();
+    this.ambience.dispose();
   }
 }

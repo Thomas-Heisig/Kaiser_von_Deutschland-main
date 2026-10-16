@@ -25,6 +25,15 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 - [ ] CI, Typecheck, Build und Browser-Smoke-Test des neuen Branches ausführen.
 - [ ] Erfolgswahrscheinlichkeiten im Balancing mit Langläufen prüfen und Ereignispool ausbauen.
 
+## ✅ Lebendige Welt – neuer Entwicklungsstand (PR in Prüfung)
+
+- [x] Prozedurale Umgebungsgeräusche mit Ein-/Ausschalter und szenenbezogener Umschaltung.
+- [x] Dezente Kartenbewegungen mit Pausenmechanismus, 30-FPS-Limit und Reduced-Motion-Unterstützung.
+- [x] Bereits vorhandenes Diplomatiesystem in NPC-Nachbarschaft eingebunden (Gesandtschaften/Beziehungen).
+- [x] Diplomatie wird im Spielstand persistiert; Integrationstest hinzugefügt.
+- [ ] CI/Build, Browsertest, Audio-Lautstärke und Zugänglichkeit vor Merge überprüfen.
+- [ ] Echte Gebäude- und Bürgeranimationen sowie differenzierte Geräuschquellen ergänzen.
+
 ## 🔴 P0 – Sofort (Build & laufende Arbeit)
 
 - [x] **Build reparieren**: Forschungsansicht integriert; `npm run check`, Tests und Produktionsbuild
@@ -84,7 +93,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 
 ### Integration vorhandener Systeme in die Aufbaukampagne
 Viele Systeme existieren in `src/core/`, sind aber nicht im Standard-Einstieg erreichbar.
-- [ ] Diplomatie (`DiplomacySystem`) – Verträge, Allianzen, Handelsabkommen
+- [~] Diplomatie (`DiplomacySystem`) – Gesandtschaften zu Rivalen in der Hauptkampagne integriert, Beziehungen und Missionen werden gespeichert; Verträge, Allianzen und Handelsabkommen noch offen
 - [ ] Religion & Kultur (`ReligionSystem`, `ArtsAndCultureSystem`)
 - [ ] Bevölkerungsdynamik, Migration, soziale Mobilität, Hungersnöte
 - [ ] Klima, Naturkatastrophen, Landschaft, Tierpopulationen
@@ -147,7 +156,7 @@ Aktuell gibt es nur lokales Hotseat (2–4 Spieler). Online-Mehrspieler fehlt.
 - [ ] Diplomatie 2.0: Botschafter, Sanktionen, Embargos, humanitäre Interventionen, Klimadiplomatie
 
 ### UI/UX-Revolution (v2.4.0-Plan)
-- [ ] Animierte Gebäude/Einheiten, visuelles Wetter, Tag/Nacht auf der Karte
+- [~] Kartenanimation (bewegte Markierungen, 30 FPS, Bewegung abschaltbar) und optionale prozedurale Geräuschkulisse (Dorf, Markt, Krieg, Winter) integriert; Gebäude-/Einheitenanimationen, visuelles Wetter und Tag/Nacht folgen
 - [ ] Animierte Übergänge, Hilfe-Overlays
 - [ ] PWA mit Offline-Modus, Touch-Optimierung; später native Apps (Capacitor)
 

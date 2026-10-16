@@ -32,6 +32,24 @@ export class KingdomMap {
   private offset = { x: 0, y: 0 };
   private destroyed: boolean = false;
   private initialized: boolean = false;
+  private motionEnabled = false;
+  private readonly animation = new Container();
+  private elapsed = 0;
+  private readonly animatedMarkers: Container[] = [];
+  private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
+    if (this.destroyed || !this.motionEnabled || document.hidden) return;
+    this.elapsed += Math.min(ticker.deltaMS, 50) / 1000;
+    this.animatedMarkers.forEach((marker, i) => {
+      marker.x = 220 + ((this.elapsed * (11 + i * 3) + i * 147) % 570);
+      marker.y = 310 + Math.sin(this.elapsed * 0.8 + i) * 32 + i * 15;
+      marker.alpha = 0.5 + Math.sin(this.elapsed * 2 + i) * 0.2;
+    });
+  };
+  private readonly visibility = (): void => {
+    if (this.destroyed || !this.initialized) return;
+    if (document.hidden) this.app.ticker.stop();
+    else if (this.motionEnabled) this.app.ticker.start();
+  };
 
   /**
    * Initializes the renderer and responsive canvas.
@@ -56,6 +74,17 @@ export class KingdomMap {
     this.app.stage.addChild(this.world);
     this.drawLandscape();
     this.world.addChild(this.settlements);
+    this.world.addChild(this.animation);
+    for (let i = 0; i < 5; i++) {
+      const marker = new Container();
+      marker.addChild(new Graphics().circle(0, 0, 3).fill({ color: 0xf0d89f, alpha: 0.75 }));
+      this.animatedMarkers.push(marker);
+      this.animation.addChild(marker);
+    }
+    this.animation.visible = false;
+    this.app.ticker.maxFPS = 30;
+    this.app.ticker.add(this.animatedTicker);
+    document.addEventListener('visibilitychange', this.visibility);
     this.observer = new ResizeObserver((): void => {
       this.app.renderer.resize(Math.max(1, host.clientWidth), Math.max(1, host.clientHeight));
       this.fit();
@@ -93,6 +122,15 @@ export class KingdomMap {
     canvas.addEventListener('pointercancel', (): void => { drag = undefined; });
     this.fit();
     this.app.ticker.stop();
+  }
+
+  /** Enable bounded ambient movement, without changing the game simulation. */
+  public setMotion(enabled: boolean): void {
+    this.motionEnabled = enabled && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.animation.visible = this.motionEnabled;
+    if (this.motionEnabled && !document.hidden) this.app.ticker.start();
+    else this.app.ticker.stop();
+    if (this.initialized) this.fit();
   }
 
   /**
@@ -218,6 +256,8 @@ export class KingdomMap {
   public dispose(): void {
     this.destroyed = true;
     this.observer?.disconnect();
+    document.removeEventListener('visibilitychange', this.visibility);
+    if (this.initialized) this.app.ticker.remove(this.animatedTicker);
     if (this.initialized) this.app.destroy(true, { children: true });
   }
 }

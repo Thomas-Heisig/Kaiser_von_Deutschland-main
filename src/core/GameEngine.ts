@@ -26,6 +26,7 @@ import { LegalSystem } from './LegalSystem';
 import { MilitaryUnitSystem } from './MilitaryUnitSystem';
 // Note: DiplomacySystem is per-player, imported where needed
 import { ReligionSystem } from './ReligionSystem';
+import { DiplomacySystem } from './DiplomacySystem';
 import { MigrationSystem } from './MigrationSystem';
 import { SocialMobilitySystem } from './SocialMobilitySystem';
 import { FamineSystem } from './FamineSystem';
@@ -183,6 +184,7 @@ export class GameEngine {
   private turnIndex: number = 0;
   private technologySystems: Map<string, PlayerTechnologySystem> = new Map();
   private council: CouncilDecisionSystem = new CouncilDecisionSystem();
+  private rivalDiplomacy = new Map<string, DiplomacySystem>();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -588,6 +590,7 @@ export class GameEngine {
       { year: this.currentYear, month: this.currentMonth },
       { raids: this.config.randomEvents, modifiers: this.getCommanderModifiers(player.id) });
     if (raid) this.emit('battleResolved', { report: raid });
+    this.processRivalDiplomacy(player);
 
     const technology = this.requireTechnologySystem(player.id);
     technology.addResearchPoints(
@@ -640,6 +643,7 @@ export class GameEngine {
     this.players.set(player.id, player);
     this.warfare.ensureRivals(player.id, data.difficulty ?? this.config.difficulty);
     this.technologySystems.set(player.id, new PlayerTechnologySystem());
+    this.initializeRivalDiplomacy(player.id);
     this.emit('playerAdded', { player: player.serialize() });
 
     return player;
@@ -650,6 +654,7 @@ export class GameEngine {
     if (existed) {
       this.warfare.removePlayer(playerId);
       this.technologySystems.delete(playerId);
+      this.rivalDiplomacy.delete(playerId);
       this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
     }
@@ -885,6 +890,7 @@ export class GameEngine {
       dynamicGameView: this.dynamicGameView.createSnapshot(),
       warfare: this.warfare.serialize(),
       council: this.council.serialize(),
+      rivalDiplomacy: Object.fromEntries(Array.from(this.rivalDiplomacy, ([id, system]) => [id, system.serialize()])),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -964,6 +970,12 @@ export class GameEngine {
     this.players = new Map(restoredPlayers.map((player: Player) => [player.id, player]));
     this.warfare = restoredWarfare;
     this.technologySystems = restoredTechnology;
+    this.rivalDiplomacy = new Map();
+    for (const player of restoredPlayers) {
+      const snapshot = saveData.rivalDiplomacy?.[player.id];
+      this.rivalDiplomacy.set(player.id, snapshot ? DiplomacySystem.deserialize(snapshot) : new DiplomacySystem(player.id));
+      this.initializeRivalDiplomacy(player.id);
+    }
     this.turnIndex = Number.isSafeInteger(saveData.turnIndex) && saveData.turnIndex >= 0
       ? saveData.turnIndex % restoredPlayers.length : 0;
     
@@ -1169,6 +1181,73 @@ export class GameEngine {
    * @param playerId Player.
    * @returns Rival realms with their current strength.
    */
+  /** Expose the existing diplomacy model for each player's NPC neighbours. */
+  public getRivalRelations(playerId: string) {
+    this.requirePlayer(playerId);
+    return this.requireRivalDiplomacy(playerId).getAllRelations();
+  }
+
+  public getRivalMissions(playerId: string) {
+    this.requirePlayer(playerId);
+    return this.requireRivalDiplomacy(playerId).getActiveMissions();
+  }
+
+  public sendRivalEnvoy(playerId: string, rivalId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    const rival = this.warfare.getRivals(playerId).find((other) => other.id === rivalId && !other.subjugated);
+    if (!rival) throw new Error('Dieser Nachbar steht nicht für eine Mission zur Verfügung.');
+    const system = this.requireRivalDiplomacy(playerId);
+    if (system.getActiveMissions().some((mission) => mission.targetKingdomId === rivalId)) {
+      throw new Error('Es ist bereits ein Gesandter zu diesem Nachbarn unterwegs.');
+    }
+    const price = 350;
+    if (player.kingdom.resources.gold < price) throw new Error('Ein Gesandter benötigt 350 Gold.');
+    player.kingdom.resources.gold -= price;
+    system.sendMission({
+      type: 'ambassador', targetKingdomId: rivalId, targetKingdomName: rival.name,
+      startYear: this.currentYear, duration: 1, cost: price
+    });
+    const message = `Gesandtschaft nach ${rival.name} aufgebrochen (350 Gold).`;
+    this.emit('diplomacyEvent', { playerId, message });
+    return message;
+  }
+
+  private requireRivalDiplomacy(playerId: string): DiplomacySystem {
+    const system = this.rivalDiplomacy.get(playerId);
+    if (!system) throw new Error('Diplomatie für dieses Reich wurde nicht angelegt.');
+    return system;
+  }
+
+  private initializeRivalDiplomacy(playerId: string): void {
+    let diplomacy = this.rivalDiplomacy.get(playerId);
+    if (!diplomacy) {
+      diplomacy = new DiplomacySystem(playerId);
+      this.rivalDiplomacy.set(playerId, diplomacy);
+    }
+    for (const rival of this.warfare.getRivals(playerId)) {
+      diplomacy.initializeRelation(rival.id, rival.name, rival.subjugated ? 'vassal' : 'neutral');
+    }
+  }
+
+  private processRivalDiplomacy(player: Player): void {
+    const diplomacy = this.requireRivalDiplomacy(player.id);
+    // Missions use the existing annual processing; trade and formal treaties remain future work.
+    if (this.currentMonth === 12) {
+      const active = diplomacy.getActiveMissions().map((mission) => mission.id);
+      diplomacy.advanceYear(this.currentYear + 1);
+      for (const id of active) {
+        const mission = diplomacy.getMission(id);
+        if (mission?.success !== null && mission?.success !== undefined) {
+          this.emit('diplomacyEvent', {
+            playerId: player.id,
+            message: `Gesandtschaft nach ${mission.targetKingdomName}: ${mission.success ? 'erfolgreich' : 'gescheitert'}.`
+          });
+        }
+      }
+    }
+  }
+
   public getRivals(playerId: string): RivalRealm[] {
     this.requirePlayer(playerId);
     return this.warfare.getRivals(playerId);
