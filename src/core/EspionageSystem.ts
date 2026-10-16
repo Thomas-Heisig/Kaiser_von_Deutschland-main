@@ -541,6 +541,18 @@ export class EspionageSystem {
     return true;
   }
 
+  /** Player-scoped read views for the active campaign (never expose internal Maps). */
+  public getAgentsForOwner(owner: string): SpyAgent[] {
+    return Array.from(this.agents.values()).filter((agent) => agent.owner === owner)
+      .map((agent) => ({ ...agent, currentMission: agent.currentMission ? { ...agent.currentMission } : undefined }));
+  }
+
+  public getMissionsForOwner(owner: string): SpyMission[] {
+    const owned = new Set(this.getAgentsForOwner(owner).map((agent) => agent.id));
+    return Array.from(this.missions.values()).filter((mission) => owned.has(mission.agentId))
+      .map((mission) => ({ ...mission }));
+  }
+
   /**
    * Get active intelligence reports
    */
