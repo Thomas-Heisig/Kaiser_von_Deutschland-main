@@ -16,19 +16,21 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 
 ## 🔴 P0 – Sofort (Build & laufende Arbeit)
 
-- [ ] **Build reparieren**: `npm run check` meldet 94 Syntaxfehler in
-      [KingdomGameUI.ts](./src/ui/KingdomGameUI.ts) (ab Zeile 858) aus der unfertigen Forschungsansicht.
-      Tests (`vitest run`: 61/61) laufen, Typprüfung und Build nicht.
+- [x] **Build reparieren**: Forschungsansicht integriert; `npm run check`, Tests und Produktionsbuild
+      bestehen wieder.
 - [ ] **Forschung pro Reich abschließen** (`PlayerTechnologySystem`, uncommittet):
   - [x] Forschungspunkte aus Schulen/Universitäten, ein Projekt je Reich
   - [x] Speichern/Laden des Forschungsstands (`technologyProgress` im Spielstand)
   - [x] Handelsrouten prüfen erforschte Technologien (neue Technologie „Hochseesegeln“)
-  - [ ] Forschungsansicht in der UI fertigstellen und manuell prüfen
-  - [ ] Unit-Tests für `PlayerTechnologySystem` und `GameEngine.startResearch()`
-  - [ ] [GAMEPLAY_TESTING_GUIDE.md](./GAMEPLAY_TESTING_GUIDE.md) und
-        [API_REFERENCE.md](./docs/05-technical-architecture/API_REFERENCE.md) ergänzen
+  - [x] Forschungsansicht und Handelsrouten im Hauptspiel bedienbar gemacht
+  - [x] Browserablauf für Hochseesegeln manuell geprüft (Forschung nach zwei Monaten abgeschlossen)
+  - [ ] Hanseroute im Browser aktivieren: Technologie ist nachgewiesen; Aktivierung benötigt zusätzlich
+        einen Hafen und 15.030 Gold, die im geprüften Spielstand fehlten
+  - [x] Unit- und Integrationstests für `PlayerTechnologySystem` und `GameEngine.startResearch()`
+  - [x] [GAMEPLAY_TESTING_GUIDE.md](./GAMEPLAY_TESTING_GUIDE.md) und
+        [API_REFERENCE.md](./docs/05-technical-architecture/API_REFERENCE.md) ergänzt
   - [ ] Committen
-- [ ] **Repository aufräumen**: Playwright-Artefakte (`.playwright-mcp/`, 5 Dateien) aus Git entfernen
+- [x] **Repository aufräumen**: Playwright-Artefakte (`.playwright-mcp/`, 5 getrackte Dateien) aus Git entfernen
       und in `.gitignore` aufnehmen
 
 ## 🟠 P1 – Stabilisierung & Konsistenz

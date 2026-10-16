@@ -928,15 +928,22 @@ export class GameEngine {
     const restoredWarfare = new CampaignWarfareSystem((): number => Math.random());
     if (saveData.warfare) restoredWarfare.load(saveData.warfare);
     for (const player of restoredPlayers) restoredWarfare.ensureRivals(player.id, saveData.config.difficulty);
-    this.pauseGame();
-    this.players = new Map(restoredPlayers.map((player: Player) => [player.id, player]));
-    this.warfare = restoredWarfare;
-    this.technologySystems = new Map(restoredPlayers.map((player: Player) => {
+    if (saveData.technologyProgress !== undefined &&
+        (!saveData.technologyProgress || typeof saveData.technologyProgress !== 'object' ||
+          Array.isArray(saveData.technologyProgress))) {
+      throw new Error('Der Forschungsstand im Spielstand ist beschädigt.');
+    }
+    const restoredTechnology = new Map<string, PlayerTechnologySystem>();
+    for (const player of restoredPlayers) {
       const system = new PlayerTechnologySystem();
       const snapshot = saveData.technologyProgress?.[player.id] as TechnologyProgressSnapshot | undefined;
       if (snapshot) system.load(snapshot);
-      return [player.id, system];
-    }));
+      restoredTechnology.set(player.id, system);
+    }
+    this.pauseGame();
+    this.players = new Map(restoredPlayers.map((player: Player) => [player.id, player]));
+    this.warfare = restoredWarfare;
+    this.technologySystems = restoredTechnology;
     this.turnIndex = Number.isSafeInteger(saveData.turnIndex) && saveData.turnIndex >= 0
       ? saveData.turnIndex % restoredPlayers.length : 0;
     

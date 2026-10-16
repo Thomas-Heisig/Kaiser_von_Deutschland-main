@@ -11,7 +11,8 @@ Offene Aufgaben und Planung: siehe [TODO.md](./TODO.md).
 
 ### Hinzugefügt – Spielbare Aufbaukampagne (Oktober 2026)
 - **KingdomGameUI** als neuer Standard-Einstieg (`src/main.ts`): semantische HTML-Verwaltung mit responsivem CSS
-  (`styles/kingdom.css`), Ansichten für Übersicht, Bauen, Wirtschaft, Garnison, Feldzüge, Charakter, Chronik, Hilfe
+  (`styles/kingdom.css`), Ansichten für Übersicht, Bauen, Wirtschaft, Forschung, Garnison, Feldzüge, Charakter,
+  Chronik und Hilfe
 - **KingdomMap** (PixiJS 8): Siedlungskarte mit Bezirksmarkern, Zoom und Zentrieren, wird erst beim Spielstart nachgeladen
 - **Aufbaukampagne ab 1200** mit sechs Kampagnenzielen (`GameEngine.getCampaignGoals()`), danach freies Weiterspielen
 - **CampaignWarfareSystem**: statistische Feldzüge und Überfälle, Rivalen, Tribut, Monatslimits, max. 60 Berichte,
@@ -21,9 +22,10 @@ Offene Aufgaben und Planung: siehe [TODO.md](./TODO.md).
 - Markthandel über die Preistabelle von `EconomySystem`, monatliche Bilanzprognose `Kingdom.getMonthlyBalance()`
 - Tests: `GameEngine.test.ts`, `Kingdom.test.ts`, `CampaignWarfareSystem.test.ts`, `TimeSystem.test.ts`,
   `Player.test.ts`, inkl. Integrationstest, der alle Kampagnenziele erreicht
-- **Forschung pro Reich** (in Arbeit): `PlayerTechnologySystem` mit Forschungspunkten aus Schulen und Universitäten,
+- **Forschung pro Reich**: `PlayerTechnologySystem` mit Forschungspunkten aus Schulen und Universitäten,
   ein Projekt pro Reich, `getTechnologyProgress()`, `getTechnologyOptions()`, `startResearch()`, Event
-  `technologyResearched`, neue Technologie „Hochseesegeln“, Handelsrouten prüfen erforschte Technologien
+  `technologyResearched`, neue Technologie „Hochseesegeln“, Handelsrouten prüfen erforschte Technologien,
+  mit UI für Forschungsprojekte und Route-Aktivierung; eigener Forschungsstand je Hotseat-Reich
 
 ### Geändert
 - Engine besitzt den verbindlichen Kalender: `advanceMonth()` mit Schutz gegen parallele Monatsberechnungen,
@@ -34,8 +36,10 @@ Offene Aufgaben und Planung: siehe [TODO.md](./TODO.md).
 - TypeScript-Konfiguration und Vite-Setup überarbeitet (Dev-Server auf Port 4100)
 - README, ARCHITECTURE, API_REFERENCE und GAMEPLAY_TESTING_GUIDE auf die Aufbaukampagne aktualisiert
 
-### Bekannte Probleme
-- `npm run check` schlägt fehl: unfertige Forschungsansicht in `KingdomGameUI.ts` (siehe TODO, P0)
+### Verifiziert
+- `npm run check` und `npm run build` erfolgreich; alle Vitest-Tests bestanden
+- Browserprüfung: Hochseesegeln erforscht; die Hanseroute meldet danach den fehlenden Hafen statt einer
+  fehlenden Technologie. Ihre Aktivierung bleibt offen, da zusätzlich 15.030 Gold benötigt werden.
 
 ## [2.6.0] - 2025-12
 
