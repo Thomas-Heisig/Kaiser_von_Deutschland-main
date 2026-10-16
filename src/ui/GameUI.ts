@@ -1,3 +1,9 @@
+/**
+ * @deprecated LEGACY / ALTERNATIVE IMPLEMENTATION.
+ * Not used by the production entry src/main.ts -> KingdomGameUI.
+ * Retained for historical behavior and schema compatibility; do not add new features here.
+ * See docs/05-technical-architecture/system-consolidation.md before migration/removal.
+ */
 // src/ui/GameUI.ts
 import { GameEngine, GameState } from '../core/GameEngine';
 import { Player } from '../core/Player';
