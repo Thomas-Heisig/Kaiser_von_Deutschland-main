@@ -1,9 +1,10 @@
-export type Soundscape = 'village' | 'market' | 'battle' | 'winter';
+export type Soundscape = 'village' | 'market' | 'battle' | 'winter' | 'culture';
 
 /** Opt-in, synthesized atmosphere with no copyrighted samples or remote assets. */
 export class GameAmbience {
   public readonly supported = typeof window !== 'undefined' && typeof window.AudioContext === 'function';
   public enabled = false;
+  private volume = 0.45;
   private context?: AudioContext;
   private timer?: number;
   private scene: Soundscape = 'village';
@@ -16,6 +17,14 @@ export class GameAmbience {
   constructor() {
     if (typeof document !== 'undefined') document.addEventListener('visibilitychange', this.visibility);
   }
+
+  /** User controlled safe mixing level (0–1); default is deliberately quiet. */
+  public setVolume(value: number): void {
+    if (!Number.isFinite(value)) return;
+    this.volume = Math.max(0, Math.min(1, value));
+  }
+
+  public getVolume(): number { return this.volume; }
 
   public setScene(scene: Soundscape): void {
     if (this.scene === scene) return;
@@ -59,7 +68,8 @@ export class GameAmbience {
       village: [[784, 0.2, 0.006, 'sine'], [1046.5, 0.18, 0.004, 'sine']],
       market: [[220, 0.13, 0.008, 'triangle'], [330, 0.11, 0.006, 'triangle']],
       battle: [[80, 0.3, 0.012, 'triangle'], [110, 0.25, 0.008, 'triangle']],
-      winter: [[95, 1.7, 0.004, 'sine'], [110, 1.2, 0.003, 'triangle']]
+      winter: [[95, 1.7, 0.004, 'sine'], [110, 1.2, 0.003, 'triangle']],
+      culture: [[523.25, 0.6, 0.006, 'sine'], [659.25, 0.52, 0.005, 'triangle']]
     };
     notes[this.scene].forEach(([frequency, duration, loudness, wave], i) => {
       const oscillator = context.createOscillator();
@@ -68,7 +78,7 @@ export class GameAmbience {
       oscillator.type = wave;
       oscillator.frequency.setValueAtTime(frequency, start);
       gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.linearRampToValueAtTime(loudness, start + 0.04);
+      gain.gain.linearRampToValueAtTime(Math.max(0.0001, loudness * this.volume), start + 0.04);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
       oscillator.connect(gain);
       gain.connect(context.destination);
