@@ -79,23 +79,20 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 - [~] Erste spielbare Anleitung im Hilfebereich und Handelsrouten-Voraussetzungen ergänzt; interaktiver mehrstufiger Tutorial-Modus noch offen.
 
 ### Code-Duplikate & technische Schulden
-- [ ] `UrbanDistrictSystem.ts` vs. `UrbanDistrictsSystem.ts` zusammenführen
-- [ ] `SiegeSystem.ts` vs. `SiegeWarfareSystem.ts` zusammenführen
-- [ ] `core/DatabaseAdapter.ts` + `core/BrowserDatabaseAdapter.ts` vs. `core/database/*` vereinheitlichen
-- [ ] `core/migrations/*` vs. `core/database/migrations/*` vereinheitlichen
-- [ ] Alte Oberflächen (`UIFlowManager`, `GameUI`, `EnhancedPixiRenderer`, Roadmap-Panels) entweder in die
-      Aufbaukampagne integrieren oder als Legacy kennzeichnen/entfernen
-- [ ] Verbleibende `any`-Typen entfernen (z. B. JSON-Initialisierung in `TechnologySystem`)
+- [~] Stadtviertel-Varianten klassifiziert und Legacy markiert; Datenmodell-Konverter und vollständige Zusammenführung offen
+- [~] Belagerungs-Varianten klassifiziert und Legacy markiert; Semantik-/Savegame-Migration offen
+- [~] SQL-Adapter kontrastiert: `core/database/*` als Zielarchitektur dokumentiert, alte Variante markiert; API-Bridge/Migration offen
+- [~] Migrationsschemata 001/002 dokumentiert und ältere Schiene als Legacy markiert; Datenmigration offen
+- [x] Alte Oberflächen (`UIFlowManager`, `GameUI`, `EnhancedPixiRenderer`, Roadmap-Panels) als Legacy gekennzeichnet;
+      Funktionsübernahme in die Aufbaukampagne und anschließendes Entfernen bleibt offen (siehe Konsolidierungsplan).
+- [~] `any` aus JSON-Initialisierung und Ressourcenbudgets in `TechnologySystem` entfernt; verbleibende Typen in weiteren Modulen offen
 
 ### Dokumentation synchronisieren
-- [ ] Versionsangaben vereinheitlichen: `package.json` 2.5.1, `status.md` 2.3.1,
-      `ARCHITECTURE.md` 2.0.0, Reports bis 2.6.0
-- [ ] [status.md](./docs/00-meta/status.md) aktualisieren (letztes Update Dezember 2025)
-- [ ] Roadmap-Abgleich: bereits umgesetzte, aber offen markierte Punkte abhaken
-      (Diplomatie- und Religionssystem, Kampagnenmodus, lokaler Hotseat, Kolonialverwaltung,
-      Belagerung, Militäreinheiten, Kulturelle Ereignisse)
-- [ ] Doppelte Release-Pläne in Roadmap (Kapitel/Episoden/„Kurzfristig–Langfristig“) zusammenführen
-- [ ] Domains-Dokumentation vervollständigen, Operations-Guides schreiben
+- [x] Paketversion 2.5.1 als Referenz in aktuellem Status/Architektur/Roadmap gesetzt; historische Reports bleiben als datierte Entwicklungsberichte
+- [x] [status.md](./docs/00-meta/status.md) auf 17.10.2026 aktualisiert, inklusive belegter Kampagnenfunktionen und offener Lücken
+- [~] Roadmap-Status abgeglichen: implementierte Klassen vs. spielbar integrierte Features unterschieden
+- [x] Kapitel=Funktionskatalog, Episoden=Content-Roadmap, alte Zeitpläne=Archiv in Roadmap explizit eingeordnet
+- [~] Betriebshandbuch und Systemkonsolidierungsleitfaden ergänzt; fehlende Domains weiterhin offen
 
 ### Qualitätssicherung
 - [ ] Testabdeckung von ~40 % auf 70 % erhöhen (Kernsysteme zuerst)
