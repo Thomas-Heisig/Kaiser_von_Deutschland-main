@@ -62,6 +62,12 @@ export interface TechnologyCategory {
   color: string;
 }
 
+/** Resource budget accepted by the legacy static research helper. */
+export interface TechnologyResourceBudget {
+  gold: number;
+  research?: number;
+}
+
 export interface TechnologyProgressSnapshot {
   researchPoints: number;
   researched: string[];
@@ -167,15 +173,22 @@ export class TechnologySystem {
   private static currentResearch: { techId: string; progress: number } | null = null;
 
   static {
-    // Initialize technologies from JSON data
-    technologiesData.technologies.forEach((tech: any) => {
-      this.technologies.set(tech.id, tech as TechnologyDefinition);
-    });
+    // JSON imports already carry inferred structural types. Reject invalid definitions
+    // rather than introducing unverified casts to TechnologyDefinition.
+    for (const raw of technologiesData.technologies) {
+      const tech: TechnologyDefinition = raw;
+      if (this.technologies.has(tech.id) || !Number.isFinite(tech.researchTime) ||
+          tech.researchTime <= 0 || !Number.isFinite(tech.year) ||
+          !Number.isFinite(tech.cost.gold) || !Number.isFinite(tech.cost.research)) {
+        throw new Error(`Ungültige oder doppelte Technologie: ${tech.id}`);
+      }
+      this.technologies.set(tech.id, tech);
+    }
 
-    // Initialize categories
-    Object.entries(technologiesData.techCategories).forEach(([id, data]: [string, any]) => {
-      this.categories.set(id, data as TechnologyCategory);
-    });
+    for (const [id, category] of Object.entries(technologiesData.techCategories)) {
+      const typedCategory: TechnologyCategory = category;
+      this.categories.set(id, typedCategory);
+    }
   }
   
   /**
@@ -218,7 +231,7 @@ export class TechnologySystem {
    */
   public static canResearch(
     tech: TechnologyDefinition,
-    resources: any
+    resources: TechnologyResourceBudget
   ): { canResearch: boolean; missingRequirements: string[] } {
     const missing: string[] = [];
     
@@ -255,7 +268,7 @@ export class TechnologySystem {
   /**
    * Startet die Erforschung einer Technologie
    */
-  public static startResearch(techId: string, resources: any): boolean {
+  public static startResearch(techId: string, resources: TechnologyResourceBudget): boolean {
     const tech = this.technologies.get(techId);
     if (!tech) return false;
     
@@ -342,7 +355,7 @@ export class TechnologySystem {
   /**
    * Holt verfügbare Technologien (Voraussetzungen erfüllt, noch nicht erforscht)
    */
-  public static getAvailableTechnologies(resources: any): TechnologyDefinition[] {
+  public static getAvailableTechnologies(resources: TechnologyResourceBudget): TechnologyDefinition[] {
     return this.getAllTechnologies().filter(tech => {
       const check = this.canResearch(tech, resources);
       return check.canResearch;
@@ -412,7 +425,7 @@ export class TechnologySystem {
    * Gibt empfohlene Technologien basierend auf Priorität zurück
    */
   public static getRecommendedTechnologies(
-    resources: any,
+    resources: TechnologyResourceBudget,
     priority: 'economic' | 'military' | 'cultural' | 'technology' | 'all' = 'all'
   ): TechnologyDefinition[] {
     const available = this.getAvailableTechnologies(resources);
