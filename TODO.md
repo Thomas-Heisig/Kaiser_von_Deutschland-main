@@ -1,3 +1,9 @@
+## 🎮 Mehr Kampagnen und Game-Actions (PR in Prüfung)
+- [x] Vier auswählbare Kampagnen: Aufbau, Hanse, Wissenschaft, Grenzland, mit jeweils sechs Live-Zielen.
+- [x] Wissenschaftliche Errungenschaften erscheinen als sichtbare Ereignisaktion mit Map-Puls und Klang.
+- [x] Überfälle und Feldschlachten lösen Game-Action-Banner und Kartenmarkierung aus.
+- [ ] Mehrstufige Kampagnenhandlungen, echte animierte Truppen und Geräusch-Samples erweitern.
+
 # ✅ TODO – Kaiser von Deutschland
 
 **Stand**: 16. Oktober 2026 · **Paketversion**: 2.5.1 · **Standard-Einstieg**: Aufbaukampagne (`KingdomGameUI`)
