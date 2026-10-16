@@ -757,6 +757,7 @@ export class KingdomGameUI {
     } else {
       panel.innerHTML = heading('EIN GUTER ANFANG', 'So regierst du dein Reich',
         'Alle sichtbaren Aktionen verändern denselben gespeicherten Spielzustand.') + `
+        <article class="build-card" aria-label="Tutorial"><h3>Deine ersten Schritte</h3><p>1. Prüfe die Nahrungsbilanz. 2. Baue einen Bauernhof. 3. Lasse einen Monat vergehen. 4. Erforsche neue Technologien. 5. Errichte einen Hafen und spare für die Hanseroute.</p><button data-open="build" class="primary">Mit dem Bauen beginnen →</button></article>
         <div class="help-grid"><article><h3>1. Versorgung sichern</h3>
           <p>Beachte die Salden unter deinen Vorräten. Baue Bauernhöfe bei Nahrungsmangel.
           Bei leeren Vorräten sinken Zufriedenheit und Bevölkerung.</p></article>
@@ -1080,6 +1081,7 @@ export class KingdomGameUI {
           route.requiredTechnology ? ` · Technologie: ${escape(route.requiredTechnology)}` : ''}</p>
         <div class="cost">+${format(route.effects.trade_income)} Gold/Jahr · Aktivierung: ${
           format(activationCost)} Gold${needsPort ? ' · Hafen erforderlich' : ''}</div>
+        <p class="muted" title="Handelsrouten brauchen die nötige Forschung, einen Hafen bei Seerouten und ausreichend Gold.">Voraussetzungen: Forschung freigeschaltet · ${needsPort ? 'Hafen nötig · ' : ''}${format(activationCost)} Gold.</p>
         ${active
           ? `<button class="secondary" data-route-deactivate="${escape(route.id)}">Route beenden</button>`
           : `<button class="secondary" data-route-activate="${escape(route.id)}" ${

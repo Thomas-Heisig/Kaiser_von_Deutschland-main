@@ -217,9 +217,12 @@ export class SocialNetworkSystem {
     currentMonth: number
   ): void {
     for (const message of this.messages.values()) {
-      // Nur aktuelle Nachrichten (maximal 12 Monate alt)
+      // Expired rumors must be released rather than retained for the entire session.
       const monthsOld = (currentYear - message.year) * 12 + (currentMonth - message.month);
-      if (monthsOld > 12) continue;
+      if (monthsOld > 12) {
+        this.messages.delete(message.id);
+        continue;
+      }
       
       const reachedCitizens = Array.from(message.reachedCitizenIds)
         .map(id => citizenSystem.getCitizen(id))
@@ -265,6 +268,8 @@ export class SocialNetworkSystem {
         }
       }
     }
+    // Long campaigns cannot accumulate one spread-event object per transmission forever.
+    if (this.spreadEvents.length > 2500) this.spreadEvents.splice(0, this.spreadEvents.length - 2500);
   }
   
   /**
@@ -457,40 +462,39 @@ export class SocialNetworkSystem {
   /**
    * Generiert automatisch soziale Beziehungen basierend auf Nähe und Gemeinsamkeiten
    */
-  public generateSocialRelations(
-    citizenSystem: CitizenSystem,
-    year: number
-  ): void {
-    const citizens = citizenSystem.getAllCitizens().filter(c => c.isAlive);
-    
-    for (const citizen of citizens) {
-      // Maximal 10 neue Beziehungen pro Durchlauf
-      if (citizen.socialRelations.length >= 20) continue;
-      
-      // Finde potenzielle Freunde in der gleichen Region und Berufsgruppe
-      const potentialFriends = citizens.filter(other => 
-        other.id !== citizen.id &&
-        other.regionId === citizen.regionId &&
-        !citizen.socialRelations.some(r => r.citizenId === other.id) &&
-        Math.abs(citizen.age - other.age) < 20 // Ähnliches Alter
-      );
-      
-      // Wähle zufällig einige aus
-      const newFriendsCount = Math.floor(Math.random() * 3);
-      for (let i = 0; i < newFriendsCount && potentialFriends.length > 0; i++) {
-        const randomIndex = Math.floor(Math.random() * potentialFriends.length);
-        const friend = potentialFriends.splice(randomIndex, 1)[0];
-        
-        // Beziehungsstärke basiert auf Persönlichkeitskompatibilität
-        const compatibility = this.calculateCompatibility(citizen, friend);
-        
-        if (compatibility > 30) {
-          this.createFriendship(citizenSystem, citizen.id, friend.id, compatibility, year);
+  public generateSocialRelations(citizenSystem: CitizenSystem, year: number): void {
+    // The previous implementation filtered the entire population for every person (O(N²)).
+    // Index once by region and consider a bounded number of candidate peers per citizen.
+    const byRegion = new Map<string, Citizen[]>();
+    for (const citizen of citizenSystem.getAllCitizens()) {
+      if (!citizen.isAlive) continue;
+      const region = byRegion.get(citizen.regionId) ?? [];
+      region.push(citizen);
+      byRegion.set(citizen.regionId, region);
+    }
+    for (const region of byRegion.values()) {
+      if (region.length < 2) continue;
+      for (const citizen of region) {
+        if (citizen.socialRelations.length >= 20) continue;
+        const friendsWanted = Math.floor(Math.random() * 3);
+        const known = new Set(citizen.socialRelations.map((relation) => relation.citizenId));
+        let added = 0;
+        for (let attempt = 0; attempt < 32 && added < friendsWanted; attempt++) {
+          const candidate = region[Math.floor(Math.random() * region.length)];
+          if (candidate.id === citizen.id || known.has(candidate.id) ||
+              candidate.socialRelations.length >= 20 ||
+              Math.abs(candidate.age - citizen.age) >= 20) continue;
+          known.add(candidate.id);
+          const compatibility = this.calculateCompatibility(citizen, candidate);
+          if (compatibility > 30 &&
+              this.createFriendship(citizenSystem, citizen.id, candidate.id, compatibility, year)) {
+            added++;
+          }
         }
       }
     }
   }
-  
+
   /**
    * Berechnet Kompatibilität zwischen zwei Bürgern
    */
