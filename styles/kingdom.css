@@ -297,3 +297,10 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+.council-alert { display: block; width: 100%; text-align: left; margin: 0 0 18px; padding: 16px 18px; background: #51331c; border: 2px solid #dfc48b; color: #ffe8b4; font-size: 1rem; }
+.council-alert:hover { background: #664125; }
+.council-dilemma { padding: 22px; margin-bottom: 26px; border: 1px solid #b49b66; border-radius: 8px; background: linear-gradient(145deg, #2f382b, #1c2f29); }
+.council-dilemma > h3 { color: #f0d79f; font-size: 1.7rem; margin: 10px 0; }
+.council-dilemma > p { margin-bottom: 20px; }
+.council-dilemma .build-grid { grid-template-columns: repeat(auto-fit,minmax(min(230px,100%),1fr)); }
