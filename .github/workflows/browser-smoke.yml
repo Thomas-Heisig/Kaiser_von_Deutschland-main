@@ -15,8 +15,8 @@ jobs:
           node-version: '20.x'
           cache: npm
       - run: npm ci
-      - run: npm install --no-save --package-lock=false playwright@1.56.1
-      - run: npx playwright install --with-deps chromium
+      - run: npm install --prefix .browser-tools --no-save --no-package-lock playwright@1.56.1
+      - run: ./.browser-tools/node_modules/.bin/playwright install --with-deps chromium
       - name: Start app
         run: |
           (npm run dev -- --host 127.0.0.1 --port 4173 > /tmp/kaiser-vite.log 2>&1 &)
