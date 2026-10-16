@@ -101,6 +101,28 @@ describe('Playable campaign integration', (): void => {
     expect(restored.hasRivalTruce(ruler.id, rival.id)).toBe(false);
   });
 
+  it('keeps covert agents isolated between players and restores them from saves', async (): Promise<void> => {
+    const engine = await campaign();
+    const ruler = engine.getPlayers()[0];
+    const rival = engine.getRivals(ruler.id)[0];
+    const other = engine.addPlayer({ name: 'Anna', kingdomName: 'Nachbarreich', gender: 'other',
+      startingStats: { age: 25 } });
+    const starting = ruler.kingdom.resources.gold;
+    expect(engine.recruitCampaignSpy(ruler.id)).toContain('Kundschafter');
+    expect(ruler.kingdom.resources.gold).toBe(starting - 400);
+    expect(engine.getCampaignIntelligence(other.id).agents).toHaveLength(0);
+    expect(engine.sendCampaignSpy(ruler.id, engine.getCampaignIntelligence(ruler.id).agents[0].id, rival.id))
+      .toContain(rival.name);
+    expect(engine.getCampaignIntelligence(ruler.id).missions).toHaveLength(1);
+    await engine.saveGame('spy-roundtrip');
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('spy-roundtrip');
+    expect(restored.getCampaignIntelligence(ruler.id).agents).toHaveLength(1);
+    expect(restored.getCampaignIntelligence(ruler.id).missions).toHaveLength(1);
+    expect(restored.getCampaignIntelligence(other.id).agents).toHaveLength(0);
+  });
+
   it('lets rulers send embassies and restores relations after saving', async (): Promise<void> => {
     const engine = await campaign();
     const ruler = engine.getPlayers()[0];
