@@ -123,6 +123,26 @@ describe('Playable campaign integration', (): void => {
     expect(restored.getCampaignIntelligence(other.id).agents).toHaveLength(0);
   });
 
+  it('finances an army with a per-realm loan, charges installments and restores debts', async (): Promise<void> => {
+    const engine = await campaign();
+    const player = engine.getPlayers()[0];
+    const gold = player.kingdom.resources.gold;
+    expect(engine.takeWarLoan(player.id)).toContain('Rüstungsdarlehen');
+    expect(player.kingdom.resources.gold).toBe(gold + 3000);
+    const debt = engine.getWarFinanceOverview(player.id).stats.totalWarDebt;
+    expect(debt).toBeGreaterThan(3000);
+    expect(() => engine.takeWarLoan(player.id)).toThrow('bereits');
+    await engine.advanceMonth();
+    expect(engine.getWarFinanceOverview(player.id).stats.totalWarDebt).toBeLessThan(debt);
+    await engine.saveGame('war-loan');
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('war-loan');
+    expect(restored.getWarFinanceOverview(player.id).stats.totalWarDebt)
+      .toBeCloseTo(engine.getWarFinanceOverview(player.id).stats.totalWarDebt);
+    expect(restored.getWarFinanceOverview(player.id).available).toBe(false);
+  });
+
   it('lets rulers send embassies and restores relations after saving', async (): Promise<void> => {
     const engine = await campaign();
     const ruler = engine.getPlayers()[0];
