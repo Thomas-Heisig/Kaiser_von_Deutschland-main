@@ -25,7 +25,7 @@ import { ScientificDiscoverySystem } from './ScientificDiscoverySystem';
 import { LegalSystem } from './LegalSystem';
 import { MilitaryUnitSystem } from './MilitaryUnitSystem';
 // Note: DiplomacySystem is per-player, imported where needed
-import { ReligionSystem } from './ReligionSystem';
+import { ReligionSystem, CulturalEvent } from './ReligionSystem';
 import { DiplomacySystem } from './DiplomacySystem';
 import { MigrationSystem } from './MigrationSystem';
 import { SocialMobilitySystem } from './SocialMobilitySystem';
@@ -185,6 +185,7 @@ export class GameEngine {
   private technologySystems: Map<string, PlayerTechnologySystem> = new Map();
   private council: CouncilDecisionSystem = new CouncilDecisionSystem();
   private rivalDiplomacy = new Map<string, DiplomacySystem>();
+  private festivalsHeld = new Map<string, number>();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -891,6 +892,7 @@ export class GameEngine {
       warfare: this.warfare.serialize(),
       council: this.council.serialize(),
       rivalDiplomacy: Object.fromEntries(Array.from(this.rivalDiplomacy, ([id, system]) => [id, system.serialize()])),
+      festivalsHeld: Array.from(this.festivalsHeld),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -971,6 +973,7 @@ export class GameEngine {
     this.warfare = restoredWarfare;
     this.technologySystems = restoredTechnology;
     this.rivalDiplomacy = new Map();
+    this.festivalsHeld = new Map(Array.isArray(saveData.festivalsHeld) ? saveData.festivalsHeld : []);
     for (const player of restoredPlayers) {
       const snapshot = saveData.rivalDiplomacy?.[player.id];
       this.rivalDiplomacy.set(player.id, snapshot ? DiplomacySystem.deserialize(snapshot) : new DiplomacySystem(player.id));
@@ -1182,6 +1185,43 @@ export class GameEngine {
    * @returns Rival realms with their current strength.
    */
   /** Expose the existing diplomacy model for each player's NPC neighbours. */
+  /** Seasonal cultural events are read from the pre-existing ReligionSystem data. */
+  public getFestivalOptions(playerId: string): Array<{
+    event: CulturalEvent; affordable: boolean; alreadyHeld: boolean;
+  }> {
+    const player = this.requirePlayer(playerId);
+    return this.religionSystem.getCulturalEvents()
+      .filter((event) => event.culture === this.religionSystem.getDominantCulture() &&
+        (event.month === this.currentMonth || event.season === player.kingdom.currentSeason))
+      .map((event) => ({
+        event,
+        affordable: player.kingdom.resources.gold >= (event.effects.goldCost ?? 0) &&
+          player.kingdom.resources.food >= (event.effects.foodConsumption ?? 0),
+        alreadyHeld: this.festivalsHeld.get(playerId + ':' + event.id) === this.currentYear
+      }));
+  }
+
+  public holdFestival(playerId: string, eventId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    const option = this.getFestivalOptions(playerId).find((entry) => entry.event.id === eventId);
+    if (!option) throw new Error('Dieses Fest ist derzeit nicht verfügbar.');
+    if (option.alreadyHeld) throw new Error('Dieses Fest wurde bereits dieses Jahr gefeiert.');
+    if (!option.affordable) throw new Error('Für die Feier fehlen Gold oder Nahrung.');
+    const effects = option.event.effects;
+    player.kingdom.resources.gold -= effects.goldCost ?? 0;
+    player.kingdom.resources.food -= effects.foodConsumption ?? 0;
+    player.kingdom.happiness = Math.max(0, Math.min(100, player.kingdom.happiness + (effects.happiness ?? 0)));
+    player.kingdom.stats.stability = Math.max(0, Math.min(100,
+      player.kingdom.stats.stability + (effects.stability ?? 0)));
+    // Culture is shared world data in the legacy system, so don't mutate it for one realm.
+    if (effects.culturalInfluence) player.updateStats({ prestige: effects.culturalInfluence / 2 });
+    this.festivalsHeld.set(playerId + ':' + eventId, this.currentYear);
+    const message = option.event.name + ' gefeiert. Das Volk erinnert sich an diese Feier.';
+    this.emit('festivalHeld', { playerId, message });
+    return message;
+  }
+
   public getRivalRelations(playerId: string) {
     this.requirePlayer(playerId);
     return this.requireRivalDiplomacy(playerId).getAllRelations();
