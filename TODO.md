@@ -34,6 +34,13 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 - [ ] CI/Build, Browsertest, Audio-Lautstärke und Zugänglichkeit vor Merge überprüfen.
 - [ ] Echte Gebäude- und Bürgeranimationen sowie differenzierte Geräuschquellen ergänzen.
 
+## ✅ Kulturkalender in der Aufbaukampagne (PR in Prüfung)
+
+- [x] Bestehende Kulturevent-Daten für Jahrestage und Jahreszeiten spielbar.
+- [x] Feste verbrauchen Gold und Nahrung und beeinflussen Zufriedenheit/Stabilität.
+- [x] Jährliche Obergrenze pro Reich, Save/Load und Integrationstest ergänzt.
+- [ ] CI- und Browsertests prüfen; weiterführende Kultur- und Religionssysteme integrieren.
+
 ## 🔴 P0 – Sofort (Build & laufende Arbeit)
 
 - [x] **Build reparieren**: Forschungsansicht integriert; `npm run check`, Tests und Produktionsbuild
@@ -94,7 +101,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 ### Integration vorhandener Systeme in die Aufbaukampagne
 Viele Systeme existieren in `src/core/`, sind aber nicht im Standard-Einstieg erreichbar.
 - [~] Diplomatie (`DiplomacySystem`) – Gesandtschaften zu Rivalen in der Hauptkampagne integriert, Beziehungen und Missionen werden gespeichert; Verträge, Allianzen und Handelsabkommen noch offen
-- [ ] Religion & Kultur (`ReligionSystem`, `ArtsAndCultureSystem`)
+- [~] Religion & Kultur: saisonale Feste aus `ReligionSystem` mit tatsächlichen Kosten/Effekten integriert; Religion, Künste und Kulturkreise noch offen
 - [ ] Bevölkerungsdynamik, Migration, soziale Mobilität, Hungersnöte
 - [ ] Klima, Naturkatastrophen, Landschaft, Tierpopulationen
 - [ ] Belagerung, Formationen, Logistik, Marine, Kriegsfinanzierung, Kriegsgefangene
