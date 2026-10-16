@@ -52,6 +52,7 @@ import { DynamicGameView } from './DynamicGameView';
 import { PlayerTechnologySystem, TechnologyDefinition, TechnologySystem } from './TechnologySystem';
 import localforage from 'localforage';
 import { encodeSave, decodeSave } from './SaveCodec';
+import { CAMPAIGNS, campaignGoals, CampaignId } from './CampaignCatalog';
 import { KingdomInfrastructure } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
 import type { Citizen } from './CitizenSystem';
@@ -102,6 +103,7 @@ export interface GameConfig {
   enableMultiplayer: boolean;
   randomEvents: boolean;
   startingYear: number;
+  campaignId?: CampaignId;
   enableOllama?: boolean;
   ollamaUrl?: string;
   enableWiki?: boolean;
@@ -198,6 +200,7 @@ export class GameEngine {
       enableMultiplayer: false,
       randomEvents: true,
       startingYear: 1200,
+      campaignId: 'aufbau',
       enableOllama: false,
       enableWiki: true,
       ...config
@@ -208,6 +211,7 @@ export class GameEngine {
       throw new RangeError('Ungültige Spielkonfiguration: Jahr, Spielerzahl oder Geschwindigkeit.');
     }
 
+    if (!CAMPAIGNS.some((campaign) => campaign.id === this.config.campaignId)) throw new RangeError('Unbekannte Kampagne.');
     this.currentYear = this.config.startingYear;
     this.gameState = GameState.LOBBY;
     this._economy = new EconomySystem(this.config);
@@ -1202,21 +1206,27 @@ export class GameEngine {
    * @returns Six objectives, complete only when their current thresholds are met.
    * @throws Error if the player does not exist.
    */
+  public getCampaignId(): CampaignId { return this.config.campaignId ?? 'aufbau'; }
+  public getCampaignDefinition() { return CAMPAIGNS.find((item) => item.id === this.getCampaignId()) ?? CAMPAIGNS[0]; }
   public getCampaignGoals(playerId: string): CampaignGoal[] {
-    const player = this.players.get(playerId);
-    if (!player) throw new Error('Spieler nicht gefunden.');
-    const kingdom = player.kingdom;
-    const balance = kingdom.getMonthlyBalance();
-    const tradeIncome = this.getTradeNetworkStats(player).monthlyIncome;
-    return [
-      { label: '12 Bauernhöfe', done: kingdom.infrastructure.farms >= 12 },
-      { label: '3 Marktplätze', done: kingdom.infrastructure.markets >= 3 },
-      { label: '2 Schulen', done: kingdom.infrastructure.schools >= 2 },
-      { label: '65 % Zufriedenheit', done: kingdom.happiness >= 65 },
-      { label: '8.000 Gold & positive Versorgung',
-        done: kingdom.resources.gold >= 8000 && balance.net.food >= 0 && balance.net.gold + tradeIncome >= 0 },
-      { label: 'Einen Rivalen unterwerfen', done: this.warfare.subjugatedCount(playerId) >= 1 }
-    ];
+    const player = this.requirePlayer(playerId);
+    if (this.getCampaignId() === 'aufbau') {
+      const kingdom = player.kingdom;
+      const balance = kingdom.getMonthlyBalance();
+      const tradeIncome = this.getTradeNetworkStats(player).monthlyIncome;
+      return [
+        { label: '12 Bauernhöfe', done: kingdom.infrastructure.farms >= 12 },
+        { label: '3 Marktplätze', done: kingdom.infrastructure.markets >= 3 },
+        { label: '2 Schulen', done: kingdom.infrastructure.schools >= 2 },
+        { label: '65 % Zufriedenheit', done: kingdom.happiness >= 65 },
+        { label: '8.000 Gold & positive Versorgung', done: kingdom.resources.gold >= 8000 &&
+          balance.net.food >= 0 && balance.net.gold + tradeIncome >= 0 },
+        { label: 'Einen Rivalen unterwerfen', done: this.warfare.subjugatedCount(playerId) >= 1 }
+      ];
+    }
+    return campaignGoals(this.getCampaignId(), player.kingdom,
+      this.requireTechnologySystem(playerId).getResearchedTechnologyIds().length,
+      this.warfare.subjugatedCount(playerId), player.kingdom.getActiveTradeRoutes().length);
   }
 
   // === Warfare (v3.0) ===
