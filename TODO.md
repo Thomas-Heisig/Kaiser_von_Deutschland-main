@@ -53,30 +53,30 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 
 - [x] **Build reparieren**: Forschungsansicht integriert; `npm run check`, Tests und Produktionsbuild
       bestehen wieder.
-- [ ] **Forschung pro Reich abschließen** (`PlayerTechnologySystem`, uncommittet):
+- [~] **Forschung pro Reich abschließen** (`PlayerTechnologySystem` ist in `src/core/TechnologySystem.ts` bereits committed):
   - [x] Forschungspunkte aus Schulen/Universitäten, ein Projekt je Reich
   - [x] Speichern/Laden des Forschungsstands (`technologyProgress` im Spielstand)
   - [x] Handelsrouten prüfen erforschte Technologien (neue Technologie „Hochseesegeln“)
   - [x] Forschungsansicht und Handelsrouten im Hauptspiel bedienbar gemacht
   - [x] Browserablauf für Hochseesegeln manuell geprüft (Forschung nach zwei Monaten abgeschlossen)
-  - [ ] Hanseroute im Browser aktivieren: Technologie ist nachgewiesen; Aktivierung benötigt zusätzlich
+  - [ ] Hanseroute im echten Browser aktivieren: Forschungscode vorhanden; Aktivierung benötigt zusätzlich
         einen Hafen und 15.030 Gold, die im geprüften Spielstand fehlten
   - [x] Unit- und Integrationstests für `PlayerTechnologySystem` und `GameEngine.startResearch()`
   - [x] [GAMEPLAY_TESTING_GUIDE.md](./GAMEPLAY_TESTING_GUIDE.md) und
         [API_REFERENCE.md](./docs/05-technical-architecture/API_REFERENCE.md) ergänzt
-  - [ ] Committen
+  - [x] Committed und durch CI-Typprüfung abgedeckt
 - [x] **Repository aufräumen**: Playwright-Artefakte (`.playwright-mcp/`, 5 getrackte Dateien) aus Git entfernen
       und in `.gitignore` aufnehmen
 
 ## 🟠 P1 – Stabilisierung & Konsistenz
 
 ### Bekannte Probleme (aus Status-Bericht)
-- [ ] ❌ Performance bricht bei > 5.000 Bürgern ein (Ziel: 100.000+, langfristig 80 Mio. über Kohorten)
-- [ ] ❌ Speicherverbrauch steigt in langen Sitzungen (Cleanup alter Daten, Objekt-Pooling)
+- [~] Soziale jährliche Beziehungsbildung: quadratische Gesamtsuche durch regional begrenztes Sampling ersetzt; Lasttest für >5.000, 100.000+ Bürger und vollständige Simulation noch offen.
+- [~] Ablauf alter Gerüchte und Begrenzung der Verbreitungsereignisse implementiert; systemweites Profiling und Objekt-Pooling noch offen.
 - [ ] ⚠️ Spielstände werden bei großen Reichen zu groß (Kompression / Kohorten statt Einzelbürger)
 - [ ] ⚠️ UI-Responsivität auf kleinen Bildschirmen (320 × 740) prüfen
 - [ ] ⚠️ Einige historische Events fehlen
-- [ ] ℹ️ Tooltips ausführlicher, Tutorial-System fehlt
+- [~] Erste spielbare Anleitung im Hilfebereich und Handelsrouten-Voraussetzungen ergänzt; interaktiver mehrstufiger Tutorial-Modus noch offen.
 
 ### Code-Duplikate & technische Schulden
 - [ ] `UrbanDistrictSystem.ts` vs. `UrbanDistrictsSystem.ts` zusammenführen
