@@ -9,6 +9,7 @@ import { KingdomInfrastructure } from '../core/Kingdom';
 import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
 import { GameAudio } from './GameAudio';
+import { CAMPAIGNS, CampaignId } from '../core/CampaignCatalog';
 import { GameAmbience, Soundscape } from './GameAmbience';
 
 type View = 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
@@ -88,6 +89,7 @@ export class KingdomGameUI {
   private readonly audio: GameAudio;
   private readonly ambience = new GameAmbience();
   private motionEnabled = false;
+  private actionBannerTimer?: number;
   private readonly buttonSoundHandler = (event: MouseEvent): void => {
     if (!(event.target instanceof Element)) return;
     const button = event.target.closest('button');
@@ -141,6 +143,9 @@ export class KingdomGameUI {
             <label class="ambience-volume">Umgebung: Lautstärke <input type="range" data-ambience-volume min="0" max="100" value="45" step="5" aria-label="Lautstärke der Umgebungsgeräusche"></label>
           </div>
           <form id="new-game">
+            <label>Kampagne<select name="campaign" id="campaign-select">
+              ${CAMPAIGNS.map((entry) => `<option value="${entry.id}">${escape(entry.name)} – ${escape(entry.description)}</option>`).join('')}
+            </select></label>
             <label>Spieler an diesem Gerät<select name="players" id="player-count">
               <option value="1" selected>1 – Einzelspieler-Kampagne</option>
               <option value="2">2 – Hotseat (abwechselnd)</option>
@@ -198,7 +203,7 @@ export class KingdomGameUI {
         if (new Set(players.map((entry: NewPlayer): string => entry.kingdomName.toLowerCase())).size !== players.length) {
           throw new Error('Jedes Reich braucht einen eigenen Namen.');
         }
-        await this.createGame(players, Number(data.get('difficulty')), data.has('events'));
+        await this.createGame(players, Number(data.get('difficulty')), data.has('events'), String(data.get('campaign') ?? 'aufbau') as CampaignId);
       });
     });
     this.root.querySelector('#continue')?.addEventListener('click', (): void => {
@@ -221,15 +226,16 @@ export class KingdomGameUI {
     for (const unsubscribe of this.subscriptions) unsubscribe();
     this.subscriptions = [];
     this.engine?.dispose();
+    window.clearTimeout(this.actionBannerTimer);
     this.map?.dispose();
     this.map = undefined;
     this.engine = engine;
     this.player = undefined;
   }
 
-  private async createGame(players: NewPlayer[], difficulty: number, randomEvents: boolean): Promise<void> {
+  private async createGame(players: NewPlayer[], difficulty: number, randomEvents: boolean, campaignId: CampaignId = 'aufbau'): Promise<void> {
     await this.replaceEngine(new GameEngine({
-      startingYear: 1200, difficulty, gameSpeed: 0.25, randomEvents, enableWiki: false
+      startingYear: 1200, difficulty, gameSpeed: 0.25, randomEvents, campaignId, enableWiki: false
     }));
     const engine = this.requireEngine();
     for (const entry of players) {
@@ -310,6 +316,7 @@ export class KingdomGameUI {
               </div>
             </section>
             <div id="notice" class="notice" role="status" aria-live="polite"></div>
+            <div id="game-action-banner" role="status" aria-live="polite" hidden></div>
             <button id="council-prompt" data-view="council" class="council-alert" hidden></button>
             <section class="map-card" aria-label="Interaktive Siedlungsübersicht">
               <div class="map-heading"><div><span class="eyebrow">DEIN LEHEN</span>
@@ -328,7 +335,7 @@ export class KingdomGameUI {
               <button data-view="economy" class="text-button">Zur Monatsbilanz →</button></section>
             <section class="council-card"><p class="eyebrow">DEIN AUFTRAG</p><h2>Ein blühendes Reich</h2>
               <p class="muted">Erfülle alle Ziele gleichzeitig. Ohne Zeitlimit.</p>
-              <div id="objectives"></div><progress id="goal-progress" max="6" aria-label="Kampagnenfortschritt"></progress>
+              <p class="eyebrow" id="campaign-title"></p><div id="objectives"></div><progress id="goal-progress" max="6" aria-label="Kampagnenfortschritt"></progress>
               <p id="goal-status"></p></section>
             <section class="council-card latest"><p class="eyebrow">NEUESTES AUS DEM REICH</p>
               <div id="latest"></div><button data-view="chronicle" class="text-button">Chronik öffnen →</button></section>
@@ -397,6 +404,9 @@ export class KingdomGameUI {
       engine.on('battleResolved', (detail: { report: BattleReport }): void => {
         this.record(detail.report.summary);
         this.audio.playEffect('battle');
+        if (this.player && detail.report.playerIds.includes(this.player.id)) {
+          this.showGameAction(detail.report.kind === 'raid' ? '⚔ Überfall auf dein Reich!' : '⚔ Die Schlacht ist entschieden!', detail.report.summary, 'raid');
+        }
         if (this.player && detail.report.playerIds.includes(this.player.id) && detail.report.kind === 'raid') {
           this.notify(detail.report.summary, !this.wonBattle(detail.report));
         }
@@ -428,6 +438,8 @@ export class KingdomGameUI {
         const message = `Forschung abgeschlossen: ${detail.technology.name}.`;
         this.record(message);
         this.notify(message);
+        this.showGameAction('✦ Wissenschaftlicher Durchbruch!', message, 'science');
+        this.audio.playEffect('success');
       })
     ];
     this.refresh();
@@ -448,6 +460,22 @@ export class KingdomGameUI {
         this.notify('Grafik konnte nicht initialisiert werden. Die Verwaltung bleibt bedienbar.', true);
       }
     }
+  }
+
+  private showGameAction(title: string, message: string, kind: 'raid' | 'science'): void {
+    const banner = this.root.querySelector<HTMLElement>('#game-action-banner');
+    if (!banner) return;
+    window.clearTimeout(this.actionBannerTimer);
+    banner.className = 'game-action-banner ' + kind;
+    banner.replaceChildren();
+    const heading = document.createElement('strong');
+    heading.textContent = title;
+    const description = document.createElement('span');
+    description.textContent = message;
+    banner.append(heading, description);
+    banner.hidden = false;
+    this.map?.playAction(kind);
+    this.actionBannerTimer = window.setTimeout(() => { banner.hidden = true; }, 4500);
   }
 
   private navigate(view: View): void {
@@ -520,6 +548,7 @@ export class KingdomGameUI {
           ? 'Die Menschen brauchen Zuversicht. Niedrigere Steuern und eine Taverne helfen deinem Reich.'
           : 'Deine Grundversorgung ist gesichert. Investiere Überschüsse in Handel, Bildung und die Zukunft deines Reiches.');
     const goals = this.engine.getCampaignGoals(this.player.id);
+    setText('campaign-title', this.engine.getCampaignDefinition().name);
     const completed = goals.filter((goal: CampaignGoal) => goal.done).length;
     const objectiveHost = this.root.querySelector('#objectives');
     if (objectiveHost) objectiveHost.innerHTML = goals.map((goal: CampaignGoal) =>
