@@ -46,7 +46,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 - [x] Militärisches Wachstum auf das Fünffache des Ausgangswertes begrenzt.
 - [x] NPC-Entwicklung als Chronikmeldung angezeigt und im vorhandenen Kriegsspeicher gesichert.
 - [x] Tests für Strategievarianten, Speicherstände und vorbereitete Angriffsunterdrückung ergänzt.
-- [ ] Diplomatische Friedensverträge mit tatsächlich wirksamer Überfallpause verbinden.
+- [x] Verhandelte zweijährige Nichtangriffspakte mit realer Angriffssperre und Überfallschutz integriert; Ablauffrist und Save/Load berücksichtigt.
 - [ ] CI und visuelle Prüfung vor Merge.
 
 ## 🔴 P0 – Sofort (Build & laufende Arbeit)
@@ -108,7 +108,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 
 ### Integration vorhandener Systeme in die Aufbaukampagne
 Viele Systeme existieren in `src/core/`, sind aber nicht im Standard-Einstieg erreichbar.
-- [~] Diplomatie (`DiplomacySystem`) – Gesandtschaften zu Rivalen in der Hauptkampagne integriert, Beziehungen und Missionen werden gespeichert; Verträge, Allianzen und Handelsabkommen noch offen
+- [~] Diplomatie (`DiplomacySystem`) – Gesandtschaften, Beziehungen und zweijährige Nichtangriffspakte mit tatsächlichem Überfallschutz integriert; Allianzen, Handel und komplexe Vertragsbrüche noch offen
 - [~] Religion & Kultur: saisonale Feste aus `ReligionSystem` mit tatsächlichen Kosten/Effekten integriert; Religion, Künste und Kulturkreise noch offen
 - [ ] Bevölkerungsdynamik, Migration, soziale Mobilität, Hungersnöte
 - [ ] Klima, Naturkatastrophen, Landschaft, Tierpopulationen
