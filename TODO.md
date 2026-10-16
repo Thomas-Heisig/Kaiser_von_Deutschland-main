@@ -41,6 +41,14 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 - [x] Jährliche Obergrenze pro Reich, Save/Load und Integrationstest ergänzt.
 - [ ] CI- und Browsertests prüfen; weiterführende Kultur- und Religionssysteme integrieren.
 
+## ✅ Rivalen-Dynamik (PR in Prüfung)
+- [x] Drei strategische NPC-Profile mit unterschiedlicher jährlicher Entwicklung.
+- [x] Militärisches Wachstum auf das Fünffache des Ausgangswertes begrenzt.
+- [x] NPC-Entwicklung als Chronikmeldung angezeigt und im vorhandenen Kriegsspeicher gesichert.
+- [x] Tests für Strategievarianten, Speicherstände und vorbereitete Angriffsunterdrückung ergänzt.
+- [ ] Diplomatische Friedensverträge mit tatsächlich wirksamer Überfallpause verbinden.
+- [ ] CI und visuelle Prüfung vor Merge.
+
 ## 🔴 P0 – Sofort (Build & laufende Arbeit)
 
 - [x] **Build reparieren**: Forschungsansicht integriert; `npm run check`, Tests und Produktionsbuild
@@ -135,7 +143,7 @@ Viele Systeme existieren in `src/core/`, sind aber nicht im Standard-Einstieg er
 - [ ] Historische Szenarien (z. B. „Der Dreißigjährige Krieg“), Herausforderungs- und Sandbox-Modus
 - [x] Autosave nach jedem abgeschlossenen Monat (`autosave`), manueller Slot `campaign` bleibt erhalten; Fehler werden gemeldet.
 - [ ] Chronik über Sitzungen hinweg speichern (aktuell nur letzte 100 Meldungen pro Sitzung)
-- [ ] KI-Gegner: Schwierigkeitsgrade und Persönlichkeiten (aggressiv, defensiv, diplomatisch)
+- [~] KI-Gegner: drei eigenständige NPC-Entwicklungsprofile (Räuber, Festungsbau, Handel), jährliche Entwicklungen und Chronik umgesetzt; adaptive Reaktionen, Verhandlungen und Schwierigkeitsgrade folgen
 - [ ] Automatisierung: Gouverneure, Auto-Handel, Produktionsketten, Vorlagen, Shortcuts
 
 ## 🟢 P3 – Mittelfristig (v2.8 – v3.x)
