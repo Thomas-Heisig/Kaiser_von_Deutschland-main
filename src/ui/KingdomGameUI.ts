@@ -138,6 +138,7 @@ export class KingdomGameUI {
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
             <button type="button" class="secondary" data-audio-toggle="ambience" aria-pressed="false">🌿 Umgebung: Aus</button>
+            <label class="ambience-volume">Umgebung: Lautstärke <input type="range" data-ambience-volume min="0" max="100" value="45" step="5" aria-label="Lautstärke der Umgebungsgeräusche"></label>
           </div>
           <form id="new-game">
             <label>Spieler an diesem Gerät<select name="players" id="player-count">
@@ -533,6 +534,7 @@ export class KingdomGameUI {
     });
     this.map?.update(kingdom, this.selected);
     const scene: Soundscape = this.view === 'war' ? 'battle' :
+      this.view === 'culture' ? 'culture' :
       this.view === 'economy' ? 'market' :
       kingdom.currentSeason === 'winter' ? 'winter' : 'village';
     this.ambience.setScene(scene);
@@ -1196,6 +1198,12 @@ export class KingdomGameUI {
               this.notify(error instanceof Error ? error.message : 'Umgebungsgeräusche nicht verfügbar.', true);
             });
         } else this.toggleEffects();
+      });
+    });
+    this.root.querySelectorAll<HTMLInputElement>('[data-ambience-volume]').forEach((input) => {
+      input.value = String(Math.round(this.ambience.getVolume() * 100));
+      input.addEventListener('input', () => {
+        this.ambience.setVolume(Number(input.value) / 100);
       });
     });
     this.updateAudioControls();
