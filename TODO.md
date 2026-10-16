@@ -14,6 +14,17 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
 
 ---
 
+## ✅ Erste Gameplay-Ausbaustufe – Reichsrat (Branch in Review)
+
+- [x] Sechs spielbare Ratsdilemmata (Ernte, Grenze, Gilden, Intrige, Winter, Gelehrte).
+- [x] Jeweils drei Entscheidungen mit überprüften Kosten, konkreten Folgen und teils Erfolgschance.
+- [x] Reichsrat als Bereich der Aufbaukampagne mit Warnhinweis, Ergebnis und Ereignisverlauf.
+- [x] Reichsspezifische offene Beschlüsse und Verlauf im Savegame; alte Spielstände bleiben ladbar.
+- [x] Hotseat: keine Weitergabe des Zuges bei ungeklärtem Beschluss.
+- [x] Unit-Tests für das neue Ratssystem hinzugefügt (lokale Ausführung und CI noch prüfen).
+- [ ] CI, Typecheck, Build und Browser-Smoke-Test des neuen Branches ausführen.
+- [ ] Erfolgswahrscheinlichkeiten im Balancing mit Langläufen prüfen und Ereignispool ausbauen.
+
 ## 🔴 P0 – Sofort (Build & laufende Arbeit)
 
 - [x] **Build reparieren**: Forschungsansicht integriert; `npm run check`, Tests und Produktionsbuild
