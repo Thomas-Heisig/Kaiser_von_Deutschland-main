@@ -68,6 +68,27 @@ describe('Playable campaign integration', (): void => {
     }
   });
 
+  it('progresses campaign chapters once and saves milestone progress', async (): Promise<void> => {
+    const engine = await campaign();
+    const player = engine.getPlayers()[0];
+    expect(engine.getCampaignChapterStatus(player.id).index).toBe(0);
+    player.kingdom.infrastructure.farms = 12;
+    player.kingdom.infrastructure.markets = 3;
+    await engine.advanceMonth();
+    expect(engine.getCampaignChapterStatus(player.id).index).toBe(1);
+    const gold = player.kingdom.resources.gold;
+    // A completed chapter must never award its reward again.
+    await engine.advanceMonth();
+    expect(engine.getCampaignChapterStatus(player.id).index).toBe(1);
+    await engine.saveGame('story-progress');
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('story-progress');
+    expect(restored.getCampaignChapterStatus(player.id).index).toBe(1);
+    expect(restored.getCampaignChapterStatus(player.id).title).toBe('Wissen und Vertrauen');
+    expect(Number.isFinite(gold)).toBe(true);
+  });
+
   it('can hold seasonal festivals once per year and preserve them in a savegame', async (): Promise<void> => {
     const engine = await campaign();
     const ruler = engine.getPlayers()[0];

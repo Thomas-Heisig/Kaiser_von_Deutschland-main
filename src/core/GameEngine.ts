@@ -53,6 +53,7 @@ import { PlayerTechnologySystem, TechnologyDefinition, TechnologySystem } from '
 import localforage from 'localforage';
 import { encodeSave, decodeSave } from './SaveCodec';
 import { CAMPAIGNS, campaignGoals, CampaignId } from './CampaignCatalog';
+import { chapterStatus, CampaignChapterStatus } from './CampaignChapters';
 import { KingdomInfrastructure } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
 import type { Citizen } from './CitizenSystem';
@@ -191,6 +192,7 @@ export class GameEngine {
   private festivalsHeld = new Map<string, number>();
   private warFinanceByPlayer = new Map<string, WarFinancingSystem>();
   private warFinanceUsed = new Map<string, number>();
+  private campaignChapters = new Map<string, number>();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -608,6 +610,7 @@ export class GameEngine {
     for (const player of this.players.values()) {
       player.kingdom.currentSeason = seasons[Math.floor((this.currentMonth % 12) / 3)];
     }
+    for (const player of this.players.values()) this.completeCampaignChapter(player);
     this.emit('monthAdvanced', { month: this.currentMonth, year: this.currentYear });
   }
 
@@ -675,6 +678,7 @@ export class GameEngine {
     this.players.set(player.id, player);
     this.warfare.ensureRivals(player.id, data.difficulty ?? this.config.difficulty);
     this.technologySystems.set(player.id, new PlayerTechnologySystem());
+    this.campaignChapters.set(player.id, 0);
     this.warFinanceByPlayer.set(player.id, new WarFinancingSystem());
     this.initializeRivalDiplomacy(player.id);
     this.emit('playerAdded', { player: player.serialize() });
@@ -690,6 +694,7 @@ export class GameEngine {
       this.rivalDiplomacy.delete(playerId);
       this.warFinanceByPlayer.delete(playerId);
       this.warFinanceUsed.delete(playerId);
+      this.campaignChapters.delete(playerId);
       this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
     }
@@ -930,6 +935,7 @@ export class GameEngine {
       espionage: this.espionageSystem.serialize(),
       warFinanceByPlayer: Object.fromEntries(Array.from(this.warFinanceByPlayer, ([id, finance]) => [id, finance.serialize()])),
       warFinanceUsed: Array.from(this.warFinanceUsed),
+      campaignChapters: Array.from(this.campaignChapters),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -1013,6 +1019,17 @@ export class GameEngine {
     this.festivalsHeld = new Map(Array.isArray(saveData.festivalsHeld) ? saveData.festivalsHeld : []);
     this.warFinanceByPlayer = new Map();
     this.warFinanceUsed = new Map(Array.isArray(saveData.warFinanceUsed) ? saveData.warFinanceUsed : []);
+    this.campaignChapters = new Map();
+    if (saveData.campaignChapters !== undefined) {
+      if (!Array.isArray(saveData.campaignChapters) ||
+          saveData.campaignChapters.some((entry: unknown) =>
+            !Array.isArray(entry) || entry.length !== 2 ||
+            !restoredPlayers.some((player: Player) => player.id === entry[0]) ||
+            !Number.isSafeInteger(entry[1]) || entry[1] < 0 || entry[1] > 3)) {
+        throw new Error('Ungültiger Kampagnenkapitelstand im Spielstand.');
+      }
+      this.campaignChapters = new Map(saveData.campaignChapters);
+    }
     for (const player of restoredPlayers) {
       const finance = new WarFinancingSystem();
       if (saveData.warFinanceByPlayer?.[player.id]) finance.deserialize(saveData.warFinanceByPlayer[player.id]);
@@ -1206,6 +1223,27 @@ export class GameEngine {
    * @returns Six objectives, complete only when their current thresholds are met.
    * @throws Error if the player does not exist.
    */
+  /** Completing each chapter is an explicit monthly milestone, never a UI render side effect. */
+  private completeCampaignChapter(player: Player): void {
+    const completed = this.campaignChapters.get(player.id) ?? 0;
+    const chapter = chapterStatus(this.getCampaignId(), completed, this.getCampaignGoals(player.id));
+    if (!chapter.ready) return;
+    this.campaignChapters.set(player.id, completed + 1);
+    const reward = 250 * (completed + 1);
+    player.kingdom.resources.gold += reward;
+    player.updateStats({ prestige: 2 });
+    this.emit('campaignChapterCompleted', {
+      playerId: player.id, chapter: chapter.title, number: completed + 1,
+      reward, final: completed + 1 === chapter.total
+    });
+  }
+
+  public getCampaignChapterStatus(playerId: string): CampaignChapterStatus {
+    this.requirePlayer(playerId);
+    return chapterStatus(this.getCampaignId(), this.campaignChapters.get(playerId) ?? 0,
+      this.getCampaignGoals(playerId));
+  }
+
   public getCampaignId(): CampaignId { return this.config.campaignId ?? 'aufbau'; }
   public getCampaignDefinition() { return CAMPAIGNS.find((item) => item.id === this.getCampaignId()) ?? CAMPAIGNS[0]; }
   public getCampaignGoals(playerId: string): CampaignGoal[] {
