@@ -3,8 +3,8 @@ import { chromium } from '../.browser-tools/node_modules/playwright/index.mjs';
 const browser = await chromium.launch({ headless: true });
 const failures = [];
 try {
-  for (const width of [1280, 320]) {
-    const page = await browser.newPage({ viewport: { width, height: 740 }, reducedMotion: 'reduce' });
+  for (const width of [1280, 820, 320]) {
+    const page = await browser.newPage({ viewport: { width, height: width === 820 ? 1180 : 740 }, reducedMotion: 'reduce' });
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
@@ -34,6 +34,21 @@ try {
     await page.locator('[data-jukebox-download]').waitFor({state:'attached'});
     if (await page.locator('#opening-play, [data-music-volume], [data-audio-toggle]').count())
       failures.push('redundant audio controls are still shown');
+    await page.locator('#settings-open').click();
+    if (await page.locator('#advisor-backend').inputValue() !== 'off')
+      failures.push('AI should default to disabled');
+    await page.locator('#advisor-backend').selectOption('mini');
+    if (await page.locator('#advisor-backend').inputValue() !== 'mini')
+      failures.push('embedded mini model cannot be enabled');
+    await page.locator('#advisor-backend').selectOption('off');
+    await page.locator('[data-close-dialog="settings-dialog"]').click();
+    const geometry = await page.evaluate(() => {
+      const container = document.querySelector('.kingdom-app')?.getBoundingClientRect();
+      return { width: container?.width ?? 0, height: container?.height ?? 0,
+        viewportWidth: window.innerWidth, viewportHeight: window.innerHeight };
+    });
+    if (geometry.width < geometry.viewportWidth - 5 || geometry.height < geometry.viewportHeight - 5)
+      failures.push('viewport ' + width + ': app not fullscreen ' + JSON.stringify(geometry));
     await page.locator('#epoch-info-toggle').click();
     await page.locator('#epoch-description').getByText(/Industrialisierung/).waitFor();
     await page.locator('[data-close-dialog="epoch-dialog"]').click();
