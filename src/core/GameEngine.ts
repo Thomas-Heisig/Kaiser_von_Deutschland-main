@@ -1378,6 +1378,7 @@ export class GameEngine {
    */
   /** Completing each chapter is an explicit monthly milestone, never a UI render side effect. */
   private completeCampaignChapter(player: Player): void {
+    if (this.getCampaignId() === 'frei') return;
     const completed = this.campaignChapters.get(player.id) ?? 0;
     const chapter = chapterStatus(this.getCampaignId(), completed, this.getCampaignGoals(player.id));
     if (!chapter.ready) return;
@@ -1401,6 +1402,7 @@ export class GameEngine {
   public getCampaignDefinition() { return CAMPAIGNS.find((item) => item.id === this.getCampaignId()) ?? CAMPAIGNS[0]; }
   public getCampaignGoals(playerId: string): CampaignGoal[] {
     const player = this.requirePlayer(playerId);
+    if (this.getCampaignId() === 'frei') return [];
     if (this.getCampaignId() === 'aufbau') {
       const kingdom = player.kingdom;
       const balance = kingdom.getMonthlyBalance();
