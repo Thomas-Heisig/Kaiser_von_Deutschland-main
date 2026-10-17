@@ -55,6 +55,7 @@ import { encodeSave, decodeSave } from './SaveCodec';
 import { CAMPAIGNS, campaignGoals, CampaignId } from './CampaignCatalog';
 import { chapterStatus, CampaignChapterStatus } from './CampaignChapters';
 import { CourtAssistantRegistry, COURT_OFFICES, CourtOffice, AssistantMode } from './CourtAssistantRegistry';
+import { epochForYear, milestonesInYear, milestonesThrough } from './WorldHistoryCatalog';
 import { applyScienceDiscovery, researchImpact, researchProductionBonus } from './ScienceImpact';
 import { KingdomInfrastructure } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
@@ -342,6 +343,9 @@ export class GameEngine {
     return this.players.get(id);
   }
 
+  public getHistoricalTimeline() { return milestonesThrough(this.currentYear); }
+  public getCurrentEpoch(): string { return epochForYear(this.currentYear); }
+
   public getCurrentYear(): number {
     return this.currentYear;
   }
@@ -600,6 +604,11 @@ export class GameEngine {
       // Yearly processes for ecological systems
       this.processEcologicalYear();
       
+      // Informative world-history milestones never mutate resources, technology,
+      // or politics: real-world developments are not automatically invented by this realm.
+      for (const milestone of milestonesInYear(this.currentYear)) {
+        this.emit('historyMilestone', { milestone });
+      }
       this.emit('yearAdvanced', { year: this.currentYear });
     }
 
