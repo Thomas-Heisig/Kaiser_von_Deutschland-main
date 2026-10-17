@@ -1,3 +1,4 @@
+import { filmForRole, filmPreferences, saveFilmPreferences, loadCinematicLibrary, type CinematicClip, type FilmRole } from './CinematicLibrary';
 import { doctrineForYear } from '../core/HistoricalGameplay';
 import { miniCouncilChoice } from '../core/EmbeddedMiniModel';
 import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
@@ -98,6 +99,8 @@ export class KingdomGameUI {
   private readonly jukebox = new MusicJukebox(() => this.updateJukeboxStatus());
   private eraMusicSwitching = false;
   private introDismissed = false;
+  private cinematicClips: CinematicClip[] = [];
+  private interludeDialog?: HTMLDialogElement;
   private cinematicTimeout?: number;
   private openingAttempt = false;
   private resumeAfterCouncil = false;
@@ -211,6 +214,7 @@ export class KingdomGameUI {
         </section>
       </main>`;
     this.bindIntro();
+    void this.refreshCinematicClips();
     this.root.querySelector('#opening-toggle')?.addEventListener('click', () => void this.toggleOpeningMusic());
     const campaignSelect = this.root.querySelector<HTMLSelectElement>('#campaign-select');
     const startYearSelect = this.root.querySelector<HTMLSelectElement>('#start-year');
@@ -443,11 +447,25 @@ export class KingdomGameUI {
           <hr><h3>Offline spielen</h3><p>Einmal online alle Mediendateien und das Spiel für diesen Browser speichern (ca. 75 MB). Der Browser kann diese Daten bei Speichermangel löschen.</p>
           <button type="button" id="offline-save" class="primary">↓ Spiel im Browser speichern</button>
           <p id="offline-status" role="status">Offline-Paket noch nicht überprüft.</p>
-          <hr><h3>Anzeige und Musik</h3>
+          <hr><h3>Filmvorführungen</h3>
+           <p id="film-library-status" role="status">Filmdateien werden überprüft …</p>
+           <label>Alternatives Intro<select id="film-intro"></select></label>
+           <label>Film beim Beenden<select id="film-outro"></select></label>
+           <label>Historisches Zwischenvideo<select id="film-interlude"></select></label>
+           <label class="checkbox"><input id="film-interludes-enabled" type="checkbox"> Zwischenvideos bei historischen Meilensteinen anzeigen</label>
+           <button type="button" id="film-preview" class="secondary">▶ Gewähltes Zwischenvideo ansehen</button>
+           <hr><h3>Anzeige und Musik</h3>
           <label>Musiklautstärke <input id="setting-music-volume" type="range" min="0" max="100" value="28"></label>
           <label><input type="checkbox" id="setting-motion" checked> Kartenanimation aktivieren</label>
           <button type="button" data-close-dialog="settings-dialog">Schließen</button></dialog>
-        <dialog id="epoch-dialog" class="info-dialog" aria-labelledby="epoch-title"><h2 id="epoch-title">Epoche</h2><p id="epoch-description"></p><p class="muted">Historische Einordnung; alternative Geschichte.</p><button type="button" data-close-dialog="epoch-dialog">Schließen</button></dialog>
+        <dialog id="film-dialog" class="film-dialog" aria-label="Historischer Film">
+           <div class="section-dialog-head"><strong id="film-dialog-title">Eine neue Epoche</strong>
+           <button type="button" id="film-dialog-close" aria-label="Film schließen">✕</button></div>
+           <video id="film-dialog-video" playsinline controls preload="none"></video>
+           <div class="film-dialog-footer"><button type="button" id="film-dialog-play">▶ Mit Ton abspielen</button>
+           <button type="button" id="film-dialog-skip">Überspringen →</button></div>
+         </dialog>
+         <dialog id="epoch-dialog" class="info-dialog" aria-labelledby="epoch-title"><h2 id="epoch-title">Epoche</h2><p id="epoch-description"></p><p class="muted">Historische Einordnung; alternative Geschichte.</p><button type="button" data-close-dialog="epoch-dialog">Schließen</button></dialog>
         <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
       </div>`;
     this.bindJukeboxControls();
@@ -634,6 +652,7 @@ export class KingdomGameUI {
         if (button) button.disabled = false;
       });
     });
+    this.bindFilmSettings();
     this.root.querySelector('#epoch-info-toggle')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#epoch-dialog')?.showModal());
     this.root.querySelector('#legal-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#legal-dialog')?.showModal());
     this.root.querySelectorAll<HTMLButtonElement>('[data-close-dialog]').forEach(button => button.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#' + button.dataset.closeDialog)?.close()));
