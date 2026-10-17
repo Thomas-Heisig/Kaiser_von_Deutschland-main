@@ -312,6 +312,7 @@ export class KingdomGameUI {
           <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span></div>
           <div class="header-actions">
             <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog" aria-label="Informationen zur Epoche"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
+            <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
             <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button></div>
@@ -406,7 +407,9 @@ export class KingdomGameUI {
               <div id="latest"></div><button data-view="chronicle" class="text-button">Chronik öffnen →</button></section>
           </aside>
         </div>
-        <footer class="game-footer">Version 2026-10-17 · Kaiser von Deutschland · Jede Entscheidung zählt.<span id="footer-keys"></span></footer>
+        <footer class="game-footer">© 2026 Thomas Heisig · Kaiser von Deutschland · <button type="button" id="legal-open" class="legal-link">Urheberrecht · KI · Datenschutz</button><span id="footer-keys"></span></footer>
+        <dialog id="epoch-dialog" class="info-dialog" aria-labelledby="epoch-title"><h2 id="epoch-title">Epoche</h2><p id="epoch-description"></p><p class="muted">Historische Einordnung; alternative Geschichte.</p><button type="button" data-close-dialog="epoch-dialog">Schließen</button></dialog>
+        <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
       </div>`;
     this.bindJukeboxControls();
     this.root.querySelector<HTMLSelectElement>('#settlement-filter')?.addEventListener('change', (event) => {
@@ -446,6 +449,9 @@ export class KingdomGameUI {
       motionToggle.disabled = true;
       motionToggle.title = 'Reduzierte Bewegung ist im Betriebssystem aktiviert.';
     }
+    this.root.querySelector('#epoch-info-toggle')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#epoch-dialog')?.showModal());
+    this.root.querySelector('#legal-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#legal-dialog')?.showModal());
+    this.root.querySelectorAll<HTMLButtonElement>('[data-close-dialog]').forEach(button => button.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#' + button.dataset.closeDialog)?.close()));
     this.root.querySelector('.brand')?.addEventListener('click', (event: Event): void => {
       event.preventDefault();
       this.navigate('overview');
@@ -728,6 +734,10 @@ export class KingdomGameUI {
     }
     setText('date', this.date());
     setText('era-label', this.engine.getCurrentEpoch().toUpperCase() + ' · ALTERNATIVE GESCHICHTE');
+    const currentEraYear = this.engine.getCurrentYear();
+    const eras: readonly [number, string][] = [[1200, 'Hochmittelalter: Städte, Herrschaften und Handelswege wachsen.'], [1400, 'Spätmittelalter: Zünfte, Handel und gesellschaftlicher Wandel.'], [1500, 'Renaissance und Reformation.'], [1600, 'Konfessionelle Konflikte und territoriale Veränderungen.'], [1750, 'Aufklärung und wissenschaftliche Reformen.'], [1820, 'Industrialisierung und veränderte Verkehrswege.'], [1890, 'Großindustrie und Elektrifizierung.'], [1945, 'Nachkriegszeit und Wiederaufbau.'], [1970, 'Elektronik und moderne Gesellschaft.'], [2000, 'Digitalzeitalter und globale Vernetzung.']];
+    setText('epoch-title', this.engine.getCurrentEpoch() + ' · ' + currentEraYear);
+    setText('epoch-description', [...eras].reverse().find(([year]) => currentEraYear >= year)?.[1] ?? eras[0][1]);
     this.root.querySelector('.kingdom-app')?.setAttribute('data-era-year', String(this.engine.getCurrentYear()));
     this.root.querySelector('.kingdom-app')?.setAttribute('data-era', this.engine.getCurrentYear() >= 1945 ? 'modern' : this.engine.getCurrentYear() >= 1800 ? 'industrial' : this.engine.getCurrentYear() >= 1500 ? 'early-modern' : 'medieval');
     const paused = this.engine.getGameState() !== GameState.RUNNING;
@@ -804,7 +814,7 @@ export class KingdomGameUI {
           .finally(() => { this.eraMusicSwitching = false; this.updateJukeboxStatus(); });
       }
     }
-    setText('music-era-label', 'Jahr ' + musicContext.year + ' · Original-Soundtrack');
+    setText('music-era-label', this.engine.getCurrentEpoch() + ' · ' + musicContext.year);
     const panel = this.root.querySelector('#panel');
     if (!panel?.contains(document.activeElement)) this.renderPanel();
   }
