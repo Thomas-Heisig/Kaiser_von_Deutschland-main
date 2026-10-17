@@ -5,7 +5,7 @@
   "description": "Historical Kingdom Simulator - Role-play from year 0 to the future with Prisoners of War system and 20+ integrated features!",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && node scripts/create-offline-archive.mjs",
     "preview": "vite preview",
     "check": "tsc --noEmit",
     "test": "vitest",
