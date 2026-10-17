@@ -1,3 +1,10 @@
+## Wiederkehrende Ratsereignisse – Bürgerauswahl (17.10.2026)
+- [x] Beim wiederkehrenden Ratsereignis bevorzugt denselben zuvor beauftragten Bürger, wenn er noch lebt und verfügbar ist.
+- [x] Falls es keine lebende frühere Bezugsperson gibt, nach fünf Sekunden einen zufälligen lebenden Erwachsenen vorauswählen.
+- [x] Manuelle Änderung unterbricht die automatische Auswahl; die eigentliche Ratsentscheidung wird **nicht** automatisch ausgelöst.
+- [x] Bestehende im Spielstand gespeicherte Ratschronik als Identitätsgedächtnis nutzen; keine neue ungesicherte Parallelstruktur.
+- [ ] Langzeit-Browserabnahme: wiederkehrendes Ereignis, Tod des Delegierten, manuelle Auswahl, Hotseat und Save/Load.
+
 ## Sichtbarkeit der Bürgeraufträge und echte Geburten (17.10.2026)
 - [x] Bürgeraufträge direkt in der oberen Spielleiste als hervorgehobene Schaltfläche anbieten (auch bei langer Navigation).
 - [x] Schwangerschaftsende erzeugt tatsächlich einen neuen Bürger mit Familienzuordnung und beidseitigen Eltern-Kind-Relationen.
