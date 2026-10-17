@@ -1,3 +1,14 @@
+## Historische Ratsereignisse, Bürger und WebGPU (17.10.2026)
+- [x] Rat um fünf epochengebundene Krisentypen ergänzt und frühere Ratsereignisse zeitlich eingegrenzt.
+- [x] Vorhandene zufällige Ereignisse um grundlegende historische Begriffsfilter ergänzt.
+- [x] Ratsbeschluss an lebenden Bürger delegieren, Name und ID in Chronik/Speicherstand vermerken.
+- [x] Schaltfläche Einstellungen mit WebGPU-Prüfung und lokaler Regelberatung.
+- [x] Optionale WebLLM-Prototyp-Anbindung für kleinen Ratsberater, Start nur nach Nutzeraktion.
+- [ ] End-to-End-Download, Latenz, Gerätespeicher und Lizenz der WebGPU-Modellkennung auf realen Geräten prüfen; Modellanbieter/Version ggf. aktualisieren.
+- [ ] Ereignisse/Kriege/Bauaufgaben systematisch statt nur erzählerisch nach Epoche balancieren (Kampfklassen, Waffen, Technik, Kosten, Siegbedingungen).
+- [ ] KI-Beratung stärker mit Bürgerfähigkeiten, Ressort und Reputation verbinden.
+- [ ] Browser-Smoke für Delegationsablauf und Einstellungsdialog erweitern.
+
 ## Startfilm, Epochenkampagnen, Grafik und Web-Zugang (17.10.2026)
 - [x] Längere Filmversion als Intro nach Studiokarte „Eine Thomas Heisig Produktion“ mit Whoosh.
 - [x] Kurzes Intro als Outro beim Beenden in das Hauptmenü.
