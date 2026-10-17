@@ -1,3 +1,7 @@
+## Bürgeraufträge nach Epoche (17.10.2026)
+
+Neuer Menüpunkt **Bürgeraufträge**: Acht epochengebundene zivile Missionen in Versorgung, Zunftwesen, Handel, Bildung, Mechanisierung, Hygiene, Wiederaufbau und Digitalisierung. Bis zu drei lebende erwachsene Bürger übernehmen Aufgaben über mehrere Spielmonate. Ressourcen werden bei Annahme belastet; nach Abschluss folgen begrenzte Erträge, Fähigkeitsfortschritt und soziale Effekte. Aufträge samt Chronik werden im Spielstand gesichert. KI- oder Ollama-Aktivierung ist nicht nötig; Spieler vergeben Aufträge ausdrücklich.
+
 ## Epochenabhängige militärische Spielmechanik (17.10.2026)
 
 Die Feldzugsimulation nutzt historische Doktrinen ab Antike, Mittelalter, früher Feuerwaffenzeit, Linientaktik, Industrialisierung, Motorisierung und vernetzter Gegenwart. Die drei vorhandenen Armeekategorien bleiben für ältere Spielstände gespeichert, werden jedoch epochenabhängig benannt und mit unterschiedlichen Kampfstärken berechnet. Mauern und Burgen verlieren über die Jahrhunderte relativ an Wirkung. Auch die Rivalennamen und Beschreibungen passen zum Zeitalter. Vorschau und tatsächliche Schlacht verwenden dieselbe historische Kampflogik. Die Struktur bleibt eine abstrahierte alternative Geschichte – keine genaue historische Simulation einzelner Nationen oder Waffenmodelle.
