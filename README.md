@@ -1,3 +1,11 @@
+## Integrierte Mini-KI und optionale Modelle (17.10.2026)
+
+**Standard: KI aus.** Ein kleines, vollständig mitgeliefertes neuronales Entscheidungsnetz (`EmbeddedMiniModel.ts`, sechs festgewichtete Neuronen) kann in **⚙ Einstellungen** ausdrücklich eingeschaltet werden. Es arbeitet offline und benötigt keinen Modelldownload. Es ist ein heuristisches Mini-Neuronennetz, **kein** vortrainiertes Sprachmodell und kein generativer Chatbot. Das Netz bewertet ausschließlich bezahlbare Ratsoptionen und verändert Spielstände nicht selbstständig.
+
+Alternativ können Regelberater, experimentelles WebGPU-Sprachmodell (Download erst auf Wunsch) oder ein **lokaler** Ollama-Dienst über `http://localhost:11434` mit wählbarem Modell genutzt werden. Ollama und WebGPU bleiben standardmäßig vollständig deaktiviert. Die WebGPU- und Ollama-Modi sind experimentell; Browser-Sicherheitsregeln, CORS und HTTPS können die tatsächliche Nutzung begrenzen.
+
+**iPad / Tablet / Handy:** Der Spielcontainer übernimmt die sichtbare Viewporthöhe unter Safari einschließlich eingeblendeter Browserleisten. Tablet-Hoch- und Querformat, kompakte Navigationsleiste, Hauptbereich mit internem Scrollen und bildschirmfüllende Modalansichten wurden neu gestaltet. Die Oberfläche nutzt die gesamte nutzbare Breite und Höhe; die Darstellung auf realen Geräten muss noch abgenommen werden.
+
 ## Historisch passende Entscheidungen und KI im Browser (17.10.2026)
 
 Der Reichsrat enthält weitere Ereignisse zu Arbeitskonflikten, Eisenbahnen, Wiederaufbau, Energieversorgung und digitalen Vorfällen. Ereignisse werden nach Epoche gefiltert; die bisherige Ereignisbibliothek bleibt erhalten, soweit zeitlich passend. Im dringenden Ratsdialog können Entscheidungen an lebende Bürger delegiert werden: Der Regelberater wählt eine bezahlbare Option, die Entscheidung wird sofort ausgeführt und inklusive des Bürgernamens in der Chronik gespeichert.

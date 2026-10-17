@@ -1,3 +1,12 @@
+## Integriertes Mininetz & iPad-Layout (17.10.2026)
+- [x] Mini-Neuronennetz mit festen eingebetteten Gewichten, komplett offline ohne Downloads oder Netzaufrufe, als Opt-in-Berater.
+- [x] KI-Unterstützung standardmäßig aus; optionales WebGPU/Ollama nur nach Auswahl.
+- [x] Ollama-Option ausschließlich lokaler Host, Modellname konfigurierbar.
+- [x] Sichtbarer Viewport auf iPad/Safari: visualViewport-Berechnung, Touch- und Querformat-CSS.
+- [x] Tablet-Kompaktlayout für 761–1180 px und mobile Ansichten; bildschirmfüllende Sidebar-Dialoge.
+- [ ] Reale iPadOS Safari-, Android Chrome- und Tablet-Landscape-Prüfungen; WebGPU-/Ollama-Modelltests.
+- [ ] Epochengetreue KI-Autonomie (historische Aktionsräume, delegierte mehrmonatige Arbeitsaufträge) implementieren.
+
 ## Historische Ratsereignisse, Bürger und WebGPU (17.10.2026)
 - [x] Rat um fünf epochengebundene Krisentypen ergänzt und frühere Ratsereignisse zeitlich eingegrenzt.
 - [x] Vorhandene zufällige Ereignisse um grundlegende historische Begriffsfilter ergänzt.

@@ -579,3 +579,47 @@ html,body,#app,.kingdom-app{width:100%;max-width:100%;min-width:0;margin:0}
 #settings-dialog select{max-width:100%}
 #settings-dialog #advisor-status{min-height:1.3em;margin:10px 0}
 @media(max-width:480px){.council-delegation{flex-direction:column}.council-delegation button{width:100%}.kingdom-app .header-actions #settings-open{min-height:34px;padding:6px 9px;font-size:.72rem}}
+
+
+/* iPad layout: remove the old 1920px maximum and fill the full available width.
+   Unlike viewport-locked scroll regions, the browser's native page scrolling
+   keeps every touch target accessible with mobile Safari chrome visible. */
+html,body,#app{width:100%;max-width:100%;min-width:0}
+#app{height:auto;min-height:100vh;min-height:100dvh;display:block}
+.kingdom-app{width:100%;min-height:100vh;min-height:100dvh;max-width:none;overflow-x:clip}
+.kingdom-app .game-layout{width:100%;max-width:none;min-width:0}
+.kingdom-app .workspace{min-width:0;overflow:visible}
+@media(min-width:761px) and (max-width:1180px){
+  .kingdom-app .game-layout{display:grid;grid-template-columns:clamp(126px,15vw,170px) minmax(0,1fr);width:100%;max-width:none}
+  .kingdom-app .sidebar{grid-column:1;grid-row:1;padding:8px 6px}
+  .kingdom-app .sidebar nav{display:grid;grid-template-columns:minmax(0,1fr);gap:2px}
+  .kingdom-app .sidebar nav button{min-height:34px;padding:5px 6px;font-size:.71rem;line-height:1.2}
+  .kingdom-app .workspace{grid-column:2;grid-row:1;padding:8px;min-width:0}
+  .kingdom-app .council{display:none}
+  .kingdom-app .map-host{height:clamp(180px,30dvh,370px)}
+  .kingdom-app .topbar{padding:8px 10px;gap:8px}
+  .kingdom-app .header-actions{gap:5px}
+  .kingdom-app .header-actions button{padding:5px 8px;min-height:36px;font-size:.72rem}
+  .kingdom-app .settlement-districts{padding:5px;gap:3px}
+  .kingdom-app .settlement-districts button{min-height:34px;padding:5px}
+  .kingdom-app .section-dialog{width:min(96vw,1050px);height:min(91dvh,980px)}
+}
+@media(max-width:760px){
+  .kingdom-app .game-layout{display:flex;flex-direction:column}
+  .kingdom-app .workspace{padding:7px}
+  .kingdom-app .sidebar{padding:5px}
+  .kingdom-app .sidebar nav{overflow-x:auto;flex-wrap:nowrap;overscroll-behavior-x:contain;scrollbar-width:thin}
+  .kingdom-app .sidebar nav button{flex:0 0 auto;min-height:39px;white-space:nowrap;padding:7px 9px}
+  .kingdom-app .resource-bar{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .kingdom-app .header-actions{max-width:100%;overflow-x:auto;flex-wrap:nowrap}
+  .kingdom-app .header-actions button{flex:0 0 auto;min-height:38px}
+  .kingdom-app .map-host{height:clamp(160px,30dvh,300px)}
+  .kingdom-app .section-dialog{width:100vw;height:100dvh;max-height:100dvh;border-radius:0}
+  .kingdom-app #section-dialog-body{overflow-y:auto}
+}
+@media(orientation:landscape) and (max-height:540px){
+  .kingdom-app .map-host{height:clamp(130px,36dvh,230px)}
+  .kingdom-app .realm-health{display:none}
+}
+#settings-dialog label{display:grid;gap:6px}
+#settings-dialog input,#settings-dialog select{max-width:100%;width:100%;min-height:42px;font-size:16px}
