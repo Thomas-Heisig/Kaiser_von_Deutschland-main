@@ -4,7 +4,7 @@
   "openingTrackId": "zeit-vergeht",
   "assetBase": "public/music/",
   "downloadsAllowed": true,
-  "notes": "15 Originalaufnahmen unter public/music, unverändert aus den hochgeladenen Git-Blobs übernommen. Die Titelcover sind gestaltete Platzhalter; Original-Cover und zusätzliche Urheberangaben können später hinterlegt werden.",
+  "notes": "15 Originalaufnahmen unter public/music, unverändert aus den hochgeladenen Git-Blobs übernommen. Die 15 Cover-Motive wurden den vom Projektinhaber bereitgestellten Screenshots zugeordnet (Screenshot-Ausschnitte, eingeschränkte Auflösung). Originaldateien in höherer Auflösung sowie weitere Urheberangaben können später ergänzt werden.",
   "tracks": [
     {
       "number": 1,
@@ -16,7 +16,7 @@
       "durationSeconds": 161.9,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1200.",
-      "cover": "/covers/leitmotiv-1200.svg"
+      "cover": "/covers/leitmotiv-1200.webp"
     },
     {
       "number": 2,
@@ -28,7 +28,7 @@
       "durationSeconds": 162.5,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1300.",
-      "cover": "/covers/stauferkrone-1300.svg"
+      "cover": "/covers/stauferkrone-1300.webp"
     },
     {
       "number": 3,
@@ -40,7 +40,7 @@
       "durationSeconds": 179.2,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1400.",
-      "cover": "/covers/leitmotiv-1400.svg"
+      "cover": "/covers/leitmotiv-1400.webp"
     },
     {
       "number": 4,
@@ -52,7 +52,7 @@
       "durationSeconds": 166.5,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1500.",
-      "cover": "/covers/pavane-1500.svg"
+      "cover": "/covers/pavane-1500.webp"
     },
     {
       "number": 5,
@@ -64,7 +64,7 @@
       "durationSeconds": 179.1,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1600.",
-      "cover": "/covers/fanfare-1600.svg"
+      "cover": "/covers/fanfare-1600.webp"
     },
     {
       "number": 6,
@@ -76,7 +76,7 @@
       "durationSeconds": 164.2,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1750.",
-      "cover": "/covers/ouvertuere-1750.svg"
+      "cover": "/covers/ouvertuere-1750.webp"
     },
     {
       "number": 7,
@@ -88,7 +88,7 @@
       "durationSeconds": 179.7,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1820.",
-      "cover": "/covers/romantik-1820.svg"
+      "cover": "/covers/romantik-1820.webp"
     },
     {
       "number": 8,
@@ -100,7 +100,7 @@
       "durationSeconds": 180,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1890.",
-      "cover": "/covers/eiserne-kronen-1890.svg"
+      "cover": "/covers/eiserne-kronen-1890.webp"
     },
     {
       "number": 9,
@@ -112,7 +112,7 @@
       "durationSeconds": 177.4,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1945.",
-      "cover": "/covers/truemmerstaaten-1945.svg"
+      "cover": "/covers/truemmerstaaten-1945.webp"
     },
     {
       "number": 10,
@@ -124,7 +124,7 @@
       "durationSeconds": 174.6,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1970.",
-      "cover": "/covers/kaisersynthesia-1970.svg"
+      "cover": "/covers/kaisersynthesia-1970.webp"
     },
     {
       "number": 11,
@@ -136,7 +136,7 @@
       "durationSeconds": 176.3,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 2000.",
-      "cover": "/covers/kaiserreich-erwachen-2000.svg"
+      "cover": "/covers/kaiserreich-erwachen-2000.webp"
     },
     {
       "number": 12,
@@ -148,7 +148,7 @@
       "durationSeconds": 179,
       "role": "special",
       "description": "Zusätzliches eigenständiges Musikstück ohne festes Startjahr.",
-      "cover": "/covers/kaiser-puls.svg"
+      "cover": "/covers/kaiser-puls.webp"
     },
     {
       "number": 13,
@@ -160,7 +160,7 @@
       "durationSeconds": 171.2,
       "role": "main",
       "description": "Offizielles Hauptthema des Spiels; beginnt nach Möglichkeit beim Programmstart.",
-      "cover": "/covers/zeit-vergeht.svg"
+      "cover": "/covers/zeit-vergeht.webp"
     },
     {
       "number": 14,
@@ -172,7 +172,7 @@
       "durationSeconds": 172.7,
       "role": "ending",
       "description": "Eigenständiger Soundtrack zum Ende der Zeit.",
-      "cover": "/covers/ende-der-zeit.svg"
+      "cover": "/covers/ende-der-zeit.webp"
     },
     {
       "number": 15,
@@ -184,7 +184,7 @@
       "durationSeconds": 178.6,
       "role": "special",
       "description": "Zusätzliches eigenständiges Musikstück ohne festes Startjahr.",
-      "cover": "/covers/anbeginn-der-zeit.svg"
+      "cover": "/covers/anbeginn-der-zeit.webp"
     }
   ],
   "introVideo": "/video/intro.mp4",

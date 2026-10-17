@@ -1,3 +1,10 @@
+## Musikcover und WebGPU-Betriebszustand (17.10.2026)
+- [x] Alle 15 Screenshot-Cover den Musiktiteln zugeordnet und statt SVG-Platzhaltern eingebaut.
+- [x] WebGPU-KI erhält expliziten Startbutton und prozentuale Lade-/Initialisierungsanzeige.
+- [x] Sichtbare Statusmeldungen für „nicht geladen“, „lädt“, „bereit“, Fehler und Antworttest.
+- [ ] Hochauflösende originale Coverdateien ergänzen (Screenshots sind nur begrenzt aufgelöst).
+- [ ] Echten WebGPU-Modelldownload und Inferenz auf Ziel-PC und iPad testen.
+
 ## Integriertes Mininetz & iPad-Layout (17.10.2026)
 - [x] Mini-Neuronennetz mit festen eingebetteten Gewichten, komplett offline ohne Downloads oder Netzaufrufe, als Opt-in-Berater.
 - [x] KI-Unterstützung standardmäßig aus; optionales WebGPU/Ollama nur nach Auswahl.
