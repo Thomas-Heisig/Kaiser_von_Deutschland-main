@@ -52,7 +52,7 @@ import { DynamicGameView } from './DynamicGameView';
 import { PlayerTechnologySystem, TechnologyDefinition, TechnologySystem } from './TechnologySystem';
 import localforage from 'localforage';
 import { encodeSave, decodeSave } from './SaveCodec';
-import { CAMPAIGNS, campaignGoals, CampaignId } from './CampaignCatalog';
+import { CAMPAIGNS, campaignIsAvailable, campaignGoals, CampaignId } from './CampaignCatalog';
 import { chapterStatus, CampaignChapterStatus } from './CampaignChapters';
 import { CourtAssistantRegistry, COURT_OFFICES, CourtOffice, AssistantMode } from './CourtAssistantRegistry';
 import { MODERNIZATION_PROJECTS, applyModernization } from './ModernizationProjects';
@@ -223,6 +223,7 @@ export class GameEngine {
     }
 
     if (!CAMPAIGNS.some((campaign) => campaign.id === this.config.campaignId)) throw new RangeError('Unbekannte Kampagne.');
+    if (!campaignIsAvailable(this.config.campaignId ?? 'aufbau', this.config.startingYear)) throw new RangeError('Diese Kampagne passt nicht zur gewählten Startepoche.');
     this.currentYear = this.config.startingYear;
     this.gameState = GameState.LOBBY;
     this._economy = new EconomySystem(this.config);
