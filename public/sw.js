@@ -109,7 +109,7 @@ self.addEventListener('message', event => {
         const existing = await cache.match(url);
         if (!existing) {
           const response = await fetch(url.href, { cache: 'reload' });
-          if (!cacheable(response) || response.status !== 200) throw new Error('Datei nicht erreichbar: ' + filename + ' (HTTP ' + response.status + ')');
+          if ((!cacheable(response) && filename !== 'index.html') || response.status !== 200) throw new Error('Datei nicht erreichbar: ' + filename + ' (HTTP ' + response.status + ')');
           const copy = await response.clone().blob();
           if (/\.(mp3|mp4)$/i.test(filename)) {
             if (copy.size < 100000 || /text\/html/i.test(copy.type))
