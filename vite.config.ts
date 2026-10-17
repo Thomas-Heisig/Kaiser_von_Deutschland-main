@@ -5,9 +5,9 @@ import type { Plugin } from 'vite';
 
 function cinemaCatalog(): { videos: Array<{ id: string; title: string; url: string }> } {
   const directory = path.resolve(__dirname, 'public/video');
-  const videos = readdirSync(directory).filter(name => /\\.(mp4|webm|m4v)$/i.test(name))
+  const videos = readdirSync(directory).filter(name => /\.(mp4|webm|m4v)$/i.test(name))
     .sort((a,b) => a.localeCompare(b,'de')).map(name => {
-      const title = name.replace(/\\.[^.]+$/, '').replace(/[-_]+/g, ' ').replace(/\\b\\w/g, letter => letter.toUpperCase());
+      const title = name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
       return { id: name, title, url: '/video/' + encodeURIComponent(name) };
     });
   return { videos };
