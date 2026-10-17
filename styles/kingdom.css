@@ -478,3 +478,9 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 .intro-activation[hidden] {display:none!important}
 .intro-activation {position:absolute;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);padding:20px 30px;background:#162b24;border:2px solid var(--gold);color:#f9e6b9;font-size:1.1rem}
 @media(max-width:1100px){.kingdom-app .sidebar nav {gap:3px}.kingdom-app .sidebar nav button {padding:6px 5px}.kingdom-app .workspace {padding:12px}.kingdom-app .map-host{height:270px}}
+
+
+.dashboard-shortcuts {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:10px}
+.dashboard-shortcuts button {min-height:30px;padding:5px 6px;font-size:.72rem;text-align:left}
+@media(max-width:760px){.dashboard-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1101px){.kingdom-app[data-view="overview"] .quick-actions {display:none}}
