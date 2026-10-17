@@ -1,3 +1,9 @@
+## Offline-Browserinstallation, Audioprüfung und Einstellungen (17.10.2026)
+
+Unter **⚙ Einstellungen** stehen nun ein Audio-Diagnosetest für sämtliche 15 MP3-Dateien, Musiklautstärke, Kartenanimation und **„Spiel im Browser speichern“** bereit. Über ein Service-Worker-/PWA-Paket werden bei ausdrücklicher Zustimmung die gebauten Anwendungsdateien, beide Introfilme, Titelcover und alle 15 MP3-Dateien lokal zwischengespeichert. Das Herunterladen braucht beim ersten Mal eine erreichbare HTTPS-Spielseite und genügend freien Gerätespeicher. Offline-Nutzung ist browser-/gerätgebunden; iOS darf Cache bei Speichermangel löschen. WebGPU-Prüfung fordert jetzt tatsächlich einen Grafikadapter an und meldet das Ergebnis.
+
+**Die Veröffentlichung ist eine eigene Aufgabe:** Das Repository ist privat und kein öffentlich erreichbares Hosting. Für Internetzugriff muss `dist/` bei einem HTTPS-Host veröffentlicht werden; anschließend die Medien-URLs prüfen. Siehe `docs/06-development/public-deployment.md`.
+
 ## Originalcover und sichtbarer WebGPU-Start (17.10.2026)
 
 Die fünfzehn Original-Covermotive wurden aus den drei vom Projektinhaber bereitgestellten Screenshots den Titel-IDs zugeordnet und ersetzen die SVG-Platzhalter. Die WebP-Dateien liegen unter `public/covers/`. Aufgrund der begrenzten Screenshot-Auflösung sind sie eine Übergangslösung bis zum Vorliegen der höher aufgelösten Originalcover.
