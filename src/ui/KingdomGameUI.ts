@@ -110,6 +110,7 @@ export class KingdomGameUI {
   private motionEnabled = false;
   private mapStyle: 'flat' | 'isometric' = 'flat';
   private councilDialog?: HTMLDialogElement;
+  private councilSelectionTimer?: number;
   private actionBannerTimer?: number;
   private readonly buttonSoundHandler = (event: MouseEvent): void => {
     if (!(event.target instanceof Element)) return;
@@ -293,6 +294,7 @@ export class KingdomGameUI {
     window.clearTimeout(this.actionBannerTimer);
     this.map?.dispose();
     this.map = undefined;
+    this.cancelCouncilSelectionTimer();
     this.councilDialog?.close();
     this.councilDialog?.remove();
     this.councilDialog = undefined;
@@ -837,10 +839,16 @@ export class KingdomGameUI {
   }
 
   /** Modal choices are bound to the same authoritative council engine as the full panel. */
+  private cancelCouncilSelectionTimer(): void {
+    window.clearTimeout(this.councilSelectionTimer);
+    this.councilSelectionTimer = undefined;
+  }
+
   private showCouncilDialog(): void {
     if (!this.engine || !this.player || this.root.querySelector('.handover')) return;
     const decision = this.engine.getPendingCouncilDecision(this.player.id);
     if (!decision) return;
+    this.cancelCouncilSelectionTimer();
     this.councilDialog?.remove();
     const dialog = document.createElement('dialog');
     dialog.className = 'council-modal';
@@ -874,21 +882,63 @@ export class KingdomGameUI {
     select.setAttribute('aria-label', 'Bürger für Ratsentscheidung');
     const empty = document.createElement('option');
     empty.value = ''; empty.textContent = 'Bürger auswählen'; select.append(empty);
-    for (const citizen of this.engine.getCouncilDelegates(this.player.id)) {
+    const preferred = this.engine.getPreferredCouncilDelegate(this.player.id);
+    for (const citizen of this.engine.getEligibleCouncilDelegates(this.player.id)) {
       const option = document.createElement('option'); option.value = citizen.id;
       option.textContent = citizen.firstName + ' ' + citizen.lastName + ' · ' + citizen.profession;
       select.append(option);
     }
+    if (preferred) select.value = preferred.id;
+    const note = document.createElement('p');
+    note.className = 'muted';
+    note.setAttribute('role', 'status');
     const delegate = document.createElement('button');
     delegate.type = 'button'; delegate.className = 'secondary'; delegate.textContent = 'An Bürger übergeben';
-    delegate.addEventListener('click', () => void this.run(() => {
-      if (!select.value) throw new Error('Bitte einen Bürger auswählen.');
-      const offers = this.requireEngine().getCouncilChoices(this.requirePlayer().id);
-      const chosen = readAdvisorConfig().backend === 'mini' ? miniCouncilChoice({year:this.requireEngine().getCurrentYear()},offers) : CouncilAdvisor.chooseByRules(offers);
-      const outcome = this.requireEngine().delegateCouncilDecision(this.requirePlayer().id, select.value, chosen);
-      this.notify(outcome.message, !outcome.success);
-      this.resumeAfterCouncilDecision(); dialog.close();
-    }));
+    const delegateChoice = (): void => {
+      if (!dialog.open || !this.engine || !this.player || !select.value) return;
+      this.cancelCouncilSelectionTimer();
+      void this.run(() => {
+        const offers = this.requireEngine().getCouncilChoices(this.requirePlayer().id);
+        const chosen = readAdvisorConfig().backend === 'mini'
+          ? miniCouncilChoice({year:this.requireEngine().getCurrentYear()},offers)
+          : CouncilAdvisor.chooseByRules(offers);
+        const outcome = this.requireEngine().delegateCouncilDecision(this.requirePlayer().id, select.value, chosen);
+        this.notify(outcome.message, !outcome.success);
+        this.resumeAfterCouncilDecision();
+        dialog.close();
+      });
+    };
+    delegate.addEventListener('click', delegateChoice);
+    // The citizen selection is automatic after five seconds, not the political choice:
+    // players can change the selected delegate or decide themselves at any time.
+    let seconds = 5;
+    note.textContent = preferred
+      ? 'Beim letzten Mal entschied ' + preferred.firstName + ' ' + preferred.lastName +
+        '. Wenn diese Person noch lebt, bleibt sie zuständig.'
+      : 'Nach 5 Sekunden wird ein zufälliger lebender Bürger vorausgewählt.';
+    if (!preferred) {
+      const tick = (): void => {
+        if (!dialog.open || !this.engine || !this.player) return;
+        seconds--;
+        if (seconds > 0) {
+          note.textContent = 'Zufällige Bürgerauswahl in ' + seconds + ' Sekunden.';
+          this.councilSelectionTimer = window.setTimeout(tick, 1000);
+          return;
+        }
+        const available = this.engine.getEligibleCouncilDelegates(this.player.id);
+        if (available.length) {
+          const chosen = available[Math.floor(Math.random() * available.length)];
+          select.value = chosen.id;
+          note.textContent = chosen.firstName + ' ' + chosen.lastName +
+            ' wurde zufällig ausgewählt. Du kannst die Auswahl ändern oder selbst entscheiden.';
+        } else note.textContent = 'Keine lebenden Bürger verfügbar. Bitte selbst entscheiden.';
+      };
+      this.councilSelectionTimer = window.setTimeout(tick, 1000);
+    }
+    select.addEventListener('change', () => {
+      this.cancelCouncilSelectionTimer();
+      note.textContent = 'Bürger manuell ausgewählt. Mit „An Bürger übergeben“ entscheidet diese Person.';
+    });
     const suggest = document.createElement('button');
     suggest.type = 'button'; suggest.className = 'secondary'; suggest.textContent = '🤖 Ratsvorschlag';
     suggest.addEventListener('click', () => void this.run(async () => {
@@ -906,14 +956,14 @@ export class KingdomGameUI {
         this.notify((error instanceof Error ? error.message : 'KI nicht verfügbar') + ' · Regelberater in Einstellungen wählen.', true);
       } finally { suggest.disabled = false; }
     }));
-    delegation.append(select, delegate, suggest);
+    delegation.append(select, note, delegate, suggest);
     const later = document.createElement('button');
     later.type = 'button';
     later.className = 'secondary';
     later.textContent = 'Später im Reichsrat entscheiden';
     later.addEventListener('click', () => dialog.close());
     dialog.append(heading, story, choices, delegation, later);
-    dialog.addEventListener('close', () => { if (this.councilDialog === dialog) this.councilDialog = undefined; dialog.remove(); });
+    dialog.addEventListener('close', () => { this.cancelCouncilSelectionTimer(); if (this.councilDialog === dialog) this.councilDialog = undefined; dialog.remove(); });
     this.root.append(dialog);
     this.councilDialog = dialog;
     dialog.showModal();
