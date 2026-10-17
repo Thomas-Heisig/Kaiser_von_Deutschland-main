@@ -160,6 +160,66 @@ describe('Playable campaign integration', (): void => {
     }
   });
 
+  it('completes the industrial campaign through buildings, research, save/load and victory', async (): Promise<void> => {
+    const engine = new GameEngine({ startingYear:1820, campaignId:'industrie',
+      randomEvents:false, enableWiki:false });
+    engines.push(engine);
+    const ruler = engine.addPlayer({name:'Anna', kingdomName:'Industrieprobe',gender:'other'});
+    await engine.startGame(); engine.pauseGame();
+    ruler.kingdom.resources.gold=100000;
+    ruler.kingdom.resources.wood=20000;
+    ruler.kingdom.resources.stone=20000;
+    ruler.kingdom.resources.iron=5000;
+    expect(engine.getCampaignChapterStatus(ruler.id).index).toBe(0);
+    expect(await engine.buildForPlayer(ruler.id,'workshops')).toBe(true);
+    expect(await engine.buildForPlayer(ruler.id,'workshops')).toBe(true);
+    expect(await engine.buildForPlayer(ruler.id,'roads')).toBe(true);
+    expect(await engine.buildForPlayer(ruler.id,'roads')).toBe(true);
+    expect(engine.getCampaignChapterStatus(ruler.id).ready).toBe(true);
+    await engine.advanceMonth();
+    expect(engine.getCampaignChapterStatus(ruler.id).index).toBe(1);
+    await engine.saveGame('full-industry');
+    const restored = new GameEngine({enableWiki:false});
+    engines.push(restored);await restored.loadGame('full-industry');
+    const current=restored.getPlayerById(ruler.id)!;
+    expect(restored.getCampaignChapterStatus(ruler.id).index).toBe(1);
+    expect(await restored.buildForPlayer(ruler.id,'schools')).toBe(true);
+    for(const tech of ['agriculture','writing','bronze_working']){
+      for(let month=0;month<30 && !restored.getTechnologyOptions(ruler.id).find(o=>o.technology.id===tech)?.canStart;month++)
+        await restored.advanceMonth();
+      expect(restored.getTechnologyOptions(ruler.id).find(o=>o.technology.id===tech)?.canStart).toBe(true);
+      restored.startResearch(ruler.id,tech);
+      for(let month=0;month<8 && !restored.getTechnologyProgress(ruler.id).researched.includes(tech);month++)
+        await restored.advanceMonth();
+      expect(restored.getTechnologyProgress(ruler.id).researched).toContain(tech);
+    }
+    expect(restored.getCampaignChapterStatus(ruler.id).index).toBeGreaterThanOrEqual(2);
+    for(let month=0;month<3 && !restored.getCampaignChapterStatus(ruler.id).finished;month++)
+      await restored.advanceMonth();
+    expect(restored.getCampaignChapterStatus(ruler.id).finished).toBe(true);
+    expect(current.kingdom.resources.gold).toBeGreaterThan(5500);
+    await restored.saveGame('industry-won');
+    const victory = new GameEngine({enableWiki:false});engines.push(victory);
+    await victory.loadGame('industry-won');
+    expect(victory.getCampaignChapterStatus(ruler.id).finished).toBe(true);
+    expect(victory.getCampaignChapterStatus(ruler.id).index).toBe(2);
+  });
+
+  it('keeps core economy and demographics finite over five simulated years', async (): Promise<void> => {
+    const engine=await campaign();const player=engine.getPlayers()[0];
+    for(let month=0;month<60;month++){
+      await engine.advanceMonth();
+      const {resources,happiness,population,stats}=player.kingdom;
+      for(const value of Object.values(resources)) expect(Number.isFinite(value)).toBe(true);
+      for(const value of Object.values(population)) expect(Number.isFinite(value)).toBe(true);
+      expect(happiness).toBeGreaterThanOrEqual(0);
+      expect(happiness).toBeLessThanOrEqual(100);
+      expect(stats.stability).toBeGreaterThanOrEqual(0);
+      expect(stats.stability).toBeLessThanOrEqual(100);
+    }
+    expect(engine.getCurrentYear()).toBe(1205);
+  });
+
   it('starts later campaigns with meaningful first-chapter building goals', async (): Promise<void> => {
     for (const [id, needed] of [['industrie','Werkstätten'],['wiederaufbau','Bauernhöfe']] as const) {
       const engine = new GameEngine({ startingYear: id === 'industrie' ? 1820 : 1945,
