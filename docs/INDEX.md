@@ -1,7 +1,13 @@
 # 📚 Kaiser von Deutschland - Dokumentations-Index
 
-**Version**: 2.5.0  
-**Letzte Aktualisierung**: Dezember 2025
+**Paketversion**: 2.5.1  
+**Letzte Aktualisierung**: 17. Oktober 2026
+
+## Aktueller Einstieg
+
+- [Projektstatus](00-meta/status.md) – verifizierter Entwicklungs- und Merge-Stand.
+- [Betriebshandbuch](06-development/operations-guide.md) – Build, Deployment und Medienprüfung.
+- [Original-Soundtrack](../README.md#video-und-musik) – 15 MP3-Titel, Introvideo, Cover und Download.
 
 ## 🚧 Entwicklungsstatus
 
