@@ -1,3 +1,12 @@
+## Geschichte & Gameplay – Militär (17.10.2026)
+- [x] Historische Militärdoktrinen, Einheitenbezeichnungen und Stärkeverhältnisse nach Spieljahr.
+- [x] Rivalennamen und Konflikt-/Angriffsbezeichnungen nach Epoche.
+- [x] Fortifikationswirkung der historischen Waffenentwicklung angepasst.
+- [x] Schlachtvorschau und tatsächliche Kampfauflösung auf denselben Jahreswert ausgerichtet.
+- [x] Tests für Epochen, Einheiten, Rivalen und Speicherstandskompatibilität.
+- [ ] Weitere zivile Aufträge, NPC-Lebensläufe und diplomatische Systeme dynamisch an die Epoche binden.
+- [ ] Spätere Epochen um eigenständige technische Einheiten und nichtmilitärische Konfliktlösung ergänzen.
+
 ## Offlinezugriff & Medienfehler (17.10.2026)
 - [x] Audiofehler beim Abspielen mit konkreter Netzwerk-/Formatdiagnose und 15-Titel-Check.
 - [x] WebGPU-Prüfung mit tatsächlicher Grafikkartenadapter-Abfrage repariert.
