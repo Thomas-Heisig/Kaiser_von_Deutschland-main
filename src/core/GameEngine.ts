@@ -2385,7 +2385,7 @@ export class GameEngine {
     }
     
     // Check infrastructure requirements (e.g., ports for sea routes)
-    if (route.id.includes('sea') || route.id.includes('naval')) {
+    if (route.id.includes('sea') || route.id.includes('naval') || route.id === 'hanseatic_routes' || route.id === 'baltic_trade') {
       if (player.kingdom.infrastructure.ports < 1) {
         return { success: false, message: 'Erfordert mindestens einen Hafen' };
       }
