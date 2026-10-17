@@ -552,3 +552,20 @@ html,body,#app,.kingdom-app{width:100%;max-width:100%;min-width:0;margin:0}
  .kingdom-app .header-actions{width:auto;margin-left:auto;gap:4px}
 }
 @media(max-width:390px){.kingdom-app .map-host{height:140px}.kingdom-app .map-tag{display:none}.kingdom-app .time-actions button{min-height:35px;padding:4px 6px}.kingdom-app .speed-label select{min-height:35px}}
+
+
+/* Studio identity and cinematic crossfade */
+.intro-overlay{opacity:1;transition:opacity 550ms ease,filter 550ms ease}
+.intro-overlay.cinematic-exit{opacity:0;filter:blur(6px);pointer-events:none}
+.intro-overlay video{opacity:0;transition:opacity 900ms ease}
+.intro-overlay.film-playing video{opacity:1}
+.production-card{position:absolute;z-index:3;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(ellipse at center,#26342b 0%,#070c0d 75%);color:#e8d3a2;text-align:center;pointer-events:none;opacity:1;transition:opacity 900ms ease}
+.production-card strong{font:clamp(1.5rem,4vw,3.6rem) Georgia,serif;font-weight:normal;letter-spacing:.1em;text-shadow:0 0 32px #cdad79}
+.production-card small{letter-spacing:.3em;font-size:clamp(.6rem,1.5vw,1rem)}
+.production-sigil{font-size:clamp(4rem,12vw,10rem);animation:studio-reveal 1.4s ease-out both}
+.intro-overlay.film-playing .production-card{opacity:0}
+.intro-overlay.film-playing .intro-caption{opacity:0}
+.intro-caption{transition:opacity 900ms}
+.opening-toggle{min-width:90px;min-height:36px;padding:6px 12px}
+@keyframes studio-reveal{from{opacity:0;transform:scale(.82);filter:blur(12px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+@media(prefers-reduced-motion:reduce){.production-sigil{animation:none}.intro-overlay,.intro-overlay video,.intro-caption,.production-card{transition:none}}

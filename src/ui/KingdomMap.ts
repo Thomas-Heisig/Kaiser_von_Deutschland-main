@@ -18,6 +18,7 @@ export class KingdomMap {
   private initialized: boolean = false;
   private motionEnabled = false;
   private readonly animation = new Container();
+  private readonly atmosphere = new Container();
   private elapsed = 0;
   private actionVisual?: Container;
   private actionTimer?: number;
@@ -83,6 +84,8 @@ export class KingdomMap {
     this.app.canvas.setAttribute('aria-label', 'Siedlungskarte. Bezirke auch über die Bauauswahl erreichbar.');
     this.app.stage.addChild(this.world);
     this.drawLandscape();
+    this.drawAtmosphere();
+    this.world.addChild(this.atmosphere);
     this.world.addChild(this.settlements);
     this.world.addChild(this.animation);
     for (let i = 0; i < 5; i++) {
@@ -239,6 +242,7 @@ export class KingdomMap {
     if (signature + epochStyle === this.lastSignature) return;
     this.lastSignature = signature + epochStyle;
     this.chimneys.length = 0;
+    this.drawAtmosphere(kingdom.currentSeason, epochStyle);
     for (const child of this.settlements.removeChildren()) child.destroy({ children: true });
     for (const location of visibleDistricts(this.districtFilter)) {
       const count = kingdom.infrastructure[location.type];
@@ -301,6 +305,14 @@ export class KingdomMap {
           }
         }
       }
+      if (count > 0 && (location.type === 'castles' || location.type === 'churches')) {
+        const flag = new Graphics().rect(0, -76, 2, 27).fill(0xe2ddc7)
+          .poly([2, -76, 24, -71, 2, -65]).fill(epochStyle === 'modern' ? 0x6bbac1 : 0xd2a356);
+        group.addChild(flag);
+      }
+      if (count > 0 && location.type === 'ports') {
+        group.addChild(new Graphics().ellipse(0, 24, 47, 5).fill({ color: 0x94c4ce, alpha: 0.3 }));
+      }
       if (winter) group.addChild(new Graphics().ellipse(0, 20, 51, 8)
         .fill({ color: 0xe1e9e6, alpha: 0.38 }));
       const label = new Text({
@@ -341,6 +353,32 @@ export class KingdomMap {
       (this.app.screen.height - 620 * scale) / 2 + this.offset.y
     );
     this.app.renderer.render(this.app.stage);
+  }
+
+  /**
+   * Low-cost atmospheric layers. Geometry stays deterministic and is rebuilt
+   * only when infrastructure/season/era changes, never on every animation frame.
+   */
+  private drawAtmosphere(season: string = 'spring', epoch: string = 'medieval'): void {
+    for (const child of this.atmosphere.removeChildren()) child.destroy({ children: true });
+    const palette = season === 'winter' ? 0xc6dfdf : season === 'autumn' ? 0xb88955 : 0x8bb69c;
+    const sky = new Graphics();
+    sky.rect(36, 20, 926, 545).fill({ color: palette, alpha: season === 'winter' ? 0.10 : 0.04 });
+    sky.ellipse(800, 80, 100, 38).fill({ color: 0xffe9b2, alpha: 0.09 });
+    for (let i = 0; i < 11; i++) {
+      const x = 95 + (i * 173) % 820;
+      const y = 88 + (i * 71) % 450;
+      sky.ellipse(x, y, 28 + (i % 3) * 12, 6)
+        .fill({ color: palette, alpha: 0.07 + (i % 4) * 0.02 });
+    }
+    if (epoch === 'industrial' || epoch === 'modern') {
+      sky.rect(125, 575, 740, 4).fill({ color: 0x8b918a, alpha: 0.55 });
+      for (let i = 0; i < 18; i++) {
+        const x = 125 + i * 40;
+        sky.rect(x, 570, 4, 14).fill({ color: 0x8b918a, alpha: 0.55 });
+      }
+    }
+    this.atmosphere.addChild(sky);
   }
 
   private drawLandscape(): void {

@@ -6,6 +6,21 @@ export interface StoryChapter {
 }
 /** Three sequential chapters per campaign, each with two live objectives. */
 export const CHAPTERS: Record<CampaignId, readonly [StoryChapter, StoryChapter, StoryChapter]> = {
+  industrie: [
+    { title: 'Die ersten Maschinen', narrative: 'Werkstätten und Verkehrswege schaffen neue Grundlagen.' },
+    { title: 'Wissen für die Fabriken', narrative: 'Schulen und Forschung treiben technischen Fortschritt an.' },
+    { title: 'Industrielle Stärke', narrative: 'Sichere Rücklagen und baue die Handelsmacht aus.' }
+  ],
+  wiederaufbau: [
+    { title: 'Grundversorgung', narrative: 'Versorge Bevölkerung und erneuere wichtige Verbindungen.' },
+    { title: 'Vertrauen gewinnen', narrative: 'Investiere in Gesundheit und Lebensqualität.' },
+    { title: 'Stabile Zukunft', narrative: 'Fördere Technik und stärke die gesellschaftliche Ordnung.' }
+  ],
+  digital: [
+    { title: 'Bildung für alle', narrative: 'Schulen und Universitäten bereiten neue Generationen vor.' },
+    { title: 'Technik als Chance', narrative: 'Forschung und Produktion entwickeln das Land.' },
+    { title: 'Vernetzte Gesellschaft', narrative: 'Handel und Bildung stützen die Zukunft.' }
+  ],
   frei: [
     { title: 'Freie Herrschaft', narrative: 'Dein Reich hat kein verpflichtendes Kampagnenziel.' },
     { title: 'Deine Geschichte', narrative: 'Gestalte Wirtschaft, Politik und Kultur nach deinem Willen.' },
