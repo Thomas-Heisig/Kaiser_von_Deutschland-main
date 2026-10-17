@@ -23,5 +23,7 @@ jobs:
         run: npm run check
       - name: Production build
         run: npm run build
+      - name: Verify media and installable archive
+        run: node scripts/verify-release-assets.mjs
       - name: Automated tests (non-watch)
         run: npx vitest run
