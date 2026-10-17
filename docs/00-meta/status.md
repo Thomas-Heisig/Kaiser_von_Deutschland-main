@@ -1,45 +1,28 @@
 # Projektstatus – Kaiser von Deutschland
 
 **Stand:** 17. Oktober 2026  
-**Paketversion:** 2.5.1 (`package.json`; kein neues Release durch Dokumentationsarbeit)  
-**Phase:** Aktive Entwicklung / spielbare Aufbaukampagne
+**Paketversion:** 2.5.1 (`package.json`; kein neues Release-Tag)  
+**Phase:** Spielbarer browserlokaler Aufbau-/Kampagneneinstieg, weitere Systeme im Ausbau
 
-## Produktiver Einstieg
-`src/main.ts → KingdomGameUI → GameEngine`. Das Spiel läuft browserlokal;
-`LocalForage` ist die tatsächliche Speicherlösung. Die alternative SQL-Architektur
-unter `core/database/` ist nicht mit diesem Speicherpfad verbunden.
+## Produktionspfad
+`src/main.ts → KingdomGameUI → GameEngine`. Spielstände liegen im Browser (LocalForage, teils `gzip-json-v1`). Die alternative SQL-Schicht ist kein Live-Savepfad.
 
-## In der Standardkampagne nachgewiesen
-- Reichsrat mit 12 spielbaren Ereignissen, Risiken und Auswahlfolgen.
-- Monatliche Speicherpunkte sowie komprimierte größere Savegames mit Legacy-Leseweg (PR #10).
-- Gesandtschaften, Rivalenstrategien, zweijährige Nichtangriffspakte, Überfallschutz.
-- Kulturfeste, Religionsüberblick und Forschungsfortschritt pro Reich.
-- Kartenanimationen, synthetische Geräuschkulisse, Lautstärkeregler.
-- Lokaler Hotseat mit abwechselnden Zügen.
-- GitHub-CI: Typecheck, Build, Unit-Tests; Chromium-Smoke Desktop/320×740.
+## Nachgewiesen in GitHub
+- PR #32 integriert: 15 Original-MP3s, zwei Intro-Videodateien, 15 SVG-Cover, neu benannte Assets, Musikauswahl und Download; kein prozeduraler Hintergrundmusikmotor mehr.
+- Auf PR #32: CI (Typecheck/Build/Unit-Tests) und Chromium Browser Smoke erfolgreich. Ein erfolgreicher Browser Smoke ist kein menschlicher Hörtest.
+- Hauptmenü mit Startjahrwahl, Kampagnen inklusive offenem Spiel, Reichsrat, Responsive-Layout und PixiJS/2D-Fallback.
+- Wirtschaft, Forschung, Militär/Feldzüge, Spielstände und Hotseat im aktiven Einstieg vorhanden; nicht jede historisch dokumentierte Klasse ist vollständig spielbar.
 
-## Vorhandene Module, noch keine vollständige Gameplay-Integration
-- Stadtviertel, Belagerung, Kolonien, Kultur, Militärformationen, Marine,
-  Spionage und weitere Roadmap-Systeme sind als Klassen vorhanden.
-  Die bloße Existenz einer Klasse beweist keine erreichbare Spielmechanik.
-- Zwei inkompatible Generationen des SQL-Adapters und des Migrationsschemas;
-  kein produktiver SQL-Savepfad.
-- `GameUI`, `UIFlowManager`, `EnhancedPixiRenderer` und Roadmap-Panels
-  sind alternative Legacy-Oberflächen.
+## Video- und Audiostart
+- `public/video/intro.mp4`: stummes Autoplay, Skip; nach Video „Zeit vergeht“ mit Browser-Autoplay-Fallback.
+- `public/music/`: 15 benannte Originaltitel; `public/covers/`: 15 vorläufige Coverillustrationen.
+- `GameAudio` gibt nur kurze UI-Spieleffekte aus, `MusicJukebox` spielt Originalaufnahmen und `GameAmbience` liefert optionale Atmosphäre.
 
-## Risiken / offene Messungen
-- Bürgerperformance über 5.000 bzw. 100.000 Einwohner und langfristiges Memory-Profiling.
-- Kohorten statt Einzelobjekten für große Bevölkerungen: Architektur vorhanden,
-  vollständige Migration, Balancing und Savegame-Kohärenz fehlen.
-- Vollständige Browser-E2E-Abdeckung, WCAG, Audio-Abnahme und Crossbrowser-Tests.
-- SQL-Schema- und Adaptervereinheitlichung einschließlich Migration 002.
-- Reale Aktivierung einer Hanseroute im Browser mit Hafen, Forschung und Gold.
+## Nach wie vor offen
+- Aktuelles `main`-Deployment auf der Live-Spielseite, Downloadlinks sowie echte Audio-/Videowiedergabe auf Geräten prüfen.
+- Original-Cover und Titeldaten (Urheber, Stil, Nutzungsrecht) ergänzen.
+- Bürgerperformance über 5.000/100.000, Langzeit-Balancing, Accessibility, Crossbrowser und Speicherstände testen.
+- Legacy-UI und SQL-Adapter nur nach Migrations-/Testnachweis konsolidieren.
+- Divergierte historische Featurebranches vor Löschung einzeln mit der tatsächlich auf `main` implementierten Funktion vergleichen; blindes Mergen vermeiden.
 
-Die ehemals genannten ~40 % Coverage, <3 s Startup, 60 FPS und <2 s Save/Load
-waren historische Schätzungen. Ohne neue reproduzierbare Messung gelten sie nicht
-als aktuelle Leistungsnachweise.
-
-## Weiterarbeit
-Offene Aufgaben: [TODO](../../TODO.md). Architekturentscheidungen:
-[Systemkonsolidierung](../05-technical-architecture/system-consolidation.md).
-[Betriebshandbuch](../06-development/operations-guide.md).
+Aktive Aufgaben: [TODO](../../TODO.md). Für Auslieferung: [Betriebshandbuch](../06-development/operations-guide.md).
