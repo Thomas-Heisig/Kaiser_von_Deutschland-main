@@ -73,7 +73,6 @@ export class DemographicSystem {
   private lastYearProcessed: number = 0;
   
   // Konfigurierbare Parameter
-  private baseBirthRate: number = 35; // pro 1000 pro Jahr
   private baseDeathRate: number = 25; // pro 1000 pro Jahr
   private infantMortalityBase: number = 150; // pro 1000 Geburten
   
