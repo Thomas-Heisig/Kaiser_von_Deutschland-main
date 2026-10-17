@@ -1,10 +1,28 @@
-## 🎧 Musik-Jukebox (PR in Prüfung)
+## Spielstart, Jahresauswahl, Musik und Fallback – 17.10.2026 (PR #30)
+- [x] Musiktitelauswahl aus dem Startmenü entfernt; der Player liegt eingeklappt bei den Audiooptionen im Spiel.
+- [x] Elf Zeitepochen von 1200 bis 2000 als spielbare Startjahre.
+- [x] Offenes Spiel ohne Zielvorgaben als zusätzliche Kampagnenart, mit eigenen Save-Daten im bestehenden Format.
+- [x] Ratsentscheidungen als echte modale Auswahl, weiterhin über den Reichsrat erreichbar.
+- [x] 2D / isometrische 3D-Look-Umschaltung und interaktive 2D-Bezirksansicht als Pixi-/WebGL-Fallback.
+- [x] Responsive CSS und sichtbare epochenspezifische Stadt- und Oberflächenmerkmale.
+- [x] Elf historische Aufnahmen und ein Bonus-Leitmotiv mit festen Namen und Dateipfaden im Musikkatalog registriert.
+- [ ] Die 12 MP3-Binärdateien mit dem vorbereiteten Einbaupaket in `public/music/` committen; erst danach sind alle Titel für alle Spielenden automatisch vorhanden.
+- [ ] Echtes 3D (WebGL-Szene mit Kamera) statt isometrischer 2D-Projektion, weiterführende moderne Gebäudemodelle und historische Rebalancing-Abnahme.
+- [ ] Laufende Veröffentlichung aus `main` und reale Browser-/Audio-/Mobile-/Langzeit-Tests auf dem Zielsystem ergänzen.
+
+## 🎧 Musik-Jukebox (PR #28 gemergt; Folgeverbesserung 17.10.2026)
+- [x] Sechs benannte Epochenaufnahmen (1200/1300/1400/1500/1600/1750) als optionaler Bibliothekskatalog und Import-Metadaten.
+- [x] Mehrfachimport der MP3-Dateien, sichtbare Version und wählbarer automatischer Titelwechsel bei Epochenfortschritt.
+- [ ] Originaldateien als echte Binärassets in `public/music/` übertragen, auf dem Zielserver bereitstellen und Hörtests mit echten MP3s durchführen.
+- [ ] Deployment/Release-Pipeline verbindlich an main anschließen und Live-Version im ausgelieferten HTML prüfen.
+
+## 🎧 Musik-Jukebox (PR #28 gemergt)
 - [x] Echte MP3-/OGG-/WAV-Dateien lokal importieren, auswählen, speichern und abspielen.
 - [x] Jukebox im Menü und Spiel, Lautstärke mit vorhandener Steuerung verbunden.
 - [ ] Hochgeladene MP3 zusätzlich als Git-Asset `public/music/krone-und-land.mp3` bereitstellen; Binärtransfer über die verfügbaren GitHub-Texttools nicht möglich.
 - [ ] Weitere Epochenstücke, Titelverwaltung und automatische Wechsel weiter ausbauen.
 
-## 🎼 Ein Reich, viele Zeiten – Musik (PR in Prüfung)
+## 🎼 Ein Reich, viele Zeiten – Musik (PR #27 gemergt)
 - [x] Eigenes Leitmotiv (76 BPM, Moll/Dur), 48-Takte-Menüfassung, 16-Takte-Spielszenen.
 - [x] Epochenfarben für Mittelalter/Hanse/Neuzeit/Industrie/Moderne/Zukunft und Spielsituationen Aufbau/Handel/Hof/Krise/Krieg.
 - [x] Nur nach Nutzerinteraktion aktiv, getrennte Musiklautstärke, Browsertab-Pause, Aufräumen von Synthesizerstimmen.

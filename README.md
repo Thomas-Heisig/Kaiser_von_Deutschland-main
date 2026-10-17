@@ -1,3 +1,10 @@
+## Neue Spielstart- und Anzeigeoptionen (17.10.2026)
+Startepoche und Kampagne sind getrennte Entscheidungen. Die Startepochen reichen von 1200 über Renaissance und Industrialisierung bis 2000. Jede Kampagne kann in einem gewählten Startjahr beginnen; die früheren Kampagnenziele bleiben bestehen, sodass historische Ziele bei einem späten Start naturgemäß anders ausfallen. Zusätzlich steht **Offenes Spiel** ohne verpflichtende Siegziele zur Verfügung. Die Uhr und der gespeicherte Spielstand verwenden dasselbe Jahr.
+
+Die Jukebox ist nicht mehr im Hauptmenü. Im Spiel finden sich unter **Musik & Klangeinstellungen** Titelwahl, Lautstärke, Klang und Epochenautomatik. Die zwölf benannten Audioaufnahmen (elf Epochenstücke plus Bonustitel) sind im Quellcode als `public/music/*.mp3` hinterlegt; **die echten MP3-Binärdaten müssen zusätzlich in GitHub hochgeladen werden**, sonst ist nur die prozedurale Hintergrundmusik beziehungsweise der lokale Benutzerimport verfügbar.
+
+Die Siedlung kann als 2D-Karte oder in einer isometrischen **3D-Look-Projektion** betrachtet werden. Ein echtes 3D-Modell ist damit noch nicht implementiert. Bei fehlender Hardwarebeschleunigung erscheint stattdessen eine interaktive, hardwarefreie 2D-Bezirkskarte, deren Gebäude zur normalen Bauverwaltung führen. Das Design passt sich in vier groben Farbstilen an Mittelalter, Neuzeit, Industrialisierung und Moderne an; Forschungs-, Gebäude- und Bevölkerungsmodelle sind nicht für jede Epoche vollständig ausbalanciert.
+
 # ⚜️ Kaiser von Deutschland ⚜️
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
@@ -45,6 +52,9 @@ Das Gesamtprojekt bleibt in Entwicklung.
 
 Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
 Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Stand 17.10.2026 – sichtbare Versionskennung und sechs Musikstücke
+Die Startseite und der Spielfuß enthalten eine erkennbare Versionskennung. Im Hauptmenü können die sechs MP3-Aufnahmen 1200, 1300, 1400, 1500, 1600 und 1750 **gemeinsam** über die Dateiauswahl importiert werden. Dateinamen mit Jahreszahl werden automatisch Titel und Epoche zugeordnet. Die Checkbox **Musik folgt Epoche** wählt im laufenden Spiel den passenden vorhandenen Titel (die jüngste Aufnahme, deren Jahr nicht in der Zukunft liegt). Manuelle Titelwahl schaltet diese Automatik ab. Audio startet aus Browser-Sicherheitsgründen erst nach einer Nutzeraktion. Die im Chat hochgeladenen MP3s werden nicht automatisch in GitHub übernommen; sie stehen in dieser Sitzung zur Verfügung, können über die Jukebox importiert oder später als Binärdateien in `public/music/` committed werden. Für Live-Deployments muss außerdem der tatsächlich verwendete Deployment-Weg die neue `main`-Version übernehmen. Der Quellcode-Sync allein aktualisiert keine bereits laufende Seite.
 
 ## 🎧 Jukebox für echte Musikdateien
 Die Jukebox bietet im Hauptmenü und während des Spiels eine **Titelwahl**, Wiedergabe,

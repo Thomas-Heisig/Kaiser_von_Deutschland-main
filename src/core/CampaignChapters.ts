@@ -6,6 +6,11 @@ export interface StoryChapter {
 }
 /** Three sequential chapters per campaign, each with two live objectives. */
 export const CHAPTERS: Record<CampaignId, readonly [StoryChapter, StoryChapter, StoryChapter]> = {
+  frei: [
+    { title: 'Freie Herrschaft', narrative: 'Dein Reich hat kein verpflichtendes Kampagnenziel.' },
+    { title: 'Deine Geschichte', narrative: 'Gestalte Wirtschaft, Politik und Kultur nach deinem Willen.' },
+    { title: 'Offene Zukunft', narrative: 'Spiele ohne festes Ende weiter.' }
+  ],
   aufbau: [
     { title: 'Das hungernde Lehen', narrative: 'Sichere Felder und Märkte, damit das Volk über den Winter kommt.' },
     { title: 'Wissen und Vertrauen', narrative: 'Investiere in Schulen und das Wohlergehen deiner Untertanen.' },
