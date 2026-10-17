@@ -39,16 +39,13 @@ for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /i "IPv4"') do (
 :ipfound
 set "LOCAL_IP=%IP: =%"
 
-REM Oeffentliche IP im Hintergrund abfragen (max 3 Sekunden)
+REM Oeffentliche IP abfragen (mit temp-Datei im Projektverzeichnis)
 set "PUBLIC_IP=Unbekannt"
-if "%PUBLIC_IP_CACHE%"=="" (
-    powershell -NoProfile -Command ^
-        "$wc = New-Object System.Net.WebClient; $wc.Headers.Add('User-Agent', 'Mozilla/5.0'); " ^
-        "try { $wc.DownloadString('https://api.ipify.org') } catch { '' }" > "%TEMP%\public_ip.tmp" 2>nul
-    if exist "%TEMP%\public_ip.tmp" (
-        set /p PUBLIC_IP=<"%TEMP%\public_ip.tmp"
-        del "%TEMP%\public_ip.tmp" 2>nul
-    )
+set "IP_TMPFILE=%CD%\public_ip.tmp"
+powershell -NoProfile -Command "$wc=New-Object System.Net.WebClient;$wc.Headers.Add('User-Agent','Mozilla/5.0');try{$wc.DownloadString('https://api.ipify.org')}catch{''}" > "%IP_TMPFILE%" 2>nul
+if exist "%IP_TMPFILE%" (
+    set /p PUBLIC_IP=<"%IP_TMPFILE%"
+    del "%IP_TMPFILE%" 2>nul
 )
 
 echo.
