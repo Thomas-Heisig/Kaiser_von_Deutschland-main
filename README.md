@@ -1,3 +1,10 @@
+## Neue Spielstart- und Anzeigeoptionen (17.10.2026)
+Startepoche und Kampagne sind getrennte Entscheidungen. Die Startepochen reichen von 1200 über Renaissance und Industrialisierung bis 2000. Jede Kampagne kann in einem gewählten Startjahr beginnen; die früheren Kampagnenziele bleiben bestehen, sodass historische Ziele bei einem späten Start naturgemäß anders ausfallen. Zusätzlich steht **Offenes Spiel** ohne verpflichtende Siegziele zur Verfügung. Die Uhr und der gespeicherte Spielstand verwenden dasselbe Jahr.
+
+Die Jukebox ist nicht mehr im Hauptmenü. Im Spiel finden sich unter **Musik & Klangeinstellungen** Titelwahl, Lautstärke, Klang und Epochenautomatik. Die zwölf benannten Audioaufnahmen (elf Epochenstücke plus Bonustitel) sind im Quellcode als `public/music/*.mp3` hinterlegt; **die echten MP3-Binärdaten müssen zusätzlich in GitHub hochgeladen werden**, sonst ist nur die prozedurale Hintergrundmusik beziehungsweise der lokale Benutzerimport verfügbar.
+
+Die Siedlung kann als 2D-Karte oder in einer isometrischen **3D-Look-Projektion** betrachtet werden. Ein echtes 3D-Modell ist damit noch nicht implementiert. Bei fehlender Hardwarebeschleunigung erscheint stattdessen eine interaktive, hardwarefreie 2D-Bezirkskarte, deren Gebäude zur normalen Bauverwaltung führen. Das Design passt sich in vier groben Farbstilen an Mittelalter, Neuzeit, Industrialisierung und Moderne an; Forschungs-, Gebäude- und Bevölkerungsmodelle sind nicht für jede Epoche vollständig ausbalanciert.
+
 # ⚜️ Kaiser von Deutschland ⚜️
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
