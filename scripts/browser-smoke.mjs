@@ -15,6 +15,15 @@ try {
     await page.locator('#opening-music').waitFor();
     await page.getByText(/Zeit vergeht/).first().waitFor();
     if (await page.locator('.welcome [data-jukebox-select]').count()) failures.push('Jukebox must not appear in start menu');
+    if (await page.locator('.welcome #settings-open').count() !== 1) failures.push('start screen settings missing');
+    await page.locator('.welcome #settings-open').click();
+    await page.locator('#settings-dialog[open]').waitFor();
+    if (await page.locator('[data-settings-tab]').count() !== 5) failures.push('five settings tabs missing on start');
+    await page.locator('#settings-tab-offline').click();
+    if (await page.locator('#settings-panel-offline [data-install-game]').count() !== 1) failures.push('install button not in settings');
+    await page.locator('#settings-tab-display').click();
+    if (await page.locator('#setting-motion').count() !== 1) failures.push('animation setting missing');
+    await page.locator('#settings-done').click();
     await page.locator('#campaign-select').selectOption('frei');
     await page.locator('#start-year').selectOption('1820');
     await page.locator('#start-era-summary').getByText('1820 · Industriezeitalter').waitFor();
@@ -34,14 +43,15 @@ try {
     await page.locator('[data-jukebox-download]').waitFor({state:'attached'});
     if (await page.locator('#opening-play, [data-music-volume], [data-audio-toggle]').count())
       failures.push('redundant audio controls are still shown');
-    if (await page.locator('#civic-open').count() !== 1) failures.push('prominent civic assignments button missing');
-    await page.locator('#civic-open').click();
+    if (await page.locator('#civic-open, .header-actions [data-install-game], #motion-toggle').count()) failures.push('header contains settings-only controls');
+    await page.locator('nav [data-view="civic"]').click();
     await page.getByRole('heading', { name: /Aufträge an Bürger/i }).waitFor();
     if (await page.locator('[data-civic-assign]').count() < 5) failures.push('civic missions inaccessible');
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
     await page.locator('#settings-open').click();
     if (await page.locator('#advisor-backend').inputValue() !== 'off')
       failures.push('AI should default to disabled');
+    await page.locator('#settings-tab-advisor').click();
     await page.locator('#advisor-backend').selectOption('webgpu');
     if (await page.locator('#advisor-start').count() !== 1) failures.push('WebGPU model start button missing');
     if (await page.locator('#advisor-progress').count() !== 1) failures.push('WebGPU load progress missing');
@@ -49,12 +59,15 @@ try {
     await page.locator('#advisor-backend').selectOption('mini');
     if (await page.locator('#advisor-backend').inputValue() !== 'mini')
       failures.push('embedded mini model cannot be enabled');
+    await page.locator('#settings-tab-film').click();
     if (await page.locator('#film-intro option').count() < 5)
       failures.push('five videos not available in film selector');
+    await page.locator('#settings-tab-offline').click();
     if (!(await page.locator('a[href="/downloads/kaiser-von-deutschland-offline.zip"]').count()))
       failures.push('LAN-HTTP complete game ZIP link missing');
+    await page.locator('#settings-tab-advisor').click();
     await page.locator('#advisor-backend').selectOption('off');
-    await page.locator('[data-close-dialog="settings-dialog"]').click();
+    await page.locator('#settings-done').click();
     const geometry = await page.evaluate(() => {
       const container = document.querySelector('.kingdom-app')?.getBoundingClientRect();
       return { width: container?.width ?? 0, height: container?.height ?? 0,

@@ -137,9 +137,297 @@ export class KingdomGameUI {
       this.notify('Audio konnte nicht abgespielt werden. Prüfe die Browser-Audioeinstellungen.', true);
     });
     this.root.addEventListener('click', this.buttonSoundHandler);
+    this.loadDisplayPreferences();
     this.showMenu();
     void this.jukebox.initialize().then(async () => { this.updateJukeboxStatus(); await this.tryOpeningTheme(); }).catch(error => console.error('Musikbibliothek:',error));
     document.addEventListener('keydown', this.keyboardHandler);
+  }
+
+  /** Shared settings dialog: start screen and active campaign use one markup source. */
+  private settingsDialogMarkup(): string {
+    return `
+<dialog id="settings-dialog" class="info-dialog settings-dialog" aria-labelledby="settings-title">
+<div class="settings-heading"><h2 id="settings-title">⚙ Einstellungen</h2><button type="button" id="settings-close" aria-label="Einstellungen schließen">✕</button></div>
+<p class="muted settings-intro">Einstellungen für dieses Gerät – auch vor dem Spielstart.</p>
+<div class="settings-tabs" role="tablist" aria-label="Einstellungsgruppen"><button type="button" role="tab" id="settings-tab-display" data-settings-tab="display" aria-controls="settings-panel-display" aria-selected="true" tabindex="0">🎨 Anzeige</button>
+<button type="button" role="tab" id="settings-tab-audio" data-settings-tab="audio" aria-controls="settings-panel-audio" aria-selected="false" tabindex="-1">🎵 Musik & Ton</button>
+<button type="button" role="tab" id="settings-tab-film" data-settings-tab="film" aria-controls="settings-panel-film" aria-selected="false" tabindex="-1">🎬 Filme</button>
+<button type="button" role="tab" id="settings-tab-advisor" data-settings-tab="advisor" aria-controls="settings-panel-advisor" aria-selected="false" tabindex="-1">🧠 KI</button>
+<button type="button" role="tab" id="settings-tab-offline" data-settings-tab="offline" aria-controls="settings-panel-offline" aria-selected="false" tabindex="-1">⬇ Installation</button></div>
+<section id="settings-panel-display" role="tabpanel" class="settings-tab-panel" aria-labelledby="settings-tab-display" data-settings-panel="display" ><h3>Anzeige & Bedienung</h3>
+<label class="checkbox"><input type="checkbox" id="setting-motion"> Kartenanimation aktivieren</label>
+<p id="setting-motion-hint" class="muted">Bewegungen und Karteneffekte ein- oder ausschalten.</p>
+<label>Kartendarstellung<select id="setting-map-style"><option value="flat">2D · Draufsicht</option><option value="isometric">3D-Look · isometrisch</option></select></label>
+<p class="muted">Die Ansicht passt sich automatisch an Telefon, Tablet und Desktop an.</p>
+</section>
+<section id="settings-panel-audio" role="tabpanel" class="settings-tab-panel" aria-labelledby="settings-tab-audio" data-settings-panel="audio" hidden><h3>Musik & Ton</h3>
+<label>Musiklautstärke <input id="setting-music-volume" type="range" min="0" max="100" value="28"></label>
+<label>Musikreihenfolge<select id="setting-playlist-mode"><option value="era">Nach Epoche</option><option value="sequential">Reihenfolge</option><option value="shuffle">Zufällig</option></select></label>
+<label>Wiederholen<select id="setting-playlist-repeat"><option value="all">Alle Titel</option><option value="one">Aktueller Titel</option><option value="off">Aus</option></select></label>
+<h4>Audiodiagnose</h4><button type="button" id="music-diagnose" class="secondary">Alle 15 MP3 prüfen</button>
+          <p id="music-diagnosis" role="status">Bei Abspielfehlern die Serverdateien überprüfen.</p>
+</section>
+<section id="settings-panel-film" role="tabpanel" class="settings-tab-panel" aria-labelledby="settings-tab-film" data-settings-panel="film" hidden><h3>Filmsequenzen</h3>
+
+           <p id="film-library-status" role="status">Filmdateien werden überprüft …</p>
+           <label>Alternatives Intro<select id="film-intro"></select></label>
+           <label>Film beim Beenden<select id="film-outro"></select></label>
+           <label>Historisches Zwischenvideo<select id="film-interlude"></select></label>
+           <label class="checkbox"><input id="film-interludes-enabled" type="checkbox"> Zwischenvideos bei historischen Meilensteinen anzeigen</label>
+           <button type="button" id="film-preview" class="secondary">▶ Gewähltes Zwischenvideo ansehen</button>
+</section>
+<section id="settings-panel-advisor" role="tabpanel" class="settings-tab-panel" aria-labelledby="settings-tab-advisor" data-settings-panel="advisor" hidden><h3>KI & Ratsberatung</h3>
+<label>Ratsberater<select id="advisor-backend"><option value="off">Aus – keine KI-Unterstützung</option><option value="mini">Integriertes Mini-Netz (offline)</option><option value="rules">Regelberater</option><option value="webgpu">WebGPU (optional, Modelldownload)</option><option value="ollama">Ollama lokal (nur auf Wunsch)</option></select></label>
+          <label id="ollama-config">Ollama-Modell <input id="ollama-model" type="text" maxlength="70" placeholder="gemma3:1b" autocomplete="off"></label>
+          <p id="advisor-hardware" class="muted"></p><p class="muted">KI ist optional. Modelle werden erst auf Anfrage heruntergeladen. Vorschläge werden nie automatisch umgesetzt. Ollama ist ausschließlich auf ausdrückliche Auswahl über localhost nutzbar.</p>
+          <div class="advisor-model-actions"><button type="button" id="advisor-test" class="secondary">WebGPU prüfen</button>
+          <button type="button" id="advisor-start" class="primary">▶ KI-Modell starten</button>
+          <button type="button" id="advisor-infer" class="secondary" disabled>🧪 Modellantwort testen</button></div>
+          <label for="advisor-progress">Modellstatus</label>
+          <progress id="advisor-progress" max="100" value="0" aria-label="KI-Modell-Ladefortschritt"></progress>
+          <p id="advisor-status" role="status" aria-live="polite">KI-Modell nicht geladen.</p>
+          <p id="advisor-inference-result" role="status"></p>
+</section>
+<section id="settings-panel-offline" role="tabpanel" class="settings-tab-panel" aria-labelledby="settings-tab-offline" data-settings-panel="offline" hidden><h3>Installation & Offline</h3>
+<button type="button" data-install-game class="primary">⬇ Spiel installieren</button><p data-install-status role="status" class="muted">Für iPad: Safari → Teilen → Zum Home-Bildschirm.</p><h4>Offline spielen / Heimnetz-Download</h4><p>Spiel, Musik, Cover und alle Videos als vollständiges ZIP herunterladen – auch über HTTP im vertrauenswürdigen Heimnetz. Nach dem Entpacken lokal über http://localhost starten. Für eine Browserinstallation auf Mobilgeräten bleibt HTTPS erforderlich.</p><a class="secondary" href="${import.meta.env.BASE_URL}downloads/kaiser-von-deutschland-offline.zip" download="kaiser-von-deutschland-offline.zip">↓ Komplettes Spiel als ZIP herunterladen (LAN/HTTP möglich)</a><p>Zusätzlich: Spiel einmalig in diesem Browser speichern (nur HTTPS oder localhost; der Browser kann Cache bei Speichermangel löschen).</p>
+          <button type="button" id="offline-save" class="primary">↓ Spiel im Browser speichern</button>
+          <p id="offline-status" role="status">Offline-Paket noch nicht überprüft.</p>
+</section>
+<div class="settings-footer"><button type="button" id="settings-done" class="primary">Fertig</button></div>
+</dialog>
+`;
+  }
+
+  /** The film preview is usable without starting a campaign. */
+  private filmDialogMarkup(): string {
+    return `
+<dialog id="film-dialog" class="film-dialog" aria-label="Historischer Film">
+           <div class="section-dialog-head"><strong id="film-dialog-title">Eine neue Epoche</strong>
+           <button type="button" id="film-dialog-close" aria-label="Film schließen">✕</button></div>
+           <video id="film-dialog-video" playsinline controls preload="none"></video>
+           <div class="film-dialog-footer"><button type="button" id="film-dialog-play">▶ Mit Ton abspielen</button>
+           <button type="button" id="film-dialog-skip">Überspringen →</button></div>
+         </dialog>
+`;
+  }
+
+  private bindSettingsControls(): void {
+    const settingsDialog = this.root.querySelector<HTMLDialogElement>('#settings-dialog');
+    const tabs = Array.from(this.root.querySelectorAll<HTMLButtonElement>('[data-settings-tab]'));
+    const selectTab = (key: string, focus = false): void => {
+      for (const tab of tabs) {
+        const active = tab.dataset.settingsTab === key;
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+        if (active && focus) tab.focus();
+      }
+      this.root.querySelectorAll<HTMLElement>('[data-settings-panel]').forEach(panel => {
+        panel.hidden = panel.dataset.settingsPanel !== key;
+      });
+    };
+    for (const [index, tab] of tabs.entries()) {
+      tab.addEventListener('click', () => selectTab(tab.dataset.settingsTab ?? 'display'));
+      tab.addEventListener('keydown', (event: KeyboardEvent) => {
+        const last = tabs.length - 1;
+        const indexToSelect = event.key === 'Home' ? 0 : event.key === 'End' ? last :
+          event.key === 'ArrowRight' ? (index + 1) % tabs.length :
+          event.key === 'ArrowLeft' ? (index + last) % tabs.length : -1;
+        if (indexToSelect < 0) return;
+        event.preventDefault(); selectTab(tabs[indexToSelect].dataset.settingsTab ?? 'display', true);
+      });
+    }
+    selectTab('display');
+    const mapSetting = this.root.querySelector<HTMLSelectElement>('#setting-map-style');
+    if (mapSetting) {
+      mapSetting.value = this.mapStyle;
+      mapSetting.addEventListener('change', () => {
+        this.mapStyle = mapSetting.value === 'isometric' ? 'isometric' : 'flat';
+        const gameControl = this.root.querySelector<HTMLSelectElement>('#map-style');
+        if (gameControl) gameControl.value = this.mapStyle;
+        const mapHost = this.root.querySelector<HTMLElement>('#kingdom-map');
+        if (mapHost) mapHost.dataset.projection = this.mapStyle;
+        this.saveDisplayPreferences();
+      });
+    }
+    const musicMode = this.root.querySelector<HTMLSelectElement>('#setting-playlist-mode');
+    if (musicMode) {
+      musicMode.value = this.jukebox.getPlaylistMode();
+      musicMode.addEventListener('change', () => {
+        this.jukebox.setPlaylistMode(musicMode.value as 'era' | 'sequential' | 'shuffle');
+        const gameControl = this.root.querySelector<HTMLSelectElement>('#playlist-mode');
+        if (gameControl) gameControl.value = musicMode.value;
+        if (musicMode.value === 'era' && this.engine) void this.jukebox.syncYear(this.engine.getCurrentYear());
+      });
+    }
+    const repeat = this.root.querySelector<HTMLSelectElement>('#setting-playlist-repeat');
+    if (repeat) {
+      repeat.value = this.jukebox.getRepeatMode();
+      repeat.addEventListener('change', () => {
+        this.jukebox.setRepeatMode(repeat.value as 'all' | 'one' | 'off');
+        const gameControl = this.root.querySelector<HTMLSelectElement>('#playlist-repeat');
+        if (gameControl) gameControl.value = repeat.value;
+      });
+    }
+
+    const backendSelect = this.root.querySelector<HTMLSelectElement>('#advisor-backend');
+    const startButton = this.root.querySelector<HTMLButtonElement>('#advisor-start');
+    const inferenceButton = this.root.querySelector<HTMLButtonElement>('#advisor-infer');
+    const progressBar = this.root.querySelector<HTMLProgressElement>('#advisor-progress');
+    const status = this.root.querySelector<HTMLElement>('#advisor-status');
+    const inferenceResult = this.root.querySelector<HTMLElement>('#advisor-inference-result');
+    const ollamaModel = this.root.querySelector<HTMLInputElement>('#ollama-model');
+    if (backendSelect) backendSelect.value = readAdvisorConfig().backend;
+    if (ollamaModel) ollamaModel.value = readAdvisorConfig().ollamaModel ?? 'gemma3:1b';
+    ollamaModel?.addEventListener('change', () => saveAdvisorConfig({ ...readAdvisorConfig(), ollamaModel: ollamaModel.value }));
+    const hardware = this.root.querySelector<HTMLElement>('#advisor-hardware');
+    if (hardware) hardware.textContent = CouncilAdvisor.isWebGpuAvailable()
+      ? 'WebGPU erkannt. Das Modell wird erst auf ausdrücklichen Wunsch geladen.'
+      : 'WebGPU hier nicht verfügbar. Das integrierte Mininetz arbeitet trotzdem offline.';
+    const updateModelUi = (): void => {
+      const webgpu = backendSelect?.value === 'webgpu';
+      const state = this.councilAdvisor.getStatus();
+      if (status) status.textContent = state.message;
+      if (progressBar) progressBar.value = state.percent;
+      if (startButton) {
+        startButton.disabled = !webgpu || !CouncilAdvisor.isWebGpuAvailable() || state.state === 'loading';
+        startButton.textContent = state.state === 'ready' ? '✓ KI-Modell bereit' : '▶ KI-Modell starten';
+      }
+      if (inferenceButton) inferenceButton.disabled = !webgpu || state.state !== 'ready';
+    };
+    this.root.querySelector('#settings-open')?.addEventListener('click', () => { updateModelUi(); settingsDialog?.showModal(); });
+    for (const id of ['#settings-close', '#settings-done']) this.root.querySelector(id)?.addEventListener('click', () => settingsDialog?.close());
+    settingsDialog?.addEventListener('click', e => { if (e.target === settingsDialog) settingsDialog.close(); });
+    backendSelect?.addEventListener('change', () => {
+      const backend = backendSelect.value as AdvisorBackend;
+      saveAdvisorConfig({ ...readAdvisorConfig(), backend });
+      if (inferenceResult) inferenceResult.textContent = '';
+      updateModelUi();
+    });
+    this.root.querySelector('#advisor-test')?.addEventListener('click', () => {
+      if (hardware) hardware.textContent = 'Grafikadapter wird überprüft …';
+      void (async () => {
+        if (!CouncilAdvisor.isWebGpuAvailable()) {
+          if (hardware) hardware.textContent = '✕ WebGPU fehlt. HTTPS, Browser und Hardware-Beschleunigung kontrollieren.';
+          return;
+        }
+        try {
+          const gpu = (navigator as Navigator & {gpu?: {requestAdapter: () => Promise<unknown | null>}}).gpu;
+          const adapter = await gpu?.requestAdapter();
+          if (hardware) hardware.textContent = adapter
+            ? '✓ WebGPU-Grafikadapter gefunden. Der Modellstart kann jetzt getestet werden.'
+            : '✕ WebGPU ist vorhanden, aber kein geeigneter Grafikadapter verfügbar.';
+        } catch (error) {
+          if (hardware) hardware.textContent = '✕ WebGPU-Prüfung fehlgeschlagen: ' +
+            (error instanceof Error ? error.message : String(error));
+        }
+      })();
+      updateModelUi();
+    });
+    startButton?.addEventListener('click', () => {
+      if (backendSelect?.value !== 'webgpu') return;
+      if (inferenceResult) inferenceResult.textContent = '';
+      const config = readAdvisorConfig();
+      void this.councilAdvisor.loadModel(config, state => {
+        if (status) status.textContent = state.message;
+        if (progressBar) progressBar.value = state.percent;
+        if (startButton) startButton.disabled = state.state === 'loading';
+        if (state.state === 'ready' || state.state === 'error') updateModelUi();
+      }).then(() => updateModelUi()).catch(error => {
+        if (status) status.textContent = 'KI-Modell konnte nicht geladen werden: ' + (error instanceof Error ? error.message : String(error));
+        updateModelUi();
+      });
+      updateModelUi();
+    });
+    inferenceButton?.addEventListener('click', () => {
+      inferenceButton.disabled = true;
+      if (inferenceResult) inferenceResult.textContent = 'Modell arbeitet – Testfrage wird beantwortet …';
+      void this.councilAdvisor.testInference(readAdvisorConfig())
+        .then(answer => { if (inferenceResult) inferenceResult.textContent = '✓ Modell antwortet: ' + answer; })
+        .catch(error => { if (inferenceResult) inferenceResult.textContent = '✕ Inferenz fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)); })
+        .finally(updateModelUi);
+    });
+    updateModelUi();
+    const volume = this.root.querySelector<HTMLInputElement>('#setting-music-volume');
+    if (volume) {
+      volume.value = String(Math.round(this.jukebox.getVolume() * 100));
+      volume.addEventListener('input', () => this.jukebox.setVolume(Number(volume.value) / 100));
+    }
+    const motionSetting = this.root.querySelector<HTMLInputElement>('#setting-motion');
+    if (motionSetting) {
+      motionSetting.checked = this.motionEnabled;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        motionSetting.disabled = true;
+        motionSetting.checked = false;
+        this.motionEnabled = false;
+        const hint = this.root.querySelector<HTMLElement>('#setting-motion-hint');
+        if (hint) hint.textContent = 'Reduzierte Bewegung ist im Betriebssystem aktiviert.';
+      }
+      motionSetting.addEventListener('change', () => {
+        this.motionEnabled = motionSetting.checked;
+        this.map?.setMotion(this.motionEnabled);
+        this.saveDisplayPreferences();
+      });
+    }
+    this.root.querySelector('#music-diagnose')?.addEventListener('click', () => {
+      const output = this.root.querySelector<HTMLElement>('#music-diagnosis');
+      void this.jukebox.diagnoseTracks((done,total,title) => {
+        if (output) output.textContent = 'Prüfung ' + done + '/' + total + ': ' + title;
+      }).then(errors => {
+        if (output) output.textContent = errors.length ? errors.join(' | ') : '✓ Alle 15 MP3-Dateien sind erreichbar und besitzen einen MP3-Header.';
+      }).catch(error => { if (output) output.textContent = String(error); });
+    });
+    this.root.querySelector('#offline-save')?.addEventListener('click', () => {
+      const output = this.root.querySelector<HTMLElement>('#offline-status');
+      const button = this.root.querySelector<HTMLButtonElement>('#offline-save');
+      if (!('serviceWorker' in navigator) || !window.isSecureContext) {
+        if (output) output.textContent = 'Offline-Installation benötigt HTTPS oder localhost.';
+        return;
+      }
+      if (button) button.disabled = true;
+      void navigator.serviceWorker.ready.then(registration => {
+        const worker = registration.active;
+        if (!worker) throw new Error('Offline-Dienst noch nicht bereit. Seite neu laden.');
+        const channel = new MessageChannel();
+        channel.port1.onmessage = (event: MessageEvent) => {
+          const data = event.data as { type: string; done?: number; total?: number; file?: string; message?: string };
+          if (data.type === 'PROGRESS' && output)
+            output.textContent = 'Speichere ' + data.done + '/' + data.total + ': ' + data.file;
+          if (data.type === 'DONE') {
+            if (output) output.textContent = '✓ Spiel und Medien in diesem Browser gespeichert. Offline-Test über Flugmodus durchführen.';
+            if (button) button.disabled = false;
+            channel.port1.close();
+          }
+          if (data.type === 'ERROR') {
+            if (output) output.textContent = '✕ Offline-Speicherung fehlgeschlagen: ' + data.message;
+            if (button) button.disabled = false;
+            channel.port1.close();
+          }
+        };
+        worker.postMessage({ type: 'DOWNLOAD' }, [channel.port2]);
+      }).catch(error => {
+        if (output) output.textContent = '✕ ' + String(error);
+        if (button) button.disabled = false;
+      });
+    });
+    this.bindFilmSettings();
+  }
+
+  private saveDisplayPreferences(): void {
+    try {
+      localStorage.setItem('kaiser-display-settings', JSON.stringify({ motion: this.motionEnabled, mapStyle: this.mapStyle }));
+    } catch { /* Storage may be blocked: session settings still apply. */ }
+  }
+
+  private loadDisplayPreferences(): void {
+    try {
+      const raw = localStorage.getItem('kaiser-display-settings');
+      if (!raw) return;
+      const stored: unknown = JSON.parse(raw);
+      if (!stored || typeof stored !== 'object') return;
+      const value = stored as { motion?: unknown; mapStyle?: unknown };
+      if (typeof value.motion === 'boolean') this.motionEnabled = value.motion;
+      if (value.mapStyle === 'flat' || value.mapStyle === 'isometric') this.mapStyle = value.mapStyle;
+    } catch { /* Invalid or disabled storage cannot prevent starting the game. */ }
   }
 
   private showMenu(): void {
@@ -206,14 +494,17 @@ export class KingdomGameUI {
             <label class="checkbox"><input type="checkbox" name="events" checked> Zufällige Ereignisse zulassen</label>
             <button type="submit" class="primary wide">Herrschaft beginnen <span>→</span></button>
           </form>
-          <div class="continue-row"><button type="button" data-install-game class="secondary">⬇ Spiel installieren</button><span data-install-status role="status" class="muted">Über HTTPS als App auf dem Gerät speicherbar.</span></div>
+          <div class="continue-row"><button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen öffnen</button><span>Anzeige, Musik, Filme, KI und Installation</span></div>
           <div class="continue-row"><button id="continue" class="secondary">Spielstand fortsetzen</button>
             <span>Lokaler Spielstand im Browser</span></div>
           <p class="menu-note">Version: 2026-10-17 · Musikoptionen nach Spielstart</p>
           <p class="menu-note">Startet pausiert · Ohne Anmeldung · Hotseat: alle Spieler an einem Gerät, Zug um Zug</p>
           <p id="notice" role="status" aria-live="polite"></p>
         </section>
+        ${this.settingsDialogMarkup()}
+        ${this.filmDialogMarkup()}
       </main>`;
+    this.bindSettingsControls();
     this.bindIntro();
     void this.refreshCinematicClips();
     this.root.querySelector('#opening-toggle')?.addEventListener('click', () => void this.toggleOpeningMusic());
@@ -335,8 +626,7 @@ export class KingdomGameUI {
           <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span></div>
           <div class="header-actions">
             <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog" aria-label="Informationen zur Epoche"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
-            <button type="button" id="civic-open" class="primary" aria-label="Bürgeraufträge direkt öffnen">⚒ Bürgeraufträge</button><button type="button" data-install-game class="secondary">⬇ Spiel installieren</button><button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen</button>
-            <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
+            <button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen</button>
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button><button data-action="exit" class="secondary" title="Zum Hauptmenü zurück">Beenden</button></div>
         </header>
@@ -433,40 +723,8 @@ export class KingdomGameUI {
         </div>
         <footer class="game-footer">© 2026 Thomas Heisig · Kaiser von Deutschland · <button type="button" id="legal-open" class="legal-link">Urheberrecht · KI · Datenschutz</button><span id="footer-keys"></span></footer>
         <dialog id="section-dialog" class="section-dialog" aria-label="Spielbereich"><div class="section-dialog-head"><strong id="section-dialog-title">Verwaltung</strong><button type="button" id="section-dialog-close" aria-label="Bereich schließen">✕</button></div><div id="section-dialog-body"></div></dialog>
-        <dialog id="settings-dialog" class="info-dialog" aria-labelledby="settings-title"><h2 id="settings-title">Spieleinstellungen & KI</h2>
-          <label>Ratsberater<select id="advisor-backend"><option value="off">Aus – keine KI-Unterstützung</option><option value="mini">Integriertes Mini-Netz (offline)</option><option value="rules">Regelberater</option><option value="webgpu">WebGPU (optional, Modelldownload)</option><option value="ollama">Ollama lokal (nur auf Wunsch)</option></select></label>
-          <label id="ollama-config">Ollama-Modell <input id="ollama-model" type="text" maxlength="70" placeholder="gemma3:1b" autocomplete="off"></label>
-          <p id="advisor-hardware" class="muted"></p><p class="muted">KI ist optional. Modelle werden erst auf Anfrage heruntergeladen. Vorschläge werden nie automatisch umgesetzt. Ollama ist ausschließlich auf ausdrückliche Auswahl über localhost nutzbar.</p>
-          <div class="advisor-model-actions"><button type="button" id="advisor-test" class="secondary">WebGPU prüfen</button>
-          <button type="button" id="advisor-start" class="primary">▶ KI-Modell starten</button>
-          <button type="button" id="advisor-infer" class="secondary" disabled>🧪 Modellantwort testen</button></div>
-          <label for="advisor-progress">Modellstatus</label>
-          <progress id="advisor-progress" max="100" value="0" aria-label="KI-Modell-Ladefortschritt"></progress>
-          <p id="advisor-status" role="status" aria-live="polite">KI-Modell nicht geladen.</p>
-          <p id="advisor-inference-result" role="status"></p>
-          <hr><h3>Musik & Diagnose</h3><button type="button" id="music-diagnose" class="secondary">Alle 15 MP3 prüfen</button>
-          <p id="music-diagnosis" role="status">Bei Abspielfehlern die Serverdateien überprüfen.</p>
-          <hr><h3>Installation als App</h3><button type="button" data-install-game class="primary">⬇ Spiel installieren</button><p data-install-status role="status" class="muted">Für iPad: Safari → Teilen → Zum Home-Bildschirm.</p><hr><h3>Offline spielen / Heimnetz-Download</h3><p>Spiel, Musik, Cover und alle Videos als vollständiges ZIP herunterladen – auch über HTTP im vertrauenswürdigen Heimnetz. Nach dem Entpacken lokal über http://localhost starten. Für eine Browserinstallation auf Mobilgeräten bleibt HTTPS erforderlich.</p><a class="secondary" href="${import.meta.env.BASE_URL}downloads/kaiser-von-deutschland-offline.zip" download="kaiser-von-deutschland-offline.zip">↓ Komplettes Spiel als ZIP herunterladen (LAN/HTTP möglich)</a><p>Zusätzlich: Spiel einmalig in diesem Browser speichern (nur HTTPS oder localhost; der Browser kann Cache bei Speichermangel löschen).</p>
-          <button type="button" id="offline-save" class="primary">↓ Spiel im Browser speichern</button>
-          <p id="offline-status" role="status">Offline-Paket noch nicht überprüft.</p>
-          <hr><h3>Filmvorführungen</h3>
-           <p id="film-library-status" role="status">Filmdateien werden überprüft …</p>
-           <label>Alternatives Intro<select id="film-intro"></select></label>
-           <label>Film beim Beenden<select id="film-outro"></select></label>
-           <label>Historisches Zwischenvideo<select id="film-interlude"></select></label>
-           <label class="checkbox"><input id="film-interludes-enabled" type="checkbox"> Zwischenvideos bei historischen Meilensteinen anzeigen</label>
-           <button type="button" id="film-preview" class="secondary">▶ Gewähltes Zwischenvideo ansehen</button>
-           <hr><h3>Anzeige und Musik</h3>
-          <label>Musiklautstärke <input id="setting-music-volume" type="range" min="0" max="100" value="28"></label>
-          <label><input type="checkbox" id="setting-motion" checked> Kartenanimation aktivieren</label>
-          <button type="button" data-close-dialog="settings-dialog">Schließen</button></dialog>
-        <dialog id="film-dialog" class="film-dialog" aria-label="Historischer Film">
-           <div class="section-dialog-head"><strong id="film-dialog-title">Eine neue Epoche</strong>
-           <button type="button" id="film-dialog-close" aria-label="Film schließen">✕</button></div>
-           <video id="film-dialog-video" playsinline controls preload="none"></video>
-           <div class="film-dialog-footer"><button type="button" id="film-dialog-play">▶ Mit Ton abspielen</button>
-           <button type="button" id="film-dialog-skip">Überspringen →</button></div>
-         </dialog>
+        ${this.settingsDialogMarkup()}
+        ${this.filmDialogMarkup()}
          <dialog id="epoch-dialog" class="info-dialog" aria-labelledby="epoch-title"><h2 id="epoch-title">Epoche</h2><p id="epoch-description"></p><p class="muted">Historische Einordnung; alternative Geschichte.</p><button type="button" data-close-dialog="epoch-dialog">Schließen</button></dialog>
         <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
       </div>`;
@@ -508,154 +766,12 @@ export class KingdomGameUI {
         this.mapStyle = mapStyleSelect.value === 'isometric' ? 'isometric' : 'flat';
         const mapHost = this.root.querySelector<HTMLElement>('#kingdom-map');
         if (mapHost) mapHost.dataset.projection = this.mapStyle;
+        const setting = this.root.querySelector<HTMLSelectElement>('#setting-map-style');
+        if (setting) setting.value = this.mapStyle;
+        this.saveDisplayPreferences();
       });
     }
-    const motionToggle = this.root.querySelector<HTMLButtonElement>('#motion-toggle');
-    motionToggle?.addEventListener('click', (): void => {
-      this.motionEnabled = !this.motionEnabled;
-      this.map?.setMotion(this.motionEnabled);
-      motionToggle.textContent = this.motionEnabled ? '✨ Animation: An' : '✨ Animation: Aus';
-      motionToggle.setAttribute('aria-pressed', String(this.motionEnabled));
-    });
-    if (motionToggle && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      motionToggle.disabled = true;
-      motionToggle.title = 'Reduzierte Bewegung ist im Betriebssystem aktiviert.';
-    }
-    const settingsDialog = this.root.querySelector<HTMLDialogElement>('#settings-dialog');
-    const backendSelect = this.root.querySelector<HTMLSelectElement>('#advisor-backend');
-    const startButton = this.root.querySelector<HTMLButtonElement>('#advisor-start');
-    const inferenceButton = this.root.querySelector<HTMLButtonElement>('#advisor-infer');
-    const progressBar = this.root.querySelector<HTMLProgressElement>('#advisor-progress');
-    const status = this.root.querySelector<HTMLElement>('#advisor-status');
-    const inferenceResult = this.root.querySelector<HTMLElement>('#advisor-inference-result');
-    const ollamaModel = this.root.querySelector<HTMLInputElement>('#ollama-model');
-    if (backendSelect) backendSelect.value = readAdvisorConfig().backend;
-    if (ollamaModel) ollamaModel.value = readAdvisorConfig().ollamaModel ?? 'gemma3:1b';
-    ollamaModel?.addEventListener('change', () => saveAdvisorConfig({ ...readAdvisorConfig(), ollamaModel: ollamaModel.value }));
-    const hardware = this.root.querySelector<HTMLElement>('#advisor-hardware');
-    if (hardware) hardware.textContent = CouncilAdvisor.isWebGpuAvailable()
-      ? 'WebGPU erkannt. Das Modell wird erst auf ausdrücklichen Wunsch geladen.'
-      : 'WebGPU hier nicht verfügbar. Das integrierte Mininetz arbeitet trotzdem offline.';
-    const updateModelUi = (): void => {
-      const webgpu = backendSelect?.value === 'webgpu';
-      const state = this.councilAdvisor.getStatus();
-      if (status) status.textContent = state.message;
-      if (progressBar) progressBar.value = state.percent;
-      if (startButton) {
-        startButton.disabled = !webgpu || !CouncilAdvisor.isWebGpuAvailable() || state.state === 'loading';
-        startButton.textContent = state.state === 'ready' ? '✓ KI-Modell bereit' : '▶ KI-Modell starten';
-      }
-      if (inferenceButton) inferenceButton.disabled = !webgpu || state.state !== 'ready';
-    };
-    this.root.querySelector('#settings-open')?.addEventListener('click', () => { updateModelUi(); settingsDialog?.showModal(); });
-    backendSelect?.addEventListener('change', () => {
-      const backend = backendSelect.value as AdvisorBackend;
-      saveAdvisorConfig({ ...readAdvisorConfig(), backend });
-      if (inferenceResult) inferenceResult.textContent = '';
-      updateModelUi();
-    });
-    this.root.querySelector('#advisor-test')?.addEventListener('click', () => {
-      if (hardware) hardware.textContent = 'Grafikadapter wird überprüft …';
-      void (async () => {
-        if (!CouncilAdvisor.isWebGpuAvailable()) {
-          if (hardware) hardware.textContent = '✕ WebGPU fehlt. HTTPS, Browser und Hardware-Beschleunigung kontrollieren.';
-          return;
-        }
-        try {
-          const gpu = (navigator as Navigator & {gpu?: {requestAdapter: () => Promise<unknown | null>}}).gpu;
-          const adapter = await gpu?.requestAdapter();
-          if (hardware) hardware.textContent = adapter
-            ? '✓ WebGPU-Grafikadapter gefunden. Der Modellstart kann jetzt getestet werden.'
-            : '✕ WebGPU ist vorhanden, aber kein geeigneter Grafikadapter verfügbar.';
-        } catch (error) {
-          if (hardware) hardware.textContent = '✕ WebGPU-Prüfung fehlgeschlagen: ' +
-            (error instanceof Error ? error.message : String(error));
-        }
-      })();
-      updateModelUi();
-    });
-    startButton?.addEventListener('click', () => {
-      if (backendSelect?.value !== 'webgpu') return;
-      if (inferenceResult) inferenceResult.textContent = '';
-      const config = readAdvisorConfig();
-      void this.councilAdvisor.loadModel(config, state => {
-        if (status) status.textContent = state.message;
-        if (progressBar) progressBar.value = state.percent;
-        if (startButton) startButton.disabled = state.state === 'loading';
-        if (state.state === 'ready' || state.state === 'error') updateModelUi();
-      }).then(() => updateModelUi()).catch(error => {
-        if (status) status.textContent = 'KI-Modell konnte nicht geladen werden: ' + (error instanceof Error ? error.message : String(error));
-        updateModelUi();
-      });
-      updateModelUi();
-    });
-    inferenceButton?.addEventListener('click', () => {
-      inferenceButton.disabled = true;
-      if (inferenceResult) inferenceResult.textContent = 'Modell arbeitet – Testfrage wird beantwortet …';
-      void this.councilAdvisor.testInference(readAdvisorConfig())
-        .then(answer => { if (inferenceResult) inferenceResult.textContent = '✓ Modell antwortet: ' + answer; })
-        .catch(error => { if (inferenceResult) inferenceResult.textContent = '✕ Inferenz fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)); })
-        .finally(updateModelUi);
-    });
-    updateModelUi();
-    const volume = this.root.querySelector<HTMLInputElement>('#setting-music-volume');
-    if (volume) {
-      volume.value = String(Math.round(this.jukebox.getVolume() * 100));
-      volume.addEventListener('input', () => this.jukebox.setVolume(Number(volume.value) / 100));
-    }
-    const motionSetting = this.root.querySelector<HTMLInputElement>('#setting-motion');
-    if (motionSetting) {
-      motionSetting.checked = this.motionEnabled;
-      motionSetting.addEventListener('change', () => {
-        this.motionEnabled = motionSetting.checked;
-        this.map?.setMotion(this.motionEnabled);
-        const toggle = this.root.querySelector<HTMLButtonElement>('#motion-toggle');
-        if (toggle) toggle.textContent = this.motionEnabled ? '✨ Animation: An' : '✨ Animation: Aus';
-      });
-    }
-    this.root.querySelector('#music-diagnose')?.addEventListener('click', () => {
-      const output = this.root.querySelector<HTMLElement>('#music-diagnosis');
-      void this.jukebox.diagnoseTracks((done,total,title) => {
-        if (output) output.textContent = 'Prüfung ' + done + '/' + total + ': ' + title;
-      }).then(errors => {
-        if (output) output.textContent = errors.length ? errors.join(' | ') : '✓ Alle 15 MP3-Dateien sind erreichbar und besitzen einen MP3-Header.';
-      }).catch(error => { if (output) output.textContent = String(error); });
-    });
-    this.root.querySelector('#offline-save')?.addEventListener('click', () => {
-      const output = this.root.querySelector<HTMLElement>('#offline-status');
-      const button = this.root.querySelector<HTMLButtonElement>('#offline-save');
-      if (!('serviceWorker' in navigator) || !window.isSecureContext) {
-        if (output) output.textContent = 'Offline-Installation benötigt HTTPS oder localhost.';
-        return;
-      }
-      if (button) button.disabled = true;
-      void navigator.serviceWorker.ready.then(registration => {
-        const worker = registration.active;
-        if (!worker) throw new Error('Offline-Dienst noch nicht bereit. Seite neu laden.');
-        const channel = new MessageChannel();
-        channel.port1.onmessage = (event: MessageEvent) => {
-          const data = event.data as { type: string; done?: number; total?: number; file?: string; message?: string };
-          if (data.type === 'PROGRESS' && output)
-            output.textContent = 'Speichere ' + data.done + '/' + data.total + ': ' + data.file;
-          if (data.type === 'DONE') {
-            if (output) output.textContent = '✓ Spiel und Medien in diesem Browser gespeichert. Offline-Test über Flugmodus durchführen.';
-            if (button) button.disabled = false;
-            channel.port1.close();
-          }
-          if (data.type === 'ERROR') {
-            if (output) output.textContent = '✕ Offline-Speicherung fehlgeschlagen: ' + data.message;
-            if (button) button.disabled = false;
-            channel.port1.close();
-          }
-        };
-        worker.postMessage({ type: 'DOWNLOAD' }, [channel.port2]);
-      }).catch(error => {
-        if (output) output.textContent = '✕ ' + String(error);
-        if (button) button.disabled = false;
-      });
-    });
-    this.bindFilmSettings();
-    this.root.querySelector('#civic-open')?.addEventListener('click', () => this.navigate('civic'));
+    this.bindSettingsControls();
     this.root.querySelector('#epoch-info-toggle')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#epoch-dialog')?.showModal());
     this.root.querySelector('#legal-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#legal-dialog')?.showModal());
     this.root.querySelectorAll<HTMLButtonElement>('[data-close-dialog]').forEach(button => button.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#' + button.dataset.closeDialog)?.close()));

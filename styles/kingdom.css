@@ -630,3 +630,30 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
 #advisor-progress{display:block;width:100%;height:12px;accent-color:#dabe7b;margin:8px 0}
 #advisor-status,#advisor-inference-result{overflow-wrap:anywhere;line-height:1.4;min-height:1.5em}
 #settings-dialog{max-width:min(93vw,650px)}
+
+/* Grouped settings, shared between the opening menu and running game. */
+.settings-dialog {width:min(94vw,850px);max-width:850px;max-height:90dvh;overflow-y:auto;padding:clamp(14px,2.5vw,26px);}
+.settings-heading {display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:-1px;background:#192c26;z-index:2;padding-bottom:8px;}
+.settings-heading h2 {margin:0;}
+.settings-heading button {margin:0;min-width:44px;min-height:44px;}
+.settings-intro {margin:8px 0 16px;}
+.settings-tabs {display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 18px;border-bottom:1px solid #697258;padding-bottom:11px;}
+.settings-tabs [role="tab"] {flex:1 1 125px;min-width:0;white-space:normal;min-height:42px;padding:9px;color:#f0e4c6;background:#253d31;}
+.settings-tabs [role="tab"][aria-selected="true"] {background:#92713e;color:white;border:2px solid #f3d89e;}
+.settings-tab-panel[hidden] {display:none!important;}
+.settings-tab-panel {display:grid;gap:11px;min-width:0;}
+.settings-tab-panel h3 {margin:6px 0;color:#e8c97d;}
+.settings-tab-panel h4 {margin:8px 0 1px;color:#e8c97d;}
+.settings-tab-panel label {display:grid;gap:6px;min-width:0;}
+.settings-tab-panel label.checkbox {display:flex;align-items:center;gap:9px;}
+.settings-tab-panel input[type="checkbox"] {width:auto;min-height:20px;}
+.settings-tab-panel p {overflow-wrap:anywhere;}
+.settings-tab-panel a {display:inline-block;max-width:100%;overflow-wrap:anywhere;}
+.settings-footer {display:flex;justify-content:flex-end;margin-top:20px;border-top:1px solid #697258;padding-top:10px;}
+.settings-footer button {min-width:105px;}
+.welcome .settings-dialog {text-align:left;}
+@media(max-width:760px) {
+  .settings-dialog {inset:0;width:100vw;max-width:none;height:100dvh;max-height:100dvh;margin:0;border-radius:0;overflow-y:auto;}
+  .settings-tabs {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+  .settings-tab-panel select,.settings-tab-panel input:not([type="checkbox"]) {max-width:100%;width:100%;min-height:44px;}
+}
