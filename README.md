@@ -1,14 +1,36 @@
-## Offizieller Soundtrack: 15 Titel (17.10.2026)
-Der Katalog in `src/data/json/music-catalog.json` enthält **15 offizielle Titel**, mit historischen Jahreszuordnungen, Titelbezeichnung, geplanter Datei und Länge. Dazu gehören die 11 epochenabhängigen Aufnahmen von 1200 bis 2000 sowie `Kaiser Puls`, `Zeit vergeht`, `Ende der Zeit` und `Anbeginn der Zeit`.
+## Aktueller Stand – Spiel, Filmstart und Original-Soundtrack (17.10.2026)
 
-**Zeit vergeht** ist das Hauptthema am Startbildschirm. Das Spiel versucht die Wiedergabe beim Laden; falls der Browser Autoplay ohne Nutzeraktion verweigert, ist ein klarer Startknopf vorhanden. Das Hauptmenü zeigt keine Titel-Auswahlliste. Innerhalb des Spiels lassen sich die Aufnahmen über Musik & Klangeinstellungen auswählen und einzeln herunterladen. Es werden nur Audioeinträge angeboten, deren Dateien per HEAD-Anfrage tatsächlich verfügbar sind.
+Der produktive Quellcode liegt auf **main**. Der Spieleinstieg erfolgt über `src/main.ts` → `src/ui/KingdomGameUI.ts` → `src/core/GameEngine.ts`. Die Anwendung ist eine browserlokale TypeScript-/Vite-Simulation, kein installierter Backenddienst. Den aktuellen Auslieferungsstand der tatsächlich verwendeten Website gesondert verifizieren.
 
-**Installation der originalen Binärdateien:** Das in der Unterhaltung erstellte Paket `Kaiser_von_Deutschland_15_Titel_GitHub.zip` enthält alle MP3-Dateien in `public/music/`, eine `music-manifest.json` mit SHA-256-Prüfsummen sowie eine Installationsanleitung. Dieses GitHub-Quellcodeupdate allein enthält die originalen Audio-Binärbytes **nicht**. Erst das zusätzliche Hochladen des Ordners `public/music/` macht die 15 Aufnahmen direkt für alle Nutzer abspiel- und herunterladbar. Neue Musikbeschreibungen können später direkt im Katalog eingetragen werden.
+### Video und Musik
+- Filmischer Programmstart: `public/video/intro.mp4` (kurze Fassung), mit Schaltfläche zum Überspringen; alternative Originalfassung in `public/video/intro-original.mp4`. Autoplay des Videos ist stumm (`muted`), da Browser automatische Wiedergabe mit Ton häufig sperren.
+- Anschließend Hauptmenü und **„Zeit vergeht“** als Hauptthema. Falls der Browser Musik-Autoplay blockiert, steht ein sichtbarer Startknopf bereit.
+- **15 Originalaufnahmen** sind fest in `public/music/*.mp3` gespeichert und über `src/data/json/music-catalog.json` benannt. Für alle 15 Titel existieren vorläufige, einzeln gestaltete Cover in `public/covers/*.svg`.
+- Im Spiel: **Musik & Klangeinstellungen** öffnen, Titel per Dropdown oder Cover wählen, herunterladen, Lautstärke einstellen oder Epochenautomatik aktivieren. Lokaler Dateiimport bleibt zusätzlich möglich.
+- Die frühere prozedurale Hintergrundmusik (`RoyalMusicScore`) wurde entfernt. `GameAudio` erzeugt nur kurze Bedien-/Spieleffekte; `GameAmbience` liefert separat aktivierbare Umgebungsgeräusche.
+- Die 15 Covers sind **vorläufige Illustrationen**, keine vom Komponisten bereitgestellten Originalcover. Künstler, Lizenz und ausführliche Stückinformationen sind noch zu ergänzen.
+
+### Schnellstart und Freigabe
+```bash
+npm ci
+npm run dev
+# Prüfungen
+npm run check
+npm run build
+npx vitest run
+```
+
+- Entwicklungsserver: standardmäßig `http://localhost:4100`; Produktionsausgabe nach `dist/` (`npm run build`).
+- GitHub Actions auf `main`: CI mit Typecheck, Build und Unit-Tests; Browser Smoke mit Chromium Desktop und 320px Mobile.
+- Für den Release zusätzlich selbst testen: Videoende/Überspringen, Startmusik mit und ohne Autoplay-Freigabe, reale Audioausgabe, Lautstärke, Downloadlinks, Spieleinstieg, bestehende Spielstände und Mobile-Layout.
+- Deployment ist **nicht** mit einer erfolgreichen GitHub-Pipeline gleichzusetzen. Das Hosting muss explizit die aktuelle `main`-Version mitsamt `public/music/`, `public/video/` und `public/covers/` ausliefern.
+
+Siehe [Projektstatus](docs/00-meta/status.md), [Betrieb](docs/06-development/operations-guide.md) und [offene Aufgaben](TODO.md).
 
 ## Neue Spielstart- und Anzeigeoptionen (17.10.2026)
 Startepoche und Kampagne sind getrennte Entscheidungen. Die Startepochen reichen von 1200 über Renaissance und Industrialisierung bis 2000. Jede Kampagne kann in einem gewählten Startjahr beginnen; die früheren Kampagnenziele bleiben bestehen, sodass historische Ziele bei einem späten Start naturgemäß anders ausfallen. Zusätzlich steht **Offenes Spiel** ohne verpflichtende Siegziele zur Verfügung. Die Uhr und der gespeicherte Spielstand verwenden dasselbe Jahr.
 
-Die Jukebox ist nicht mehr im Hauptmenü. Im Spiel finden sich unter **Musik & Klangeinstellungen** Titelwahl, Lautstärke, Klang und Epochenautomatik. Die zwölf benannten Audioaufnahmen (elf Epochenstücke plus Bonustitel) sind im Quellcode als `public/music/*.mp3` hinterlegt; **die echten MP3-Binärdaten müssen zusätzlich in GitHub hochgeladen werden**, sonst ist nur die prozedurale Hintergrundmusik beziehungsweise der lokale Benutzerimport verfügbar.
+Die Jukebox ist nicht mehr im Hauptmenü. Im Spiel finden sich unter **Musik & Klangeinstellungen** Titelwahl, Lautstärke, Klang und Epochenautomatik. Alle 15 Originalaufnahmen sind im Repository unter `public/music/` enthalten; die prozedurale Hintergrundmusik wurde entfernt.
 
 Die Siedlung kann als 2D-Karte oder in einer isometrischen **3D-Look-Projektion** betrachtet werden. Ein echtes 3D-Modell ist damit noch nicht implementiert. Bei fehlender Hardwarebeschleunigung erscheint stattdessen eine interaktive, hardwarefreie 2D-Bezirkskarte, deren Gebäude zur normalen Bauverwaltung führen. Das Design passt sich in vier groben Farbstilen an Mittelalter, Neuzeit, Industrialisierung und Moderne an; Forschungs-, Gebäude- und Bevölkerungsmodelle sind nicht für jede Epoche vollständig ausbalanciert.
 
