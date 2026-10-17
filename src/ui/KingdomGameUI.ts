@@ -312,7 +312,6 @@ export class KingdomGameUI {
           <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span></div>
           <div class="header-actions">
             <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog" aria-label="Informationen zur Epoche"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
-            <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
             <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button></div>
