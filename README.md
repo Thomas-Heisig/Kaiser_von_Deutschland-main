@@ -63,6 +63,17 @@ Die langfristig geplante durchgehende Simulation von Mittelalter bis Zukunft mit
 epochenabhängigen Gebäuden, Wirtschaft, Armeen, Medien und Bürgerberufen ist
 **noch nicht fertig**. Die bisherigen Roadmap- und Legacy-Beschreibungen bleiben erhalten.
 
+### Historische Ausstellungen als optionale Spielaktion
+
+Historische Karten bleiben reine Wissensinformationen, aber der Herrscher kann
+für bereits vergangene kulturelle, künstlerische, wissenschaftliche und
+technische Meilensteine eine **freiwillige Ausstellung** finanzieren.
+Jede Ausstellung kostet Gold (Basispreis 350, im Zeitverlauf angepasst),
+bringt einmalig +2 kulturellen Einfluss sowie Prestige und wird pro Reich
+gespeichert. Eine Ausstellung erfindet keine historische Technologie und kann
+pro Reich nur einmal gefördert werden. Spekulative Zukunftskarten sind
+nicht förderbar. Die Spieldaten älterer Saves bleiben nutzbar.
+
 ## 🏛️ Hofverwaltung und Delegation (neue spielbare Erweiterung)
 
 Die umfangreiche Reichsverwaltung kann optional an **Bürger mit eigenen Fähigkeiten** delegiert werden.

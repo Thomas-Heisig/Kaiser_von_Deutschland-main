@@ -50,6 +50,27 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('funds one historical exhibit per realm and preserves it in a save', async (): Promise<void> => {
+    const engine = await campaign();
+    const player = engine.getPlayers()[0];
+    player.kingdom.resources.gold = 4000;
+    const option = engine.getExhibitionOptions(player.id).find(o => o.milestone.id === 'university-bologna');
+    expect(option).toBeDefined();
+    const culture = player.kingdom.stats.culturalInfluence;
+    const gold = player.kingdom.resources.gold;
+    expect(engine.sponsorExhibition(player.id, 'university-bologna')).toContain('Ausstellung');
+    expect(player.kingdom.resources.gold).toBe(gold - option!.cost);
+    expect(player.kingdom.stats.culturalInfluence).toBe(Math.min(100, culture + 2));
+    expect(() => engine.sponsorExhibition(player.id, 'university-bologna')).toThrow('bereits');
+    expect(() => engine.sponsorExhibition(player.id, 'moon')).toThrow('noch nicht');
+    await engine.saveGame('exhibition');
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('exhibition');
+    expect(restored.getExhibitionOptions(player.id).find(o =>
+      o.milestone.id === 'university-bologna')?.held).toBe(true);
+  });
+
   it('activates the real Hanseatic route after sailing research, a port and 15030 gold', async (): Promise<void> => {
     const engine = await campaign();
     const player = engine.getPlayers()[0];

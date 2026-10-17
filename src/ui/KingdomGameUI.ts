@@ -458,6 +458,11 @@ export class KingdomGameUI {
         this.showGameAction(detail.final ? '♛ Kampagne abgeschlossen!' : '♜ Neues Kapitel!', message, 'science');
         this.audio.playEffect('success');
       }),
+      engine.on('exhibitionSponsored', (detail: { playerId: string; message: string }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        this.record(detail.message);
+        this.showGameAction('♫ Kultur gefördert', detail.message, 'science');
+      }),
       engine.on('historyMilestone', (detail: { milestone: { year: number; title: string; description: string; speculative?: boolean } }): void => {
         const item = detail.milestone;
         this.record('Weltgeschichte ' + item.year + ': ' + item.title);
@@ -925,6 +930,7 @@ export class KingdomGameUI {
         this.renderCharacter(this.player);
     } else if (this.view === 'history') {
       const records = this.engine.getHistoricalTimeline();
+      const exhibitions = this.engine.getExhibitionOptions(this.player.id);
       const icons: Record<HistoryKind, string> = {
         invention: '⚙', science: '✧', art: '♫', culture: '◈', society: '⚖', future: '◇'
       };
@@ -932,6 +938,16 @@ export class KingdomGameUI {
         'Historische Entwicklungen der jeweiligen Zeit. Diese Informationen schalten nicht automatisch Technologien für dein Reich frei.') +
         `<p class="muted">Epoche: ${escape(this.engine.getCurrentEpoch())} · bis Jahr ${format(this.engine.getCurrentYear())}
         · ${format(records.length)} Einträge. Die Zukunft ist ausdrücklich als Szenario gekennzeichnet.</p>
+        <p class="muted">Kulturförderung ist freiwillig. Eine Ausstellung kostet Gold und steigert
+        dauerhaft den kulturellen Einfluss deines Reiches um 2 Punkte; sie kann nur einmal finanziert werden.</p>
+        <div class="build-grid">${exhibitions.slice().reverse().map((entry) => `
+          <article class="build-card"><h3>${escape(entry.milestone.title)}</h3>
+          <p>Historische Ausstellung · ${format(entry.cost)} Gold</p>
+          <button data-sponsor-exhibition="${escape(entry.milestone.id)}"
+          ${entry.held || !entry.affordable ? 'disabled' : ''}>
+          ${entry.held ? 'Bereits gefördert' : entry.affordable ? 'Ausstellung fördern' : 'Zu wenig Gold'}</button>
+          </article>`).join('')}</div>
+        <h3>Historische Informationskarten</h3>
         <div class="build-grid">${records.slice().reverse().map((item) => `
           <article class="build-card"><div class="build-title"><span aria-hidden="true">${icons[item.kind]}</span>
             <h3>${escape(item.title)}</h3><small>${format(item.year)}</small></div>
@@ -1027,6 +1043,12 @@ export class KingdomGameUI {
       button.addEventListener('click', () => void this.run(() => {
         this.notify(this.requireEngine().sendCampaignSpy(this.requirePlayer().id,
           button.dataset.spyAgent ?? '', button.dataset.spyTarget ?? ''));
+      }));
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-sponsor-exhibition]').forEach((button) => {
+      button.addEventListener('click', () => void this.run(() => {
+        this.notify(this.requireEngine().sponsorExhibition(this.requirePlayer().id,
+          button.dataset.sponsorExhibition ?? ''));
       }));
     });
     panel.querySelectorAll<HTMLButtonElement>('[data-festival]').forEach((button) => {
