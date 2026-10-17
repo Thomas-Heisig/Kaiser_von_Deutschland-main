@@ -1,3 +1,5 @@
+> **Dokumentationshinweis 17.10.2026:** Die folgende Gliederung ist ein früherer *Soll-Strukturplan*, der zahlreiche noch nicht angelegte Dateien erwähnt. Tatsächlich vorhandene Dokumente stehen im [aktuellen Index](INDEX.md). Verbindlicher Stand: [Status](00-meta/status.md), [TODO](../TODO.md), [Roadmap](00-meta/roadmap.md). Die Planideen bleiben erhalten, sind aber keine existierenden Links oder spielbaren Funktionen.
+
 # Dokumentation - Kaiser von Deutschland
 
 ## Übersicht
