@@ -2184,6 +2184,14 @@ export class GameEngine {
     const name = citizen.firstName + ' ' + citizen.lastName;
     const outcome = this.council.resolve(player, choiceId, this.currentYear, this.currentMonth,
       { id: citizen.id, name });
+    // A publicly delegated judgement has a modest, persistent personal consequence.
+    citizen.reputation = Math.max(-100, Math.min(100,
+      (citizen.reputation ?? 50) + (outcome.success ? 2 : -3)));
+    citizen.skills.leadership = Math.min(100, Math.max(0, citizen.skills.leadership + 1));
+    citizen.lifeEvents ??= [];
+    citizen.lifeEvents.push({ year: this.currentYear, month: this.currentMonth, type: 'achievement',
+      description: 'Ratsentscheidung: ' + outcome.message });
+    if (citizen.lifeEvents.length > 100) citizen.lifeEvents.splice(1, citizen.lifeEvents.length - 100);
     this.emit('councilResolved', { playerId, outcome });
     return outcome;
   }
