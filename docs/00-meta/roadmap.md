@@ -6,6 +6,11 @@
 
 Die [TODO](../../TODO.md) ist die *einzige operative Aufgabenliste*. Diese Roadmap zeigt Abhängigkeiten und Entwicklungsziele, **kein selbst attestiertes Fertigstellungsprotokoll**. [Status](status.md) beschreibt ausschließlich nachprüfbare Ergebnisse. Frühere Visionen, Zeitpläne und alle Ideen der bisherigen Dokumentation wurden vollständig archiviert: [Original-Roadmap](../outdated/roadmap-snapshot-2026-10-17.md), [Original-TODO](../outdated/TODO-snapshot-2026-10-17.md), [README-Ideen](backlog-from-readme.md). Keine historischen Ideen wurden gestrichen.
 
+## Gameplay-P1-Befunde (17.10.2026)
+- Industrie und Wiederaufbau hatten Startinfrastruktur, die einen Großteil des ersten Kapitels ohne Spielerhandlung erfüllte; Anfangsziele verschärft.
+- Die Zielanzeige verwendete bislang globale Ziel-Schwellen anstelle abgeschlossener Kapitel für die Siegmeldung. Siegstatus und Fortschrittsanzeige sind jetzt an Kapitelabschluss gebunden.
+- Noch offen: vollständiger automatisierter Spielabschluss, mehrjährige Wirtschaftsbalance und reale Niederlagebedingungen.
+
 ## Gameplay-Freigabereihenfolge (verbindlich)
 
 1. **Kampagnenabschluss als End-to-End-Ablauf:** Start, Bau, Handel, Forschung, Reichsrat, Monatswechsel, Save/Load, Sieg und Niederlage.

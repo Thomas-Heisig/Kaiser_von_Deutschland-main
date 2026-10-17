@@ -160,6 +160,22 @@ describe('Playable campaign integration', (): void => {
     }
   });
 
+  it('starts later campaigns with meaningful first-chapter building goals', async (): Promise<void> => {
+    for (const [id, needed] of [['industrie','Werkstätten'],['wiederaufbau','Bauernhöfe']] as const) {
+      const engine = new GameEngine({ startingYear: id === 'industrie' ? 1820 : 1945,
+        campaignId:id, randomEvents:false, enableWiki:false });
+      engines.push(engine);
+      const player = engine.addPlayer({name:'Anna', kingdomName:'Prüfreich',gender:'other'});
+      await engine.startGame(); engine.pauseGame();
+      const first = engine.getCampaignChapterStatus(player.id);
+      expect(first.index).toBe(0);
+      expect(first.ready).toBe(false);
+      expect(first.goals[0].label).toContain(needed);
+      await engine.advanceMonth();
+      expect(engine.getCampaignChapterStatus(player.id).index).toBe(0);
+    }
+  });
+
   it('progresses campaign chapters once and saves milestone progress', async (): Promise<void> => {
     const engine = await campaign();
     const player = engine.getPlayers()[0];

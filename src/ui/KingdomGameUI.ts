@@ -1208,10 +1208,13 @@ export class KingdomGameUI {
     const goalProgress = this.root.querySelector<HTMLProgressElement>('#goal-progress');
     if (goalProgress) {
       goalProgress.max = goals.length;
-      goalProgress.value = completed;
+      goalProgress.value = chapter.finished ? goals.length : Math.min(goals.length, chapter.index * 2 + chapter.goals.filter(goal => goal.done).length);
     }
-    setText('goal-status', this.engine.getCampaignId() === 'frei' ? 'Freies Spiel ohne Siegzwang – deine Entscheidungen bestimmen den Weg.' : completed === goals.length
-      ? 'Ziel erreicht! Dein Reich blüht. Du kannst frei weiterspielen.' : `${completed} von ${goals.length} Zielen erreicht`);
+    setText('goal-status', this.engine.getCampaignId() === 'frei'
+      ? 'Freies Spiel ohne Siegzwang – deine Entscheidungen bestimmen den Weg.'
+      : chapter.finished ? '♛ Kampagne gewonnen! Alle drei Kapitel wurden abgeschlossen. Du kannst frei weiterspielen.'
+      : chapter.ready ? 'Kapitelziele erfüllt. Lasse einen Monat vergehen, um das Kapitel abzuschließen.'
+      : `${chapter.goals.filter(goal => goal.done).length} von ${chapter.goals.length} aktuellen Kapitelzielen erfüllt · ${completed} von ${goals.length} Gesamtzielen.`);
     const latest = this.root.querySelector('#latest');
     if (latest) latest.innerHTML = this.journal.slice(0, 2).map((entry: JournalEntry) =>
       `<p><small>${escape(entry.date)}</small>${escape(entry.message)}</p>`).join('');
