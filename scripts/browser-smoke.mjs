@@ -116,6 +116,7 @@ try {
       engine.dispose();
     });
     await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('#intro-skip').click();
     await page.locator('#continue').click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
     await page.locator('nav [data-view="economy"]').click();
