@@ -1,3 +1,4 @@
+import { miniCouncilChoice } from '../core/EmbeddedMiniModel';
 import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
 import {
   CampaignGoal, CharacterAction, GameEngine, GameState, MarketResource, SaveMeta
@@ -426,7 +427,8 @@ export class KingdomGameUI {
         <footer class="game-footer">© 2026 Thomas Heisig · Kaiser von Deutschland · <button type="button" id="legal-open" class="legal-link">Urheberrecht · KI · Datenschutz</button><span id="footer-keys"></span></footer>
         <dialog id="section-dialog" class="section-dialog" aria-label="Spielbereich"><div class="section-dialog-head"><strong id="section-dialog-title">Verwaltung</strong><button type="button" id="section-dialog-close" aria-label="Bereich schließen">✕</button></div><div id="section-dialog-body"></div></dialog>
         <dialog id="settings-dialog" class="info-dialog" aria-labelledby="settings-title"><h2 id="settings-title">Spieleinstellungen & KI</h2>
-          <label>Ratsberater<select id="advisor-backend"><option value="rules">Lokaler Regelberater</option><option value="webgpu">Kleines KI-Modell im Browser (WebGPU)</option></select></label>
+          <label>Ratsberater<select id="advisor-backend"><option value="off">Aus – keine KI-Unterstützung</option><option value="mini">Integriertes Mini-Netz (offline)</option><option value="rules">Regelberater</option><option value="webgpu">WebGPU (optional, Modelldownload)</option><option value="ollama">Ollama lokal (nur auf Wunsch)</option></select></label>
+          <label id="ollama-config">Ollama-Modell <input id="ollama-model" type="text" maxlength="70" placeholder="gemma3:1b" autocomplete="off"></label>
           <p id="advisor-hardware" class="muted"></p><p class="muted">KI ist optional. Modelle werden erst auf Anfrage heruntergeladen. Vorschläge werden nie automatisch umgesetzt. Die vorhandene Ollama-Anbindung ist noch nicht mit der öffentlichen Spieloberfläche verbunden.</p>
           <button type="button" id="advisor-test" class="secondary">WebGPU prüfen</button><p id="advisor-status" role="status"></p>
           <button type="button" data-close-dialog="settings-dialog">Schließen</button></dialog>
@@ -487,13 +489,16 @@ export class KingdomGameUI {
     const settingsDialog = this.root.querySelector<HTMLDialogElement>('#settings-dialog');
     const backendSelect = this.root.querySelector<HTMLSelectElement>('#advisor-backend');
     if (backendSelect) backendSelect.value = readAdvisorConfig().backend;
+    const ollamaModel = this.root.querySelector<HTMLInputElement>('#ollama-model');
+    if (ollamaModel) ollamaModel.value = readAdvisorConfig().ollamaModel ?? 'gemma3:1b';
+    ollamaModel?.addEventListener('change', () => saveAdvisorConfig({ ...readAdvisorConfig(), ollamaModel: ollamaModel.value }));
     const hw = this.root.querySelector<HTMLElement>('#advisor-hardware');
     if (hw) hw.textContent = CouncilAdvisor.isWebGpuAvailable()
       ? 'WebGPU verfügbar; Modell wird bei Bedarf geladen.'
       : 'WebGPU nicht verfügbar; Regelberater nutzbar.';
     this.root.querySelector('#settings-open')?.addEventListener('click', () => settingsDialog?.showModal());
     backendSelect?.addEventListener('change', () => {
-      const backend: AdvisorBackend = backendSelect.value === 'webgpu' ? 'webgpu' : 'rules';
+      const backend = backendSelect.value as AdvisorBackend;
       saveAdvisorConfig({ ...readAdvisorConfig(), backend });
     });
     this.root.querySelector('#advisor-test')?.addEventListener('click', () => {
@@ -725,7 +730,8 @@ export class KingdomGameUI {
     delegate.type = 'button'; delegate.className = 'secondary'; delegate.textContent = 'An Bürger übergeben';
     delegate.addEventListener('click', () => void this.run(() => {
       if (!select.value) throw new Error('Bitte einen Bürger auswählen.');
-      const chosen = CouncilAdvisor.chooseByRules(this.requireEngine().getCouncilChoices(this.requirePlayer().id));
+      const offers = this.requireEngine().getCouncilChoices(this.requirePlayer().id);
+      const chosen = readAdvisorConfig().backend === 'mini' ? miniCouncilChoice({year:this.requireEngine().getCurrentYear()},offers) : CouncilAdvisor.chooseByRules(offers);
       const outcome = this.requireEngine().delegateCouncilDecision(this.requirePlayer().id, select.value, chosen);
       this.notify(outcome.message, !outcome.success);
       this.resumeAfterCouncilDecision(); dialog.close();
