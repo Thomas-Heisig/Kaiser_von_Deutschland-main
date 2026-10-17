@@ -1,3 +1,11 @@
+## Historische Filmsequenzen und Bürgerbiografien (17.10.2026)
+- [x] Dynamischer Filmkatalog aus tatsächlich vorhandenen Dateien beim Build; Auswahl von Intro, Outro und Zwischenfilm.
+- [x] Optionale Zwischenfilme für historische Meilensteine mit Überspringen, Tonsteuerung und Vorschau.
+- [x] Bürgeraufträge bewerten auch Berufserfahrung/Disziplin; Abschlüsse schreiben Lebenslaufereignisse.
+- [ ] Die drei zusätzlich angekündigten Videos in `public/video/` hochladen, anschließend Katalog und thematische Epochenzuordnung prüfen (in GitHub bisher nur zwei Videos sichtbar).
+- [ ] Authentische Zeitabschnitte, historische Sprechertexte, Filmrechte und Fades am tatsächlichen Endgerät abnehmen.
+- [ ] Echte mehrstufige Familien-, Berufs- und Gesellschaftsentwicklung inklusive Spielerentscheidungen erweitern.
+
 ## Lebendige Geschichte: zivile Bürgeraufträge (17.10.2026)
 - [x] Epochengebundene Bürgeraufträge vom Mittelalter bis zur Digitalisierung.
 - [x] Mehrmonatiger Verlauf, Vorabkosten, reale Abschlussbelohnung und Fähigkeitenentwicklung.

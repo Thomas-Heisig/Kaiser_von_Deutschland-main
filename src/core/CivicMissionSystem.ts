@@ -59,12 +59,21 @@ export class CivicMissionSystem {
       assignment.completedMonths++;
       if(assignment.completedMonths<mission.months)continue;
       const proficiency=citizen.skills[mission.preferredSkill];
-      const factor=0.7+Math.min(100,proficiency)/200;
+      // Skills, work experience and personal discipline shape tangible outcomes.
+      const character = citizen.personality;
+      const experience = Math.max(0, Math.min(100, citizen.professionLevel || 0));
+      const discipline = character && Number.isFinite(character.discipline) ? character.discipline : 50;
+      const factor = 0.65 + Math.min(100, proficiency) / 250 +
+        experience / 1000 + Math.max(0, Math.min(100, discipline)) / 1000;
       for(const [key,value] of Object.entries(mission.reward) as [CivicResource,number][])
         kingdom.resources[key]+=Math.round(value*factor);
       kingdom.happiness=bounded(kingdom.happiness+(mission.happiness??0));
       kingdom.stats.stability=bounded(kingdom.stats.stability+(mission.stability??0));
       citizen.skills[mission.preferredSkill]=bounded(proficiency+2);
+      citizen.professionLevel=bounded((citizen.professionLevel??0)+1);
+      citizen.reputation=bounded((citizen.reputation??0)+2);
+      citizen.lifeEvents??=[];
+      citizen.lifeEvents.push({year,month,type:'achievement',description:'Abschluss: '+mission.title});
       const event={playerId,citizenId:citizen.id,missionId:mission.id,success:true,
         message:citizen.firstName+' '+citizen.lastName+' hat „'+mission.title+'“ abgeschlossen.'};
       this.history.unshift(event);events.push(event);
