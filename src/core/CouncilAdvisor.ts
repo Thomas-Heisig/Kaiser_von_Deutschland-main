@@ -34,7 +34,8 @@ export class CouncilAdvisor {
     if (!this.loading) {
       this.loading = (async () => {
         // Lazy runtime: downloads model weights locally only after explicit opt-in.
-        const library = await import(/* @vite-ignore */ 'https://esm.run/@mlc-ai/web-llm@0.2.80') as {
+        const moduleUrl = 'https://esm.run/@mlc-ai/web-llm@0.2.80';
+        const library = await import(/* @vite-ignore */ moduleUrl) as {
           CreateMLCEngine: (model: string) => Promise<WebLlmEngine>;
         };
         const engine = await library.CreateMLCEngine(model);
