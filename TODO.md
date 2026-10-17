@@ -1,3 +1,9 @@
+## Roadmap: Generationen und Lebensläufe (17.10.2026)
+- [x] Zeittypische Vornamen für geborene Bürger, verschiedene Namensgruppen vom Mittelalter bis Moderne (fiktionale Simulation).
+- [x] Einfache regelgebundene Schwangerschaftsentstehung für zusammenlebende erwachsene Ehepaare, Gesundheits- und Nahrungsschranken, Geburtenabstand.
+- [ ] Automatische Eheschließungen und Partnerfindung, regionale kulturelle Namensräume und Geburten-/Sterblichkeitsbalance in langen Spielserien.
+- [ ] Integrationstests mit festen Zufallsquellen und umfangreichen Generationssimulationen; echte Geräteabnahme.
+
 ## HTTPS/PWA Freischaltung und Fallback (17.10.2026)
 - [x] PWA-App-Icons als echte PNGs (192/512 px) automatisch beim Build generieren und im Manifest referenzieren.
 - [x] HTTPS-Workflow versucht GitHub Pages mit enablement=true zu aktivieren.
