@@ -10,6 +10,8 @@ try {
     await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: /Kaiser von/i }).waitFor({ timeout: 15000 });
     await page.locator('#start-year').waitFor();
+    await page.locator('#opening-music').waitFor();
+    await page.getByText(/Zeit vergeht/).first().waitFor();
     if (await page.locator('.welcome [data-jukebox-select]').count()) failures.push('Jukebox must not appear in start menu');
     await page.locator('#campaign-select').selectOption('frei');
     await page.locator('#start-year').selectOption('1820');
@@ -21,6 +23,7 @@ try {
     await page.locator('#game-music-settings').waitFor();
     await page.locator('#game-music-settings summary').click();
     await page.locator('[data-jukebox-select]').waitFor();
+    await page.locator('[data-jukebox-download]').waitFor({state:'attached'});
     await page.locator('[data-jukebox-import]').setInputFiles({
       name: 'Kaiserliches leitmotiv 1200.mp3', mimeType:'audio/mpeg', buffer:Buffer.alloc(4096,0x41)
     });

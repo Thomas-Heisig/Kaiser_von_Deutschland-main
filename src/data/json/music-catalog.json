@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "album": "Kaiser von Deutschland – Soundtrack",
+  "openingTrackId": "zeit-vergeht",
+  "assetBase": "public/music/",
+  "downloadsAllowed": true,
+  "notes": "Titel und Zuordnung entsprechen den vom Spielautor übermittelten Aufnahmen. Weitere Beschreibungen können ergänzt werden. Die MP3-Dateien sind Binärassets und müssen zusätzlich unter public/music/ liegen.",
+  "tracks": [
+    {
+      "number": 1,
+      "id": "leitmotiv-1200",
+      "title": "Kaiserliches Leitmotiv",
+      "year": 1200,
+      "era": "Mittelalter",
+      "filename": "kaiserliches-leitmotiv-1200.mp3",
+      "durationSeconds": 161.9,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1200."
+    },
+    {
+      "number": 2,
+      "id": "stauferkrone-1300",
+      "title": "Stauferkrone",
+      "year": 1300,
+      "era": "Hochmittelalter",
+      "filename": "stauferkrone-1300.mp3",
+      "durationSeconds": 162.5,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1300."
+    },
+    {
+      "number": 3,
+      "id": "leitmotiv-1400",
+      "title": "Kaisers Leitmotiv",
+      "year": 1400,
+      "era": "Spätmittelalter",
+      "filename": "kaisers-leitmotiv-1400.mp3",
+      "durationSeconds": 179.2,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1400."
+    },
+    {
+      "number": 4,
+      "id": "pavane-1500",
+      "title": "Kaiserhof Pavane",
+      "year": 1500,
+      "era": "Renaissance",
+      "filename": "kaiserhof-pavane-1500.mp3",
+      "durationSeconds": 166.5,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1500."
+    },
+    {
+      "number": 5,
+      "id": "fanfare-1600",
+      "title": "Imperiale Fanfare",
+      "year": 1600,
+      "era": "Frühe Neuzeit",
+      "filename": "imperiale-fanfare-1600.mp3",
+      "durationSeconds": 179.1,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1600."
+    },
+    {
+      "number": 6,
+      "id": "ouvertuere-1750",
+      "title": "Kaiserliche Ouvertüre",
+      "year": 1750,
+      "era": "Aufklärung",
+      "filename": "kaiserliche-ouvertuere-1750.mp3",
+      "durationSeconds": 164.2,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1750."
+    },
+    {
+      "number": 7,
+      "id": "romantik-1820",
+      "title": "Eiserne Krone",
+      "year": 1820,
+      "era": "Romantik",
+      "filename": "eiserne-krone-1820.mp3",
+      "durationSeconds": 179.7,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1820."
+    },
+    {
+      "number": 8,
+      "id": "eiserne-kronen-1890",
+      "title": "Eiserne Kronen",
+      "year": 1890,
+      "era": "Spätromantik und Moderne",
+      "filename": "eiserne-kronen-1890.mp3",
+      "durationSeconds": 180,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1890."
+    },
+    {
+      "number": 9,
+      "id": "truemmerstaaten-1945",
+      "title": "Trümmerstaaten",
+      "year": 1945,
+      "era": "Nachkriegsmoderne",
+      "filename": "truemmerstaaten-1945.mp3",
+      "durationSeconds": 177.4,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1945."
+    },
+    {
+      "number": 10,
+      "id": "kaisersynthesia-1970",
+      "title": "Kaisersynthesia",
+      "year": 1970,
+      "era": "Elektronische Moderne",
+      "filename": "kaisersynthesia-1970.mp3",
+      "durationSeconds": 174.6,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1970."
+    },
+    {
+      "number": 11,
+      "id": "kaiserreich-erwachen-2000",
+      "title": "Kaiserreich Erwachen",
+      "year": 2000,
+      "era": "Digitalzeitalter",
+      "filename": "kaiserreich-erwachen-2000.mp3",
+      "durationSeconds": 176.3,
+      "role": "era",
+      "description": "Soundtrack der Spielzeit ab dem Jahr 2000."
+    },
+    {
+      "number": 12,
+      "id": "kaiser-puls",
+      "title": "Kaiser Puls",
+      "year": null,
+      "era": "Sonderstück",
+      "filename": "kaiser-puls.mp3",
+      "durationSeconds": 179,
+      "role": "special",
+      "description": "Zusätzliches eigenständiges Musikstück ohne festes Startjahr."
+    },
+    {
+      "number": 13,
+      "id": "zeit-vergeht",
+      "title": "Zeit vergeht",
+      "year": null,
+      "era": "Hauptthema / Programmstart",
+      "filename": "zeit-vergeht.mp3",
+      "durationSeconds": 171.2,
+      "role": "main",
+      "description": "Offizielles Hauptthema des Spiels; beginnt nach Möglichkeit beim Programmstart."
+    },
+    {
+      "number": 14,
+      "id": "ende-der-zeit",
+      "title": "Ende der Zeit",
+      "year": null,
+      "era": "Endzeit / Finale",
+      "filename": "ende-der-zeit.mp3",
+      "durationSeconds": 172.7,
+      "role": "ending",
+      "description": "Eigenständiger Soundtrack zum Ende der Zeit."
+    },
+    {
+      "number": 15,
+      "id": "anbeginn-der-zeit",
+      "title": "Anbeginn der Zeit",
+      "year": null,
+      "era": "Ursprung / Prolog",
+      "filename": "anbeginn-der-zeit.mp3",
+      "durationSeconds": 178.6,
+      "role": "special",
+      "description": "Zusätzliches eigenständiges Musikstück ohne festes Startjahr."
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import localforage from 'localforage';
+import musicCatalog from '../data/json/music-catalog.json';
 
 export interface JukeboxTrack {
   id: string;
@@ -13,32 +14,13 @@ const KEY = 'kaiser-music-tracks-v1';
 const STORAGE = localforage.createInstance({ name: 'KaiserMusik', storeName: 'tracks' });
 
 /** These titles appear only after their matching MP3 actually exists on the server. */
-export const BUNDLED_TRACKS: readonly JukeboxTrack[] = [
-  { id: 'leitmotiv-1200', title: 'Kaiserliches Leitmotiv', era: '1200 · Mittelalter', year: 1200,
-    source: 'library', url: '/music/kaiserliches-leitmotiv-1200.mp3' },
-  { id: 'stauferkrone-1300', title: 'Stauferkrone', era: '1300 · Hochmittelalter', year: 1300,
-    source: 'library', url: '/music/stauferkrone-1300.mp3' },
-  { id: 'leitmotiv-1400', title: 'Kaisers Leitmotiv', era: '1400 · Spätmittelalter', year: 1400,
-    source: 'library', url: '/music/kaisers-leitmotiv-1400.mp3' },
-  { id: 'pavane-1500', title: 'Kaiserhof Pavane', era: '1500 · Frühe Neuzeit', year: 1500,
-    source: 'library', url: '/music/kaiserhof-pavane-1500.mp3' },
-  { id: 'fanfare-1600', title: 'Imperiale Fanfare', era: '1600 · Frühe Neuzeit', year: 1600,
-    source: 'library', url: '/music/imperiale-fanfare-1600.mp3' },
-  { id: 'ouvertuere-1750', title: 'Kaiserliche Ouvertüre', era: '1750 · Aufklärung', year: 1750,
-    source: 'library', url: '/music/kaiserliche-ouvertuere-1750.mp3' },
-  { id: 'romantik-1820', title: 'Eiserne Krone', era: '1820 · Romantik', year: 1820, source: 'library',
-    url: '/music/eiserne-krone-1820.mp3' },
-  { id: 'eiserne-kronen-1890', title: 'Eiserne Kronen', era: '1890 · Spätromantik & Moderne', year: 1890,
-    source: 'library', url: '/music/eiserne-kronen-1890.mp3' },
-  { id: 'truemmerstaaten-1945', title: 'Trümmerstaaten', era: '1945 · Nachkriegsmoderne', year: 1945,
-    source: 'library', url: '/music/truemmerstaaten-1945.mp3' },
-  { id: 'kaisersynthesia-1970', title: 'Kaisersynthesia', era: '1970 · Elektronik', year: 1970,
-    source: 'library', url: '/music/kaisersynthesia-1970.mp3' },
-  { id: 'kaiserreich-erwachen-2000', title: 'Kaiserreich erwachen', era: '2000 · Digitalzeitalter', year: 2000,
-    source: 'library', url: '/music/kaiserreich-erwachen-2000.mp3' },
-  { id: 'krone-und-land', title: 'Krone und Land – Ein Reich, viele Zeiten',
-    era: 'Mittelalter · Bonus', source: 'library', url: '/music/krone-und-land.mp3' }
-];
+export const BUNDLED_TRACKS: readonly JukeboxTrack[] = musicCatalog.tracks.map(track => ({
+  id: track.id, title: track.title, era: track.era,
+  ...(typeof track.year === 'number' ? {year:track.year} : {}),
+  source: 'library' as const, url: '/music/' + track.filename
+}));
+
+export const MAIN_THEME_ID = musicCatalog.openingTrackId;
 
 const YEAR_NAMES: Record<number, { title: string; era: string }> = {
   1200: { title: 'Kaiserliches Leitmotiv', era: 'Mittelalter' },
@@ -85,10 +67,16 @@ export class MusicJukebox {
   private enabled = false;
   private tracks: JukeboxTrack[] = [];
   private onChange: () => void = () => {};
+  private readonly catalog = musicCatalog;
+  private autoplayBlocked = false;
 
   public constructor(onChange?: () => void) { if (onChange) this.onChange = onChange; }
   public getTracks(): JukeboxTrack[] { return this.tracks.map(track => ({ ...track })); }
   public getCurrentId(): string | null { return this.currentId; }
+  public getTrackInfo(id: string) { return this.catalog.tracks.find(track=>track.id===id); }
+  public getDownloadUrl(id: string): string | null { const track = this.tracks.find(t=>t.id===id); return track?.source==='library' ? track.url ?? null : null; }
+  public hasAutoplayBlock(): boolean { return this.autoplayBlocked; }
+  public async playOpening(): Promise<boolean> { if (!this.tracks.some(track=>track.id===MAIN_THEME_ID)) return false; try {await this.play(MAIN_THEME_ID); this.autoplayBlocked=false; return true;} catch {this.autoplayBlocked=true; return false;} }
   public getTrackForYear(year: number): JukeboxTrack | null { return trackForYear(this.tracks, year); }
   public isPlaying(): boolean { return this.enabled && !!this.audio && !this.audio.paused; }
 

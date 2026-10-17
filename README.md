@@ -1,3 +1,10 @@
+## Offizieller Soundtrack: 15 Titel (17.10.2026)
+Der Katalog in `src/data/json/music-catalog.json` enthält **15 offizielle Titel**, mit historischen Jahreszuordnungen, Titelbezeichnung, geplanter Datei und Länge. Dazu gehören die 11 epochenabhängigen Aufnahmen von 1200 bis 2000 sowie `Kaiser Puls`, `Zeit vergeht`, `Ende der Zeit` und `Anbeginn der Zeit`.
+
+**Zeit vergeht** ist das Hauptthema am Startbildschirm. Das Spiel versucht die Wiedergabe beim Laden; falls der Browser Autoplay ohne Nutzeraktion verweigert, ist ein klarer Startknopf vorhanden. Das Hauptmenü zeigt keine Titel-Auswahlliste. Innerhalb des Spiels lassen sich die Aufnahmen über Musik & Klangeinstellungen auswählen und einzeln herunterladen. Es werden nur Audioeinträge angeboten, deren Dateien per HEAD-Anfrage tatsächlich verfügbar sind.
+
+**Installation der originalen Binärdateien:** Das in der Unterhaltung erstellte Paket `Kaiser_von_Deutschland_15_Titel_GitHub.zip` enthält alle MP3-Dateien in `public/music/`, eine `music-manifest.json` mit SHA-256-Prüfsummen sowie eine Installationsanleitung. Dieses GitHub-Quellcodeupdate allein enthält die originalen Audio-Binärbytes **nicht**. Erst das zusätzliche Hochladen des Ordners `public/music/` macht die 15 Aufnahmen direkt für alle Nutzer abspiel- und herunterladbar. Neue Musikbeschreibungen können später direkt im Katalog eingetragen werden.
+
 ## Neue Spielstart- und Anzeigeoptionen (17.10.2026)
 Startepoche und Kampagne sind getrennte Entscheidungen. Die Startepochen reichen von 1200 über Renaissance und Industrialisierung bis 2000. Jede Kampagne kann in einem gewählten Startjahr beginnen; die früheren Kampagnenziele bleiben bestehen, sodass historische Ziele bei einem späten Start naturgemäß anders ausfallen. Zusätzlich steht **Offenes Spiel** ohne verpflichtende Siegziele zur Verfügung. Die Uhr und der gespeicherte Spielstand verwenden dasselbe Jahr.
 
