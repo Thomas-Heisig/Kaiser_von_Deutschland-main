@@ -231,12 +231,13 @@ export class KingdomMap {
     this.lastSignature = '';
   }
 
-  public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure, completed: readonly string[] = []): void {
+  public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure, completed: readonly string[] = [], year = 1200): void {
     if (!this.initialized || this.destroyed) return;
     const signature = districtSceneSignature(kingdom.infrastructure, selected,
       this.districtFilter, kingdom.currentSeason, completed);
-    if (signature === this.lastSignature) return;
-    this.lastSignature = signature;
+    const epochStyle = year >= 1945 ? 'modern' : year >= 1800 ? 'industrial' : year >= 1500 ? 'renaissance' : 'medieval';
+    if (signature + epochStyle === this.lastSignature) return;
+    this.lastSignature = signature + epochStyle;
     this.chimneys.length = 0;
     for (const child of this.settlements.removeChildren()) child.destroy({ children: true });
     for (const location of visibleDistricts(this.districtFilter)) {
@@ -252,10 +253,11 @@ export class KingdomMap {
           width: selected === location.type ? 2 : 1, alpha: selected === location.type ? 1 : 0.35
         });
       group.addChild(ground);
-      if (modernization && count > 0) {
+      if ((modernization || epochStyle === 'modern' || epochStyle === 'industrial') && count > 0 && location.type !== 'farms' && location.type !== 'roads' && location.type !== 'ports' && location.type !== 'walls') {
         group.addChild(new Graphics().roundRect(-29, -62, 58, 42, 5)
           .fill({ color: 0x587f84, alpha: 0.95 }).roundRect(-24, -56, 48, 6, 2)
           .fill(0xc2d4ce).rect(-16, -42, 11, 16).rect(5, -42, 11, 16).fill(0xecdcb0));
+        if (epochStyle === 'modern' && count > 0) group.addChild(new Graphics().rect(-36,-76,72,4).fill(0x69bec7));
       } else if (location.type === 'farms') {
         const fields = new Graphics();
         for (let i = 0; i < 5; i++) {
@@ -310,6 +312,12 @@ export class KingdomMap {
       group.addChild(label);
       this.settlements.addChild(group);
     }
+    const eraText = epochStyle === 'modern' ? 'Moderne' : epochStyle === 'industrial'
+      ? 'Industrialisierung' : epochStyle === 'renaissance' ? 'Neuzeit' : 'Mittelalter';
+    const badge = new Text({text: eraText + ' · ' + year, style: {fontFamily: 'Georgia',
+      fontSize: 25, fill: 0xf4e6c5}});
+    badge.position.set(38, 26);
+    this.settlements.addChild(badge);
     this.fit();
   }
 

@@ -345,3 +345,43 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 @media(max-width:400px){.jukebox{padding:8px}.jukebox select{min-width:0;width:100%;max-width:100%}.jukebox label{max-width:100%}}
 
 .jukebox-auto {display:flex;align-items:center;gap:7px;font-size:.8rem}.jukebox-auto input {min-height:18px;width:18px;accent-color:#dfc48b}.game-footer{font-variant-numeric:tabular-nums}
+
+
+/* Version 2026-10-17: scalable era-aware shell */
+.game-music-settings {margin:0;border-bottom:1px solid var(--border);background:#172b23;}
+.game-music-settings>summary {cursor:pointer;padding:11px 21px;color:#e8d6a7;font-weight:600;font-size:.86rem;}
+.game-music-settings:not([open]) .jukebox{display:none;}
+.game-layout,.workspace,.sidebar,.council,.map-card,.topbar,.resource-bar {min-width:0;}
+.welcome-content{width:100%;}
+.map-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:280px;padding:30px;text-align:center;background:radial-gradient(circle at center,#365344,#172b25);color:#f4e6c1}
+.map-fallback p{max-width:450px;color:#c9d3bf}
+.map-host[data-projection="isometric"]{perspective:1200px;background:linear-gradient(#263f3a,#13291f)}
+.map-host[data-projection="isometric"] canvas{transform:rotateX(22deg) rotateZ(-3deg) scale(.88);transform-origin:center center;transition:transform .35s ease}
+.map-host[data-projection="flat"] canvas{transform:none}
+.kingdom-app[data-era="medieval"] {--gold:#dfc48b;--panel:#1b2b26;}
+.kingdom-app[data-era="early-modern"] {--gold:#d7b487;--panel:#2e2c24;}
+.kingdom-app[data-era="industrial"] {--gold:#b9c2b1;--panel:#263139;}
+.kingdom-app[data-era="modern"] {--gold:#8bd0dc;--panel:#1a313b;}
+.kingdom-app[data-era="industrial"] .map-card,.kingdom-app[data-era="modern"] .map-card{background:linear-gradient(140deg,#253536,#102b30)}
+.kingdom-app[data-era="modern"] .topbar {background:#152c36;border-color:#426b72}
+.council-modal {width:min(94vw,760px);max-height:86vh;overflow:auto;position:fixed;inset:0;margin:auto;border:2px solid #bca16c;border-radius:12px;background:#1a2d26;color:#eee5cf;padding:clamp(18px,3vw,32px);box-shadow:0 20px 90px #000c}
+.council-modal::backdrop {background:#030b0bcc;backdrop-filter:blur(4px)}
+.council-modal h2{font-size:clamp(1.5rem,3vw,2.3rem);color:var(--gold);margin-bottom:15px}
+.council-modal>p{margin-bottom:20px}
+.council-modal-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:12px;margin-bottom:18px}
+.council-modal-choices button{text-align:left;white-space:normal;min-height:90px}
+.settlement-controls{align-items:flex-end}
+.settlement-controls label{min-width:0;flex-wrap:wrap}
+@media(max-width:1100px){.game-layout{grid-template-columns:155px minmax(0,1fr)}.council{grid-template-columns:minmax(0,1fr)}.resource-bar{grid-template-columns:repeat(5,minmax(0,1fr))}.header-actions{flex-wrap:wrap}}
+@media(max-width:760px){.game-layout{display:flex;flex-direction:column}.resource-bar{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}.resource{min-width:0}.header-actions{justify-content:flex-start}.header-actions label{min-width:110px}.settlement-controls{justify-content:flex-start}.settlement-controls label{flex:1 1 145px}.settlement-controls select{max-width:100%}.council{display:flex;flex-direction:column}.welcome-content{padding:24px 16px}.game-music-settings>summary{padding:12px}.summary-grid{grid-template-columns:repeat(auto-fit,minmax(135px,1fr))}}
+@media(max-width:380px){.resource-bar{grid-template-columns:repeat(2,minmax(0,1fr))}.map-tools{flex-wrap:wrap}.time-actions{justify-content:flex-start}.game-footer{overflow-wrap:anywhere}}
+@media(prefers-reduced-motion:reduce){.map-host canvas{transition:none!important}}
+
+
+.map-fallback{min-height:300px;justify-content:flex-start}
+.fallback-city{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;max-width:950px}
+.fallback-city button{display:grid;place-items:center;gap:5px;min-height:90px;padding:9px 5px;background:linear-gradient(165deg,#355748,#1f342f);border:1px solid #71825e;font-size:.73rem;text-align:center}
+.fallback-city button>span:first-child{font-size:25px;color:#f0d99e}
+.fallback-city button>strong{font-size:1rem;color:#f0d99e}
+.fallback-city button:hover{background:#466e57}
+@media(max-width:760px){.fallback-city{grid-template-columns:repeat(2,minmax(0,1fr))}}

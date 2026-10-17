@@ -1,3 +1,15 @@
+## Spielstart, Jahresauswahl, Musik und Fallback – 17.10.2026 (PR #30)
+- [x] Musiktitelauswahl aus dem Startmenü entfernt; der Player liegt eingeklappt bei den Audiooptionen im Spiel.
+- [x] Elf Zeitepochen von 1200 bis 2000 als spielbare Startjahre.
+- [x] Offenes Spiel ohne Zielvorgaben als zusätzliche Kampagnenart, mit eigenen Save-Daten im bestehenden Format.
+- [x] Ratsentscheidungen als echte modale Auswahl, weiterhin über den Reichsrat erreichbar.
+- [x] 2D / isometrische 3D-Look-Umschaltung und interaktive 2D-Bezirksansicht als Pixi-/WebGL-Fallback.
+- [x] Responsive CSS und sichtbare epochenspezifische Stadt- und Oberflächenmerkmale.
+- [x] Elf historische Aufnahmen und ein Bonus-Leitmotiv mit festen Namen und Dateipfaden im Musikkatalog registriert.
+- [ ] Die 12 MP3-Binärdateien mit dem vorbereiteten Einbaupaket in `public/music/` committen; erst danach sind alle Titel für alle Spielenden automatisch vorhanden.
+- [ ] Echtes 3D (WebGL-Szene mit Kamera) statt isometrischer 2D-Projektion, weiterführende moderne Gebäudemodelle und historische Rebalancing-Abnahme.
+- [ ] Laufende Veröffentlichung aus `main` und reale Browser-/Audio-/Mobile-/Langzeit-Tests auf dem Zielsystem ergänzen.
+
 ## 🎧 Musik-Jukebox (PR #28 gemergt; Folgeverbesserung 17.10.2026)
 - [x] Sechs benannte Epochenaufnahmen (1200/1300/1400/1500/1600/1750) als optionaler Bibliothekskatalog und Import-Metadaten.
 - [x] Mehrfachimport der MP3-Dateien, sichtbare Version und wählbarer automatischer Titelwechsel bei Epochenfortschritt.

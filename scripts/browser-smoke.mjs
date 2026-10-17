@@ -9,17 +9,25 @@ try {
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: /Kaiser von/i }).waitFor({ timeout: 15000 });
-    await page.locator('[data-jukebox-select]').waitFor();
-    await page.getByText(/Version: 2026-10-17/).waitFor();
-    await page.locator('[data-jukebox-auto]').waitFor();
-    if (!(await page.locator('[data-jukebox-import]').getAttribute('multiple') !== null)) failures.push('MP3-Multiupload fehlt');
-    await page.locator('[data-jukebox-import]').setInputFiles({
-      name: 'jukebox-smoke.mp3', mimeType: 'audio/mpeg',
-      buffer: Buffer.alloc(4096, 0x41)
-    });
-    await page.locator('[data-jukebox-select]').locator('option').filter({ hasText: 'jukebox-smoke' }).first().waitFor({ state: 'attached' });
+    await page.locator('#start-year').waitFor();
+    if (await page.locator('.welcome [data-jukebox-select]').count()) failures.push('Jukebox must not appear in start menu');
+    await page.locator('#campaign-select').selectOption('frei');
+    await page.locator('#start-year').selectOption('1820');
+    await page.locator('#start-era-summary').getByText('1820 · Industriezeitalter').waitFor();
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
+    if (!(await page.locator('#date').textContent())?.includes('1820')) failures.push('selected start year did not enter the simulation');
+    if (await page.locator('.kingdom-app').getAttribute('data-era') !== 'industrial') failures.push('industrial epoch style not applied');
+    await page.locator('#game-music-settings').waitFor();
+    await page.locator('#game-music-settings summary').click();
+    await page.locator('[data-jukebox-select]').waitFor();
+    await page.locator('[data-jukebox-import]').setInputFiles({
+      name: 'Kaiserliches leitmotiv 1200.mp3', mimeType:'audio/mpeg', buffer:Buffer.alloc(4096,0x41)
+    });
+    await page.locator('[data-jukebox-select] option').filter({hasText:'Kaiserliches Leitmotiv'}).first().waitFor({state:'attached'});
+    await page.locator('#map-style').selectOption('isometric');
+    if (await page.locator('#kingdom-map').getAttribute('data-projection') !== 'isometric') failures.push('map switch failed');
+    if (await page.locator('#objectives .objective').count() !== 0) failures.push('sandbox should have zero mandatory goals');
     const districtButtons = page.locator('#settlement-districts button');
     if (await districtButtons.count() !== 16)
       failures.push(`viewport ${width}: expected 16 settlement districts`);

@@ -99,6 +99,8 @@ export class KingdomGameUI {
   private eraMusicSwitching = false;
   private readonly ambience = new GameAmbience();
   private motionEnabled = false;
+  private mapStyle: 'flat' | 'isometric' = 'flat';
+  private councilDialog?: HTMLDialogElement;
   private actionBannerTimer?: number;
   private readonly buttonSoundHandler = (event: MouseEvent): void => {
     if (!(event.target instanceof Element)) return;
@@ -144,17 +146,9 @@ export class KingdomGameUI {
           <p class="lead">Aus einem kleinen Lehen wird ein blühendes Reich.
             Sorge für dein Volk, lenke den Handel und baue deine Herrschaft auf.</p>
           <div class="scenario"><span class="scenario-icon">♜</span><div>
-            <strong>Ein neuer Anfang · 1200</strong>
-            <p>Freie mittelalterliche Aufbaukampagne. Alternative Geschichte, keine historische Landkarte.</p>
+            <strong id="start-era-summary">Mittelalter · 1200</strong>
+            <p id="start-campaign-summary">Wähle Kampagne und Startzeit. Die Welt wächst mit deinem Reich.</p>
           </div></div>
-          <div class="jukebox" aria-label="Musik-Jukebox"><strong>🎼 Jukebox</strong>
-            <select data-jukebox-select aria-label="Musiktitel wählen"></select>
-            <button type="button" data-jukebox-play>▶ Titel abspielen</button>
-            <button type="button" data-jukebox-stop>■ Stop</button>
-            <label class="jukebox-auto"><input type="checkbox" data-jukebox-auto> Musik folgt Epoche</label>
-            <label>Musikdatei hinzufügen <input type="file" data-jukebox-import multiple accept=".mp3,.ogg,.wav,audio/*"></label>
-            <p data-jukebox-status role="status">Musikbibliothek bereit.</p>
-          </div>
           <div class="audio-controls" aria-label="Audioeinstellungen">
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
@@ -163,6 +157,19 @@ export class KingdomGameUI {
             <label class="ambience-volume">Umgebung: Lautstärke <input type="range" data-ambience-volume min="0" max="100" value="45" step="5" aria-label="Lautstärke der Umgebungsgeräusche"></label>
           </div>
           <form id="new-game">
+            <label>Startepoche<select name="startYear" id="start-year">
+              <option value="1200">1200 · Hochmittelalter</option>
+              <option value="1300">1300 · Spätmittelalter</option>
+              <option value="1400">1400 · Frühe Renaissance</option>
+              <option value="1500">1500 · Renaissance</option>
+              <option value="1600">1600 · Frühe Neuzeit</option>
+              <option value="1750">1750 · Aufklärung</option>
+              <option value="1820">1820 · Industriezeitalter</option>
+              <option value="1890">1890 · Späte Industrialisierung</option>
+              <option value="1945">1945 · Nachkriegszeit</option>
+              <option value="1970">1970 · Moderne</option>
+              <option value="2000">2000 · Digitalzeitalter</option>
+            </select></label>
             <label>Kampagne<select name="campaign" id="campaign-select">
               ${CAMPAIGNS.map((entry) => `<option value="${entry.id}">${escape(entry.name)} – ${escape(entry.description)}</option>`).join('')}
             </select></label>
@@ -192,14 +199,26 @@ export class KingdomGameUI {
           </form>
           <div class="continue-row"><button id="continue" class="secondary">Spielstand fortsetzen</button>
             <span>Lokaler Spielstand im Browser</span></div>
-          <p class="menu-note">Version: 2026-10-17 · 6 Epochenstücke · Jukebox und Kampagnen</p>
+          <p class="menu-note">Version: 2026-10-17 · Musikoptionen nach Spielstart</p>
           <p class="menu-note">Startet pausiert · Ohne Anmeldung · Hotseat: alle Spieler an einem Gerät, Zug um Zug</p>
           <p id="notice" role="status" aria-live="polite"></p>
         </section>
       </main>`;
     this.audio.setMusicContext({year:1200,scene:'menu'});
     this.bindAudioControls();
-    this.bindJukeboxControls();
+    const campaignSelect = this.root.querySelector<HTMLSelectElement>('#campaign-select');
+    const startYearSelect = this.root.querySelector<HTMLSelectElement>('#start-year');
+    const updateStartSummary = (): void => {
+      const campaign = CAMPAIGNS.find(c => c.id === campaignSelect?.value) ?? CAMPAIGNS[0];
+      const yearText = startYearSelect?.selectedOptions[0]?.textContent ?? '1200 · Mittelalter';
+      const header = this.root.querySelector('#start-era-summary');
+      const info = this.root.querySelector('#start-campaign-summary');
+      if (header) header.textContent = yearText;
+      if (info) info.textContent = campaign.name + ': ' + campaign.description;
+    };
+    campaignSelect?.addEventListener('change', updateStartSummary);
+    startYearSelect?.addEventListener('change', updateStartSummary);
+    updateStartSummary();
     const playerCount = this.root.querySelector<HTMLSelectElement>('#player-count');
     playerCount?.addEventListener('change', (): void => {
       const count = Number(playerCount.value);
@@ -226,7 +245,7 @@ export class KingdomGameUI {
         if (new Set(players.map((entry: NewPlayer): string => entry.kingdomName.toLowerCase())).size !== players.length) {
           throw new Error('Jedes Reich braucht einen eigenen Namen.');
         }
-        await this.createGame(players, Number(data.get('difficulty')), data.has('events'), String(data.get('campaign') ?? 'aufbau') as CampaignId);
+        await this.createGame(players, Number(data.get('difficulty')), data.has('events'), String(data.get('campaign') ?? 'aufbau') as CampaignId, Number(data.get('startYear') ?? 1200));
       });
     });
     this.root.querySelector('#continue')?.addEventListener('click', (): void => {
@@ -252,13 +271,16 @@ export class KingdomGameUI {
     window.clearTimeout(this.actionBannerTimer);
     this.map?.dispose();
     this.map = undefined;
+    this.councilDialog?.close();
+    this.councilDialog?.remove();
+    this.councilDialog = undefined;
     this.engine = engine;
     this.player = undefined;
   }
 
-  private async createGame(players: NewPlayer[], difficulty: number, randomEvents: boolean, campaignId: CampaignId = 'aufbau'): Promise<void> {
+  private async createGame(players: NewPlayer[], difficulty: number, randomEvents: boolean, campaignId: CampaignId = 'aufbau', startingYear = 1200): Promise<void> {
     await this.replaceEngine(new GameEngine({
-      startingYear: 1200, difficulty, gameSpeed: 0.25, randomEvents, campaignId, enableWiki: false
+      startingYear, difficulty, gameSpeed: 0.25, randomEvents, campaignId, enableWiki: false
     }));
     const engine = this.requireEngine();
     for (const entry of players) {
@@ -295,6 +317,7 @@ export class KingdomGameUI {
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button></div>
         </header>
+        <details class="game-music-settings" id="game-music-settings"><summary>♫ Musik & Klangeinstellungen</summary>
         <section class="jukebox jukebox-ingame" aria-label="Musik-Jukebox">
           <strong>🎼 Jukebox</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
           <button type="button" data-jukebox-play>▶ Titel abspielen</button>
@@ -302,7 +325,7 @@ export class KingdomGameUI {
           <label class="jukebox-auto"><input type="checkbox" data-jukebox-auto> Musik folgt Epoche</label>
           <label>Import MP3 <input data-jukebox-import type="file" multiple accept=".mp3,.ogg,.wav,audio/*"></label>
           <p data-jukebox-status role="status"></p>
-        </section>
+        </section></details>
         <section class="resource-bar" aria-label="Ressourcen und monatliche Änderung">
           ${(['gold', 'food', 'wood', 'stone', 'iron'] as const).map((key: MarketResource | 'gold') => `
             <div class="resource"><span class="resource-symbol" aria-hidden="true">${
@@ -354,6 +377,10 @@ export class KingdomGameUI {
               <div class="map-heading"><div><span class="eyebrow">DEIN LEHEN</span>
                 <h2>Land & Leute</h2></div><span class="map-tag">Siedlungsübersicht</span></div>
               <div class="settlement-controls" aria-label="Siedlungsfilter">
+                <label>Kartenansicht <select id="map-style" aria-label="Darstellung auswählen">
+                  <option value="flat">2D · Draufsicht</option>
+                  <option value="isometric">3D-Look · isometrische Projektion</option>
+                </select></label>
                 <label>Bezirke <select id="settlement-filter">
                 <option value="alle">Alle 16 Bezirke</option>
                 <option value="versorgung">Versorgung</option><option value="stadt">Stadt</option>
@@ -402,6 +429,15 @@ export class KingdomGameUI {
       const target = event.target as HTMLElement;
       if (target.closest('[data-open-district]')) this.navigate('build');
     });
+    const mapStyleSelect = this.root.querySelector<HTMLSelectElement>('#map-style');
+    if (mapStyleSelect) {
+      mapStyleSelect.value = this.mapStyle;
+      mapStyleSelect.addEventListener('change', () => {
+        this.mapStyle = mapStyleSelect.value === 'isometric' ? 'isometric' : 'flat';
+        const mapHost = this.root.querySelector<HTMLElement>('#kingdom-map');
+        if (mapHost) mapHost.dataset.projection = this.mapStyle;
+      });
+    }
     const motionToggle = this.root.querySelector<HTMLButtonElement>('#motion-toggle');
     motionToggle?.addEventListener('click', (): void => {
       this.motionEnabled = !this.motionEnabled;
@@ -437,7 +473,7 @@ export class KingdomGameUI {
         this.record('Der Reichsrat ruft: ' + detail.title);
         this.audio.playEffect('success');
         this.notify('Dringende Angelegenheit im Reichsrat: ' + detail.title);
-        if (!engine.isHotseat()) this.navigate('council');
+        if (!engine.isHotseat()) this.showCouncilDialog();
       }),
       engine.on('councilResolved', (detail: { playerId: string; outcome: { message: string } }): void => {
         if (this.player?.id === detail.playerId) this.record(detail.outcome.message);
@@ -554,10 +590,78 @@ export class KingdomGameUI {
         this.refresh();
       } catch (error) {
         console.error('Karte konnte nicht gestartet werden:', error);
-        host.innerHTML = '<p class="map-error">Die Grafikkarte ist nicht verfügbar. Alle Spielaktionen sind über die Verwaltung unten erreichbar.</p>';
-        this.notify('Grafik konnte nicht initialisiert werden. Die Verwaltung bleibt bedienbar.', true);
+        this.map?.dispose();
+        this.map = undefined;
+        host.dataset.fallback = 'true';
+        this.renderMapFallback();
+        host.addEventListener('click', event => {
+          const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-fallback-district]');
+          if (!button) return;
+          this.selected = button.dataset.fallbackDistrict as keyof KingdomInfrastructure;
+          this.navigate('build');
+        });
+        host.dataset.projection = 'flat';
+        this.mapStyle = 'flat';
+        const style = this.root.querySelector<HTMLSelectElement>('#map-style');
+        if (style) { style.value = 'flat'; style.disabled = true; }
+        console.warn('Interaktive 2D-Fallbackansicht verwendet:', error);
       }
     }
+  }
+
+  /** Browser/WebGL-independent 2D building tiles, backed by actual infrastructure counts. */
+  private renderMapFallback(): void {
+    const host = this.root.querySelector<HTMLElement>('#kingdom-map');
+    if (!host || host.dataset.fallback !== 'true' || !this.player) return;
+    host.innerHTML = `<div class="map-fallback" aria-label="2D-Siedlungskarte">
+      <strong>${escape(this.engine?.getCurrentEpoch() ?? 'Siedlung')} · 2D-Stadtansicht</strong>
+      <div class="fallback-city">${SETTLEMENT_DISTRICTS.map(d => `<button type="button"
+        data-fallback-district="${d.type}" title="${escape(d.name)} ausbauen"><span aria-hidden="true">${STRUCTURES[d.type].symbol}</span>
+        <span>${escape(d.name)}</span><strong>${format(this.player!.kingdom.infrastructure[d.type])}</strong></button>`).join('')}</div>
+      <p>Jedes Gebäude ist auswählbar und führt zur echten Bauverwaltung.</p></div>`;
+  }
+
+  /** Modal choices are bound to the same authoritative council engine as the full panel. */
+  private showCouncilDialog(): void {
+    if (!this.engine || !this.player || this.root.querySelector('.handover')) return;
+    const decision = this.engine.getPendingCouncilDecision(this.player.id);
+    if (!decision) return;
+    this.councilDialog?.remove();
+    const dialog = document.createElement('dialog');
+    dialog.className = 'council-modal';
+    dialog.setAttribute('aria-label', 'Dringende Entscheidung des Reichsrats');
+    const heading = document.createElement('h2');
+    heading.textContent = decision.title;
+    const story = document.createElement('p');
+    story.textContent = decision.story;
+    const choices = document.createElement('div');
+    choices.className = 'council-modal-choices';
+    for (const choice of this.engine.getCouncilChoices(this.player.id)) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.disabled = !choice.affordable;
+      button.textContent = choice.title + ' – ' + choice.description +
+        (choice.affordable ? '' : ' (nicht genügend Ressourcen)');
+      button.addEventListener('click', () => void this.run(() => {
+        const outcome = this.requireEngine().resolveCouncilDecision(this.requirePlayer().id, choice.id);
+        this.notify(outcome.message, !outcome.success);
+        dialog.close();
+        dialog.remove();
+        this.councilDialog = undefined;
+        this.audio.playEffect(outcome.success ? 'success' : 'battle');
+      }));
+      choices.append(button);
+    }
+    const later = document.createElement('button');
+    later.type = 'button';
+    later.className = 'secondary';
+    later.textContent = 'Später im Reichsrat entscheiden';
+    later.addEventListener('click', () => dialog.close());
+    dialog.append(heading, story, choices, later);
+    dialog.addEventListener('close', () => { if (this.councilDialog === dialog) this.councilDialog = undefined; dialog.remove(); });
+    this.root.append(dialog);
+    this.councilDialog = dialog;
+    dialog.showModal();
   }
 
   private showGameAction(title: string, message: string, kind: 'raid' | 'science', playerWon: boolean = false): void {
@@ -625,6 +729,8 @@ export class KingdomGameUI {
     }
     setText('date', this.date());
     setText('era-label', this.engine.getCurrentEpoch().toUpperCase() + ' · ALTERNATIVE GESCHICHTE');
+    this.root.querySelector('.kingdom-app')?.setAttribute('data-era-year', String(this.engine.getCurrentYear()));
+    this.root.querySelector('.kingdom-app')?.setAttribute('data-era', this.engine.getCurrentYear() >= 1945 ? 'modern' : this.engine.getCurrentYear() >= 1800 ? 'industrial' : this.engine.getCurrentYear() >= 1500 ? 'early-modern' : 'medieval');
     const paused = this.engine.getGameState() !== GameState.RUNNING;
     setText('pause', paused ? '▶ Fortsetzen' : 'Ⅱ Pausieren');
     this.root.querySelector('#pause')?.setAttribute('aria-label', paused ? 'Zeit fortsetzen' : 'Zeit pausieren');
@@ -650,7 +756,7 @@ export class KingdomGameUI {
     const chapter = this.engine.getCampaignChapterStatus(this.player.id);
     setText('campaign-title', this.engine.getCampaignDefinition().name + ' · ' +
       (chapter.finished ? 'Alle Kapitel bestanden' : 'Kapitel ' + (chapter.index + 1) + '/' + chapter.total + ': ' + chapter.title));
-    setText('campaign-story', chapter.narrative);
+    setText('campaign-story', this.engine.getCampaignId() === 'frei' ? 'Offenes Spiel: Erkunde jede Epoche ohne verpflichtende Ziele.' : chapter.narrative);
     const completed = goals.filter((goal: CampaignGoal) => goal.done).length;
     const objectiveHost = this.root.querySelector('#objectives');
     if (objectiveHost) objectiveHost.innerHTML = goals.map((goal: CampaignGoal) =>
@@ -661,7 +767,7 @@ export class KingdomGameUI {
       goalProgress.max = goals.length;
       goalProgress.value = completed;
     }
-    setText('goal-status', completed === goals.length
+    setText('goal-status', this.engine.getCampaignId() === 'frei' ? 'Freies Spiel ohne Siegzwang – deine Entscheidungen bestimmen den Weg.' : completed === goals.length
       ? 'Ziel erreicht! Dein Reich blüht. Du kannst frei weiterspielen.' : `${completed} von ${goals.length} Zielen erreicht`);
     const latest = this.root.querySelector('#latest');
     if (latest) latest.innerHTML = this.journal.slice(0, 2).map((entry: JournalEntry) =>
@@ -681,8 +787,9 @@ export class KingdomGameUI {
       ${format(kingdom.infrastructure[district.type])} Gebäude
       <button data-open-district class="secondary">Bezirk ausbauen →</button>`;
     setText('settlement-season', SEASON_LABELS[kingdom.currentSeason] + ' · ' + this.engine.getCurrentEpoch());
+    this.renderMapFallback();
     this.map?.update(kingdom, this.selected, this.engine.getModernizationOptions(this.player.id)
-      .filter(option => option.completed).map(option => option.project.id));
+      .filter(option => option.completed).map(option => option.project.id), this.engine.getCurrentYear());
     const scene: Soundscape = this.view === 'war' ? 'battle' :
       this.view === 'culture' ? 'culture' :
       this.view === 'economy' ? 'market' :
@@ -1636,7 +1743,11 @@ export class KingdomGameUI {
   private bindAudioControls(): void {
     this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => {
-        if (button.dataset.audioToggle === 'music') void this.toggleMusic();
+        if (button.dataset.audioToggle === 'music') {
+          const musicSettings = this.root.querySelector<HTMLDetailsElement>('#game-music-settings');
+          if (musicSettings) musicSettings.open = true;
+          void this.toggleMusic();
+        }
         else if (button.dataset.audioToggle === 'ambience') {
           void this.ambience.toggle()
             .then((): void => this.updateAudioControls())
@@ -1749,6 +1860,7 @@ export class KingdomGameUI {
   public dispose(): void {
     this.engine?.dispose();
     this.map?.dispose();
+    this.councilDialog?.remove();
     for (const unsubscribe of this.subscriptions) unsubscribe();
     document.removeEventListener('keydown', this.keyboardHandler);
     this.root.removeEventListener('click', this.buttonSoundHandler);
