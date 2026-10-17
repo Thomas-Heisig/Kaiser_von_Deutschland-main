@@ -46,6 +46,23 @@ Das Gesamtprojekt bleibt in Entwicklung.
 Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
 Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## 📚 Weltgeschichte: Erfindungen, Wissenschaft, Kunst und Kultur
+
+Im neuen Hauptspielbereich **Weltgeschichte** erscheinen historisch datierte Informationskarten
+zu Erfindungen, Forschung, Architektur, Kunst, Kultur und gesellschaftlichen Veränderungen.
+Quellenlinks und Orte sind direkt an den Karten hinterlegt. Mit dem Jahreswechsel informiert
+das Spiel bei passenden Meilensteinen über neue Einträge; das Epochenschild ändert sich
+von Antike über Mittelalter und Industrialisierung bis zur Moderne und alternativen Zukunft.
+Der Katalog deckt ausgewählte Einträge ab 1088 bis 2012 ab; **2050 und 2150 sind
+explizit als spekulative Zukunftsszenarien** gekennzeichnet.
+
+**Wichtig:** Historische Informationen sind zunächst **ein Wissens- und Chroniksystem**:
+Dass beispielsweise der Buchdruck historisch existierte, bedeutet nicht, dass dein Reich
+die entsprechende Technologie automatisch entwickelt hat. Es muss weiterhin selbst forschen.
+Die langfristig geplante durchgehende Simulation von Mittelalter bis Zukunft mit
+epochenabhängigen Gebäuden, Wirtschaft, Armeen, Medien und Bürgerberufen ist
+**noch nicht fertig**. Die bisherigen Roadmap- und Legacy-Beschreibungen bleiben erhalten.
+
 ## 🏛️ Hofverwaltung und Delegation (neue spielbare Erweiterung)
 
 Die umfangreiche Reichsverwaltung kann optional an **Bürger mit eigenen Fähigkeiten** delegiert werden.

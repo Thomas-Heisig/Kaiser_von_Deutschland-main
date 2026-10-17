@@ -1,3 +1,12 @@
+## 📚 Weltgeschichte und langfristiger Epochenwechsel (PR in Prüfung)
+- [x] Separate zugängliche Weltgeschichte-Oberfläche für ausgewählte reale Erfindungen, Wissenschaft, Kunst, Architektur und Kultur mit Datierung, Ort, Beschreibung und Quellen.
+- [x] Zeitabhängige Epochenüberschrift, Jahrgangs-Ereignisse und deutlich gekennzeichnete spekulative Zukunftsinhalte.
+- [x] Informationsereignisse vergeben keine automatischen Fortschritte in der eigentlichen Technologie-Forschung.
+- [x] Unit-Tests für Sichtbarkeit, Datierung und Zukunftskennzeichnung; Browser-Smoke für neues Menü.
+- [ ] Breitere kuratierte und geprüfte Datenbasis mit exakten Fachquellen, Regionen, Kulturkreisen und Filtern.
+- [ ] Epochenabhängige Wirtschafts-, Bau-, Militär-, Bürger- und Politiksysteme bis Moderne und Zukunft voll spielbar machen.
+- [ ] Balance- und Zeitsprungkonzept für Jahrhunderte ohne Millionen einzelne Monatsticks.
+
 ## 👥 Hofverwaltung / KI-Assistenz (PR in Prüfung)
 - [x] Drei optionale Hofämter mit lebenden Bürgern und monatlichem Kompetenzzuwachs.
 - [x] Beratungsmodus als Standard und begrenzte regelbasierte Automatik für Handel und Forschung, ohne Fremdmodell oder autonome Kriege.
