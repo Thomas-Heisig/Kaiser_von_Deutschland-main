@@ -523,7 +523,19 @@ export class EventSystem {
   /**
    * Prüft, ob ein Event basierend auf Bedingungen ausgelöst werden kann
    */
+  /** Historical content safety filter for legacy random events without year metadata. */
+  private matchesHistoricalEra(event: GameEvent, year: number): boolean {
+    const id = event.id.toLowerCase();
+    const text = (event.title + ' ' + event.description).toLowerCase();
+    if (/cyber|digital|internet|computer|hacker|datenbank|software/.test(id + ' ' + text)) return year >= 1980;
+    if (/railway|railroad|eisenbahn|dampfmaschine|elektrizit|electricity|industrie/.test(id + ' ' + text)) return year >= 1800;
+    if (/atomic|nuclear|atombomb|kernkraft/.test(id + ' ' + text)) return year >= 1945;
+    if (/ritter|feudal|kreuzzug|pilger|ritterturnier|gilde|zunft/.test(id + ' ' + text)) return year <= 1800;
+    return true;
+  }
+
   private checkEventConditions(event: GameEvent, player: Player, currentYear: number, season?: string): boolean {
+    if (!this.matchesHistoricalEra(event, currentYear)) return false;
     if (!event.conditions) return true;
 
     const conditions = event.conditions;
