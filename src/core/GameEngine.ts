@@ -1,3 +1,4 @@
+import { CivicMissionSystem } from './CivicMissionSystem';
 // src/core/GameEngine.ts
 import { Player, PlayerCreationData } from './Player';
 import { EconomySystem } from './Economy';
@@ -202,6 +203,7 @@ export class GameEngine {
   private courtAssistants = new CourtAssistantRegistry();
   private culturalExhibitions = new Map<string, number>();
   private modernizationCompleted = new Map<string, string[]>();
+  private civicMissions = new CivicMissionSystem();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -344,6 +346,24 @@ export class GameEngine {
 
   public getPlayerById(id: string): Player | undefined {
     return this.players.get(id);
+  }
+
+  public getCivicMissions(playerId:string) {
+    this.requirePlayer(playerId);
+    return { options:this.civicMissions.options(this.currentYear),
+      active:this.civicMissions.active(playerId),history:this.civicMissions.historyFor(playerId),
+      citizens:this.citizenSystem.getAliveCitizens().filter(c=>!c.isPlayerCharacter&&c.age>=16)
+        .slice(0,40).map(c=>({id:c.id,name:c.firstName+' '+c.lastName,profession:c.profession,skills:{...c.skills}})) };
+  }
+  public assignCivicMission(playerId:string,citizenId:string,missionId:string):string {
+    const player=this.requirePlayer(playerId);
+    if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    const citizen=this.citizenSystem.getCitizen(citizenId);
+    if(!citizen)throw Error('Bürger nicht gefunden.');
+    const assignment=this.civicMissions.start(playerId,citizen,player.kingdom,missionId,this.currentYear,this.currentMonth);
+    const mission=this.civicMissions.options(this.currentYear).find(x=>x.id===assignment.missionId)!;
+    const message=citizen.firstName+' '+citizen.lastName+' übernimmt „'+mission.title+'“ ('+mission.months+' Monate).';
+    this.emit('civicMissionEvent',{playerId,message});return message;
   }
 
   public getModernizationOptions(playerId: string) {
@@ -597,6 +617,10 @@ export class GameEngine {
       await this.processPlayerMonth(player);
     }
     
+    for (const player of this.players.values()) {
+      for (const event of this.civicMissions.advance(player.id,player.kingdom,this.currentYear,this.currentMonth,id=>this.citizenSystem.getCitizen(id)))
+        this.emit('civicMissionEvent',{playerId:player.id,message:event.message});
+    }
     // Process population dynamics systems
     this.citizenSystem.processMonth(this.currentYear, this.currentMonth);
     this.demographicSystem.processMonth(this.citizenSystem, this.currentYear, this.currentMonth);
@@ -789,6 +813,7 @@ export class GameEngine {
       this.siegeWarfareSystem.abandonSiege('siege-' + playerId);
       this.siegeTargets.delete(playerId);
       this.courtAssistants.removePlayer(playerId);
+      this.civicMissions.removePlayer(playerId);
       this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
     }
@@ -1036,6 +1061,7 @@ export class GameEngine {
       courtAssistants: this.courtAssistants.serialize(),
       culturalExhibitions: Array.from(this.culturalExhibitions),
       modernizationCompleted: Array.from(this.modernizationCompleted),
+      civicMissions: this.civicMissions.serialize(),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -1213,6 +1239,8 @@ export class GameEngine {
       this.aiControllerManager.loadSnapshot(saveData.aiControllerManager);
     }
     this.citizenSystem.restoreCitizens(saveData.citizens ?? []);
+    this.civicMissions = new CivicMissionSystem();
+    if(saveData.civicMissions) this.civicMissions.load(saveData.civicMissions,new Set(restoredPlayers.map((p:Player)=>p.id)),id=>this.citizenSystem.getCitizen(id));
     this.courtAssistants = new CourtAssistantRegistry();
     if (saveData.courtAssistants !== undefined) this.courtAssistants.restore(saveData.courtAssistants,
       new Set(restoredPlayers.map((p: Player) => p.id)), (id) => this.citizenSystem.getCitizen(id));
@@ -1643,7 +1671,7 @@ export class GameEngine {
 
   public getRivals(playerId: string): RivalRealm[] {
     this.requirePlayer(playerId);
-    return this.warfare.getRivals(playerId);
+    return this.warfare.getRivals(playerId, this.currentYear);
   }
 
   /**
@@ -1799,8 +1827,8 @@ export class GameEngine {
     const modifiers = this.getCommanderModifiers(playerId);
     return {
       soldiers: CampaignWarfareSystem.fieldSoldiers(player.kingdom),
-      attack: CampaignWarfareSystem.armyPower(player.kingdom, modifiers),
-      defense: CampaignWarfareSystem.defensePower(player.kingdom, modifiers),
+      attack: CampaignWarfareSystem.armyPower(player.kingdom, modifiers, this.currentYear),
+      defense: CampaignWarfareSystem.defensePower(player.kingdom, modifiers, this.currentYear),
       cost: CampaignWarfareSystem.campaignCost(player.kingdom),
       canCampaign: this.warfare.canCampaign(playerId, this.currentYear * 12 + this.currentMonth),
       commanderBonus: modifiers.commanderBonus ?? 0
@@ -1815,15 +1843,15 @@ export class GameEngine {
    */
   public getVictoryChance(playerId: string, target: string): number {
     const player = this.requirePlayer(playerId);
-    const attack = CampaignWarfareSystem.armyPower(player.kingdom, this.getCommanderModifiers(playerId));
+    const attack = CampaignWarfareSystem.armyPower(player.kingdom, this.getCommanderModifiers(playerId), this.currentYear);
     const opponent = this.players.get(target);
     if (opponent) {
       return CampaignWarfareSystem.victoryChance(attack,
-        CampaignWarfareSystem.defensePower(opponent.kingdom, this.getCommanderModifiers(target)));
+        CampaignWarfareSystem.defensePower(opponent.kingdom, this.getCommanderModifiers(target), this.currentYear));
     }
     const rival = this.warfare.getRivals(playerId).find((entry: RivalRealm): boolean => entry.id === target);
     if (!rival) throw new Error('Unbekannter Gegner.');
-    return CampaignWarfareSystem.victoryChance(attack, CampaignWarfareSystem.rivalPower(rival));
+    return CampaignWarfareSystem.victoryChance(attack, CampaignWarfareSystem.rivalPower(rival, this.currentYear));
   }
 
   /**

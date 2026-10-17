@@ -1,3 +1,4 @@
+import { doctrineForYear, rivalIdentity } from './HistoricalGameplay';
 // src/core/CampaignWarfareSystem.ts
 import type { Kingdom } from './Kingdom';
 
@@ -131,9 +132,9 @@ export class CampaignWarfareSystem {
    * @param playerId Owning player.
    * @returns Copies of the rival realms.
    */
-  public getRivals(playerId: string): RivalRealm[] {
+  public getRivals(playerId: string, year: number = 1200): RivalRealm[] {
     return this.rivals.filter((rival: RivalRealm): boolean => rival.playerId === playerId)
-      .map((rival: RivalRealm): RivalRealm => ({ ...rival }));
+      .map((rival: RivalRealm): RivalRealm => ({ ...rival, ...(rivalIdentity(rival.id,year) ?? {}) }));
   }
 
   /**
@@ -169,10 +170,11 @@ export class CampaignWarfareSystem {
    * @param modifiers Optional commander bonus (0-0.5).
    * @returns Effective combat power.
    */
-  public static armyPower(kingdom: Kingdom, modifiers: PowerModifiers = {}): number {
+  public static armyPower(kingdom: Kingdom, modifiers: PowerModifiers = {}, year: number = 1200): number {
     const military = kingdom.military;
+    const doctrine = doctrineForYear(year);
     const raw = (Object.keys(UNIT_POWER) as FieldUnit[])
-      .reduce((sum: number, unit: FieldUnit): number => sum + military[unit] * UNIT_POWER[unit], 0);
+      .reduce((sum: number, unit: FieldUnit): number => sum + military[unit] * doctrine.coefficients[unit], 0);
     const quality = 0.6 + (military.trainingLevel + military.equipmentQuality + military.morale) / 250;
     const barracks = 1 + Math.min(0.3, kingdom.infrastructure.barracks * 0.05);
     const commander = 1 + Math.max(0, Math.min(0.5, modifiers.commanderBonus ?? 0));
@@ -185,9 +187,9 @@ export class CampaignWarfareSystem {
    * @param modifiers Optional commander bonus.
    * @returns Effective defensive power.
    */
-  public static defensePower(kingdom: Kingdom, modifiers: PowerModifiers = {}): number {
-    const fortification = 1 + Math.min(1, kingdom.infrastructure.walls * 0.15 + kingdom.infrastructure.castles * 0.25);
-    return Math.round(CampaignWarfareSystem.armyPower(kingdom, modifiers) * fortification);
+  public static defensePower(kingdom: Kingdom, modifiers: PowerModifiers = {}, year: number = 1200): number {
+    const fortification = 1 + Math.min(1, kingdom.infrastructure.walls * 0.15 + kingdom.infrastructure.castles * 0.25) * doctrineForYear(year).fortificationFactor;
+    return Math.round(CampaignWarfareSystem.armyPower(kingdom, modifiers, year) * fortification);
   }
 
   /**
@@ -195,8 +197,8 @@ export class CampaignWarfareSystem {
    * @param rival Rival realm.
    * @returns Effective defensive power.
    */
-  public static rivalPower(rival: RivalRealm): number {
-    return Math.round(rival.soldiers * 1.2 * rival.fortification);
+  public static rivalPower(rival: RivalRealm, year: number = 1200): number {
+    return Math.round(rival.soldiers * 1.2 * rival.fortification * doctrineForYear(year).rivalPowerFactor);
   }
 
   /**
@@ -255,8 +257,8 @@ export class CampaignWarfareSystem {
     this.payCampaign(kingdom);
     this.lastCampaignMonth.set(playerId, monthIndex);
 
-    const attackerPower = CampaignWarfareSystem.armyPower(kingdom, modifiers);
-    const defenderPower = CampaignWarfareSystem.rivalPower(rival);
+    const attackerPower = CampaignWarfareSystem.armyPower(kingdom, modifiers, date.year);
+    const defenderPower = CampaignWarfareSystem.rivalPower(rival, date.year);
     const chance = CampaignWarfareSystem.victoryChance(attackerPower, defenderPower);
     const won = this.random() < chance;
     const ownSoldiers = CampaignWarfareSystem.fieldSoldiers(kingdom);
@@ -282,8 +284,9 @@ export class CampaignWarfareSystem {
       kingdom.happiness = Math.max(0, kingdom.happiness - 4);
       summary = `Niederlage gegen ${rival.name}. Das Heer zieht sich mit ${attackerLosses} Gefallenen zurück.`;
     }
+    summary = '[' + doctrineForYear(date.year).conflict + '] ' + summary;
     return this.addReport({
-      year: date.year, month: date.month, kind: 'campaign', attacker: kingdom.name, defender: rival.name,
+      year: date.year, month: date.month, kind: 'campaign', attacker: kingdom.name, defender: rivalIdentity(rival.id,date.year)?.name ?? rival.name,
       attackerPower, defenderPower, victoryChance: chance, attackerWon: won,
       attackerLosses, defenderLosses, plunder, summary, playerIds: [playerId]
     });
@@ -309,8 +312,8 @@ export class CampaignWarfareSystem {
     this.payCampaign(attacker.kingdom);
     this.lastCampaignMonth.set(attacker.id, monthIndex);
 
-    const attackerPower = CampaignWarfareSystem.armyPower(attacker.kingdom, modifiers.attacker);
-    const defenderPower = CampaignWarfareSystem.defensePower(defender.kingdom, modifiers.defender);
+    const attackerPower = CampaignWarfareSystem.armyPower(attacker.kingdom, modifiers.attacker, date.year);
+    const defenderPower = CampaignWarfareSystem.defensePower(defender.kingdom, modifiers.defender, date.year);
     const chance = CampaignWarfareSystem.victoryChance(attackerPower, defenderPower);
     const won = this.random() < chance;
     const attackerSoldiers = CampaignWarfareSystem.fieldSoldiers(attacker.kingdom);
@@ -358,8 +361,8 @@ export class CampaignWarfareSystem {
       !rival.subjugated && rival.soldiers > 0 && !options.protectedByTreaty?.(rival.id));
     if (!hostile.length || this.random() >= MONTHLY_RAID_CHANCE) return undefined;
     const raider = hostile[Math.min(hostile.length - 1, Math.floor(this.random() * hostile.length))];
-    const raidPower = Math.round(CampaignWarfareSystem.rivalPower(raider) * 0.4 / raider.fortification);
-    const defense = CampaignWarfareSystem.defensePower(kingdom, options.modifiers);
+    const raidPower = Math.round(CampaignWarfareSystem.rivalPower(raider, date.year) * 0.4 / raider.fortification);
+    const defense = CampaignWarfareSystem.defensePower(kingdom, options.modifiers, date.year);
     const raiderChance = CampaignWarfareSystem.victoryChance(raidPower, defense);
     const raiderWon = this.random() < raiderChance;
     const defenderLosses = this.applyCasualties(kingdom, raiderWon ? 0.12 : 0.04,
@@ -379,8 +382,9 @@ export class CampaignWarfareSystem {
       kingdom.military.morale = Math.min(100, kingdom.military.morale + 4);
       summary = `Deine Garnison schlägt einen Überfall von ${raider.name} zurück.`;
     }
+    summary = '[' + doctrineForYear(date.year).raid + '] ' + summary;
     return this.addReport({
-      year: date.year, month: date.month, kind: 'raid', attacker: raider.name, defender: kingdom.name,
+      year: date.year, month: date.month, kind: 'raid', attacker: rivalIdentity(raider.id,date.year)?.name ?? raider.name, defender: kingdom.name,
       attackerPower: raidPower, defenderPower: defense, victoryChance: raiderChance, attackerWon: raiderWon,
       attackerLosses: raiderLosses, defenderLosses, plunder, summary, playerIds: [playerId]
     });

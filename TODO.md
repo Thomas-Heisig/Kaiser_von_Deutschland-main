@@ -1,3 +1,19 @@
+## Lebendige Geschichte: zivile Bürgeraufträge (17.10.2026)
+- [x] Epochengebundene Bürgeraufträge vom Mittelalter bis zur Digitalisierung.
+- [x] Mehrmonatiger Verlauf, Vorabkosten, reale Abschlussbelohnung und Fähigkeitenentwicklung.
+- [x] Aufträge speichern/laden und im eigenen Spielfenster verwalten.
+- [ ] Persönlichkeiten und lokale Wirtschaft stärker in Auftragsausgänge einbeziehen.
+- [ ] Zusätzliche Berufsgruppen und zivile Geschichten mit fortlaufenden Beziehungen ergänzen.
+
+## Geschichte & Gameplay – Militär (17.10.2026)
+- [x] Historische Militärdoktrinen, Einheitenbezeichnungen und Stärkeverhältnisse nach Spieljahr.
+- [x] Rivalennamen und Konflikt-/Angriffsbezeichnungen nach Epoche.
+- [x] Fortifikationswirkung der historischen Waffenentwicklung angepasst.
+- [x] Schlachtvorschau und tatsächliche Kampfauflösung auf denselben Jahreswert ausgerichtet.
+- [x] Tests für Epochen, Einheiten, Rivalen und Speicherstandskompatibilität.
+- [ ] Weitere zivile Aufträge, NPC-Lebensläufe und diplomatische Systeme dynamisch an die Epoche binden.
+- [ ] Spätere Epochen um eigenständige technische Einheiten und nichtmilitärische Konfliktlösung ergänzen.
+
 ## Offlinezugriff & Medienfehler (17.10.2026)
 - [x] Audiofehler beim Abspielen mit konkreter Netzwerk-/Formatdiagnose und 15-Titel-Check.
 - [x] WebGPU-Prüfung mit tatsächlicher Grafikkartenadapter-Abfrage repariert.

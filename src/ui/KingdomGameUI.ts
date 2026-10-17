@@ -1,3 +1,4 @@
+import { doctrineForYear } from '../core/HistoricalGameplay';
 import { miniCouncilChoice } from '../core/EmbeddedMiniModel';
 import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
 import {
@@ -18,7 +19,7 @@ import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../
 import { GameAmbience, Soundscape } from './GameAmbience';
 import type { HistoryKind } from '../core/WorldHistoryCatalog';
 
-type View = 'modernization' | 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'civic' | 'modernization' | 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -354,7 +355,7 @@ export class KingdomGameUI {
             <p class="eyebrow nav-label">DEINE HERRSCHAFT</p>
             <nav aria-label="Spielbereiche">
               ${([
-                ['overview', '◈', 'Reichsübersicht'], ['court', '♟', 'Hofverwaltung'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
+                ['overview', '◈', 'Reichsübersicht'], ['civic', '⚒', 'Bürgeraufträge'], ['court', '♟', 'Hofverwaltung'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
                 ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['modernization', '⚙', 'Modernisierung'], ['military', '⚑', 'Garnison'],
                 ['war', '⚔', 'Feldzüge'], ['intelligence', '◉', 'Geheimdienst'], ['world', '☼', 'Welt & Volk'], ['culture', '♫', 'Kultur & Feste'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
                 ['chronicle', '▤', 'Chronik'], ['history', '⌛', 'Weltgeschichte'], ['help', '?', 'Spielhilfe']
@@ -715,6 +716,9 @@ export class KingdomGameUI {
           this.showGameAction('⚔ Grenzwache in Bereitschaft', detail.message, 'raid');
           this.audio.playEffect('battle');
         }
+      }),
+      engine.on('civicMissionEvent',(detail:{playerId:string;message:string}):void=>{
+        if(this.player?.id===detail.playerId)this.record(detail.message);
       }),
       engine.on('courtEvent', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) this.record(detail.message);
@@ -1103,6 +1107,26 @@ export class KingdomGameUI {
         `<h3>Entscheidungs-Chronik</h3><ol class="journal">${history.slice(0, 20).map((entry) =>
           `<li><time>${escape(entry.date)}</time><p>${escape(entry.message)}</p></li>`).join('') ||
           '<li>Noch keine Ratsbeschlüsse gefasst.</li>'}</ol>`;
+    } else if (this.view === 'civic') {
+      const data = this.engine.getCivicMissions(this.player.id);
+      panel.innerHTML = heading('GESELLSCHAFT & ARBEIT', 'Aufträge an Bürger',
+        'Verteile Aufgaben passend zum Jahrhundert. Bürger arbeiten mehrere Spielmonate und verbessern ihre Fähigkeiten.') +
+        '<p class="muted">Bis zu drei parallele Aufträge. Ressourcen werden bei Beginn verbraucht; Erträge kommen nach Abschluss.</p>' +
+        '<h3>Aktuelle Aufträge</h3><div class="build-grid">' +
+        (data.active.map(a => {
+          const mission = data.options.find(m=>m.id===a.missionId);
+          return '<article class="build-card"><h3>'+escape(mission?.title??a.missionId)+'</h3><p>Fortschritt: '+a.completedMonths+'/'+(mission?.months??'?')+' Monate</p></article>';
+        }).join('')||'<p class="muted">Noch kein Auftrag vergeben.</p>')+
+        '</div><h3>Verfügbare Aufgaben</h3><div class="build-grid">' +
+        data.options.map(m=>'<article class="build-card"><h3>'+escape(m.title)+'</h3><p>'+escape(m.description)+'</p>'+
+          '<p class="cost">'+m.months+' Monate · '+Object.entries(m.cost).map(([k,v])=>v+' '+escape(k)).join(' · ')+'</p>'+
+          '<label>Bürger <select data-civic-citizen="'+escape(m.id)+'">'+data.citizens.map(c=>
+            '<option value="'+escape(c.id)+'">'+escape(c.name)+' · '+escape(c.profession)+
+            ' · '+escape(m.preferredSkill)+' '+c.skills[m.preferredSkill]+'</option>').join('')+'</select></label>'+
+          '<button data-civic-assign="'+escape(m.id)+'" '+(!data.citizens.length||data.active.length>=3?'disabled':'')+
+          '>Auftrag vergeben</button></article>').join('')+
+        '</div><h3>Abgeschlossene Aufträge</h3><ol class="journal">'+
+        data.history.slice(0,15).map(h=>'<li>'+escape(h.message)+'</li>').join('')+'</ol>';
     } else if (this.view === 'overview') {
       panel.innerHTML = heading('DAS REICH AUF EINEN BLICK', 'Deine nächste Entscheidung',
         'Sichere die Versorgung, investiere gezielt und beobachte die Folgen im nächsten Monat.') + `
@@ -1113,7 +1137,7 @@ export class KingdomGameUI {
           <article><span>Entwicklung</span><strong>${format(kingdom.stats.literacyRate)} %</strong><small>Alphabetisierung</small></article>
         </div>
         <section class="dashboard-shortcuts" aria-label="Deine Herrschaft direkt öffnen">
-          <button data-open="court">♟ Hofverwaltung</button>
+          <button data-open="court">♟ Hofverwaltung</button><button data-open="civic">⚒ Bürgeraufträge</button>
           <button data-open="council">♛ Reichsrat</button>
           <button data-open="economy">⚖ Wirtschaft</button>
           <button data-open="build">♜ Bauen</button>
@@ -1228,14 +1252,16 @@ export class KingdomGameUI {
           ${completed?'Bereits umgesetzt':'Modernisieren'}</button>
           ${blockers.length ? `<p class="muted">${blockers.map(escape).join(' · ')}</p>` : ''}</article>`).join('')}</div>`;
     } else if (this.view === 'military') {
+      const doctrine = doctrineForYear(this.engine.getCurrentYear());
       panel.innerHTML = heading('SICHERHEIT & VERTEIDIGUNG', 'Die Garnison',
         'Rekruten kommen aus der bäuerlichen Bevölkerung. Mehr Truppen kosten Unterhalt und fehlen auf den Feldern.') + `
+        <p class="muted">${escape(doctrine.label)} · ${escape(doctrine.context)}</p>
         <p class="muted">Moral: ${format(kingdom.military.morale)} % · Ausbildung: ${
           format(kingdom.military.trainingLevel)} % · Ausrüstung: ${format(kingdom.military.equipmentQuality)} %</p>
         <div class="build-grid">${([
-          ['infantry', 'Infanterie', 50, '50 Gold · 10 Nahrung'],
-          ['archers', 'Bogenschützen', 75, '75 Gold · 15 Nahrung · 10 Holz'],
-          ['cavalry', 'Kavallerie', 150, '150 Gold · 30 Nahrung · 5 Eisen']
+          ['infantry', doctrine.units.infantry, 50, '50 Gold · 10 Nahrung'],
+          ['archers', doctrine.units.archers, 75, '75 Gold · 15 Nahrung · 10 Holz'],
+          ['cavalry', doctrine.units.cavalry, 150, '150 Gold · 30 Nahrung · 5 Eisen']
         ] as const).map(([type, name, gold, cost]) => `<article class="build-card">
           <h3>${name}</h3><strong class="troop-count">${format(kingdom.military[type])}</strong>
           <p>${cost} je Rekrut</p><button class="secondary" data-recruit="${type}"
@@ -1332,11 +1358,12 @@ export class KingdomGameUI {
           </article>`;
         }).join('')}</div>`;
     } else if (this.view === 'war') {
+      const doctrine = doctrineForYear(this.engine.getCurrentYear());
       const finance = this.engine.getWarFinanceOverview(this.player.id);
       const borderWatch = this.engine.hasBorderWatch(this.player.id);
       const siege = this.engine.getCampaignSiege(this.player.id);
-      panel.innerHTML = heading('KRIEGSRAT', 'Feldzüge & Nachbarn',
-        'Jeder Feldzug kostet Nachschub und Verluste. Pro Monat kann dein Heer einmal ausrücken.') +
+      panel.innerHTML = heading('KRIEGSRAT', doctrine.conflict + ' & Nachbarn',
+        doctrine.context + ' Pro Monat kann dein Heer einmal ausrücken.') +
         `<article class="build-card"><h3>Kriegsfinanzierung</h3>
          <p>Darlehensschuld: ${format(finance.stats.totalWarDebt)} Gold ·
          Monatliche Rate: ${format(finance.stats.monthlyDebtPayment)} Gold</p>
@@ -1457,6 +1484,13 @@ export class KingdomGameUI {
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
+    panel.querySelectorAll<HTMLButtonElement>('[data-civic-assign]').forEach(button => {
+      button.addEventListener('click',()=>void this.run(()=>{
+        const missionId=button.dataset.civicAssign??'';
+        const citizenId=panel.querySelector<HTMLSelectElement>('[data-civic-citizen="'+missionId+'"]')?.value??'';
+        this.notify(this.requireEngine().assignCivicMission(this.requirePlayer().id,citizenId,missionId));
+      }));
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-court-appoint]').forEach((button) => {
       button.addEventListener('click', () => void this.run(() => {
         const select = panel.querySelector<HTMLSelectElement>(
@@ -1850,6 +1884,7 @@ export class KingdomGameUI {
   private renderWarRoom(player: Player): string {
     const engine = this.requireEngine();
     const army = engine.getArmyOverview(player.id);
+    const doctrine = doctrineForYear(engine.getCurrentYear());
     const blocker = this.campaignBlocker(player);
     const percent = (value: number): string => `${Math.round(value * 100)} %`;
     const rivals = engine.getRivals(player.id).map((rival: RivalRealm): string => {
@@ -1860,7 +1895,7 @@ export class KingdomGameUI {
           <h3>${escape(rival.name)}</h3><small>${rival.subjugated ? 'Unterworfen' : 'Feindlich'}</small></div>
         <p>${escape(rival.description)}</p>
         <dl class="stat-list"><div><dt>Soldaten</dt><dd>${format(rival.soldiers)}</dd></div>
-          <div><dt>Stärke</dt><dd>${format(CampaignWarfareSystem.rivalPower(rival))}</dd></div>
+          <div><dt>Stärke</dt><dd>${format(CampaignWarfareSystem.rivalPower(rival, engine.getCurrentYear()))}</dd></div>
           <div><dt>${rival.subjugated ? 'Tribut' : 'Siegchance'}</dt><dd class="${rival.subjugated || chance >= 0.5
             ? 'positive' : 'negative'}">${rival.subjugated ? `${format(rival.loot / 24)} Gold/Mo.` : percent(chance)}</dd></div>
         </dl>
@@ -1893,7 +1928,7 @@ export class KingdomGameUI {
             percent(report.victoryChance)} · Verluste ${format(report.attackerLosses)} / ${
             format(report.defenderLosses)}${report.plunder ? ` · Beute ${format(report.plunder)} Gold` : ''}</small></div></li>`;
     }).join('');
-    return `<div class="summary-grid war-summary">
+    return `<p class="muted"><strong>${escape(doctrine.label)}</strong> · ${escape(doctrine.context)}</p><div class="summary-grid war-summary">
         <article><span>Feldheer</span><strong>${format(army.soldiers)}</strong><small>Soldaten</small></article>
         <article><span>Angriff</span><strong>${format(army.attack)}</strong><small>inkl. ${
           percent(army.commanderBonus)} Feldherrenbonus</small></article>

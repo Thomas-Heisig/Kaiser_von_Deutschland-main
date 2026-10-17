@@ -90,7 +90,7 @@ try {
     await page.getByRole('heading', { name: /Universität Bologna/i }).first().waitFor();
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
     await page.locator('nav [data-view="war"]').click();
-    await page.getByRole('heading', { name: /Feldzüge & Nachbarn/i }).waitFor();
+    await page.getByRole('heading', { name: /Nachbarn/i }).waitFor();
     await page.screenshot({ path: `smoke-${width}.png`, fullPage: true });
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (overflow > 2) failures.push(`viewport ${width}: horizontal overflow ${overflow}px`);
