@@ -12,8 +12,9 @@ import { GameAudio } from './GameAudio';
 import { CAMPAIGNS, CampaignId } from '../core/CampaignCatalog';
 import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../core/CourtAssistantRegistry';
 import { GameAmbience, Soundscape } from './GameAmbience';
+import type { HistoryKind } from '../core/WorldHistoryCatalog';
 
-type View = 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -287,7 +288,7 @@ export class KingdomGameUI {
                 ['overview', '◈', 'Reichsübersicht'], ['court', '♟', 'Hofverwaltung'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
                 ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['military', '⚑', 'Garnison'],
                 ['war', '⚔', 'Feldzüge'], ['intelligence', '◉', 'Geheimdienst'], ['world', '☼', 'Welt & Volk'], ['culture', '♫', 'Kultur & Feste'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
-                ['chronicle', '▤', 'Chronik'], ['help', '?', 'Spielhilfe']
+                ['chronicle', '▤', 'Chronik'], ['history', '⌛', 'Weltgeschichte'], ['help', '?', 'Spielhilfe']
               ] as const).map(([key, symbol, name]) => `
                 <button data-view="${key}"><span aria-hidden="true">${symbol}</span>${name}</button>`).join('')}
             </nav>
@@ -303,7 +304,7 @@ export class KingdomGameUI {
           </aside>
           <main class="workspace">
             <section class="timebar" aria-label="Zeitsteuerung">
-              <div><p class="eyebrow">HOCHMITTELALTER · ALTERNATIVE GESCHICHTE</p>
+              <div><p class="eyebrow"><span id="era-label">MITTELALTER · ALTERNATIVE GESCHICHTE</span></p>
                 <h1 id="date"></h1></div>
               <div class="time-actions" data-mode="solo"><span id="time-status"></span>
                 <button data-action="pause" id="pause" aria-label="Zeit fortsetzen">▶ Fortsetzen</button>
@@ -457,6 +458,12 @@ export class KingdomGameUI {
         this.showGameAction(detail.final ? '♛ Kampagne abgeschlossen!' : '♜ Neues Kapitel!', message, 'science');
         this.audio.playEffect('success');
       }),
+      engine.on('historyMilestone', (detail: { milestone: { year: number; title: string; description: string; speculative?: boolean } }): void => {
+        const item = detail.milestone;
+        this.record('Weltgeschichte ' + item.year + ': ' + item.title);
+        this.showGameAction(item.speculative ? '✧ Zukunftsszenario' : '📜 Historischer Meilenstein',
+          item.year + ': ' + item.title + ' – ' + item.description, 'science');
+      }),
       engine.on('technologyResearched', (detail: { playerId: string; technology: { name: string } }): void => {
         if (this.player?.id !== detail.playerId) return;
         const message = `Forschung abgeschlossen: ${detail.technology.name}.`;
@@ -550,6 +557,7 @@ export class KingdomGameUI {
       if (bar) bar.value = value;
     }
     setText('date', this.date());
+    setText('era-label', this.engine.getCurrentEpoch().toUpperCase() + ' · ALTERNATIVE GESCHICHTE');
     const paused = this.engine.getGameState() !== GameState.RUNNING;
     setText('pause', paused ? '▶ Fortsetzen' : 'Ⅱ Pausieren');
     this.root.querySelector('#pause')?.setAttribute('aria-label', paused ? 'Zeit fortsetzen' : 'Zeit pausieren');
@@ -915,6 +923,23 @@ export class KingdomGameUI {
       panel.innerHTML = heading('DEINE ROLLE', 'Der gespielte Charakter',
         'Du lenkst das Reich durch eine Person aus deinem Volk. Wechsle die Rolle, wann immer du willst.') +
         this.renderCharacter(this.player);
+    } else if (this.view === 'history') {
+      const records = this.engine.getHistoricalTimeline();
+      const icons: Record<HistoryKind, string> = {
+        invention: '⚙', science: '✧', art: '♫', culture: '◈', society: '⚖', future: '◇'
+      };
+      panel.innerHTML = heading('WELTGESCHICHTE', 'Erfindungen, Kunst und Kultur',
+        'Historische Entwicklungen der jeweiligen Zeit. Diese Informationen schalten nicht automatisch Technologien für dein Reich frei.') +
+        `<p class="muted">Epoche: ${escape(this.engine.getCurrentEpoch())} · bis Jahr ${format(this.engine.getCurrentYear())}
+        · ${format(records.length)} Einträge. Die Zukunft ist ausdrücklich als Szenario gekennzeichnet.</p>
+        <div class="build-grid">${records.slice().reverse().map((item) => `
+          <article class="build-card"><div class="build-title"><span aria-hidden="true">${icons[item.kind]}</span>
+            <h3>${escape(item.title)}</h3><small>${format(item.year)}</small></div>
+            <p>${escape(item.description)}</p><p class="muted">${escape(item.place)} ·
+            ${item.speculative ? '⚠ Fiktives Zukunftsszenario' : 'Historischer Informationsbeitrag'}</p>
+            <p><a href="${escape(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">
+              Quelle: ${escape(item.sourceTitle)} ↗</a></p>
+          </article>`).join('') || '<p>In diesem Zeitraum liegen noch keine Einträge vor.</p>'}</div>`;
     } else if (this.view === 'chronicle') {
       panel.innerHTML = heading('DIE GESCHICHTE DEINER HERRSCHAFT', 'Reichschronik',
         'Die letzten 100 Meldungen dieser Sitzung. Dein eigentlicher Spielzustand wird separat gespeichert.') + `
