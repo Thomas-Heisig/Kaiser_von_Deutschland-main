@@ -199,6 +199,7 @@ export class GameEngine {
   private borderWatch = new Map<string, number>();
   private siegeTargets = new Map<string, string>();
   private courtAssistants = new CourtAssistantRegistry();
+  private culturalExhibitions = new Map<string, number>();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -344,6 +345,34 @@ export class GameEngine {
   }
 
   public getHistoricalTimeline() { return milestonesThrough(this.currentYear); }
+
+  /** Optional stateful museum action. Real-world history remains informational. */
+  public getExhibitionOptions(playerId: string) {
+    const player = this.requirePlayer(playerId);
+    return milestonesThrough(this.currentYear).filter((item) => !item.speculative &&
+      (item.kind === 'art' || item.kind === 'culture' || item.kind === 'science' || item.kind === 'invention'))
+      .map((item) => ({
+        milestone: item, cost: 350 + Math.max(0, this.currentYear - 1200) * 2,
+        held: this.culturalExhibitions.has(playerId + ':' + item.id),
+        affordable: player.kingdom.resources.gold >= 350 + Math.max(0, this.currentYear - 1200) * 2
+      }));
+  }
+
+  public sponsorExhibition(playerId: string, milestoneId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    const option = this.getExhibitionOptions(playerId).find((entry) => entry.milestone.id === milestoneId);
+    if (!option) throw new Error('Diese historische Ausstellung ist noch nicht verfügbar.');
+    if (option.held) throw new Error('Diese Ausstellung wurde bereits gefördert.');
+    if (!option.affordable) throw new Error('Für die Ausstellung fehlt Gold.');
+    player.kingdom.resources.gold -= option.cost;
+    player.kingdom.stats.culturalInfluence = Math.min(100, player.kingdom.stats.culturalInfluence + 2);
+    player.updateStats({ prestige: 1 });
+    this.culturalExhibitions.set(playerId + ':' + milestoneId, this.currentYear);
+    const message = 'Ausstellung gefördert: ' + option.milestone.title + ' (+2 Kultur).';
+    this.emit('exhibitionSponsored', { playerId, message });
+    return message;
+  }
   public getCurrentEpoch(): string { return epochForYear(this.currentYear); }
 
   public getCurrentYear(): number {
@@ -973,6 +1002,7 @@ export class GameEngine {
       siegeTargets: Array.from(this.siegeTargets),
       siegeWarfare: this.siegeWarfareSystem.serialize(),
       courtAssistants: this.courtAssistants.serialize(),
+      culturalExhibitions: Array.from(this.culturalExhibitions),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -1054,6 +1084,17 @@ export class GameEngine {
     this.technologySystems = restoredTechnology;
     this.rivalDiplomacy = new Map();
     this.festivalsHeld = new Map(Array.isArray(saveData.festivalsHeld) ? saveData.festivalsHeld : []);
+    this.culturalExhibitions = new Map();
+    if (saveData.culturalExhibitions !== undefined) {
+      if (!Array.isArray(saveData.culturalExhibitions) || saveData.culturalExhibitions.length > 5000 ||
+          saveData.culturalExhibitions.some((pair: unknown) =>
+            !Array.isArray(pair) || pair.length !== 2 || typeof pair[0] !== 'string' ||
+            !restoredPlayers.some((p: Player) => pair[0].startsWith(p.id + ':')) ||
+            !Number.isSafeInteger(pair[1]) || pair[1] < 0 || pair[1] > saveData.currentYear)) {
+        throw new Error('Beschädigtes kulturelles Gedächtnis im Spielstand.');
+      }
+      this.culturalExhibitions = new Map(saveData.culturalExhibitions);
+    }
     this.warFinanceByPlayer = new Map();
     this.warFinanceUsed = new Map(Array.isArray(saveData.warFinanceUsed) ? saveData.warFinanceUsed : []);
     this.campaignChapters = new Map();
