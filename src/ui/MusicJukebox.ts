@@ -8,16 +8,23 @@ export interface JukeboxTrack {
   source: 'library' | 'import';
   year?: number;
   url?: string;
+  coverUrl?: string;
+  description?: string;
 }
 
 const KEY = 'kaiser-music-tracks-v1';
 const STORAGE = localforage.createInstance({ name: 'KaiserMusik', storeName: 'tracks' });
 
-/** These titles appear only after their matching MP3 actually exists on the server. */
+/** Original recordings tracked as versioned static assets, without HEAD/MIME gating. */
 export const BUNDLED_TRACKS: readonly JukeboxTrack[] = musicCatalog.tracks.map(track => ({
-  id: track.id, title: track.title, era: track.era,
-  ...(typeof track.year === 'number' ? {year:track.year} : {}),
-  source: 'library' as const, url: '/music/' + track.filename
+  id: track.id,
+  title: track.title,
+  era: track.era,
+  ...(typeof track.year === 'number' ? { year: track.year } : {}),
+  source: 'library' as const,
+  url: '/music/' + track.filename,
+  coverUrl: track.cover,
+  description: track.description
 }));
 
 export const MAIN_THEME_ID = musicCatalog.openingTrackId;
@@ -33,21 +40,20 @@ const YEAR_NAMES: Record<number, { title: string; era: string }> = {
   1890: { title: 'Eiserne Kronen', era: 'Spätromantik & Moderne' },
   1945: { title: 'Trümmerstaaten', era: 'Nachkriegsmoderne' },
   1970: { title: 'Kaisersynthesia', era: 'Elektronik' },
-  2000: { title: 'Kaiserreich erwachen', era: 'Digitalzeitalter' }
+  2000: { title: 'Kaiserreich Erwachen', era: 'Digitalzeitalter' }
 };
 
-/** A dated recording suitable for the present game year; never invent an unavailable track. */
+/** Select a recording for the current game year, not an unrelated bonus theme. */
 export function trackForYear(tracks: readonly JukeboxTrack[], year: number): JukeboxTrack | null {
-  if (!tracks.length) return null;
   const dated = tracks.filter((track): track is JukeboxTrack & { year: number } =>
     typeof track.year === 'number' && Number.isFinite(track.year))
     .sort((a, b) => a.year - b.year);
-  if (!dated.length) return tracks[0];
+  if (!dated.length) return tracks.find(track => track.id === MAIN_THEME_ID) ?? tracks[0] ?? null;
   if (!Number.isFinite(year)) return dated[0];
   return [...dated].reverse().find(track => track.year <= year) ?? dated[0];
 }
 
-/** Uploaded filenames such as "(3) Kaisers Leitmotiv 1400.mp3" get readable names. */
+/** Infer useful titles for optional private browser imports. */
 export function musicMetadataFromFilename(filename: string): Pick<JukeboxTrack, 'title' | 'era' | 'year'> {
   const year = Object.keys(YEAR_NAMES).map(Number)
     .find(candidate => new RegExp('(?:^|\\D)' + candidate + '(?:\\D|$)').test(filename));
@@ -55,8 +61,10 @@ export function musicMetadataFromFilename(filename: string): Pick<JukeboxTrack, 
     const metadata = YEAR_NAMES[year];
     return { title: metadata.title, era: year + ' · ' + metadata.era, year };
   }
-  return { title: filename.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').trim(),
-    era: 'Eigene Aufnahme' };
+  return {
+    title: filename.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').trim(),
+    era: 'Eigene Aufnahme'
+  };
 }
 
 export class MusicJukebox {
@@ -65,38 +73,44 @@ export class MusicJukebox {
   private currentId: string | null = null;
   private volume = 0.28;
   private enabled = false;
-  private tracks: JukeboxTrack[] = [];
+  private tracks: JukeboxTrack[] = [...BUNDLED_TRACKS];
   private onChange: () => void = () => {};
-  private readonly catalog = musicCatalog;
   private autoplayBlocked = false;
 
-  public constructor(onChange?: () => void) { if (onChange) this.onChange = onChange; }
+  constructor(onChange?: () => void) { if (onChange) this.onChange = onChange; }
   public getTracks(): JukeboxTrack[] { return this.tracks.map(track => ({ ...track })); }
   public getCurrentId(): string | null { return this.currentId; }
-  public getTrackInfo(id: string) { return this.catalog.tracks.find(track=>track.id===id); }
-  public getDownloadUrl(id: string): string | null { const track = this.tracks.find(t=>t.id===id); return track?.source==='library' ? track.url ?? null : null; }
+  public getTrackInfo(id: string) { return musicCatalog.tracks.find(track => track.id === id); }
+  public getDownloadUrl(id: string): string | null {
+    const track = this.tracks.find(item => item.id === id);
+    return track?.source === 'library' ? track.url ?? null : null;
+  }
+  public getVolume(): number { return this.volume; }
   public hasAutoplayBlock(): boolean { return this.autoplayBlocked; }
-  public async playOpening(): Promise<boolean> { if (!this.tracks.some(track=>track.id===MAIN_THEME_ID)) return false; try {await this.play(MAIN_THEME_ID); this.autoplayBlocked=false; return true;} catch {this.autoplayBlocked=true; return false;} }
-  public getTrackForYear(year: number): JukeboxTrack | null { return trackForYear(this.tracks, year); }
   public isPlaying(): boolean { return this.enabled && !!this.audio && !this.audio.paused; }
+  public getTrackForYear(year: number): JukeboxTrack | null { return trackForYear(this.tracks, year); }
 
   public async initialize(): Promise<void> {
     const list = (await STORAGE.getItem<JukeboxTrack[]>(KEY)) ?? [];
-    const valid = Array.isArray(list) ? list.filter(track => track && track.source === 'import' &&
+    const imported = Array.isArray(list) ? list.filter(track => track && track.source === 'import' &&
       typeof track.id === 'string' && typeof track.title === 'string')
-      .map(track => ({ ...track, ...(
-        typeof track.year === 'number' ? {} : musicMetadataFromFilename(track.title)
-      ) })) : [];
-    const available: JukeboxTrack[] = [];
-    for (const track of BUNDLED_TRACKS) {
-      try {
-        const response = await fetch(track.url!, { method: 'HEAD' });
-        if (response.ok && (response.headers.get('content-type') ?? '').startsWith('audio/'))
-          available.push(track);
-      } catch { /* no audio file yet, don't present a broken track */ }
-    }
-    this.tracks = [...available, ...valid];
+      .map(track => ({
+        ...track,
+        ...(typeof track.year === 'number' ? {} : musicMetadataFromFilename(track.title))
+      })) : [];
+    this.tracks = [...BUNDLED_TRACKS, ...imported];
     this.onChange();
+  }
+
+  public async playOpening(): Promise<boolean> {
+    try {
+      await this.play(MAIN_THEME_ID);
+      this.autoplayBlocked = false;
+      return true;
+    } catch {
+      this.autoplayBlocked = true;
+      return false;
+    }
   }
 
   public async importFile(file: File): Promise<JukeboxTrack> {
@@ -108,14 +122,14 @@ export class MusicJukebox {
     const id = 'user-' + crypto.randomUUID();
     const track: JukeboxTrack = { id, ...musicMetadataFromFilename(file.name), source: 'import' };
     await STORAGE.setItem('audio-' + id, file);
-    const imported = [...this.tracks.filter(track => track.source === 'import'), track];
+    const imported = [...this.tracks.filter(item => item.source === 'import'), track];
     try {
       await STORAGE.setItem(KEY, imported);
     } catch (error) {
       await STORAGE.removeItem('audio-' + id);
       throw error;
     }
-    this.tracks = [...this.tracks.filter(track => track.source === 'library'), ...imported];
+    this.tracks = [...BUNDLED_TRACKS, ...imported];
     this.onChange();
     return track;
   }
@@ -132,7 +146,7 @@ export class MusicJukebox {
 
   public async play(id: string): Promise<void> {
     const track = this.tracks.find(item => item.id === id);
-    if (!track) throw new Error('Kein Musiktitel verfügbar. Bitte zuerst MP3-Dateien importieren.');
+    if (!track) throw new Error('Der Musiktitel ist nicht verfügbar.');
     this.stop();
     let source = track.url;
     if (track.source === 'import') {
@@ -144,12 +158,14 @@ export class MusicJukebox {
     if (!source) throw new Error('Audiodatei fehlt.');
     const audio = new Audio(source);
     audio.loop = true;
+    audio.preload = 'auto';
     audio.volume = this.volume;
     this.audio = audio;
     this.currentId = id;
     try {
       await audio.play();
       this.enabled = true;
+      this.autoplayBlocked = false;
       this.onChange();
     } catch (error) {
       this.stop();
@@ -168,11 +184,14 @@ export class MusicJukebox {
     this.audio = null;
     this.currentId = null;
     this.enabled = false;
-    if (old) { old.pause(); old.removeAttribute('src'); old.load(); }
+    if (old) {
+      old.pause();
+      old.removeAttribute('src');
+      old.load();
+    }
     if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
     this.objectUrl = null;
     this.onChange();
   }
-
   public dispose(): void { this.stop(); }
 }
