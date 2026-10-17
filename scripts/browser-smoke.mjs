@@ -34,6 +34,11 @@ try {
     await page.locator('[data-jukebox-download]').waitFor({state:'attached'});
     if (await page.locator('#opening-play, [data-music-volume], [data-audio-toggle]').count())
       failures.push('redundant audio controls are still shown');
+    if (await page.locator('#civic-open').count() !== 1) failures.push('prominent civic assignments button missing');
+    await page.locator('#civic-open').click();
+    await page.getByRole('heading', { name: /Aufträge an Bürger/i }).waitFor();
+    if (await page.locator('[data-civic-assign]').count() < 5) failures.push('civic missions inaccessible');
+    if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
     await page.locator('#settings-open').click();
     if (await page.locator('#advisor-backend').inputValue() !== 'off')
       failures.push('AI should default to disabled');
