@@ -353,7 +353,9 @@ export class GameEngine {
     return { options:this.civicMissions.options(this.currentYear),
       active:this.civicMissions.active(playerId),history:this.civicMissions.historyFor(playerId),
       citizens:this.citizenSystem.getAliveCitizens().filter(c=>!c.isPlayerCharacter&&c.age>=16)
-        .slice(0,40).map(c=>({id:c.id,name:c.firstName+' '+c.lastName,profession:c.profession,skills:{...c.skills}})) };
+        .slice(0,100).map(c=>({id:c.id,name:c.firstName+' '+c.lastName,profession:c.profession,skills:{...c.skills},
+          professionLevel:c.professionLevel,reputation:c.reputation,discipline:c.personality?.discipline??50,
+          familyId:c.familyId??'',regionId:c.regionId,lifeEvents:(c.lifeEvents??[]).slice(-3)})) };
   }
   public assignCivicMission(playerId:string,citizenId:string,missionId:string):string {
     const player=this.requirePlayer(playerId);
