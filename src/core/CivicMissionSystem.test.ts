@@ -22,6 +22,27 @@ describe('Historische Bürgeraufträge',()=>{
   expect(restored.active('one')).toHaveLength(0);
   expect(restored.advance('one',k,1200,4,()=>c)).toHaveLength(0);
  });
+ it('supports historically gated civic professions and bounded local outcomes',()=>{
+  const s=new CivicMissionSystem();
+  expect(s.options(1200).some(m=>m.id==='mills')).toBe(true);
+  expect(s.options(1200).some(m=>m.id==='printing')).toBe(false);
+  expect(s.options(1500).some(m=>m.id==='printing')).toBe(true);
+  expect(s.options(1800).some(m=>m.id==='rail')).toBe(false);
+  expect(s.options(1900).some(m=>m.id==='rail')).toBe(true);
+  const k1=new Kingdom({name:'A',rulerName:'Test',foundingYear:1200});
+  const k2=new Kingdom({name:'B',rulerName:'Test',foundingYear:1200});
+  const matching={...citizen('a'),profession:'farmer' as const,professionLevel:40,personality:{discipline:70},needs:{safety:90},lifeEvents:[]};
+  const unfamiliar={...citizen('b'),profession:'soldier' as const,professionLevel:40,personality:{discipline:70},needs:{safety:90},lifeEvents:[]};
+  const a=new CivicMissionSystem(); const b=new CivicMissionSystem();
+  a.start('a',matching as Citizen,k1,'grain',1200,1);
+  b.start('b',unfamiliar as Citizen,k2,'grain',1200,1);
+  a.advance('a',k1,1200,2,()=>matching as Citizen);
+  b.advance('b',k2,1200,2,()=>unfamiliar as Citizen);
+  a.advance('a',k1,1200,3,()=>matching as Citizen);
+  b.advance('b',k2,1200,3,()=>unfamiliar as Citizen);
+  expect(k1.resources.food).toBeGreaterThan(k2.resources.food);
+  expect(matching.lifeEvents.some(x=>x.type==='achievement')).toBe(true);
+ });
  it('refuses double assignment and corrupted saves',()=>{
   const s=new CivicMissionSystem();const k=new Kingdom({name:'Test',rulerName:'Greta',foundingYear:1200});
   const c=citizen();s.start('one',c,k,'grain',1200,1);
