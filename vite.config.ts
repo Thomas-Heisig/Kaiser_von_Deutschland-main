@@ -1,12 +1,30 @@
 import { defineConfig } from 'vite';
 import path from 'path';
+import { readdirSync } from 'node:fs';
 import type { Plugin } from 'vite';
+
+function cinemaCatalog(): { videos: Array<{ id: string; title: string; url: string }> } {
+  const directory = path.resolve(__dirname, 'public/video');
+  const videos = readdirSync(directory).filter(name => /\\.(mp4|webm|m4v)$/i.test(name))
+    .sort((a,b) => a.localeCompare(b,'de')).map(name => {
+      const title = name.replace(/\\.[^.]+$/, '').replace(/[-_]+/g, ' ').replace(/\\b\\w/g, letter => letter.toUpperCase());
+      return { id: name, title, url: '/video/' + encodeURIComponent(name) };
+    });
+  return { videos };
+}
 
 function offlineBuildAssets(): Plugin {
   return {
     name: 'offline-build-assets',
+    configureServer(server) {
+      server.middlewares.use('/video-catalog.json', (_request, response) => {
+        response.setHeader('Content-Type', 'application/json; charset=utf-8');
+        response.end(JSON.stringify(cinemaCatalog()));
+      });
+    },
     generateBundle(_options, bundle) {
       const assets = Object.keys(bundle).filter(name => !name.endsWith('.map'));
+      this.emitFile({ type: 'asset', fileName: 'video-catalog.json', source: JSON.stringify(cinemaCatalog()) });
       this.emitFile({ type: 'asset', fileName: 'offline-shell.json',
         source: JSON.stringify({ files: ['index.html', ...assets] }) });
     }
