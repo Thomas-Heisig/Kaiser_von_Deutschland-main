@@ -43,7 +43,7 @@ try {
     await page.locator('#campaign-select').selectOption(campaign);
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
-    await page.locator('#campaign-title').getByText(chapter, { exact: false }).waitFor();
+    await page.locator('#campaign-title').filter({ hasText: chapter }).waitFor();
     const objectives = await page.locator('#objectives .objective').count();
     if (objectives !== 6) failures.push(`campaign ${campaign} shows ${objectives} objectives instead of 6`);
     if (errors.length) failures.push(`campaign ${campaign}: ${errors.join('; ')}`);
