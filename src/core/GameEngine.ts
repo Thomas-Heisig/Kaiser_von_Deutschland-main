@@ -116,6 +116,9 @@ export interface GameConfig {
   enableWiki?: boolean;
 }
 
+/** Recent campaign messages are part of the game save, not only the open UI session. */
+export interface ChronicleEntry { date: string; message: string; playerId?: string }
+
 export interface SaveMeta {
   slot: string;
   savedAt: string;
@@ -205,6 +208,19 @@ export class GameEngine {
   private culturalExhibitions = new Map<string, number>();
   private modernizationCompleted = new Map<string, string[]>();
   private civicMissions = new CivicMissionSystem();
+  private chronicle: ChronicleEntry[] = [];
+  /** A bounded, plain-data chronicle is safe to copy into a version-2 save. */
+  public getChronicle(): ChronicleEntry[] {
+    return this.chronicle.map(entry => ({...entry}));
+  }
+  public recordChronicle(message: string, playerId?: string): void {
+    if (typeof message !== 'string' || !message.trim() || message.length > 900) return;
+    if (playerId !== undefined && !this.players.has(playerId)) throw new Error('Unbekannter Chronikspieler.');
+    const date = String(this.currentMonth).padStart(2,'0') + '/' + this.currentYear;
+    this.chronicle.unshift({ date, message, ...(playerId ? { playerId } : {}) });
+    this.chronicle.length = Math.min(this.chronicle.length,100);
+  }
+
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -1065,6 +1081,7 @@ export class GameEngine {
       culturalExhibitions: Array.from(this.culturalExhibitions),
       modernizationCompleted: Array.from(this.modernizationCompleted),
       civicMissions: this.civicMissions.serialize(),
+      chronicle: this.getChronicle(),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -1241,6 +1258,20 @@ export class GameEngine {
     if (saveData.aiControllerManager) {
       this.aiControllerManager.loadSnapshot(saveData.aiControllerManager);
     }
+    // Legacy version-2 saves omit this optional array. Strict bounded validation
+    // prevents malformed history entries from being injected into the UI.
+    if (saveData.chronicle !== undefined && (
+        !Array.isArray(saveData.chronicle) || saveData.chronicle.length > 100 ||
+        saveData.chronicle.some((entry: unknown) => !entry || typeof entry !== 'object' ||
+          typeof (entry as ChronicleEntry).date !== 'string' ||
+          (entry as ChronicleEntry).date.length > 40 ||
+          typeof (entry as ChronicleEntry).message !== 'string' ||
+          (entry as ChronicleEntry).message.length > 900 ||
+          ((entry as ChronicleEntry).playerId !== undefined &&
+            !restoredPlayers.some((p: Player) => p.id === (entry as ChronicleEntry).playerId))))) {
+      throw new Error('Die gespeicherte Chronik ist beschädigt.');
+    }
+    this.chronicle = (saveData.chronicle ?? []).map((entry: ChronicleEntry) => ({...entry}));
     this.citizenSystem.restoreCitizens(saveData.citizens ?? []);
     this.civicMissions = new CivicMissionSystem();
     if(saveData.civicMissions) this.civicMissions.load(saveData.civicMissions,new Set(restoredPlayers.map((p:Player)=>p.id)),id=>this.citizenSystem.getCitizen(id));

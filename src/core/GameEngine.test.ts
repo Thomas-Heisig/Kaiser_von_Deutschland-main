@@ -127,6 +127,21 @@ describe('Playable campaign integration', (): void => {
     expect(restored.getCourtAssistants(player.id)).toHaveLength(0);
   });
 
+  it('retains the chronicle across saves and limits history to 100 messages', async (): Promise<void> => {
+    const engine = await campaign();
+    for (let i=0;i<112;i++) engine.recordChronicle('Chronik-Ereignis '+i);
+    expect(engine.getChronicle()).toHaveLength(100);
+    expect(engine.getChronicle()[0].message).toBe('Chronik-Ereignis 111');
+    await engine.saveGame('chronicle-persistent');
+    const loaded = new GameEngine({ enableWiki:false });
+    engines.push(loaded);
+    await loaded.loadGame('chronicle-persistent');
+    expect(loaded.getChronicle()).toEqual(engine.getChronicle());
+    loaded.recordChronicle('Nach dem Laden');
+    expect(loaded.getChronicle()[0].message).toBe('Nach dem Laden');
+    expect(engine.getChronicle()[0].message).toBe('Chronik-Ereignis 111');
+  });
+
   it('loads each campaign with six independent objectives and retains selection after saving', async (): Promise<void> => {
     for (const campaignId of ['aufbau', 'hanse', 'wissenschaft', 'grenzland', 'kultur', 'kaiserkrone'] as const) {
       const engine = new GameEngine({ enableWiki: false, randomEvents: false, campaignId });
