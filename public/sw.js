@@ -95,7 +95,10 @@ self.addEventListener('message', event => {
       const manifestResponse = await fetch(inScope('offline-assets.json'), { cache: 'no-store' });
       if (!manifestResponse.ok) throw new Error('Offline-Dateiliste fehlt.');
       const manifest = await manifestResponse.json();
-      const items = [...new Set([...(data.shell || []), ...manifest.files])];
+      const shellResponse = await fetch(inScope('offline-shell.json'), { cache: 'no-store' });
+      if (!shellResponse.ok) throw new Error('Liste der App-Dateien fehlt; bitte aktuelle Version deployen.');
+      const shellManifest = await shellResponse.json();
+      const items = [...new Set(['offline-assets.json','offline-shell.json',...(shellManifest.files || []), ...manifest.files])];
       const cacheMedia = await caches.open(MEDIA);
       const cacheShell = await caches.open(SHELL);
       let downloaded = 0;
