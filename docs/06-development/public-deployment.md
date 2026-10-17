@@ -1,3 +1,5 @@
+> **Ist-Zustand 17.10.2026:** GitHub Pages kann für dieses private Repository trotz `enablement: true` mit `Resource not accessible by integration` nicht automatisch erstellt werden. Die Seite ist **nicht** als online verifiziert. Vorgehensweise: Repository-Eigentümer aktiviert Pages in Settings → Pages mit GitHub Actions oder bindet ein alternatives HTTPS-Hosting (z. B. Cloudflare Pages) an; danach Workflow ausführen, DNS/TLS und reale HTTP-Medienantworten sowie PWA/Offline auf Geräten prüfen. Media-Dateien und eine fertige Website sind als GitHub-Actions-Artefakt vorhanden, aber keine öffentlich abrufbare Website. Vor einer Freigabe Rechte, Impressum und Datenschutz prüfen.
+
 # Öffentliches Deployment – Kaiser von Deutschland
 
 Der Quellcode liegt in einem **privaten** GitHub-Repository. Das Spiel läuft als Vite/TypeScript-Browseranwendung mit statischen MP3-/MP4-Dateien und speichert Spielstände lokal im jeweiligen Browser. Ein öffentliches Deployment ist noch **nicht** bestätigt.
