@@ -2176,9 +2176,26 @@ export class GameEngine {
     return outcome;
   }
 
+  /** Use the last surviving delegate of this recurring event, if available. */
+  public getPreferredCouncilDelegate(playerId: string): Citizen | null {
+    const pending = this.getPendingCouncilDecision(playerId);
+    if (!pending) return null;
+    const previous = [...this.getCouncilHistory(playerId)]
+      .find(entry => entry.decisionId === pending.id && entry.delegatedCitizenId);
+    if (!previous?.delegatedCitizenId) return null;
+    const candidate = this.citizenSystem.getCitizen(previous.delegatedCitizenId);
+    return candidate?.isAlive && !candidate.isPlayerCharacter ? candidate : null;
+  }
+
+  /** All living adult delegates; a remembered delegate must not be hidden by ranking. */
+  public getEligibleCouncilDelegates(playerId: string): Citizen[] {
+    this.requirePlayer(playerId);
+    return this.citizenSystem.getAliveCitizens().filter(c => !c.isPlayerCharacter && c.age >= 16);
+  }
+
   public getCouncilDelegates(playerId: string): Citizen[] {
     this.requirePlayer(playerId);
-    return this.citizenSystem.getAliveCitizens()
+    return this.getEligibleCouncilDelegates(playerId)
       .filter(citizen => !citizen.isPlayerCharacter)
       .sort((a,b) => (b.skills.leadership + b.skills.literacy) - (a.skills.leadership + a.skills.literacy))
       .slice(0, 20);
