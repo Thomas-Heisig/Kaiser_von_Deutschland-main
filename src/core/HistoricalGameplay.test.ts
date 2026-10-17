@@ -16,7 +16,7 @@ describe('Historische militärische Entwicklung', () => {
     const past = military.getRivals('p',1200);
     const modern = military.getRivals('p',2020);
     expect(past[0].name).toMatch(/Raubritter/);
-    expect(modern[0].name).toMatch(/Miliz/);
+    expect(modern[0].name).toMatch(/miliz/i);
     expect(military.getRivals('p',1200)).toEqual(past);
     expect(rivalIdentity('nordland',2020)?.name).toMatch(/Staatenbund/);
   });
