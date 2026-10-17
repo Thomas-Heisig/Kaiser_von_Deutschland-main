@@ -16,6 +16,8 @@ try {
     await page.locator('#start-era-summary').getByText('1820 · Industriezeitalter').waitFor();
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
+    if (!(await page.locator('#date').textContent())?.includes('1820')) failures.push('selected start year did not enter the simulation');
+    if (await page.locator('.kingdom-app').getAttribute('data-era') !== 'industrial') failures.push('industrial epoch style not applied');
     await page.locator('#game-music-settings').waitFor();
     await page.locator('#game-music-settings summary').click();
     await page.locator('[data-jukebox-select]').waitFor();
