@@ -51,6 +51,44 @@ try {
     if (errors.length) failures.push(`campaign ${campaign}: ${errors.join('; ')}`);
     await page.close();
   }
+  // Real Chromium UI activation: prepare a legitimate researched save using public APIs,
+  // reload into the playable campaign, then click the real economy activation button.
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 740 }, reducedMotion: 'reduce' });
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+    await page.evaluate(async () => {
+      const { GameEngine } = await import('/src/core/GameEngine.ts');
+      const engine = new GameEngine({ startingYear: 1200, randomEvents: false, enableWiki: false });
+      const ruler = engine.addPlayer({ name: 'Hanse-Test', kingdomName: 'Hansestadt', gender: 'other' });
+      await engine.startGame();
+      engine.pauseGame();
+      ruler.kingdom.infrastructure.schools = 2;
+      for (let month = 0; month < 6; month++) await engine.advanceMonth();
+      ruler.kingdom.resources.gold = 50000;
+      engine.startResearch(ruler.id, 'sailing');
+      await engine.advanceMonth();
+      await engine.advanceMonth();
+      if (!engine.getTechnologyProgress(ruler.id).researched.includes('sailing'))
+        throw new Error('Hochseesegeln konnte nicht erforscht werden');
+      ruler.kingdom.infrastructure.ports = 1;
+      ruler.kingdom.resources.gold = 15030;
+      await engine.saveGame('autosave');
+      engine.dispose();
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('#continue').click();
+    await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
+    await page.locator('nav [data-view="economy"]').click();
+    const route = page.locator('.build-card').filter({ has: page.getByRole('heading', { name: 'Hanserouten' }) });
+    await route.getByRole('button', { name: 'Route aktivieren' }).click();
+    await route.getByRole('button', { name: 'Route beenden' }).waitFor();
+    if (errors.length) failures.push('Hansa UI: ' + errors.join('; '));
+    await page.screenshot({ path: 'smoke-hanse-route.png', fullPage: true });
+    await page.close();
+  }
+
 } finally {
   await browser.close();
 }

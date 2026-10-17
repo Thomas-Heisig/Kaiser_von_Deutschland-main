@@ -54,6 +54,7 @@ import localforage from 'localforage';
 import { encodeSave, decodeSave } from './SaveCodec';
 import { CAMPAIGNS, campaignGoals, CampaignId } from './CampaignCatalog';
 import { chapterStatus, CampaignChapterStatus } from './CampaignChapters';
+import { CourtAssistantRegistry, COURT_OFFICES, CourtOffice, AssistantMode } from './CourtAssistantRegistry';
 import { applyScienceDiscovery, researchImpact, researchProductionBonus } from './ScienceImpact';
 import { KingdomInfrastructure } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
@@ -196,6 +197,7 @@ export class GameEngine {
   private campaignChapters = new Map<string, number>();
   private borderWatch = new Map<string, number>();
   private siegeTargets = new Map<string, string>();
+  private courtAssistants = new CourtAssistantRegistry();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -652,6 +654,8 @@ export class GameEngine {
       this.emit('technologyResearched', { playerId: player.id, technology: completedTechnology });
     }
 
+    this.processCourtAssistants(player);
+
     // Apply monthly policy effects
     this.policySystem.applyMonthlyEffects(player);
 
@@ -714,6 +718,7 @@ export class GameEngine {
       this.borderWatch.delete(playerId);
       this.siegeWarfareSystem.abandonSiege('siege-' + playerId);
       this.siegeTargets.delete(playerId);
+      this.courtAssistants.removePlayer(playerId);
       this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
     }
@@ -958,6 +963,7 @@ export class GameEngine {
       borderWatch: Array.from(this.borderWatch),
       siegeTargets: Array.from(this.siegeTargets),
       siegeWarfare: this.siegeWarfareSystem.serialize(),
+      courtAssistants: this.courtAssistants.serialize(),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -1113,6 +1119,9 @@ export class GameEngine {
       this.aiControllerManager.loadSnapshot(saveData.aiControllerManager);
     }
     this.citizenSystem.restoreCitizens(saveData.citizens ?? []);
+    this.courtAssistants = new CourtAssistantRegistry();
+    if (saveData.courtAssistants !== undefined) this.courtAssistants.restore(saveData.courtAssistants,
+      new Set(restoredPlayers.map((p: Player) => p.id)), (id) => this.citizenSystem.getCitizen(id));
     if (saveData.roleSwitchingSessions) {
       for (const sessionSnapshot of saveData.roleSwitchingSessions) {
         this.roleSwitchingSystem.loadSessionSnapshot(sessionSnapshot);
@@ -1772,6 +1781,78 @@ export class GameEngine {
    * @param playerId Player.
    * @returns Living citizen or null.
    */
+  /** Citizen administrators are entirely optional; no external AI service is required. */
+  public getCourtAssistants(playerId: string) {
+    this.requirePlayer(playerId);
+    return this.courtAssistants.list(playerId).map((a) => ({
+      ...a, citizen: this.citizenSystem.getCitizen(a.citizenId) ?? null
+    }));
+  }
+
+  public getCourtCandidates(playerId: string): Citizen[] {
+    this.requirePlayer(playerId);
+    const assigned = new Set(this.courtAssistants.serialize().map((a) => a.citizenId));
+    return this.citizenSystem.getAliveCitizens()
+      .filter((c) => !c.isPlayerCharacter && !assigned.has(c.id))
+      .sort((a, b) => b.skills.leadership + b.skills.literacy - a.skills.leadership - a.skills.literacy)
+      .slice(0, 15);
+  }
+
+  public appointCourtAssistant(playerId: string, office: CourtOffice, citizenId: string): void {
+    this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    const candidate = this.getCourtCandidates(playerId).find((c) => c.id === citizenId);
+    if (!candidate) throw new Error('Dieser Bürger ist nicht verfügbar.');
+    this.courtAssistants.appoint(playerId, office, citizenId);
+    this.emit('courtEvent', { playerId, message: candidate.firstName + ' wurde zum Hofamt ernannt.' });
+  }
+
+  public setCourtAssistantMode(playerId: string, office: CourtOffice, mode: AssistantMode): void {
+    this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    this.courtAssistants.setMode(playerId, office, mode);
+  }
+
+  public dismissCourtAssistant(playerId: string, office: CourtOffice): void {
+    this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    this.courtAssistants.dismiss(playerId, office);
+  }
+
+  private processCourtAssistants(player: Player): void {
+    for (const assistant of this.courtAssistants.list(player.id)) {
+      const citizen = this.citizenSystem.getCitizen(assistant.citizenId);
+      if (!citizen || !citizen.isAlive || citizen.isPlayerCharacter) {
+        this.courtAssistants.dismiss(player.id, assistant.office);
+        continue;
+      }
+      const skill = COURT_OFFICES[assistant.office].skill;
+      citizen.skills[skill] = Math.min(100, citizen.skills[skill] + 1);
+      this.courtAssistants.advance(player.id, assistant.office);
+      if (assistant.mode !== 'automatisch') continue;
+      if (assistant.office === 'wirtschaft') {
+        // A cautious, capped purchase when the treasury is secure.
+        const food = player.kingdom.resources.food;
+        if (food < 600 && player.kingdom.resources.gold > 1200) {
+          const amount = Math.min(100, 600 - food);
+          if (this.tradeForPlayer(player.id, 'food', amount, 'buy'))
+            this.emit('courtEvent', { playerId: player.id, message: 'Der Kämmerer beschaffte ' + amount + ' Nahrung.' });
+        }
+      } else if (assistant.office === 'forschung') {
+        if (!this.requireTechnologySystem(player.id).getCurrentResearch()) {
+          const options = this.getTechnologyOptions(player.id).filter((o) =>
+            o.canStart && o.technology.cost.gold <= player.kingdom.resources.gold * 0.2);
+          if (options.length) {
+            const tech = options.sort((a,b) => a.technology.cost.research - b.technology.cost.research)[0].technology;
+            this.startResearch(player.id, tech.id);
+            this.emit('courtEvent', { playerId: player.id, message: 'Die Hofgelehrte begann: ' + tech.name });
+          }
+        }
+      }
+      // Marshals advise and train, but never attack or spend military resources automatically.
+    }
+  }
+
   public getCurrentCharacter(playerId: string): Citizen | null {
     const character = this.roleSwitchingSystem.getCurrentCharacter(playerId,
       (id: string) => this.citizenSystem.getCitizen(id));
@@ -2304,7 +2385,7 @@ export class GameEngine {
     }
     
     // Check infrastructure requirements (e.g., ports for sea routes)
-    if (route.id.includes('sea') || route.id.includes('naval')) {
+    if (route.id.includes('sea') || route.id.includes('naval') || route.id === 'hanseatic_routes' || route.id === 'baltic_trade') {
       if (player.kingdom.infrastructure.ports < 1) {
         return { success: false, message: 'Erfordert mindestens einen Hafen' };
       }

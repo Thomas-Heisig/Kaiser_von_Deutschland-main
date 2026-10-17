@@ -10,9 +10,10 @@ import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
 import { GameAudio } from './GameAudio';
 import { CAMPAIGNS, CampaignId } from '../core/CampaignCatalog';
+import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../core/CourtAssistantRegistry';
 import { GameAmbience, Soundscape } from './GameAmbience';
 
-type View = 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -283,7 +284,7 @@ export class KingdomGameUI {
             <p class="eyebrow nav-label">DEINE HERRSCHAFT</p>
             <nav aria-label="Spielbereiche">
               ${([
-                ['overview', '◈', 'Reichsübersicht'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
+                ['overview', '◈', 'Reichsübersicht'], ['court', '♟', 'Hofverwaltung'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
                 ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['military', '⚑', 'Garnison'],
                 ['war', '⚔', 'Feldzüge'], ['intelligence', '◉', 'Geheimdienst'], ['world', '☼', 'Welt & Volk'], ['culture', '♫', 'Kultur & Feste'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
                 ['chronicle', '▤', 'Chronik'], ['help', '?', 'Spielhilfe']
@@ -433,6 +434,9 @@ export class KingdomGameUI {
           this.showGameAction('⚔ Grenzwache in Bereitschaft', detail.message, 'raid');
           this.audio.playEffect('battle');
         }
+      }),
+      engine.on('courtEvent', (detail: { playerId: string; message: string }): void => {
+        if (this.player?.id === detail.playerId) this.record(detail.message);
       }),
       engine.on('financeEvent', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) this.record(detail.message);
@@ -884,6 +888,29 @@ export class KingdomGameUI {
                     this.engine!.getArmyOverview(this.player!.id).soldiers < 40 ? 'disabled' : ''}>
                   ${escape(rival.name)} belagern</button>`).join('')}`}
          </article>` + this.renderWarRoom(this.player);
+    } else if (this.view === 'court') {
+      const assigned = this.engine.getCourtAssistants(this.player.id);
+      const candidates = this.engine.getCourtCandidates(this.player.id);
+      panel.innerHTML = heading('OPTIONALE HOFVERWALTUNG', 'Deine Berater',
+        'Bürger lernen durch ihre Aufgaben. Beratungsmodus ist Standard; Automatik bleibt pro Amt freiwillig.') +
+        `<div class="build-grid">${COURT_OFFICE_IDS.map((office) => {
+          const def = COURT_OFFICES[office];
+          const entry = assigned.find((a) => a.office === office);
+          return `<article class="build-card"><h3>${escape(def.name)}</h3><p>${escape(def.description)}</p>
+            ${entry && entry.citizen ? `<p><strong>${escape(entry.citizen.firstName)} ${escape(entry.citizen.lastName)}</strong>
+              · ${format(entry.citizen.skills[def.skill])} Fähigkeit · ${format(entry.monthsServed)} Monate Erfahrung</p>
+              <label>Steuerung<select data-court-mode="${office}">
+                <option value="beratung" ${entry.mode === 'beratung' ? 'selected' : ''}>Nur beraten</option>
+                <option value="automatisch" ${entry.mode === 'automatisch' ? 'selected' : ''}>Begrenzt automatisch</option>
+              </select></label><button data-court-dismiss="${office}">Entlassen</button>`
+              : `<label>Bürger auswählen<select data-court-candidate="${office}">
+                ${candidates.map((c) => `<option value="${escape(c.id)}">
+                  ${escape(c.firstName)} ${escape(c.lastName)} · ${format(c.skills[def.skill])}</option>`).join('')}
+                </select></label><button data-court-appoint="${office}" ${!candidates.length ? 'disabled' : ''}>Ernennen</button>`}
+          </article>`;
+        }).join('')}</div>
+        <p class="muted">Automatik: Kämmerer kauft höchstens 100 Nahrung pro Monat bei knappen Vorräten und sicherer Staatskasse.
+        Hofgelehrte startet nur erschwingliche Forschung. Marschall sammelt Erfahrung und berät, führt aber keine eigenmächtigen Kriege.</p>`;
     } else if (this.view === 'character') {
       panel.innerHTML = heading('DEINE ROLLE', 'Der gespielte Charakter',
         'Du lenkst das Reich durch eine Person aus deinem Volk. Wechsle die Rolle, wann immer du willst.') +
@@ -919,6 +946,27 @@ export class KingdomGameUI {
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
+    panel.querySelectorAll<HTMLButtonElement>('[data-court-appoint]').forEach((button) => {
+      button.addEventListener('click', () => void this.run(() => {
+        const select = panel.querySelector<HTMLSelectElement>(
+          '[data-court-candidate="' + button.dataset.courtAppoint + '"]');
+        this.requireEngine().appointCourtAssistant(this.requirePlayer().id,
+          button.dataset.courtAppoint as CourtOffice, select?.value ?? '');
+        this.notify('Hofamt besetzt.');
+      }));
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-court-dismiss]').forEach((button) => {
+      button.addEventListener('click', () => void this.run(() => {
+        this.requireEngine().dismissCourtAssistant(this.requirePlayer().id,
+          button.dataset.courtDismiss as CourtOffice);
+      }));
+    });
+    panel.querySelectorAll<HTMLSelectElement>('[data-court-mode]').forEach((select) => {
+      select.addEventListener('change', () => void this.run(() => {
+        this.requireEngine().setCourtAssistantMode(this.requirePlayer().id,
+          select.dataset.courtMode as CourtOffice, select.value as AssistantMode);
+      }));
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-siege-target]').forEach((button) => {
       button.addEventListener('click', () => void this.run(() => {
         this.notify(this.requireEngine().beginCampaignSiege(this.requirePlayer().id,
@@ -1246,7 +1294,7 @@ export class KingdomGameUI {
     return `<div class="build-grid">${routes.map((route): string => {
       const active = player.kingdom.isTradeRouteActive(route.id);
       const activationCost = Math.floor(route.length * 10 + route.danger * 100);
-      const needsPort = route.id.includes('sea') || route.id.includes('naval');
+      const needsPort = route.id.includes('sea') || route.id.includes('naval') || route.id === 'hanseatic_routes' || route.id === 'baltic_trade';
       const canActivate = player.kingdom.resources.gold >= activationCost &&
         (!needsPort || player.kingdom.infrastructure.ports > 0);
       return `<article class="build-card ${active ? 'selected' : ''}">
