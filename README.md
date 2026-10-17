@@ -46,6 +46,24 @@ Das Gesamtprojekt bleibt in Entwicklung.
 Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
 Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## 🎼 Musik – Ein Reich, viele Zeiten / Krone und Land
+Ein neues, **eigens aus Tönen zusammengesetztes** wiederkehrendes Leitmotiv
+(D–E–F–G–F–E–D, mit Dur-Variante) erklingt bei 76 BPM im 4/4-Takt.
+Die Web-Audio-Komposition ist komplett lokal generiert und benötigt
+keine externen Samples oder Netzwerkverbindung. Eine 48-Takte-Menüform
+dauert etwa 2:32 Minuten, kürzere Szenen wiederholen 16 Takte.
+Klangfarben orientieren sich stilistisch an früher/höherer Mittelalterzeit,
+Hansezeit, höfischer Musik, Industrialisierung, Moderne und Zukunft.
+Aufbau, Handel, Hof, Krise und Feldzug ändern die Instrumentierung und
+Tonart. Die Klänge sind **synthetische Annäherungen**, keine echten
+Einspielungen von Fiedel, Drehleier oder historischer Orchesterbesetzung.
+Musik startet erst durch bewusstes Einschalten und besitzt eine eigene
+Lautstärkeregelung. Effekte und Umgebungsgeräusche bleiben separat.
+Bei verdecktem Browserfenster wird die Musik pausiert; beim Szenenwechsel
+werden laufende Stimmen beendet und neu eingeleitet.
+Das zusätzlich bereitgestellte 5-Sekunden-MP4 ist nur eine Referenz
+und wird nicht als lizenzfreier Endlossoundtrack ausgegeben.
+
 ## 🏘️ Erweiterte Siedlungsansicht
 Die PixiJS-Siedlungskarte berücksichtigt jetzt **alle 16 Infrastrukturarten** statt
 nur acht Bezirke. Versorgung, Stadt, Bildung und Verteidigung sind filterbar.
