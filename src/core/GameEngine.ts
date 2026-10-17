@@ -54,6 +54,7 @@ import localforage from 'localforage';
 import { encodeSave, decodeSave } from './SaveCodec';
 import { CAMPAIGNS, campaignGoals, CampaignId } from './CampaignCatalog';
 import { chapterStatus, CampaignChapterStatus } from './CampaignChapters';
+import { applyScienceDiscovery, researchImpact, researchProductionBonus } from './ScienceImpact';
 import { KingdomInfrastructure } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
 import type { Citizen } from './CitizenSystem';
@@ -616,6 +617,10 @@ export class GameEngine {
 
   private async processPlayerMonth(player: Player): Promise<void> {
     player.kingdom.processMonth();
+    const bonus = researchProductionBonus(player.kingdom, this.requireTechnologySystem(player.id).getResearchedTechnologyIds());
+    for (const resource of ['food', 'wood', 'stone', 'iron', 'gold'] as const) {
+      player.kingdom.resources[resource] += bonus[resource];
+    }
     const debtPayment = this.requireWarFinance(player.id).processMonthlyPayments(player.kingdom);
     if (debtPayment.cannotAfford) this.emit('financeEvent', { playerId: player.id,
       message: 'Eine Kriegsdarlehensrate konnte nicht bezahlt werden.' });
@@ -633,6 +638,7 @@ export class GameEngine {
     );
     const completedTechnology = technology.updateResearch(30);
     if (completedTechnology) {
+      applyScienceDiscovery(player.kingdom, completedTechnology);
       this.emit('technologyResearched', { playerId: player.id, technology: completedTechnology });
     }
 
@@ -1137,6 +1143,10 @@ export class GameEngine {
    * @returns A detached research snapshot.
    * @throws Error if the player does not exist.
    */
+  public getResearchImpact(playerId: string) {
+    return researchImpact(this.requireTechnologySystem(playerId).getResearchedTechnologyIds());
+  }
+
   public getTechnologyProgress(playerId: string): TechnologyProgressSnapshot {
     return this.requireTechnologySystem(playerId).serialize();
   }
