@@ -1,3 +1,11 @@
+## Heimnetz-Download ohne HTTPS (17.10.2026)
+
+Nach `npm ci && npm run build` enthält `dist/downloads/kaiser-von-deutschland-offline.zip` die statische Anwendung samt aller MP3, Cover und fünf MP4, plus `OFFLINE-LESEN.txt` und `START_WINDOWS.cmd`. Der Download-Link steht im laufenden Spiel unter **Einstellungen → Offline spielen / Heimnetz-Download**. Auf einem **vertrauenswürdigen Heimnetz** darf das ZIP über HTTP heruntergeladen werden (beispielsweise `http://192.168.x.x:4173/downloads/kaiser-von-deutschland-offline.zip` nach `npm run build` und `npm run serve:lan` auf dem Heimnetz-PC). Entpackt auf Windows startet `START_WINDOWS.cmd` das Spiel mit Python 3 lokal unter `http://localhost:8765`, ohne Internet. Windows-Startskript bindet nur an 127.0.0.1.
+
+**Einschränkung:** Ein reiner HTTP-LAN-Zugriff vom Tablet ist kein sicherer Browserkontext. Browser unterbinden dort Service Worker, PWA-Installation und ggf. WebGPU. Für den Tablet-/Smartphone-PWA-Betrieb wird später eine echte HTTPS-Spielseite benötigt (**offenes TODO**). Keine Router-Portweiterleitung auf einen Entwicklungsserver einrichten.
+
+Die fünf Medien unter `public/video/` (zwei Intros und `Video 3.mp4`, `Video 4.mp4`, `Video 5.mp4`) werden automatisch im Auswahlmenü angeboten. Die inhaltliche Zuordnung der drei neuen Filme ist nach Sichtung noch offen.
+
 ## Videothek und Bürgerlebensläufe (17.10.2026)
 
 Der Videokatalog wird beim Build automatisch aus tatsächlich vorhandenen Dateien in `public/video/` erzeugt (MP4, WebM, M4V). In den Spieleinstellungen lassen sich alternative Intro-/Outrofilme und ein optionales Zwischenvideo für historische Meilensteine auswählen und probeweise abspielen. Ohne ausgewählten Zwischenfilm wird keiner abgespielt. Zurzeit liegen nach Repository-Prüfung nur `intro-original.mp4` und `intro.mp4` vor: drei weitere angekündigte Dateien sind **noch nicht im GitHub-Verzeichnis nachgewiesen**, daher können sie erst nach Upload ausgewählt werden. Ton-Autoplay unterliegt Browserrestriktionen; Start/Überspringen bleiben möglich.
