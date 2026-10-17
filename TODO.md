@@ -4,6 +4,28 @@
 
 Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und den Meilensteinen der [Roadmap](docs/00-meta/roadmap.md). `[x]` bedeutet im Hauptspiel **implementiert und mindestens automatisiert geprüft**, `[~]` teilweise, `[ ]` offen. Ein in alten Unterlagen als „fertig“ bezeichnetes Modul ist ohne Benutzeroberfläche **nicht** abgeschlossen. Frühere Einträge gingen nicht verloren: [TODO-Archiv](docs/outdated/TODO-snapshot-2026-10-17.md), [README-Ideenbestand](docs/00-meta/backlog-from-readme.md), [historische Roadmap](docs/outdated/roadmap-snapshot-2026-10-17.md).
 
+## Priorisierung: spielbare Kampagnen zuerst (17.10.2026)
+
+### P1a – durchgängiger Kampagnenablauf (vor neuen Großsystemen)
+- [ ] Vollständigen Kampagnendurchlauf von Beginn bis Sieg/Niederlage einschließlich Monatswechsel, Zufallsereignissen, Speichern/Laden und Schlusswertung automatisieren. Vorhandene Kapitelziele/Belohnungen sind nur Teilabdeckung.
+- [ ] Mehrjährige deterministische Balancing-Läufe mit Gold, Nahrung, Forschung, Bevölkerungs- und Stabilitätswerten sowie Kampagnenschwellen protokollieren und Grenzwerte verbessern.
+- [ ] Kopplung zwischen Ratsbeschlüssen, Handel, Forschung, Kultur, Diplomatie und Rivalenentwicklung in messbaren Integrationstests nachweisen.
+- [ ] Interaktive Tutorial-Kampagne mit Schritten Bauen → Handeln → Forschen → Reichsrat → Speichern und Hilfen bei fehlenden Ressourcen anbieten.
+- [x] Chronikeinträge der aktiven Herrschaft im Spielstand begrenzt auf 100 Einträge dauerhaft sichern; Altstände ohne Chronik bleiben ladbar; Test für Speichern/Laden ergänzt.
+- [ ] Sieg-/Niederlageseite, Wiederholung, Sandbox-Fortsetzung und Schlussstatistik UI-seitig abnehmen (die bisherige Erfolgsmeldung ist kein vollständiger Kampagnenabschluss).
+
+### P1b – danach Strategie und reaktive Gegner
+- [ ] Rivalen auf Wirtschafts-, Handels-, Forschungs- und Militärfortschritte dynamisch reagieren lassen; unterschiedliche Schwierigkeit mit nachvollziehbaren Regeln testen.
+- [ ] Diplomatie um Bündnisse, Handelsverträge, Vertragsbruch und konsequentes Reputations-/Rivalenverhalten im Hauptspiel ergänzen.
+- [ ] Regionale Hunger-, Wanderungs- und Versorgungslagen als Spielentscheidungen mit Kosten und dauerhaften Auswirkungen verknüpfen.
+- [ ] Logistik, Belagerungen und Kriegsgefangene nur nach vollständigem Hauptkampagnen-/Savegame-Test erweitern.
+- [ ] Alternative Gewinnstrategien für Handel, Wissenschaft, Kultur und Diplomatie unabhängig vom Krieg end-to-end prüfen.
+
+### P1c – Qualität und Zugänglichkeit
+- [ ] E2E für neue Partie, Bauen, Handelsgeschäft, Forschung, Ratsentscheidung, Hotseat, Speichern/Laden und Kampagnenziel hinzufügen.
+- [ ] Wesentliche Ansichten auf 320/768/1024 Pixel, mobilem Touch und Tastaturnavigation inklusive Fokus und Textskalierung abnehmen.
+- [ ] Bevölkerungs- und Simulationslast mit 1.000/5.000/20.000 Bürgern messen, Speicher/CPU-Grenzen dokumentieren und Engpässe beheben.
+
 ## P0 — Veröffentlichung und zuverlässiger Betrieb
 
 - [ ] **HTTPS live schalten:** Pages wurde selbst mit `enablement: true` nicht erstellt (`Resource not accessible by integration`); Eigentümer aktiviert Pages in Settings oder verbindet privaten Cloudflare-Pages-Host. **Nicht als deployed deklarieren.**
@@ -20,7 +42,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Ratsdelegation: lebender früherer Delegierter / Zufall nach fünf Sekunden / manuelle Auswahl / Tod / Hotseat / Save-Load in vollständigen E2E-Tests abnehmen.
 - [ ] Langfristiges Vertrauen, Loyalität, Rivalitäten, politische Fraktionen und regionale Produktion als Folgen von Rats-/Bürgeraufträgen.
 - [ ] Ereignis- und Kampagnenschleifen mit historischen Epochen, Konfliktlösung ohne Krieg, technische Einheiten und Balance über Jahrhunderte.
-- [ ] Chronik über Sitzungen hinweg speichern und bei großen Spielständen mit Begrenzung/Migration testen.
+- [x] Chronik begrenzt und in Version-2-Spielständen integriert; große Altstände und Migrationsfälle weiterhin gesondert testen.
 - [ ] Größere Spielstände, Bürgerzahlen >5.000 / 100.000, Browser-Latenz, Profiling, Benchmarks, deterministische Langläufe prüfen.
 - [ ] Browser-E2E für Hotseat, Save/Load, Ratsentscheidungen, Tutorials und Fortschritt; WCAG und Touchgeräte ergänzen.
 
