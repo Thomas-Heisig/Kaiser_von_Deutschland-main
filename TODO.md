@@ -8,7 +8,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### P1a – durchgängiger Kampagnenablauf (vor neuen Großsystemen)
 
-- [~] Kapitel-Startbalance für Industrie/Wiederaufbau und Siegstatusanzeige korrigiert; vollständigen Kampagnendurchlauf von Beginn bis Sieg/Niederlage einschließlich Monatswechsel, Zufallsereignissen, Speichern/Laden und Schlusswertung automatisieren. Vorhandene Kapitelziele/Belohnungen sind nur Teilabdeckung.
+- [~] Industrie-Kampagne jetzt als vollständiger Bau-/Forschungs-/Save-Load-/Sieg-Test abgedeckt; fünfjährige Stabilitätsprüfung für endliche Ressourcen- und Bevölkerungswerte ergänzt. Kapitel-Startbalance für Industrie/Wiederaufbau und Siegstatusanzeige korrigiert; vollständigen Kampagnendurchlauf von Beginn bis Sieg/Niederlage einschließlich Monatswechsel, Zufallsereignissen, Speichern/Laden und Schlusswertung automatisieren. Vorhandene Kapitelziele/Belohnungen sind nur Teilabdeckung.
 - [ ] Mehrjährige deterministische Balancing-Läufe mit Gold, Nahrung, Forschung, Bevölkerungs- und Stabilitätswerten sowie Kampagnenschwellen protokollieren und Grenzwerte verbessern.
 - [ ] Kopplung zwischen Ratsbeschlüssen, Handel, Forschung, Kultur, Diplomatie und Rivalenentwicklung in messbaren Integrationstests nachweisen.
 - [ ] Interaktive Tutorial-Kampagne mit Schritten Bauen → Handeln → Forschen → Reichsrat → Speichern und Hilfen bei fehlenden Ressourcen anbieten.

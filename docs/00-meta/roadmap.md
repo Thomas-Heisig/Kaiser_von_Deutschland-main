@@ -6,6 +6,9 @@
 
 Die [TODO](../../TODO.md) ist die *einzige operative Aufgabenliste*. Diese Roadmap zeigt Abhängigkeiten und Entwicklungsziele, **kein selbst attestiertes Fertigstellungsprotokoll**. [Status](status.md) beschreibt ausschließlich nachprüfbare Ergebnisse. Frühere Visionen, Zeitpläne und alle Ideen der bisherigen Dokumentation wurden vollständig archiviert: [Original-Roadmap](../outdated/roadmap-snapshot-2026-10-17.md), [Original-TODO](../outdated/TODO-snapshot-2026-10-17.md), [README-Ideen](backlog-from-readme.md). Keine historischen Ideen wurden gestrichen.
 
+## P1-Testabdeckung (17.10.2026)
+Eine Industriekampagne wird automatisiert mit echten Bauten, Forschung, Save/Load und Sieg getestet. Ein zusätzlicher 60-Monats-Lauf sichert endliche Werte und zentrale Grenzen. Andere Kampagnen, echte Niederlagebedingungen, freie Wirtschaftsbalance und Lasttests bleiben offen.
+
 ## Gameplay-P1-Befunde (17.10.2026)
 
 - Industrie und Wiederaufbau hatten Startinfrastruktur, die einen Großteil des ersten Kapitels ohne Spielerhandlung erfüllte; Anfangsziele verschärft.
