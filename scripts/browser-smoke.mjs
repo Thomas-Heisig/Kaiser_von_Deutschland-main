@@ -13,7 +13,7 @@ try {
     if (await page.locator('.welcome [data-jukebox-select]').count()) failures.push('Jukebox must not appear in start menu');
     await page.locator('#campaign-select').selectOption('frei');
     await page.locator('#start-year').selectOption('1820');
-    await page.getByText('1820 · Industriezeitalter').waitFor();
+    await page.locator('#start-era-summary').getByText('1820 · Industriezeitalter').waitFor();
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
     await page.locator('#game-music-settings').waitFor();
