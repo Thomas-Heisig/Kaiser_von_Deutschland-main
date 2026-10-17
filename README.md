@@ -46,6 +46,22 @@ Das Gesamtprojekt bleibt in Entwicklung.
 Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
 Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## 🎧 Jukebox für echte Musikdateien
+Die Jukebox bietet im Hauptmenü und während des Spiels eine **Titelwahl**, Wiedergabe,
+Stopp sowie Import eigener MP3-, OGG- oder WAV-Dateien (bis 30 MB). Die Datei wird
+im Browserprofil via IndexedDB/localforage gespeichert und bleibt nach dem Neuladen
+verfügbar. Eingespielte Aufnahmen ersetzen auf Wunsch den synthetischen Soundtrack,
+dessen Schalter und Effekt-/Umgebungssteuerung bestehen bleiben.
+
+**Wichtiger Bereitstellungsschritt:** Die mit dieser Unterhaltung übermittelte
+MP3 `davinci_erstelle_einen_mehrmin_tigen__loopf_higen_instrume.mp3` ist
+ca. 162 Sekunden lang, aber **noch nicht als Binärdatei im Git-Repository**.
+Sie kann unmittelbar über die Jukebox-Dateiauswahl importiert werden. Alternativ
+wird eine Datei `public/music/krone-und-land.mp3` automatisch als fest hinterlegter
+Titel erwartet, sobald sie separat in das Repository hochgeladen wird.
+Ohne diese Datei funktioniert der importierte Browser-Titel trotzdem.
+Die vorhandene README und alte Roadmap bleiben bestehen.
+
 ## 🎼 Musik – Ein Reich, viele Zeiten / Krone und Land
 Ein neues, **eigens aus Tönen zusammengesetztes** wiederkehrendes Leitmotiv
 (D–E–F–G–F–E–D, mit Dur-Variante) erklingt bei 76 BPM im 4/4-Takt.
