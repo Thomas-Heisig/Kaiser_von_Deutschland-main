@@ -316,3 +316,9 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 .game-action-banner.science { border-color:#d9c786; background:#293d3a; }
 @keyframes action-arrive { from { opacity:0; transform:translateY(-7px); } to { opacity:1; transform:none; } }
 @media (prefers-reduced-motion:reduce) { .game-action-banner { animation:none; } }
+
+/* Long era names must wrap on 320px phones without widening the viewport. */
+@media (max-width: 760px) {
+  .sidebar nav button { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+  .sidebar nav button span { flex: 0 0 auto; }
+}
