@@ -1,8 +1,9 @@
 import type { Kingdom } from './Kingdom';
-export type CampaignId = 'aufbau' | 'hanse' | 'wissenschaft' | 'grenzland' | 'kultur' | 'kaiserkrone';
+export type CampaignId = 'aufbau' | 'hanse' | 'wissenschaft' | 'grenzland' | 'kultur' | 'kaiserkrone' | 'frei';
 export interface CampaignDefinition { id: CampaignId; name: string; description: string; year: number; }
 export interface CampaignObjective { label: string; done: boolean }
 export const CAMPAIGNS: readonly CampaignDefinition[] = [
+  { id: 'frei', name: 'Offenes Spiel', description: 'Ohne Siegzwang: Geschichte und Reich frei gestalten.', year: 1200 },
   { id: 'aufbau', name: 'Ein neuer Anfang', description: 'Baue ein blühendes Lehen auf.', year: 1200 },
   { id: 'hanse', name: 'Aufstieg der Hanse', description: 'Errichte Häfen und ein Handelsnetz.', year: 1200 },
   { id: 'wissenschaft', name: 'Zeitalter des Wissens', description: 'Fördere Bildung und eigene Forschung.', year: 1200 },
@@ -13,6 +14,7 @@ export const CAMPAIGNS: readonly CampaignDefinition[] = [
 export function campaignGoals(id: CampaignId, kingdom: Kingdom, researched: number, subdued: number, tradeRoutes: number, truces: number = 0): CampaignObjective[] {
   const infra = kingdom.infrastructure;
   switch (id) {
+    case 'frei': return [];
     case 'hanse': return [
       { label: '2 Häfen errichten', done: infra.ports >= 2 },
       { label: '3 Marktplätze', done: infra.markets >= 3 },
