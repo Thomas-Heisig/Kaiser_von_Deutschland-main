@@ -299,6 +299,7 @@ export class KingdomGameUI {
           <strong>🎼 Jukebox</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
           <button type="button" data-jukebox-play>▶ Titel abspielen</button>
           <button type="button" data-jukebox-stop>■ Stop</button>
+          <label class="jukebox-auto"><input type="checkbox" data-jukebox-auto> Musik folgt Epoche</label>
           <label>Import MP3 <input data-jukebox-import type="file" multiple accept=".mp3,.ogg,.wav,audio/*"></label>
           <p data-jukebox-status role="status"></p>
         </section>
