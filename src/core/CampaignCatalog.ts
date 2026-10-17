@@ -27,16 +27,16 @@ export function campaignGoals(id: CampaignId, kingdom: Kingdom, researched: numb
   switch (id) {
     case 'frei': return [];
     case 'industrie': return [
-      { label: '2 Werkstätten betreiben', done: infra.workshops >= 2 },
-      { label: '3 Straßenverbindungen ausbauen', done: infra.roads >= 3 },
+      { label: '4 Werkstätten betreiben', done: infra.workshops >= 4 },
+      { label: '5 Straßenverbindungen ausbauen', done: infra.roads >= 5 },
       { label: '2 Schulen errichten', done: infra.schools >= 2 },
       { label: '3 Technologien erforschen', done: researched >= 3 },
       { label: '5.500 Gold Produktionsreserve', done: kingdom.resources.gold >= 5500 },
       { label: 'Handelsmacht auf 25 erhöhen', done: kingdom.stats.tradePower >= 25 }
     ];
     case 'wiederaufbau': return [
-      { label: '4 Bauernhöfe versorgen das Land', done: infra.farms >= 4 },
-      { label: '2 Straßen erneuern', done: infra.roads >= 2 },
+      { label: '10 Bauernhöfe versorgen das Land', done: infra.farms >= 10 },
+      { label: '5 Straßen erneuern', done: infra.roads >= 5 },
       { label: 'Ein Hospital errichten', done: infra.hospitals >= 1 },
       { label: '65 % Zufriedenheit erreichen', done: kingdom.happiness >= 65 },
       { label: '4 Technologien erforschen', done: researched >= 4 },
