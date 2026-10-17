@@ -1,3 +1,12 @@
+## Sichtbarkeit der Bürgeraufträge und echte Geburten (17.10.2026)
+- [x] Bürgeraufträge direkt in der oberen Spielleiste als hervorgehobene Schaltfläche anbieten (auch bei langer Navigation).
+- [x] Schwangerschaftsende erzeugt tatsächlich einen neuen Bürger mit Familienzuordnung und beidseitigen Eltern-Kind-Relationen.
+- [x] Bereits vorhandene Familien- und Spielstanddatenfelder verwenden; Geburt beim monatlichen Bürgerdurchlauf ohne Map-Mutation-Probleme.
+- [ ] Historisch und kulturell angepasste Vornamen und geregelte Partner-/Schwangerschaftslogik ergänzen (derzeit Platzhaltername).
+- [ ] Geburtenstatistik mit tatsächlichen Geburten in der Demografie zusammenführen; derzeit bestehende Demografiezählung nur statistisch.
+- [ ] Generationsübergreifende Vermögensverteilung, Jugend-/Ausbildungsphase, Familiengründung und Sterbefälle langfristig balancieren.
+- [ ] Live-Deployment prüfen, damit die neue Schaltfläche auf der tatsächlich geöffneten Spielseite sichtbar ist.
+
 ## Historische Filmsequenzen und Bürgerbiografien (17.10.2026)
 - [x] Dynamischer Filmkatalog aus tatsächlich vorhandenen Dateien beim Build; Auswahl von Intro, Outro und Zwischenfilm.
 - [x] Optionale Zwischenfilme für historische Meilensteine mit Überspringen, Tonsteuerung und Vorschau.
