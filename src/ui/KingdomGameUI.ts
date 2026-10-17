@@ -1294,7 +1294,7 @@ export class KingdomGameUI {
     return `<div class="build-grid">${routes.map((route): string => {
       const active = player.kingdom.isTradeRouteActive(route.id);
       const activationCost = Math.floor(route.length * 10 + route.danger * 100);
-      const needsPort = route.id.includes('sea') || route.id.includes('naval');
+      const needsPort = route.id.includes('sea') || route.id.includes('naval') || route.id === 'hanseatic_routes' || route.id === 'baltic_trade';
       const canActivate = player.kingdom.resources.gold >= activationCost &&
         (!needsPort || player.kingdom.infrastructure.ports > 0);
       return `<article class="build-card ${active ? 'selected' : ''}">
