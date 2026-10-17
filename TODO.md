@@ -1,3 +1,12 @@
+## Offizielle Musikbibliothek – alle 15 Stücke (17.10.2026)
+- [x] Alle 15 hochgeladenen MP3-Originale per Dateigröße und SHA-256 im lokalen ZIP geprüft und in sauber benanntem Einbaupaket `public/music/` aufbereitet.
+- [x] In GitHub: zentraler, erweiterbarer 15-Titel-Katalog mit Sonderstücken und Epoche.
+- [x] `Zeit vergeht` als Startthema mit Autoplay-Versuch und Klick-Ersatz, ohne Titelwahl im Startmenü.
+- [x] In-Game-Titelauswahl und Downloadlink für feste Musikdateien.
+- [ ] 15 originale MP3-Binärdateien aus dem Einbaupaket in GitHub unter `public/music/` übernehmen, dann Browser-Hörtest mit echten Medien durchführen.
+- [ ] Vom Nutzer gelieferte weitergehende Angaben zu Komponist, Lizenz, Cover, Stil und Szeneneinsatz im Katalog nachtragen.
+- [ ] Hörabnahme: Ein-/Ausblenden, Lautheitsabgleich, Wiedergabe bei Speicher/Ladewechsel und Mobile-Autoplay.
+
 ## Spielstart, Jahresauswahl, Musik und Fallback – 17.10.2026 (PR #30)
 - [x] Musiktitelauswahl aus dem Startmenü entfernt; der Player liegt eingeklappt bei den Audiooptionen im Spiel.
 - [x] Elf Zeitepochen von 1200 bis 2000 als spielbare Startjahre.
