@@ -23,23 +23,30 @@ if not exist "node_modules\" (
     )
 )
 
-REM ---- Alte Vite/Node-Prozesse im Projektverzeichnis beenden ----
+REM ---- Alte Vite/Node-Prozesse im Projektverzeichnis und auf dem Port beenden ----
 echo Pruefe auf laufende Spiel-Prozesse ...
 
 powershell -NoProfile -Command ^
-    "$projDir = '%CD:\=\\%'; " ^
-    "Get-Process -Name 'node' -ErrorAction SilentlyContinue | Where-Object { " ^
+    "$port = %PORT%; " ^
+    "$projDir = '%~dp0'; " ^
+    "$projDir = $projDir.TrimEnd('\\'); " ^
+    "$killed = @(); " ^
+    "$procs = Get-Process -Name 'node' -ErrorAction SilentlyContinue | Where-Object { " ^
     "  try { $_.CommandLine -match [regex]::Escape($projDir) } catch { $false } " ^
-    "} | ForEach-Object { " ^
-    "  Write-Host (\"  -> Beende Prozess PID \" + $_.Id + \" (\" + $_.ProcessName + \")\"); " ^
-    "  Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue " ^
-    "}" ^
-    "if ((Get-Process -Name 'node' -ErrorAction SilentlyContinue | Where-Object { try { $_.CommandLine -match [regex]::Escape($projDir) } catch { $false } }).Count -eq 0) { " ^
-    "  Write-Host '  -> Keine alten Prozesse gefunden.' " ^
-    "}"
+    "}; " ^
+    "if ($procs) { $procs | ForEach-Object { $killed += $_.Id; Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue } }; " ^
+    "$connections = cmd /c 'netstat -ano ^| findstr \":%PORT% \" ^| findstr \"LISTEN\"' 2>$null; " ^
+    "if ($connections) { " ^
+    "  $connections | ForEach-Object { " ^
+    "    $pid = $_ -replace '.*\s+(\d+)$','$1'; " ^
+    "    if ($pid -and ($killed -notcontains $pid)) { $killed += $pid; Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue } " ^
+    "  } " ^
+    "}; " ^
+    "if ($killed.Count -eq 0) { Write-Host '  -> Keine alten Prozesse gefunden.' } " ^
+    "else { $killed | ForEach-Object { Write-Host ('  -> Beende Prozess PID ' + $_) } }"
 
 REM Kurz warten, damit Prozesse sich schliessen koennen
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 
 REM ---- IP-Adressen ermitteln ----
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /i "IPv4"') do (
