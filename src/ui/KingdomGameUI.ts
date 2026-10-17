@@ -534,9 +534,23 @@ export class KingdomGameUI {
       updateModelUi();
     });
     this.root.querySelector('#advisor-test')?.addEventListener('click', () => {
-      if (hardware) hardware.textContent = CouncilAdvisor.isWebGpuAvailable()
-        ? '✓ WebGPU-Unterstützung vorhanden. Lade das Modell mit „KI-Modell starten“.'
-        : '✕ WebGPU nicht verfügbar (Browser, HTTPS oder Grafiktreiber).';
+      if (hardware) hardware.textContent = 'Grafikadapter wird überprüft …';
+      void (async () => {
+        if (!CouncilAdvisor.isWebGpuAvailable()) {
+          if (hardware) hardware.textContent = '✕ WebGPU fehlt. HTTPS, Browser und Hardware-Beschleunigung kontrollieren.';
+          return;
+        }
+        try {
+          const gpu = (navigator as Navigator & {gpu?: {requestAdapter: () => Promise<unknown | null>}}).gpu;
+          const adapter = await gpu?.requestAdapter();
+          if (hardware) hardware.textContent = adapter
+            ? '✓ WebGPU-Grafikadapter gefunden. Der Modellstart kann jetzt getestet werden.'
+            : '✕ WebGPU ist vorhanden, aber kein geeigneter Grafikadapter verfügbar.';
+        } catch (error) {
+          if (hardware) hardware.textContent = '✕ WebGPU-Prüfung fehlgeschlagen: ' +
+            (error instanceof Error ? error.message : String(error));
+        }
+      })();
       updateModelUi();
     });
     startButton?.addEventListener('click', () => {
