@@ -7,6 +7,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 ## Priorisierung: spielbare Kampagnen zuerst (17.10.2026)
 
 ### P1a – durchgängiger Kampagnenablauf (vor neuen Großsystemen)
+
 - [ ] Vollständigen Kampagnendurchlauf von Beginn bis Sieg/Niederlage einschließlich Monatswechsel, Zufallsereignissen, Speichern/Laden und Schlusswertung automatisieren. Vorhandene Kapitelziele/Belohnungen sind nur Teilabdeckung.
 - [ ] Mehrjährige deterministische Balancing-Läufe mit Gold, Nahrung, Forschung, Bevölkerungs- und Stabilitätswerten sowie Kampagnenschwellen protokollieren und Grenzwerte verbessern.
 - [ ] Kopplung zwischen Ratsbeschlüssen, Handel, Forschung, Kultur, Diplomatie und Rivalenentwicklung in messbaren Integrationstests nachweisen.
@@ -15,6 +16,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Sieg-/Niederlageseite, Wiederholung, Sandbox-Fortsetzung und Schlussstatistik UI-seitig abnehmen (die bisherige Erfolgsmeldung ist kein vollständiger Kampagnenabschluss).
 
 ### P1b – danach Strategie und reaktive Gegner
+
 - [ ] Rivalen auf Wirtschafts-, Handels-, Forschungs- und Militärfortschritte dynamisch reagieren lassen; unterschiedliche Schwierigkeit mit nachvollziehbaren Regeln testen.
 - [ ] Diplomatie um Bündnisse, Handelsverträge, Vertragsbruch und konsequentes Reputations-/Rivalenverhalten im Hauptspiel ergänzen.
 - [ ] Regionale Hunger-, Wanderungs- und Versorgungslagen als Spielentscheidungen mit Kosten und dauerhaften Auswirkungen verknüpfen.
@@ -22,6 +24,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Alternative Gewinnstrategien für Handel, Wissenschaft, Kultur und Diplomatie unabhängig vom Krieg end-to-end prüfen.
 
 ### P1c – Qualität und Zugänglichkeit
+
 - [ ] E2E für neue Partie, Bauen, Handelsgeschäft, Forschung, Ratsentscheidung, Hotseat, Speichern/Laden und Kampagnenziel hinzufügen.
 - [ ] Wesentliche Ansichten auf 320/768/1024 Pixel, mobilem Touch und Tastaturnavigation inklusive Fokus und Textskalierung abnehmen.
 - [ ] Bevölkerungs- und Simulationslast mit 1.000/5.000/20.000 Bürgern messen, Speicher/CPU-Grenzen dokumentieren und Engpässe beheben.

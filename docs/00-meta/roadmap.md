@@ -7,6 +7,7 @@
 Die [TODO](../../TODO.md) ist die *einzige operative Aufgabenliste*. Diese Roadmap zeigt Abhängigkeiten und Entwicklungsziele, **kein selbst attestiertes Fertigstellungsprotokoll**. [Status](status.md) beschreibt ausschließlich nachprüfbare Ergebnisse. Frühere Visionen, Zeitpläne und alle Ideen der bisherigen Dokumentation wurden vollständig archiviert: [Original-Roadmap](../outdated/roadmap-snapshot-2026-10-17.md), [Original-TODO](../outdated/TODO-snapshot-2026-10-17.md), [README-Ideen](backlog-from-readme.md). Keine historischen Ideen wurden gestrichen.
 
 ## Gameplay-Freigabereihenfolge (verbindlich)
+
 1. **Kampagnenabschluss als End-to-End-Ablauf:** Start, Bau, Handel, Forschung, Reichsrat, Monatswechsel, Save/Load, Sieg und Niederlage.
 2. **Langzeit-Balancing:** viele Spieljahre und reale Wechselwirkungen messen, statt nur Funktionen zu zählen.
 3. **Systemintegration:** Forschung/Handel/Kultur/Diplomatie/Rivalen als wechselseitige strategische Entscheidungen.
@@ -18,6 +19,7 @@ Diese Reihenfolge betrifft die Gameplay-Arbeit; HTTPS/PWA bleibt unabhängig als
 ## Jetzt — Gate A: zuverlässige Veröffentlichung (P0)
 
 **Ziel:** eine nachweislich erreichbare HTTPS-PWA mit echter Offline-Nutzung.
+
 1. Pages-Berechtigung in privatem Repo klären oder anderes HTTPS-Hosting verbinden.
 2. HTTPS, Service-Worker-Scope, PWA-Manifest, PNG-Icons, MP3-/Video-Status 200/206 und Installation messen.
 3. Medienrechte, Credits, Datenschutz und vollständiges Impressum vor öffentlicher Freigabe.
