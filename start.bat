@@ -26,24 +26,7 @@ if not exist "node_modules\" (
 REM ---- Alte Vite/Node-Prozesse im Projektverzeichnis und auf dem Port beenden ----
 echo Pruefe auf laufende Spiel-Prozesse ...
 
-powershell -NoProfile -Command ^
-    "$port = %PORT%; " ^
-    "$projDir = '%~dp0'; " ^
-    "$projDir = $projDir.TrimEnd('\\'); " ^
-    "$killed = @(); " ^
-    "$procs = Get-Process -Name 'node' -ErrorAction SilentlyContinue | Where-Object { " ^
-    "  try { $_.CommandLine -match [regex]::Escape($projDir) } catch { $false } " ^
-    "}; " ^
-    "if ($procs) { $procs | ForEach-Object { $killed += $_.Id; Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue } }; " ^
-    "$connections = cmd /c 'netstat -ano ^| findstr \":%PORT% \" ^| findstr \"LISTEN\"' 2>$null; " ^
-    "if ($connections) { " ^
-    "  $connections | ForEach-Object { " ^
-    "    $pid = $_ -replace '.*\s+(\d+)$','$1'; " ^
-    "    if ($pid -and ($killed -notcontains $pid)) { $killed += $pid; Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue } " ^
-    "  } " ^
-    "}; " ^
-    "if ($killed.Count -eq 0) { Write-Host '  -> Keine alten Prozesse gefunden.' } " ^
-    "else { $killed | ForEach-Object { Write-Host ('  -> Beende Prozess PID ' + $_) } }"
+powershell -NoProfile -Command "$port=%PORT%;$dir='%~dp0'.TrimEnd('\');$k=@();$procs=Get-Process -Name 'node' -ErrorAction SilentlyContinue|Where-Object{try{$_.CommandLine-match[regex]::Escape($dir)}catch{$false}};if($procs){$procs|ForEach-Object{$k+=$_.Id;Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue}};cmd /c 'netstat -ano|findstr \":%PORT% \"|findstr \"LISTEN\"' 2>$null|ForEach-Object{$pid=$_-replace'.*\s+(\d+)$','$1';if($pid-and($k-notcontains$pid)){$k+=$pid;Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue}};if($k.Count-eq0){Write-Host '  -> Keine alten Prozesse gefunden.'}else{$k|ForEach-Object{Write-Host ('  -> Beende Prozess PID '+$_)}}"
 
 REM Kurz warten, damit Prozesse sich schliessen koennen
 timeout /t 2 /nobreak >nul
