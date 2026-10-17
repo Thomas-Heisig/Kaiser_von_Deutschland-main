@@ -23,8 +23,12 @@ try {
     if (!(await page.locator('#date').textContent())?.includes('1820')) failures.push('selected start year did not enter the simulation');
     if (await page.locator('.kingdom-app').getAttribute('data-era') !== 'industrial') failures.push('industrial epoch style not applied');
     await page.locator('#game-music-settings').waitFor();
-    await page.locator('#game-music-settings summary').click();
+    await page.locator('#game-music-settings > summary').click();
     await page.locator('[data-jukebox-select]').waitFor();
+    await page.locator('.playlist-covers > summary').click();
+    if (await page.locator('#playlist-mode').count() !== 1) failures.push('playlist modes missing');
+    await page.locator('#playlist-mode').selectOption('shuffle');
+    await page.locator('#playlist-repeat').selectOption('one');
     await page.locator('.cover-card').first().waitFor();
     if (await page.locator('.cover-card').count() !== 15) failures.push('expected all 15 official album covers');
     await page.locator('[data-jukebox-download]').waitFor({state:'attached'});
@@ -49,6 +53,7 @@ try {
     await page.locator('[data-district="ports"]').click();
     await page.locator('#settlement-details').getByText('Hafen').waitFor();
     await page.locator('nav [data-view="help"]').click();
+    await page.locator('#section-dialog[open]').waitFor();
     await page.getByRole('heading', { name: 'Deine ersten Schritte' }).waitFor();
     await page.locator('nav [data-view="diplomacy"]').click();
     await page.getByRole('heading', { name: /diplomatische hof/i }).waitFor();
