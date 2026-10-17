@@ -10,6 +10,7 @@ import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
 import { SETTLEMENT_DISTRICTS, DistrictFilter, SEASON_LABELS } from './SettlementSceneModel';
 import { GameAudio } from './GameAudio';
+import { MusicJukebox } from './MusicJukebox';
 import type { MusicScene } from './RoyalMusicScore';
 import { musicArrangement, MUSIC_EPOCH_NAMES, MUSIC_SCENE_NAMES } from './RoyalMusicScore';
 import { CAMPAIGNS, CampaignId } from '../core/CampaignCatalog';
@@ -93,6 +94,7 @@ export class KingdomGameUI {
   private journal: JournalEntry[] = [];
   private subscriptions: Array<() => void> = [];
   private readonly audio: GameAudio;
+  private readonly jukebox = new MusicJukebox(() => this.updateJukeboxStatus());
   private readonly ambience = new GameAmbience();
   private motionEnabled = false;
   private actionBannerTimer?: number;
@@ -123,6 +125,7 @@ export class KingdomGameUI {
     });
     this.root.addEventListener('click', this.buttonSoundHandler);
     this.showMenu();
+    void this.jukebox.initialize().then(() => this.updateJukeboxStatus()).catch(error => console.error('Musikbibliothek:',error));
     document.addEventListener('keydown', this.keyboardHandler);
   }
 
@@ -142,6 +145,13 @@ export class KingdomGameUI {
             <strong>Ein neuer Anfang · 1200</strong>
             <p>Freie mittelalterliche Aufbaukampagne. Alternative Geschichte, keine historische Landkarte.</p>
           </div></div>
+          <div class="jukebox" aria-label="Musik-Jukebox"><strong>🎼 Jukebox</strong>
+            <select data-jukebox-select aria-label="Musiktitel wählen"></select>
+            <button type="button" data-jukebox-play>▶ Titel abspielen</button>
+            <button type="button" data-jukebox-stop>■ Stop</button>
+            <label>Musikdatei hinzufügen <input type="file" data-jukebox-import accept=".mp3,.ogg,.wav,audio/*"></label>
+            <p data-jukebox-status role="status">Musikbibliothek bereit.</p>
+          </div>
           <div class="audio-controls" aria-label="Audioeinstellungen">
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
@@ -185,6 +195,7 @@ export class KingdomGameUI {
       </main>`;
     this.audio.setMusicContext({year:1200,scene:'menu'});
     this.bindAudioControls();
+    this.bindJukeboxControls();
     const playerCount = this.root.querySelector<HTMLSelectElement>('#player-count');
     playerCount?.addEventListener('change', (): void => {
       const count = Number(playerCount.value);
@@ -280,6 +291,13 @@ export class KingdomGameUI {
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button></div>
         </header>
+        <section class="jukebox jukebox-ingame" aria-label="Musik-Jukebox">
+          <strong>🎼 Jukebox</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
+          <button type="button" data-jukebox-play>▶ Titel abspielen</button>
+          <button type="button" data-jukebox-stop>■ Stop</button>
+          <label>Import MP3 <input data-jukebox-import type="file" accept=".mp3,.ogg,.wav,audio/*"></label>
+          <p data-jukebox-status role="status"></p>
+        </section>
         <section class="resource-bar" aria-label="Ressourcen und monatliche Änderung">
           ${(['gold', 'food', 'wood', 'stone', 'iron'] as const).map((key: MarketResource | 'gold') => `
             <div class="resource"><span class="resource-symbol" aria-hidden="true">${
@@ -361,6 +379,7 @@ export class KingdomGameUI {
         <footer class="game-footer">Jede Entscheidung zählt.<span id="footer-keys"></span></footer>
       </div>`;
     this.bindAudioControls();
+    this.bindJukeboxControls();
     this.root.querySelector<HTMLSelectElement>('#settlement-filter')?.addEventListener('change', (event) => {
       const target = event.currentTarget as HTMLSelectElement;
       this.districtFilter = target.value as DistrictFilter;
@@ -1545,6 +1564,44 @@ export class KingdomGameUI {
     else engine.resumeGame();
   }
 
+  private updateJukeboxStatus(): void {
+    this.root.querySelectorAll<HTMLSelectElement>('[data-jukebox-select]').forEach(select => {
+      const chosen=select.value;
+      const items=this.jukebox.getTracks();
+      select.replaceChildren(...items.map(t => {
+        const option=document.createElement('option');option.value=t.id;
+        option.textContent=t.title+' · '+t.era;return option;
+      }));
+      select.value=items.some(t=>t.id===chosen)?chosen:items[0]?.id??'';
+    });
+    this.root.querySelectorAll<HTMLElement>('[data-jukebox-status]').forEach(el=>{
+      el.textContent=this.jukebox.isPlaying() ? '▶ Eigener Musiktitel läuft' :
+        'Wähle einen Titel und starte ihn. Importierte Dateien bleiben lokal im Browser.';
+    });
+  }
+
+  private bindJukeboxControls(): void {
+    this.updateJukeboxStatus();
+    this.root.querySelectorAll<HTMLButtonElement>('[data-jukebox-play]').forEach(button=>
+      button.addEventListener('click',()=>void this.run(async()=>{
+        const id=this.root.querySelector<HTMLSelectElement>('[data-jukebox-select]')?.value??'';
+        if(this.audio.musicEnabled) await this.audio.toggleMusic();
+        await this.jukebox.play(id);
+        this.updateAudioControls();
+      })));
+    this.root.querySelectorAll<HTMLButtonElement>('[data-jukebox-stop]').forEach(button=>
+      button.addEventListener('click',()=>this.jukebox.stop()));
+    this.root.querySelectorAll<HTMLInputElement>('[data-jukebox-import]').forEach(input=>
+      input.addEventListener('change',()=>void this.run(async()=>{
+        const file=input.files?.[0];if(!file)return;
+        const track=await this.jukebox.importFile(file);
+        this.updateJukeboxStatus();
+        this.root.querySelectorAll<HTMLSelectElement>('[data-jukebox-select]').forEach(select=>select.value=track.id);
+        this.notify('Musiktitel importiert: '+track.title);
+        input.value='';
+      })));
+  }
+
   private bindAudioControls(): void {
     this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => {
@@ -1568,6 +1625,7 @@ export class KingdomGameUI {
       input.value=String(Math.round(this.audio.getMusicVolume()*100));
       input.addEventListener('input', () => {
         this.audio.setMusicVolume(Number(input.value)/100);
+        this.jukebox.setVolume(Number(input.value)/100);
         this.root.querySelectorAll<HTMLInputElement>('[data-music-volume]').forEach(other=>{
           if(other!==input) other.value=input.value;
         });
@@ -1578,6 +1636,7 @@ export class KingdomGameUI {
 
   private async toggleMusic(): Promise<void> {
     try {
+      if (!this.audio.musicEnabled) this.jukebox.stop();
       await this.audio.toggleMusic();
       this.updateAudioControls();
     } catch (error) {
@@ -1663,6 +1722,7 @@ export class KingdomGameUI {
     document.removeEventListener('keydown', this.keyboardHandler);
     this.root.removeEventListener('click', this.buttonSoundHandler);
     this.audio.dispose();
+    this.jukebox.dispose();
     this.ambience.dispose();
   }
 }

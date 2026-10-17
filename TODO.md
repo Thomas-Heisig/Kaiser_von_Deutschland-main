@@ -1,3 +1,9 @@
+## 🎧 Musik-Jukebox (PR in Prüfung)
+- [x] Echte MP3-/OGG-/WAV-Dateien lokal importieren, auswählen, speichern und abspielen.
+- [x] Jukebox im Menü und Spiel, Lautstärke mit vorhandener Steuerung verbunden.
+- [ ] Hochgeladene MP3 zusätzlich als Git-Asset `public/music/krone-und-land.mp3` bereitstellen; Binärtransfer über die verfügbaren GitHub-Texttools nicht möglich.
+- [ ] Weitere Epochenstücke, Titelverwaltung und automatische Wechsel weiter ausbauen.
+
 ## 🎼 Ein Reich, viele Zeiten – Musik (PR in Prüfung)
 - [x] Eigenes Leitmotiv (76 BPM, Moll/Dur), 48-Takte-Menüfassung, 16-Takte-Spielszenen.
 - [x] Epochenfarben für Mittelalter/Hanse/Neuzeit/Industrie/Moderne/Zukunft und Spielsituationen Aufbau/Handel/Hof/Krise/Krieg.
