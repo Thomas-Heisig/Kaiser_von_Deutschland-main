@@ -1,3 +1,11 @@
+## HTTPS-Installation (17.10.2026)
+- [x] GitHub-Pages-Build für Projekt-Unterpfad, PWA/Service-Worker-Scope und Medienpfade vorbereitet.
+- [x] GitHub Actions Deployment-Workflow ergänzt, Auslieferung nur nach erfolgreichem Build/Tests.
+- [ ] GitHub Pages in Repository-Einstellungen unter Settings → Pages mit Source GitHub Actions aktivieren; bei privatem Repo Planberechtigung prüfen.
+- [ ] HTTPS-URL nach Deployment tatsächlich öffnen und PWA-Installation, 15 Titel, fünf Filme und Offline-Modus auf Geräten abnehmen.
+- [ ] Falls Pages bei privatem Repo nicht verfügbar ist: Cloudflare Pages mit privatem GitHub-Repo verbinden (Build npm ci && npm run build; Output dist; Basis-Pfad root).
+- [ ] Nutzungsrechte, Datenschutz und Impressum vor öffentlicher Veröffentlichung prüfen. HTTPS alleine schützt diese Anforderungen nicht.
+
 ## Bürgerpersönlichkeit bei delegierten Ratsentscheidungen (17.10.2026)
 - [x] Bürger wählen bei ausdrücklich delegierten Ratsentscheidungen anhand von Beruf, Fähigkeiten, Mut, Ehrgeiz, Disziplin und Mitgefühl.
 - [x] Nur finanzierbare Antworten zulassen; keine externe KI oder automatisches Ausführen einer Ratsentscheidung.
