@@ -109,6 +109,26 @@ describe('Playable campaign integration', (): void => {
     expect(restored.getFestivalOptions(ruler.id).find((entry) => entry.event.id === 'christmas')?.alreadyHeld).toBe(true);
   });
 
+  it('spends border watch supplies once and consumes the defense after one tick', async (): Promise<void> => {
+    const engine = await campaign();
+    const ruler = engine.getPlayers()[0];
+    ruler.kingdom.resources.gold = Math.max(2000, ruler.kingdom.resources.gold);
+    ruler.kingdom.resources.wood = Math.max(500, ruler.kingdom.resources.wood);
+    const gold = ruler.kingdom.resources.gold;
+    const wood = ruler.kingdom.resources.wood;
+    expect(engine.prepareBorderWatch(ruler.id)).toContain('Grenzwache');
+    expect(ruler.kingdom.resources.gold).toBe(gold - 300);
+    expect(ruler.kingdom.resources.wood).toBe(wood - 150);
+    expect(() => engine.prepareBorderWatch(ruler.id)).toThrow('bereits');
+    await engine.saveGame('watch');
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('watch');
+    expect(restored.hasBorderWatch(ruler.id)).toBe(true);
+    await restored.advanceMonth();
+    expect(restored.hasBorderWatch(ruler.id)).toBe(false);
+  });
+
   it('persists a two-year non-aggression treaty and prevents attacks and raids', async (): Promise<void> => {
     const engine = await campaign();
     const ruler = engine.getPlayers()[0];
