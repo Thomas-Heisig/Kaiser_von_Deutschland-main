@@ -26,6 +26,16 @@ export const BUNDLED_TRACKS: readonly JukeboxTrack[] = [
     source: 'library', url: '/music/imperiale-fanfare-1600.mp3' },
   { id: 'ouvertuere-1750', title: 'Kaiserliche Ouvertüre', era: '1750 · Aufklärung', year: 1750,
     source: 'library', url: '/music/kaiserliche-ouvertuere-1750.mp3' },
+  { id: 'romantik-1820', title: 'Eiserne Krone', era: '1820 · Romantik', year: 1820, source: 'library',
+    url: '/music/eiserne-krone-1820.mp3' },
+  { id: 'eiserne-kronen-1890', title: 'Eiserne Kronen', era: '1890 · Spätromantik & Moderne', year: 1890,
+    source: 'library', url: '/music/eiserne-kronen-1890.mp3' },
+  { id: 'truemmerstaaten-1945', title: 'Trümmerstaaten', era: '1945 · Nachkriegsmoderne', year: 1945,
+    source: 'library', url: '/music/truemmerstaaten-1945.mp3' },
+  { id: 'kaisersynthesia-1970', title: 'Kaisersynthesia', era: '1970 · Elektronik', year: 1970,
+    source: 'library', url: '/music/kaisersynthesia-1970.mp3' },
+  { id: 'kaiserreich-erwachen-2000', title: 'Kaiserreich erwachen', era: '2000 · Digitalzeitalter', year: 2000,
+    source: 'library', url: '/music/kaiserreich-erwachen-2000.mp3' },
   { id: 'krone-und-land', title: 'Krone und Land – Ein Reich, viele Zeiten',
     era: 'Mittelalter · Bonus', source: 'library', url: '/music/krone-und-land.mp3' }
 ];
@@ -36,7 +46,12 @@ const YEAR_NAMES: Record<number, { title: string; era: string }> = {
   1400: { title: 'Kaisers Leitmotiv', era: 'Spätmittelalter' },
   1500: { title: 'Kaiserhof Pavane', era: 'Frühe Neuzeit' },
   1600: { title: 'Imperiale Fanfare', era: 'Frühe Neuzeit' },
-  1750: { title: 'Kaiserliche Ouvertüre', era: 'Aufklärung' }
+  1750: { title: 'Kaiserliche Ouvertüre', era: 'Aufklärung' },
+  1820: { title: 'Eiserne Krone', era: 'Romantik' },
+  1890: { title: 'Eiserne Kronen', era: 'Spätromantik & Moderne' },
+  1945: { title: 'Trümmerstaaten', era: 'Nachkriegsmoderne' },
+  1970: { title: 'Kaisersynthesia', era: 'Elektronik' },
+  2000: { title: 'Kaiserreich erwachen', era: 'Digitalzeitalter' }
 };
 
 /** A dated recording suitable for the present game year; never invent an unavailable track. */
