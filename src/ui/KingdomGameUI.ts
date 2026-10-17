@@ -592,7 +592,14 @@ export class KingdomGameUI {
         console.error('Karte konnte nicht gestartet werden:', error);
         this.map?.dispose();
         this.map = undefined;
-        host.innerHTML = '<div class="map-fallback" role="status"><strong>2D-Bezirkskarte</strong><p>Die hardwarebeschleunigte Darstellung ist nicht verfügbar. Die 16 Bezirke können unten ausgewählt und ausgebaut werden.</p></div>';
+        host.dataset.fallback = 'true';
+        this.renderMapFallback();
+        host.addEventListener('click', event => {
+          const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-fallback-district]');
+          if (!button) return;
+          this.selected = button.dataset.fallbackDistrict as keyof KingdomInfrastructure;
+          this.navigate('build');
+        });
         host.dataset.projection = 'flat';
         this.mapStyle = 'flat';
         const style = this.root.querySelector<HTMLSelectElement>('#map-style');
@@ -600,6 +607,18 @@ export class KingdomGameUI {
         console.warn('Interaktive 2D-Fallbackansicht verwendet:', error);
       }
     }
+  }
+
+  /** Browser/WebGL-independent 2D building tiles, backed by actual infrastructure counts. */
+  private renderMapFallback(): void {
+    const host = this.root.querySelector<HTMLElement>('#kingdom-map');
+    if (!host || host.dataset.fallback !== 'true' || !this.player) return;
+    host.innerHTML = `<div class="map-fallback" aria-label="2D-Siedlungskarte">
+      <strong>${escape(this.engine?.getCurrentEpoch() ?? 'Siedlung')} · 2D-Stadtansicht</strong>
+      <div class="fallback-city">${SETTLEMENT_DISTRICTS.map(d => `<button type="button"
+        data-fallback-district="${d.type}" title="${escape(d.name)} ausbauen"><span aria-hidden="true">${STRUCTURES[d.type].symbol}</span>
+        <span>${escape(d.name)}</span><strong>${format(this.player!.kingdom.infrastructure[d.type])}</strong></button>`).join('')}</div>
+      <p>Jedes Gebäude ist auswählbar und führt zur echten Bauverwaltung.</p></div>`;
   }
 
   /** Modal choices are bound to the same authoritative council engine as the full panel. */
@@ -768,6 +787,7 @@ export class KingdomGameUI {
       ${format(kingdom.infrastructure[district.type])} Gebäude
       <button data-open-district class="secondary">Bezirk ausbauen →</button>`;
     setText('settlement-season', SEASON_LABELS[kingdom.currentSeason] + ' · ' + this.engine.getCurrentEpoch());
+    this.renderMapFallback();
     this.map?.update(kingdom, this.selected, this.engine.getModernizationOptions(this.player.id)
       .filter(option => option.completed).map(option => option.project.id), this.engine.getCurrentYear());
     const scene: Soundscape = this.view === 'war' ? 'battle' :
@@ -1723,7 +1743,11 @@ export class KingdomGameUI {
   private bindAudioControls(): void {
     this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => {
-        if (button.dataset.audioToggle === 'music') void this.toggleMusic();
+        if (button.dataset.audioToggle === 'music') {
+          const musicSettings = this.root.querySelector<HTMLDetailsElement>('#game-music-settings');
+          if (musicSettings) musicSettings.open = true;
+          void this.toggleMusic();
+        }
         else if (button.dataset.audioToggle === 'ambience') {
           void this.ambience.toggle()
             .then((): void => this.updateAudioControls())
