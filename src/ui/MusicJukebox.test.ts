@@ -8,7 +8,7 @@ describe('Official soundtrack assets', () => {
     expect(new Set(BUNDLED_TRACKS.map(track => track.url)).size).toBe(15);
     for (const track of BUNDLED_TRACKS) {
       expect(track.url).toMatch(/^\/music\/[a-z0-9-]+\.mp3$/);
-      expect(track.coverUrl).toMatch(/^\/covers\/[a-z0-9-]+\.svg$/);
+      expect(track.coverUrl).toMatch(/^\/covers\/[a-z0-9-]+\.webp$/);
     }
   });
   it('starts with Zeit vergeht and follows chronological eras', () => {
