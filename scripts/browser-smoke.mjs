@@ -65,7 +65,7 @@ try {
       await engine.startGame();
       engine.pauseGame();
       ruler.kingdom.infrastructure.schools = 2;
-      await engine.advanceMonth();
+      for (let month = 0; month < 6; month++) await engine.advanceMonth();
       ruler.kingdom.resources.gold = 50000;
       engine.startResearch(ruler.id, 'sailing');
       await engine.advanceMonth();
