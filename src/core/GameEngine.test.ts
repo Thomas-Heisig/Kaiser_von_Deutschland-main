@@ -50,6 +50,49 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('activates the real Hanseatic route after sailing research, a port and 15030 gold', async (): Promise<void> => {
+    const engine = await campaign();
+    const player = engine.getPlayers()[0];
+    const t = engine.getTransportSystem().getTradeRoute('hanseatic_routes');
+    expect(t?.requiredTechnology).toBe('sailing');
+    expect(engine.activateTradeRoute(player, 'hanseatic_routes').success).toBe(false);
+    player.kingdom.infrastructure.schools = 2;
+    await engine.advanceMonth();
+    player.kingdom.resources.gold = 50000;
+    engine.startResearch(player.id, 'sailing');
+    await engine.advanceMonth();
+    await engine.advanceMonth();
+    expect(engine.getTechnologyProgress(player.id).researched).toContain('sailing');
+    expect(engine.activateTradeRoute(player, 'hanseatic_routes').message).toContain('Hafen');
+    player.kingdom.infrastructure.ports = 1;
+    player.kingdom.resources.gold = 15029;
+    expect(engine.activateTradeRoute(player, 'hanseatic_routes').success).toBe(false);
+    player.kingdom.resources.gold = 15030;
+    expect(engine.activateTradeRoute(player, 'hanseatic_routes').success).toBe(true);
+    expect(player.kingdom.resources.gold).toBe(0);
+    expect(player.kingdom.isTradeRouteActive('hanseatic_routes')).toBe(true);
+  });
+
+  it('appoints living advisors, keeps automatic actions optional and saves trained skills', async (): Promise<void> => {
+    const engine = await campaign();
+    const player = engine.getPlayers()[0];
+    const citizen = engine.getCourtCandidates(player.id)[0];
+    expect(citizen).toBeDefined();
+    engine.appointCourtAssistant(player.id, 'forschung', citizen.id);
+    expect(engine.getCourtAssistants(player.id)[0].mode).toBe('beratung');
+    engine.setCourtAssistantMode(player.id, 'forschung', 'automatisch');
+    const before = citizen.skills.literacy;
+    await engine.advanceMonth();
+    expect(citizen.skills.literacy).toBe(before + 1);
+    await engine.saveGame('court-advisor');
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('court-advisor');
+    expect(restored.getCourtAssistants(player.id)[0].mode).toBe('automatisch');
+    restored.dismissCourtAssistant(player.id, 'forschung');
+    expect(restored.getCourtAssistants(player.id)).toHaveLength(0);
+  });
+
   it('loads each campaign with six independent objectives and retains selection after saving', async (): Promise<void> => {
     for (const campaignId of ['aufbau', 'hanse', 'wissenschaft', 'grenzland', 'kultur', 'kaiserkrone'] as const) {
       const engine = new GameEngine({ enableWiki: false, randomEvents: false, campaignId });
