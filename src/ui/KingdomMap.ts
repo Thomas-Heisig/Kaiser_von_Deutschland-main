@@ -37,11 +37,15 @@ export class KingdomMap {
   private elapsed = 0;
   private actionVisual?: Container;
   private actionTimer?: number;
+  private actionStart = 0;
+  private actionTroops: Array<{ sprite: Container; from: [number, number]; to: [number, number]; delay: number }> = [];
   private readonly animatedMarkers: Container[] = [];
   private readonly citizens: Container[] = [];
   private readonly chimneys: Graphics[] = [];
   private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
-    if (this.destroyed || !this.motionEnabled || document.hidden) return;
+    if (this.destroyed || document.hidden) return;
+    if (this.actionVisual) this.animateAction();
+    if (!this.motionEnabled) return;
     this.elapsed += Math.min(ticker.deltaMS, 50) / 1000;
     this.citizens.forEach((citizen, i) => {
       const road = [
@@ -157,10 +161,25 @@ export class KingdomMap {
     this.app.ticker.stop();
   }
 
-  /** Temporary, bounded effects; no changes to the battle or research simulation. */
-  public playAction(kind: 'raid' | 'science'): void {
+  private animateAction(): void {
+    const elapsed = (performance.now() - this.actionStart) / 1000;
+    for (const unit of this.actionTroops) {
+      const progress = Math.max(0, Math.min(1, (elapsed - unit.delay) / 1.35));
+      const eased = progress * progress * (3 - 2 * progress);
+      unit.sprite.position.set(
+        unit.from[0] + (unit.to[0] - unit.from[0]) * eased,
+        unit.from[1] + (unit.to[1] - unit.from[1]) * eased - Math.sin(progress * Math.PI) * 8
+      );
+      unit.sprite.alpha = progress <= 0 ? 0 : 1;
+    }
+    if (this.actionVisual) this.actionVisual.alpha = 0.78 + Math.sin(elapsed * 8) * 0.18;
+  }
+
+  /** A bounded visual reenactment of the resolved battle (never an extra battle roll). */
+  public playAction(kind: 'raid' | 'science', playerWon: boolean = false): void {
     if (!this.initialized || this.destroyed) return;
     this.actionVisual?.destroy({ children: true });
+    this.actionTroops = [];
     window.clearTimeout(this.actionTimer);
     const visual = new Container();
     const color = kind === 'raid' ? 0xe98159 : 0xe8d498;
@@ -169,13 +188,41 @@ export class KingdomMap {
     visual.addChild(new Graphics().circle(x, y, 63)
       .stroke({ color, width: 6, alpha: 0.8 })
       .circle(x, y, 29).fill({ color, alpha: 0.25 }));
+    if (kind === 'raid' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // Two tiny detachments follow opposing paths; their colors show who prevailed.
+      const formations = [
+        { color: 0xb6d6bb, from: [185, 395] as [number, number], to: [385, 265] as [number, number] },
+        { color: 0xe18a70, from: [680, 180] as [number, number], to: [405, 285] as [number, number] }
+      ];
+      formations.forEach((formation, side) => {
+        for (let index = 0; index < 7; index++) {
+          const fighter = new Container();
+          const tint = side === (playerWon ? 0 : 1) ? formation.color : 0x938f88;
+          fighter.addChild(new Graphics()
+            .circle(0, -6, 3).fill(0xd9c5a3)
+            .roundRect(-4, -2, 8, 9, 2).fill(tint)
+            .moveTo(5, -1).lineTo(9, -8).stroke({ color: 0xcdd2cd, width: 2 }));
+          visual.addChild(fighter);
+          this.actionTroops.push({
+            sprite: fighter,
+            from: [formation.from[0] + (index % 4) * 12, formation.from[1] + Math.floor(index / 4) * 13],
+            to: [formation.to[0] + (index % 4) * 10, formation.to[1] + Math.floor(index / 4) * 12],
+            delay: index * 0.09 + side * 0.15
+          });
+        }
+      });
+    }
     this.world.addChild(visual);
     this.actionVisual = visual;
+    this.actionStart = performance.now();
+    if (this.actionTroops.length && !document.hidden) this.app.ticker.start();
     this.fit();
     this.actionTimer = window.setTimeout(() => {
       if (this.destroyed) return;
       if (this.actionVisual === visual) this.actionVisual = undefined;
+      this.actionTroops = [];
       visual.destroy({ children: true });
+      if (!this.motionEnabled) this.app.ticker.stop();
       this.fit();
     }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 800 : 2600);
   }
@@ -185,7 +232,7 @@ export class KingdomMap {
     this.motionEnabled = enabled && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.animation.visible = this.motionEnabled;
     if (this.motionEnabled && !document.hidden) this.app.ticker.start();
-    else this.app.ticker.stop();
+    else if (!this.actionVisual) this.app.ticker.stop();
     if (this.initialized) this.fit();
   }
 
@@ -319,6 +366,7 @@ export class KingdomMap {
    */
   public dispose(): void {
     window.clearTimeout(this.actionTimer);
+    this.actionTroops = [];
     this.actionVisual = undefined;
     this.destroyed = true;
     this.observer?.disconnect();
