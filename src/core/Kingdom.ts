@@ -572,9 +572,14 @@ export class Kingdom {
    */
   public getMonthlyBalance(): MonthlyBalance {
     this.initializeRates();
+    // In the live campaign only processMonth() runs. Previously the seasonal
+    // production multipliers existed solely in the unused legacy yearly path;
+    // every month yielded the same harvest and timber. The visible forecast
+    // and the actual monthly accounting must use identical seasonal rates.
+    const seasonal = this.getSeasonalMultiplier();
     const production: ProductionRates = {
-      food: Math.floor(this.productionRates.food / 12),
-      wood: Math.floor(this.productionRates.wood / 12),
+      food: Math.floor(this.productionRates.food * seasonal.food / 12),
+      wood: Math.floor(this.productionRates.wood * seasonal.wood / 12),
       stone: Math.floor(this.productionRates.stone / 12),
       iron: Math.floor(this.productionRates.iron / 12),
       gold: Math.floor(this.productionRates.gold / 12)

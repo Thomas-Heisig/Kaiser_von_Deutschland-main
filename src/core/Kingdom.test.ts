@@ -15,6 +15,20 @@ describe('Kingdom campaign economy', (): void => {
     expect(forecast.taxes).toBeGreaterThan(0);
   });
 
+  it('applies seasonal harvest and timber to both monthly forecast and actual accounting', (): void => {
+    const kingdom=createKingdom();
+    kingdom.currentSeason='summer';
+    const summer=kingdom.getMonthlyBalance();
+    kingdom.currentSeason='winter';
+    const winter=kingdom.getMonthlyBalance();
+    expect(summer.production.food).toBeGreaterThan(winter.production.food);
+    expect(summer.production.wood).toBeGreaterThan(winter.production.wood);
+    const old={...kingdom.resources};
+    kingdom.processMonth();
+    for (const resource of ['gold','food','wood','stone','iron'] as const)
+      expect(kingdom.resources[resource]).toBe(Math.max(0,old[resource]+winter.net[resource]));
+  });
+
   it('does not charge iron or build anything when construction cannot be funded', (): void => {
     const kingdom = createKingdom();
     kingdom.resources.iron = 0;
