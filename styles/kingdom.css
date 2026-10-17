@@ -343,3 +343,5 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 .jukebox input[type=file] { max-width:210px; }
 .jukebox p { flex-basis:100%;font-size:.75rem;margin:0; }
 @media(max-width:400px){.jukebox{padding:8px}.jukebox select{min-width:0;width:100%;max-width:100%}.jukebox label{max-width:100%}}
+
+.jukebox-auto {display:flex;align-items:center;gap:7px;font-size:.8rem}.jukebox-auto input {min-height:18px;width:18px;accent-color:#dfc48b}.game-footer{font-variant-numeric:tabular-nums}
