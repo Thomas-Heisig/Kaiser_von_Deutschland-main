@@ -1961,12 +1961,23 @@ export class GameEngine {
    * @returns Candidate citizens not controlled by any player.
    */
   public getPlayableCharacters(limit: number = 12): Citizen[] {
-    const rank: Record<Citizen['socialClass'], number> = { royal: 3, noble: 2, middle: 1, peasant: 0 };
-    return this.citizenSystem.getAliveCitizens()
-      .filter((citizen: Citizen): boolean => !citizen.isPlayerCharacter)
-      .sort((a: Citizen, b: Citizen): number =>
-        rank[b.socialClass] - rank[a.socialClass] || b.reputation - a.reputation || a.age - b.age)
-      .slice(0, Math.max(0, limit));
+    const pool = this.citizenSystem.getAliveCitizens()
+      .filter((citizen: Citizen): boolean => !citizen.isPlayerCharacter);
+    const classes: Citizen['socialClass'][] = ['royal', 'noble', 'middle', 'peasant'];
+    const groups = classes.map(socialClass => pool
+      .filter(citizen => citizen.socialClass === socialClass)
+      .sort((a, b) => b.reputation - a.reputation || a.age - b.age));
+    const selected: Citizen[] = [];
+    // Cycle through social classes so ordinary citizens remain visible even
+    // when a save contains many more nobles than peasants.
+    while (selected.length < Math.max(0, limit) && groups.some(group => group.length > 0)) {
+      for (const group of groups) {
+        const candidate = group.shift();
+        if (candidate) selected.push(candidate);
+        if (selected.length >= limit) break;
+      }
+    }
+    return selected;
   }
 
   /**

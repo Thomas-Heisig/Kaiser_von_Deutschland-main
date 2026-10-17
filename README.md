@@ -1,3 +1,9 @@
+## Musik, Bedienung und Figuren (17.10.2026)
+
+Die Playlist bietet kompakte Auswahl für **Nach Epoche**, **Reihenfolge** und **Zufällig**. Die Wiederholung ist zwischen **Alle**, **Titel** und **Aus** wählbar. Bei aktiver Epochenmusik folgt die Originalaufnahme dem aktuellen Spieljahr; alternative Playlist-Modi spielen die Titel nacheinander oder zufällig. Die Einstellungen werden im Browser gespeichert. Die Covergalerie ist einklappbar.
+
+Spielbereiche in der Sidebar werden auf Desktop, Tablet und Handy als modale Dialoge angezeigt. Sie sind über Schließen, Escape oder Klick auf den verdunkelten Hintergrund schließbar; umfangreiche Inhalte scrollen **innerhalb** der Dialoge. Die Hauptansicht nutzt die verfügbare Bildschirmbreite und -höhe. Die spielbaren Figuren sind nicht auf Adelige beschränkt: Die Rollenliste enthält auch Bürgertum und Bauernstand, soweit solche lebenden Bürger vorhanden sind.
+
 ## Kompakte Bedienung, Epoche und automatische Zeit (17.10.2026)
 
 Die Hauptansicht erhält weniger Abstände, eine verkürzte Karte, engere Navigationszeilen und direkte Schaltflächen für Herrschaftsbereiche. Die aktuelle Epoche und das Spieljahr sind als klickbare Information rechts im Kopf angeordnet; ein Dialog erläutert den historischen Zeitraum.

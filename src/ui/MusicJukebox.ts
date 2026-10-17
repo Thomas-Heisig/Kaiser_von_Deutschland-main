@@ -67,6 +67,9 @@ export function musicMetadataFromFilename(filename: string): Pick<JukeboxTrack, 
   };
 }
 
+export type PlaylistMode = 'era' | 'sequential' | 'shuffle';
+export type RepeatMode = 'all' | 'one' | 'off';
+
 export class MusicJukebox {
   private audio: HTMLAudioElement | null = null;
   private objectUrl: string | null = null;
@@ -76,8 +79,33 @@ export class MusicJukebox {
   private tracks: JukeboxTrack[] = [...BUNDLED_TRACKS];
   private onChange: () => void = () => {};
   private autoplayBlocked = false;
+  private playlistMode: PlaylistMode = 'era';
+  private repeatMode: RepeatMode = 'all';
+  private currentYear = 1200;
+  private playbackSerial = 0;
 
   constructor(onChange?: () => void) { if (onChange) this.onChange = onChange; }
+  public getPlaylistMode(): PlaylistMode { return this.playlistMode; }
+  public getRepeatMode(): RepeatMode { return this.repeatMode; }
+  public setPlaylistMode(mode: PlaylistMode): void {
+    this.playlistMode = mode;
+    if (this.audio) this.audio.loop = this.repeatMode === 'one' || (this.repeatMode !== 'off' && mode === 'era');
+    localStorage.setItem('kaiser-playlist-mode', mode);
+    this.onChange();
+  }
+  public setRepeatMode(mode: RepeatMode): void {
+    this.repeatMode = mode;
+    localStorage.setItem('kaiser-repeat-mode', mode);
+    if (this.audio) this.audio.loop = mode === 'one' || (mode !== 'off' && this.playlistMode === 'era');
+    this.onChange();
+  }
+  public setCurrentYear(year: number): void { this.currentYear = year; }
+  public async syncYear(year: number): Promise<void> {
+    this.currentYear = year;
+    if (this.playlistMode !== 'era') return;
+    const match = this.getTrackForYear(year);
+    if (match && match.id !== this.currentId) await this.play(match.id);
+  }
   public getTracks(): JukeboxTrack[] { return this.tracks.map(track => ({ ...track })); }
   public getCurrentId(): string | null { return this.currentId; }
   public getTrackInfo(id: string) { return musicCatalog.tracks.find(track => track.id === id); }
@@ -91,6 +119,10 @@ export class MusicJukebox {
   public getTrackForYear(year: number): JukeboxTrack | null { return trackForYear(this.tracks, year); }
 
   public async initialize(): Promise<void> {
+    const savedMode = localStorage.getItem('kaiser-playlist-mode');
+    if (savedMode === 'era' || savedMode === 'shuffle' || savedMode === 'sequential') this.playlistMode = savedMode;
+    const savedRepeat = localStorage.getItem('kaiser-repeat-mode');
+    if (savedRepeat === 'one' || savedRepeat === 'all' || savedRepeat === 'off') this.repeatMode = savedRepeat;
     const list = (await STORAGE.getItem<JukeboxTrack[]>(KEY)) ?? [];
     const imported = Array.isArray(list) ? list.filter(track => track && track.source === 'import' &&
       typeof track.id === 'string' && typeof track.title === 'string')
@@ -148,6 +180,7 @@ export class MusicJukebox {
     const track = this.tracks.find(item => item.id === id);
     if (!track) throw new Error('Der Musiktitel ist nicht verfügbar.');
     this.stop();
+    const serial = ++this.playbackSerial;
     let source = track.url;
     if (track.source === 'import') {
       const blob = await STORAGE.getItem<Blob>('audio-' + id);
@@ -157,7 +190,8 @@ export class MusicJukebox {
     }
     if (!source) throw new Error('Audiodatei fehlt.');
     const audio = new Audio(source);
-    audio.loop = true;
+    audio.loop = this.repeatMode === 'one' || (this.repeatMode !== 'off' && this.playlistMode === 'era');
+    audio.addEventListener('ended', () => { if (this.playbackSerial === serial) void this.advancePlaylist(); });
     audio.preload = 'auto';
     audio.volume = this.volume;
     this.audio = audio;
@@ -173,6 +207,25 @@ export class MusicJukebox {
     }
   }
 
+  public async advancePlaylist(): Promise<void> {
+    if (this.playlistMode === 'era') {
+      if (this.repeatMode === 'off') { this.stop(); return; }
+      const track = this.getTrackForYear(this.currentYear);
+      if (track) await this.play(track.id);
+      return;
+    }
+    if (this.repeatMode === 'one' && this.currentId) { await this.play(this.currentId); return; }
+    const tracks = this.tracks;
+    const currentIndex = tracks.findIndex(t => t.id === this.currentId);
+    if (this.repeatMode === 'off' && currentIndex === tracks.length - 1) { this.stop(); return; }
+    let next = (currentIndex + 1) % tracks.length;
+    if (this.playlistMode === 'shuffle' && tracks.length > 1) {
+      next = Math.floor(Math.random() * (tracks.length - 1));
+      if (next >= currentIndex && currentIndex >= 0) next++;
+    }
+    if (tracks[next]) await this.play(tracks[next].id);
+  }
+
   public setVolume(value: number): void {
     if (!Number.isFinite(value)) return;
     this.volume = Math.max(0, Math.min(1, value));
@@ -180,6 +233,7 @@ export class MusicJukebox {
   }
 
   public stop(): void {
+    this.playbackSerial++;
     const old = this.audio;
     this.audio = null;
     this.currentId = null;
