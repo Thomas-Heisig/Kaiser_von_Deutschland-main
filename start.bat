@@ -29,7 +29,7 @@ echo Pruefe auf laufende Spiel-Prozesse ...
 set "PS_KILL_SCRIPT=%CD%\.kill_procs.ps1"
 > "%PS_KILL_SCRIPT%" (
 echo $port = %PORT%;
-echo $dir = "%~dp0".TrimEnd("\");
+echo $dir = "%~dp0".TrimEnd([char]92);
 echo $k = @();
 echo $procs = Get-Process -Name "node" -ErrorAction SilentlyContinue ^| Where-Object { try { $_.CommandLine -match [regex]::Escape($dir) } catch { $false } };
 echo if ^($procs^) { $procs ^| ForEach-Object { $k += $_.Id; Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue } };
