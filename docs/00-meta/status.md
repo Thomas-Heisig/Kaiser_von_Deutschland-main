@@ -15,5 +15,11 @@
 - Ältere Berichte dokumentieren teils **Klassen, Prototypen oder alte Einstiege**; daraus folgt keine Hauptspiel-Freigabe.
 - Paketmanifest-Version `2.5.1` beschreibt die Paketversion, nicht den vollständigen Fortschritt historischer Pläne oder eine neue produktive Veröffentlichung.
 
+## Inventarisierung alter Feature-Zusagen
+
+Die ursprüngliche README nennt unter anderem 15/35 Rollen, 23/68 Gebäude, 24 Technologien, 27/70 historische Ereignisse, sieben/zehn Religionen sowie zahlreiche spezialisierte Simulationssysteme. Diese Zahlen stammen aus unterschiedlichen historischen Entwicklungsständen und wurden **nicht als funktionsfähiger Umfang der aktuellen Spieloberfläche verifiziert**. Für jede Gruppe stehen jetzt konkrete Nachweis- und Integrationsaufgaben in [TODO](../../TODO.md) und [Roadmap](roadmap.md).
+
+Im neuesten `main` ist die gemeinsame Einstellungsoberfläche mit fünf Tabs bereits in CI und Browser-Smoke geprüft. Der HTTPS-Pages-Workflow scheiterte weiterhin an GitHub-Berechtigungen.
+
 ## Aktuelle Priorität
 [TODO](../../TODO.md) (P0 zuerst), [Roadmap](roadmap.md) und [Changelog](../../CHANGELOG.md). Vollständige historische Ideen: [README-Backlog](backlog-from-readme.md). Aktive Dokumente sind maßgeblich, Archivschnappschüsse bleiben lesbar.
