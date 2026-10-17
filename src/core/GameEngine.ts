@@ -633,9 +633,9 @@ export class GameEngine {
     this.processRivalDiplomacy(player);
 
     const technology = this.requireTechnologySystem(player.id);
-    technology.addResearchPoints(
-      player.kingdom.infrastructure.schools * 10 + player.kingdom.infrastructure.universities * 25
-    );
+    const baseResearch = player.kingdom.infrastructure.schools * 10 + player.kingdom.infrastructure.universities * 25;
+    const researchBonus = researchImpact(technology.getResearchedTechnologyIds()).researchPercent;
+    technology.addResearchPoints(Math.floor(baseResearch * (1 + researchBonus / 100)));
     const completedTechnology = technology.updateResearch(30);
     if (completedTechnology) {
       applyScienceDiscovery(player.kingdom, completedTechnology);
