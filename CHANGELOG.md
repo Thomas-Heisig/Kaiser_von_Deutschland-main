@@ -4,6 +4,7 @@
 ## [Unreleased] — Stand 17.10.2026
 
 ### Added
+- Begrenzte Reichschronik wird mit dem Spielstand gespeichert, beim Laden wiederhergestellt und über einen Save/Load-Test abgesichert.
 - Drei historisch begrenzte Bürgeraufträge aus dem ursprünglichen Ideenbestand: Seuchenhilfe, Bewässerung und Kulturförderung.
 - Browserbasierte Hauptoberfläche, mehrere Epochen, sechs Kampagnen und Hotseat (2–4) mit Forschungs-, Handels- und Ratsentscheidungen.
 - Vollständige Musikbibliothek mit 15 MP3-Titeln, Covergalerie und Download; fünf MP4-Filme mit Intro-/Outro-/Zwischenszene.
