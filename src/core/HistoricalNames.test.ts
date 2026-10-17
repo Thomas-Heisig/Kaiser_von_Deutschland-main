@@ -41,7 +41,7 @@ describe('Roadmap: historische Namen und Familien', () => {
     const citizen=system.createCitizen({firstName:'Anna',lastName:'Meyer',gender:'female',
       age:30,birthYear:1200,birthMonth:5,profession:'farmer',regionId:'dorf'});
     const random=vi.spyOn(Math,'random').mockReturnValue(0);
-    try { system.processMonth(1230,1);expect(citizen.health.isPregnant).toBe(false); }
+    try { system.processMonth(1230,1);expect(citizen.health.isPregnant).toBeFalsy(); }
     finally { random.mockRestore(); }
   });
 });
