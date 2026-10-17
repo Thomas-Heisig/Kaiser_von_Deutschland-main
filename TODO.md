@@ -1,10 +1,16 @@
-## 🎧 Musik-Jukebox (PR in Prüfung)
+## 🎧 Musik-Jukebox (PR #28 gemergt; Folgeverbesserung 17.10.2026)
+- [x] Sechs benannte Epochenaufnahmen (1200/1300/1400/1500/1600/1750) als optionaler Bibliothekskatalog und Import-Metadaten.
+- [x] Mehrfachimport der MP3-Dateien, sichtbare Version und wählbarer automatischer Titelwechsel bei Epochenfortschritt.
+- [ ] Originaldateien als echte Binärassets in `public/music/` übertragen, auf dem Zielserver bereitstellen und Hörtests mit echten MP3s durchführen.
+- [ ] Deployment/Release-Pipeline verbindlich an main anschließen und Live-Version im ausgelieferten HTML prüfen.
+
+## 🎧 Musik-Jukebox (PR #28 gemergt)
 - [x] Echte MP3-/OGG-/WAV-Dateien lokal importieren, auswählen, speichern und abspielen.
 - [x] Jukebox im Menü und Spiel, Lautstärke mit vorhandener Steuerung verbunden.
 - [ ] Hochgeladene MP3 zusätzlich als Git-Asset `public/music/krone-und-land.mp3` bereitstellen; Binärtransfer über die verfügbaren GitHub-Texttools nicht möglich.
 - [ ] Weitere Epochenstücke, Titelverwaltung und automatische Wechsel weiter ausbauen.
 
-## 🎼 Ein Reich, viele Zeiten – Musik (PR in Prüfung)
+## 🎼 Ein Reich, viele Zeiten – Musik (PR #27 gemergt)
 - [x] Eigenes Leitmotiv (76 BPM, Moll/Dur), 48-Takte-Menüfassung, 16-Takte-Spielszenen.
 - [x] Epochenfarben für Mittelalter/Hanse/Neuzeit/Industrie/Moderne/Zukunft und Spielsituationen Aufbau/Handel/Hof/Krise/Krieg.
 - [x] Nur nach Nutzerinteraktion aktiv, getrennte Musiklautstärke, Browsertab-Pause, Aufräumen von Synthesizerstimmen.
