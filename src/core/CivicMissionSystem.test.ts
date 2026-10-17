@@ -9,6 +9,11 @@ describe('Historische Bürgeraufträge',()=>{
   expect(s.options(1200).some(m=>m.id==='computer')).toBe(false);
   expect(s.options(2020).some(m=>m.id==='computer')).toBe(true);
   expect(s.options(2020).some(m=>m.id==='guild')).toBe(false);
+  expect(s.options(1200).some(m=>m.id==='plague_relief')).toBe(true);
+  expect(s.options(1945).some(m=>m.id==='plague_relief')).toBe(false);
+  expect(s.options(1200).some(m=>m.id==='irrigation')).toBe(true);
+  expect(s.options(1200).some(m=>m.id==='festival')).toBe(false);
+  expect(s.options(1500).some(m=>m.id==='festival')).toBe(true);
  });
  it('charges upfront, completes after elapsed months and persists progress',()=>{
   const s=new CivicMissionSystem();const k=new Kingdom({name:'Test',rulerName:'Greta',foundingYear:1200});
