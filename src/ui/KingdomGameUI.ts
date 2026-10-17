@@ -14,7 +14,7 @@ import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../
 import { GameAmbience, Soundscape } from './GameAmbience';
 import type { HistoryKind } from '../core/WorldHistoryCatalog';
 
-type View = 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'modernization' | 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -286,7 +286,7 @@ export class KingdomGameUI {
             <nav aria-label="Spielbereiche">
               ${([
                 ['overview', '◈', 'Reichsübersicht'], ['court', '♟', 'Hofverwaltung'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
-                ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['military', '⚑', 'Garnison'],
+                ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['modernization', '⚙', 'Modernisierung'], ['military', '⚑', 'Garnison'],
                 ['war', '⚔', 'Feldzüge'], ['intelligence', '◉', 'Geheimdienst'], ['world', '☼', 'Welt & Volk'], ['culture', '♫', 'Kultur & Feste'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
                 ['chronicle', '▤', 'Chronik'], ['history', '⌛', 'Weltgeschichte'], ['help', '?', 'Spielhilfe']
               ] as const).map(([key, symbol, name]) => `
@@ -456,6 +456,12 @@ export class KingdomGameUI {
         const message = detail.chapter + ' vollendet! +' + format(detail.reward) + ' Gold.';
         this.record(message);
         this.showGameAction(detail.final ? '♛ Kampagne abgeschlossen!' : '♜ Neues Kapitel!', message, 'science');
+        this.audio.playEffect('success');
+      }),
+      engine.on('modernizationCompleted', (detail: { playerId: string; message: string }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        this.record(detail.message);
+        this.showGameAction('⚙ Epochenwandel', detail.message, 'science');
         this.audio.playEffect('success');
       }),
       engine.on('exhibitionSponsored', (detail: { playerId: string; message: string }): void => {
@@ -757,6 +763,18 @@ export class KingdomGameUI {
               ? `<button class="primary" data-research="${escape(option.technology.id)}">Forschung beginnen</button>`
               : `<p class="muted">${option.blockers.map(escape).join(' · ')}</p>`}
           </article>`).join('')}</div>`;
+    } else if (this.view === 'modernization') {
+      const options = this.engine.getModernizationOptions(this.player.id);
+      panel.innerHTML = heading('EPOCHENWANDEL', 'Modernisierung des Reiches',
+        'Vom Dampfzeitalter bis zur Zukunft. Nur eigene Forschung, Ressourcen und Spieljahr entscheiden über die Umsetzung.') +
+        `<div class="build-grid">${options.map(({project,completed,canStart,blockers}) => `
+          <article class="build-card ${completed ? 'selected' : ''}"><h3>${escape(project.name)} · ${project.year}</h3>
+          <p>${escape(project.description)}</p><p>${escape(project.effect)}</p>
+          <p class="cost">${format(project.cost.gold)} Gold · ${format(project.cost.wood)} Holz ·
+          ${format(project.cost.stone)} Stein · ${format(project.cost.iron)} Eisen</p>
+          <button data-modernization="${escape(project.id)}" ${!canStart?'disabled':''}>
+          ${completed?'Bereits umgesetzt':'Modernisieren'}</button>
+          ${blockers.length ? `<p class="muted">${blockers.map(escape).join(' · ')}</p>` : ''}</article>`).join('')}</div>`;
     } else if (this.view === 'military') {
       panel.innerHTML = heading('SICHERHEIT & VERTEIDIGUNG', 'Die Garnison',
         'Rekruten kommen aus der bäuerlichen Bevölkerung. Mehr Truppen kosten Unterhalt und fehlen auf den Feldern.') + `
@@ -1043,6 +1061,12 @@ export class KingdomGameUI {
       button.addEventListener('click', () => void this.run(() => {
         this.notify(this.requireEngine().sendCampaignSpy(this.requirePlayer().id,
           button.dataset.spyAgent ?? '', button.dataset.spyTarget ?? ''));
+      }));
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-modernization]').forEach(button => {
+      button.addEventListener('click', () => void this.run(() => {
+        this.notify(this.requireEngine().launchModernization(this.requirePlayer().id,
+          button.dataset.modernization ?? ''));
       }));
     });
     panel.querySelectorAll<HTMLButtonElement>('[data-sponsor-exhibition]').forEach((button) => {

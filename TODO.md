@@ -1,4 +1,11 @@
-## 🎨 Kulturförderung aus historischer Weltgeschichte (PR in Prüfung)
+## ⚙️ Spielbare Modernisierung (PR in Prüfung)
+- [x] Sechs optional finanzierbare Modernisierungsprojekte von Dampf bis KI-Zukunft.
+- [x] Zeit-/Forschungs-/Materialgates, gebuchte Ressourcen und einmalige reale Kultur-/Stabilitäts-/Handelsboni.
+- [x] Eigener UI-Bereich und kompatible Save-/Load-Daten je Reich.
+- [ ] Echte Fabriken, Stromnetze, Bahnlinien, Gebäude-Upgrades, Karrierewechsel und moderne Kriegsführung in ein ganzheitliches Simulationsmodell integrieren.
+- [ ] Jahrhundert-Zeitsprünge und Kohorten mit reproduzierbarer Simulation und Performanceprofilen.
+
+## 🎨 Kulturförderung aus historischer Weltgeschichte (PR #24 gemergt)
 - [x] Vergangenheit liefert optionale Ausstellungen mit echtem Goldpreis und +2 kulturellem Einfluss.
 - [x] Historische Forschung wird dabei ausdrücklich nicht automatisch freigeschaltet.
 - [x] Einmalige Förderung je Reich, im Spielstand erhalten; Zukunftsszenarien ausgeschlossen.

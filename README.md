@@ -46,6 +46,22 @@ Das Gesamtprojekt bleibt in Entwicklung.
 Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
 Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## ⚙️ Modernisierung vom Dampfzeitalter zur Zukunft
+Im neuen Bereich **Modernisierung** stehen sechs konkrete und optionale
+Epochenprojekte zur Wahl: mechanisierte Manufakturen, Eisenbahnnetz,
+Elektrizitätsnetz, Rundfunkhäuser, digitale Verwaltung und vernetzte Städte.
+Die Umsetzung benötigt das jeweilige historische Mindestjahr, eine **tatsächlich
+im eigenen Reich abgeschlossene Technologie** sowie Gold, Holz, Stein und Eisen.
+Jede Errungenschaft wird einmalig pro Reich bezahlt, gibt einen gedeckelten,
+wirksamen Bonus auf Kultur, Stabilität oder Handelsmacht und wird gespeichert.
+Alte Spielstände bleiben kompatibel.
+
+Diese erste Modernisierungswelle ist **keine komplette Wirtschafts- und
+Berufssimulation des 19.–22. Jahrhunderts**. Die alten 16 Infrastrukturklassen,
+mittelalterliche Kriegsführung und Bürgerberufe werden dadurch noch nicht
+epochenabhängig ersetzt. Die bisherigen Systeme und Dokumentationsabschnitte
+bleiben ausdrücklich erhalten.
+
 ## 📚 Weltgeschichte: Erfindungen, Wissenschaft, Kunst und Kultur
 
 Im neuen Hauptspielbereich **Weltgeschichte** erscheinen historisch datierte Informationskarten

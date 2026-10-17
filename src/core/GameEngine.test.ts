@@ -50,6 +50,19 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('rejects premature modernization and preserves old-save-compatible progress', async (): Promise<void> => {
+    const engine = await campaign();
+    const player = engine.getPlayers()[0];
+    expect(engine.getModernizationOptions(player.id)).toHaveLength(6);
+    expect(engine.getModernizationOptions(player.id).every(x => !x.canStart)).toBe(true);
+    expect(() => engine.launchModernization(player.id,'manufacturing')).toThrow('Verfügbar ab');
+    await engine.saveGame('early-modernization');
+    const loaded = new GameEngine({enableWiki:false});
+    engines.push(loaded);
+    await loaded.loadGame('early-modernization');
+    expect(loaded.getModernizationOptions(player.id).every(x => !x.completed)).toBe(true);
+  });
+
   it('funds one historical exhibit per realm and preserves it in a save', async (): Promise<void> => {
     const engine = await campaign();
     const player = engine.getPlayers()[0];
