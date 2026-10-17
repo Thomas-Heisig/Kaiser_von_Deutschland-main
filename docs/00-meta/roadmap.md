@@ -34,6 +34,9 @@ Die [TODO](../../TODO.md) ist die *einzige operative Aufgabenliste*. Diese Roadm
 - Optional echte 3D-Schlachten, VR/AR, transhumanistische und futuristische Szenarien bis 2200, parallele Geschichtsverläufe.
 Die vollständig erhaltenen 2025/2026-Episoden **Sturm des Mittelalters, Funken der Renaissance, Donner der Revolution, Flammen der Weltkriege, Licht der Moderne, Schatten der Zukunft und Ewigkeit der Geschichte** stehen im [unveränderten Roadmap-Archiv](../outdated/roadmap-snapshot-2026-10-17.md).
 
+## Konkreter Integrationsschritt (17.10.2026)
+Drei neue Bürgeraufträge aus den historischen Ideenfeldern Krise, Klima und Kultur werden über die bereits aktive Bürgerauftragsnavigation angeboten. Eine echte Kopplung an Epidemie-, Dürre- und Kunstsystem ist noch offen.
+
 ## Themenpakete aus der ursprünglichen README – vollständige Wiedereingliederung
 
 Die alte README wurde auf konkrete, ehemals als „NEU“ deklarierte Bereiche geprüft. Der Status ist **Ideen-/Prototyp-Backlog**, bis eine aktive Hauptspiel-Integration nachgewiesen ist. Die [TODO](../../TODO.md) enthält die einzelnen überprüfbaren Aufgaben; vollständiger Wortlaut im [Original](../outdated/README-snapshot-2026-10-17.md).
