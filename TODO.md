@@ -42,6 +42,32 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Electron/Capacitor, Desktop-/Mobile-Distribution, optionale Cloud-Spielstände, lokalisierte Sprachversionen.
 - [ ] Perspektivisch 3D-Schlachtfeld, VR/AR, Raumfahrt, Zukunft, alternative Realitäten und prozedurale Narrative.
 
+## Abgleich mit den konkreten Funktionsversprechen der alten README (17.10.2026)
+
+Die historische README enthält detailliertere Funktionsumfänge als der bisherige Sammel-Backlog. **Quelle:** [vollständiges Original](docs/outdated/README-snapshot-2026-10-17.md) und [Ideenbestand](docs/00-meta/backlog-from-readme.md). In der Hauptkampagne sind viele alte Module zwar als Quellcode vorhanden, aber nicht bis zur Bedienoberfläche und zum Spielstand durchgängig verbunden. Deshalb bleiben sie bis zur tatsächlichen Integration offen.
+
+### P1 – Historische Rollen, gesellschaftliche Systeme und Ereignisse
+- [ ] **Rollen / Lebenssimulation:** Frühere 15, später 35 Rollen (Kaiser, König, Klerus, Adel, Beamte, Händler, Handwerker, Bauern, Gelehrte; Bankier, Architekt, Spion, Admiral, General, Journalist, Erfinder, Diplomat, Fabrikbesitzer, Philosoph) auf tatsächliche auswählbare Hauptspiel-Rollen abgleichen. Rollenwechsel, KI für nicht gespielte Charaktere, Rollenziele und rollenabhängige UI erst nach Integration als fertig melden.
+- [ ] **Lebensphasen:** Kindheit, Schulzeit, Erwachsenenleben, Lehre–Geselle–Meister, monatliches Tagesbudget, drei Zeitmodi (Tag/Monat/Jahr), Charaktererstellung und Persönlichkeit durchgehend im Hauptspiel testen.
+- [ ] **Geschichte und Krisen:** Die früher genannten 27 bzw. 70 historischen Ereignisse, zehn Persönlichkeiten, zehn Schlachten, acht Epidemien, acht Katastrophen und Ereignisketten anhand des tatsächlichen Katalogs inventarisieren und epochegerecht im Spiel verknüpfen.
+- [ ] **Politik und Diplomatie:** Früher angegebene 33/53 Maßnahmen, acht Politikbereiche, Umwelt-, Digital-, Wissenschafts- und Sicherheitspolitik, Bündnisse, Vasallen, Friedensverträge, Nichtangriffspakte und politische Folgeereignisse mit echter UI/Savegame-Wirkung prüfen.
+- [ ] **Bevölkerung und Religion:** Religionen (frühere Angaben sieben bzw. zehn), acht Kulturen, religiöse Bauten, Konversion, kulturelle Spannungen, soziale Netzwerke, Migration, Klassenwechsel und Revolutionen nachvollziehbar integrieren.
+
+### P2 – Originale Domänen und Detailmechanik
+- [ ] **Bauten / Forschung:** Historische Versprechen 23/68 Gebäudetypen, 24 Technologien, drei Weltwunder, Spezialbauten und Technologiebaum gegen verfügbare Bau- und Forschungsoptionen zählen und Lücken schließen.
+- [ ] **Handel / Verkehr / Wirtschaft:** Zehn Handelsrouten, 15 Transportarten, Bernsteinstraße/Hanse/EU-Binnenmarkt, Routenrisiko, aktive Routen, Einnahmen, Infrastrukturboni, Markt, regionale Produktionsketten, Inflation, Arbeitsplätze und Kohortenwirtschaft spielbar nachweisen.
+- [ ] **Umwelt:** Klima, Ressourcenregeneration, Landschaftsumbau, Bewässerung, Tierpopulationen, Artenschutz, historische Naturkatastrophen und Umweltpolitik zeitgebunden integrieren.
+- [ ] **Militär und Marine:** Fünfzehn Militäreinheiten, Geländeeffekte, Wetter, Formationen, Nachschub, Belagerungen, Befestigungen, Marine (acht Schiffstypen/zehn Technologien), Seeschlachten, Blockaden, Piraterie und friedliche Alternativen prüfen.
+- [ ] **Geheimdienst / Gefangene / Kriegsfinanzierung:** Agenten, Sabotage, Doppelagenten; Gefangenenlager, Austausch, Lösegeld, Fluchten; zwölf Finanzierungsformen, Kriegsanleihen, Kredite, Rückzahlung, Inflation und diplomatische Konsequenzen integrieren.
+- [ ] **Städte / Wissen / Kultur / Recht:** Stadtbezirke, Nachtzyklus, Künstler, elf Kunststile, zwölf Kulturereignisse, Medien/Gerüchte/Zensur, Gerichte, Bibliothek, Universitäten, 15 Entdeckungen, zehn Rechts- und zwölf Steuermodelle integrieren.
+- [ ] **Wissensquellen:** Historische Wikipedia-Anreicherung nur optional, mit Quellenhinweisen und Cache-/Offline-Verhalten.
+- [ ] **Sichtbarkeit und Umfang:** Alte reine Code-Module/Prototyp-Panels zuerst über verknüpfte UI, Engine, Migration und Tests integrieren; danach tatsächliche Zahlen und Verfügbarkeit dokumentieren. Die historische Behauptung über 80 Millionen Bürger ist **nicht** durch Performance-Tests der aktuellen Browser-App bestätigt.
+
+### P3 – Gemeinschaft und Zukunft
+- [ ] **Online-Multiplayer:** Sechs Spieler inklusive Bots, Echtzeit/Rundenmodus, öffentliche/private Chats, Lobby, Sitzungen und wiederverbundene Clients sind eigene neue Implementierungsvorhaben; nicht mit 2–4 lokalem Hotseat verwechseln.
+- [ ] **Zukunft/Episoden:** 2050/2080/2100/2200, KI-Revolution, Fusion, Raumfahrt, alternative Verläufe, originale Episoden und zukünftige Rollen/Technologien als gesonderte Szenarien mit Konsistenztests realisieren.
+- [ ] **Sammlungen/Medien:** Historische Personen und Schlachten, 15 wissenschaftliche Entdeckungen, Kunst, Musik, Videos, Ursprungs-/Lizenzangaben sowie optional vertonte Geschichtserzählung konsistent katalogisieren.
+
 ## Qualität und Dokumentation
 - [ ] Testabdeckung nachvollziehbar messen und für Kernsysteme schrittweise auf 70 % bringen; Ist-Wert bisher nicht bestätigt.
 - [~] Legacy-Architektur und veraltete Berichte systematisch von Live-Dokumentation getrennt; API-Referenz und Handbuch regelmäßig weiter aktualisieren.
