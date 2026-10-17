@@ -1,3 +1,10 @@
+## Status- und Dokumentationsgate
+
+- [ ] `npm run check`, `npx vitest run`, `npm run build`, Medienprüfung bestanden
+- [ ] README-Features gegen aktive UI geprüft und TODO/Roadmap/Status/Changelog aktualisiert
+- [ ] Keine unbestätigten Hosting- oder Endgerätetests als fertig bezeichnet
+- [ ] Alte Ideen/Behauptungen im Archiv erhalten; keine historischen Berichte überschrieben
+
 ## Summary
 
 - What does this PR change?
