@@ -31,10 +31,16 @@ jobs:
         run: npm run check
       - name: Unit tests
         run: npx vitest run
-      - name: Build under GitHub Pages base
+      - name: Build standalone offline ZIP for localhost
+        run: |
+          npm run build
+          cp dist/downloads/kaiser-von-deutschland-offline.zip /tmp/kaiser-offline-standalone.zip
+      - name: Build website under GitHub Pages base
         env:
           GITHUB_PAGES: 'true'
-        run: npm run build
+        run: |
+          npm run build
+          cp /tmp/kaiser-offline-standalone.zip dist/downloads/kaiser-von-deutschland-offline.zip
       - name: Validate PWA and HTTPS paths
         run: |
           test -s dist/index.html
