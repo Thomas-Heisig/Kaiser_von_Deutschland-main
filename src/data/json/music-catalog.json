@@ -4,7 +4,7 @@
   "openingTrackId": "zeit-vergeht",
   "assetBase": "public/music/",
   "downloadsAllowed": true,
-  "notes": "Titel und Zuordnung entsprechen den vom Spielautor übermittelten Aufnahmen. Weitere Beschreibungen können ergänzt werden. Die MP3-Dateien sind Binärassets und müssen zusätzlich unter public/music/ liegen.",
+  "notes": "15 Originalaufnahmen unter public/music, unverändert aus den hochgeladenen Git-Blobs übernommen. Die Titelcover sind gestaltete Platzhalter; Original-Cover und zusätzliche Urheberangaben können später hinterlegt werden.",
   "tracks": [
     {
       "number": 1,
@@ -15,7 +15,8 @@
       "filename": "kaiserliches-leitmotiv-1200.mp3",
       "durationSeconds": 161.9,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 1200."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1200.",
+      "cover": "/covers/leitmotiv-1200.svg"
     },
     {
       "number": 2,
@@ -26,7 +27,8 @@
       "filename": "stauferkrone-1300.mp3",
       "durationSeconds": 162.5,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 1300."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1300.",
+      "cover": "/covers/stauferkrone-1300.svg"
     },
     {
       "number": 3,
@@ -37,7 +39,8 @@
       "filename": "kaisers-leitmotiv-1400.mp3",
       "durationSeconds": 179.2,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 1400."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1400.",
+      "cover": "/covers/leitmotiv-1400.svg"
     },
     {
       "number": 4,
@@ -48,7 +51,8 @@
       "filename": "kaiserhof-pavane-1500.mp3",
       "durationSeconds": 166.5,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 1500."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1500.",
+      "cover": "/covers/pavane-1500.svg"
     },
     {
       "number": 5,
@@ -59,7 +63,8 @@
       "filename": "imperiale-fanfare-1600.mp3",
       "durationSeconds": 179.1,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 1600."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1600.",
+      "cover": "/covers/fanfare-1600.svg"
     },
     {
       "number": 6,
@@ -70,7 +75,8 @@
       "filename": "kaiserliche-ouvertuere-1750.mp3",
       "durationSeconds": 164.2,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 1750."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1750.",
+      "cover": "/covers/ouvertuere-1750.svg"
     },
     {
       "number": 7,
@@ -81,7 +87,8 @@
       "filename": "eiserne-krone-1820.mp3",
       "durationSeconds": 179.7,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 1820."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1820.",
+      "cover": "/covers/romantik-1820.svg"
     },
     {
       "number": 8,
@@ -92,7 +99,8 @@
       "filename": "eiserne-kronen-1890.mp3",
       "durationSeconds": 180,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 1890."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1890.",
+      "cover": "/covers/eiserne-kronen-1890.svg"
     },
     {
       "number": 9,
@@ -103,7 +111,8 @@
       "filename": "truemmerstaaten-1945.mp3",
       "durationSeconds": 177.4,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 1945."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1945.",
+      "cover": "/covers/truemmerstaaten-1945.svg"
     },
     {
       "number": 10,
@@ -114,7 +123,8 @@
       "filename": "kaisersynthesia-1970.mp3",
       "durationSeconds": 174.6,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 1970."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 1970.",
+      "cover": "/covers/kaisersynthesia-1970.svg"
     },
     {
       "number": 11,
@@ -125,7 +135,8 @@
       "filename": "kaiserreich-erwachen-2000.mp3",
       "durationSeconds": 176.3,
       "role": "era",
-      "description": "Soundtrack der Spielzeit ab dem Jahr 2000."
+      "description": "Soundtrack der Spielzeit ab dem Jahr 2000.",
+      "cover": "/covers/kaiserreich-erwachen-2000.svg"
     },
     {
       "number": 12,
@@ -136,7 +147,8 @@
       "filename": "kaiser-puls.mp3",
       "durationSeconds": 179,
       "role": "special",
-      "description": "Zusätzliches eigenständiges Musikstück ohne festes Startjahr."
+      "description": "Zusätzliches eigenständiges Musikstück ohne festes Startjahr.",
+      "cover": "/covers/kaiser-puls.svg"
     },
     {
       "number": 13,
@@ -147,7 +159,8 @@
       "filename": "zeit-vergeht.mp3",
       "durationSeconds": 171.2,
       "role": "main",
-      "description": "Offizielles Hauptthema des Spiels; beginnt nach Möglichkeit beim Programmstart."
+      "description": "Offizielles Hauptthema des Spiels; beginnt nach Möglichkeit beim Programmstart.",
+      "cover": "/covers/zeit-vergeht.svg"
     },
     {
       "number": 14,
@@ -158,7 +171,8 @@
       "filename": "ende-der-zeit.mp3",
       "durationSeconds": 172.7,
       "role": "ending",
-      "description": "Eigenständiger Soundtrack zum Ende der Zeit."
+      "description": "Eigenständiger Soundtrack zum Ende der Zeit.",
+      "cover": "/covers/ende-der-zeit.svg"
     },
     {
       "number": 15,
@@ -169,7 +183,10 @@
       "filename": "anbeginn-der-zeit.mp3",
       "durationSeconds": 178.6,
       "role": "special",
-      "description": "Zusätzliches eigenständiges Musikstück ohne festes Startjahr."
+      "description": "Zusätzliches eigenständiges Musikstück ohne festes Startjahr.",
+      "cover": "/covers/anbeginn-der-zeit.svg"
     }
-  ]
+  ],
+  "introVideo": "/video/intro.mp4",
+  "introVideoAlternative": "/video/intro-original.mp4"
 }
