@@ -26,3 +26,9 @@
 - Divergierte historische Featurebranches vor Löschung einzeln mit der tatsächlich auf `main` implementierten Funktion vergleichen; blindes Mergen vermeiden.
 
 Aktive Aufgaben: [TODO](../../TODO.md). Für Auslieferung: [Betriebshandbuch](../06-development/operations-guide.md).
+
+
+## Release-Gate 17.10.2026
+- CI und Chromium-Smoke für `main` erfolgreich; Browser-Smoke deckt Hanse-UI inkl. echter Routenaktivierung ab.
+- GitHub Pages **nicht aktiv**: Automatischer Enablement-Versuch endet mit GitHub-Permissionsfehler. HTTPS-Erreichbarkeit und installierte PWA sind unbestätigt.
+- Roadmap-Fortsetzung im Branch: Geburten, historische Namensgruppen und partnergebundene Familienentwicklung; Langzeitbalance noch offen.

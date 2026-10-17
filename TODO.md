@@ -1,15 +1,22 @@
+## Roadmap: Generationen und Lebensläufe (17.10.2026)
+- [x] Zeittypische Vornamen für geborene Bürger, verschiedene Namensgruppen vom Mittelalter bis Moderne (fiktionale Simulation).
+- [x] Einfache regelgebundene Schwangerschaftsentstehung für zusammenlebende erwachsene Ehepaare, Gesundheits- und Nahrungsschranken, Geburtenabstand.
+- [ ] Automatische Eheschließungen und Partnerfindung, regionale kulturelle Namensräume und Geburten-/Sterblichkeitsbalance in langen Spielserien.
+- [ ] Integrationstests mit festen Zufallsquellen und umfangreichen Generationssimulationen; echte Geräteabnahme.
+
 ## HTTPS/PWA Freischaltung und Fallback (17.10.2026)
 - [x] PWA-App-Icons als echte PNGs (192/512 px) automatisch beim Build generieren und im Manifest referenzieren.
 - [x] HTTPS-Workflow versucht GitHub Pages mit enablement=true zu aktivieren.
 - [x] Separates buildbares Website-Artefakt in GitHub Actions hinterlegen, falls GitHub Pages nicht für privates Repository verfügbar ist.
-- [ ] Prüfen, ob GitHub-Plan und Repository-Einstellungen die Pages-Aktivierung erlauben; bei 404/403 Pages manuell aktivieren oder externen HTTPS-Host konfigurieren.
+- [~] GitHub Pages scheitert nach enablement=true mit `Resource not accessible by integration` (17.10.2026, Workflow 39067803181). Pages muss vom Kontoinhaber in Settings aktiviert werden, alternativ privaten Cloudflare-Pages-Host verbinden.
 - [ ] Exakte HTTPS-Adresse mit echtem Gerät öffnen, Installation sowie Offline-Modus verifizieren.
 
 ## Browserinstallation – PWA-Bedienung (17.10.2026)
 - [x] Sichtbaren „Spiel installieren“-Button in der Spielleiste und den Einstellungen eingebaut.
 - [x] Browser-Installationsdialog bei entsprechender Browserfreigabe anbieten; iPad/Safari-Fallback mit „Zum Home-Bildschirm“ erläutern.
 - [ ] Nach GitHub-Pages-Freischaltung echte HTTPS-Installation auf iPad, Android und Windows kontrollieren.
-- [ ] PNG-App-Icons 192/512 px und vollständige Installability-Abnahme ergänzen.
+- [x] PNG-App-Icons 192/512 px beim Build erzeugen und in der PWA referenzieren.
+- [ ] Installability-Abnahme auf echtem HTTPS-Host und Mobilgeräten (Pages derzeit nicht freigeschaltet).
 
 ## HTTPS-Installation (17.10.2026)
 - [x] GitHub-Pages-Build für Projekt-Unterpfad, PWA/Service-Worker-Scope und Medienpfade vorbereitet.
@@ -342,8 +349,7 @@ Abgeschlossene Arbeiten stehen im [CHANGELOG](./CHANGELOG.md).
   - [x] Handelsrouten prüfen erforschte Technologien (neue Technologie „Hochseesegeln“)
   - [x] Forschungsansicht und Handelsrouten im Hauptspiel bedienbar gemacht
   - [x] Browserablauf für Hochseesegeln manuell geprüft (Forschung nach zwei Monaten abgeschlossen)
-  - [ ] Hanseroute im echten Browser aktivieren: Forschungscode vorhanden; Aktivierung benötigt zusätzlich
-        einen Hafen und 15.030 Gold, die im geprüften Spielstand fehlten
+  - [x] Hanseroute im echten Chromium-Browser über die UI aktiviert; Smoke-Test baut Hafen und Forschung auf, prüft Routenzustand.
   - [x] Unit- und Integrationstests für `PlayerTechnologySystem` und `GameEngine.startResearch()`
   - [x] [GAMEPLAY_TESTING_GUIDE.md](./GAMEPLAY_TESTING_GUIDE.md) und
         [API_REFERENCE.md](./docs/05-technical-architecture/API_REFERENCE.md) ergänzt

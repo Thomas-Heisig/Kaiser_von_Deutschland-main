@@ -8,6 +8,15 @@ Diese erweiterte Roadmap transformiert "Kaiser von Deutschland" von einem Spiel 
 
 ---
 
+## Technischer Umsetzungsstand (17. Oktober 2026)
+Die Prioritäten werden mit dem aktuellen [TODO](../../TODO.md) synchronisiert.
+Für die Lebenssimulation sind reale Geburten, beidseitige Eltern-Kind-Beziehungen,
+einfache familiengebundene Schwangerschaftsereignisse und epochennahe Vornamen
+implementiert. Die Partnersuche, regionale Namensvarianten und langfristige
+Balancierung bleiben **offen**. Der Code ist kein historisch-demografisches
+Referenzmodell. HTTPS-Hosting bleibt bis zu einem nachweislich erfolgreichen
+Deployment und Endgerättest offen; CI-Erfolg allein ist kein Hostingnachweis.
+
 ## Verbindliche Interpretation der Release-Pläne
 Die Kapitel I–VIII bilden den **Funktionskatalog**; die Episoden 1–7 die
 **Erzähl-/Content-Roadmap**, und die Blöcke „Kurzfristig–Langfristig“ sind

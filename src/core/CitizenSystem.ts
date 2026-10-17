@@ -1,3 +1,4 @@
+import { nameForBirth } from './HistoricalNames';
 // src/core/CitizenSystem.ts
 
 import { v4 as uuidv4 } from 'uuid';
@@ -528,6 +529,21 @@ export class CitizenSystem {
       // Glück basierend auf Bedürfnissen berechnen
       this.updateHappiness(citizen);
       
+      // Naturally occurring pregnancies only among adult partners living together.
+      // One attempt per year, bounded and gated by health and fertility.
+      if (currentMonth === 1 && citizen.gender === 'female' &&
+          citizen.age >= 18 && citizen.age <= 39 && !citizen.health.isPregnant &&
+          citizen.health.overall >= 45 && citizen.needs.food >= 35) {
+        const spouseId = citizen.familyRelations.find(r => r.relationType === 'spouse')?.citizenId;
+        const spouse = spouseId ? this.citizens.get(spouseId) : undefined;
+        const recentBirth = citizen.lifeEvents.some(e => e.type === 'child_born' &&
+          (currentYear * 12 + currentMonth) - (e.year * 12 + e.month) < 24);
+        if (spouse?.isAlive && spouse.age >= 18 && spouse.regionId === citizen.regionId &&
+            !recentBirth && Math.random() < 0.20 * Math.min(1, citizen.health.fertility / 100)) {
+          citizen.health.isPregnant = true;
+          citizen.health.pregnancyMonth = 1;
+        }
+      }
       // Schwangerschaft verarbeiten
       if (citizen.health.isPregnant && citizen.health.pregnancyMonth !== undefined) {
         citizen.health.pregnancyMonth++;
@@ -591,10 +607,11 @@ export class CitizenSystem {
     // The mother and child share a family; parent and child relationships are bidirectional.
     const parent = mother.familyRelations.find(relation => relation.relationType === 'spouse');
     const father = parent ? this.citizens.get(parent.citizenId) : undefined;
+    const gender = Math.random() < 0.5 ? 'female' : 'male';
     const child = this.createCitizen({
-      firstName: mother.gender === 'female' ? 'Kind' : 'Nachwuchs',
+      firstName: nameForBirth(year, gender),
       lastName: mother.lastName,
-      gender: Math.random() < 0.5 ? 'female' : 'male',
+      gender,
       age: 0,
       birthYear: year,
       birthMonth: month,
