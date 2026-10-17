@@ -1,3 +1,14 @@
+## Kompakter Hauptscreen und Ton-Autoplay (17.10.2026)
+- [x] Film versucht Wiedergabe mit Originalton; bei Browser-Autoplay-Sperre kann das Intro mit einem Klick freigegeben werden.
+- [x] „Zeit vergeht“ startet im Anschluss automatisch; kein separater Musikstartknopf. Browserautoplay kann dennoch eine Interaktion erfordern.
+- [x] Musik-/Klangregler und überzählige Audioknöpfe entfernt; Titelgalerie und Downloads bleiben.
+- [x] Kompaktere Desktop-Oberfläche mit verkleinerter Karte, reduzierten Abständen und direkten Herrschaftsaktionen.
+- [x] Spieljahr/Epocheninformationen per Klick im Header erreichbar.
+- [x] Automatische Zeit nach erledigter Ratsentscheidung und Speichern wieder aufnehmen, sofern vorher aktiv.
+- [x] Rechte/KI/Datenschutz-Informationen als Dialog ergänzt (Projektinhaber Thomas Heisig).
+- [ ] Vollständiges Impressum mit ladungsfähiger Kontaktanschrift und titelbezogenen Rechten/KI-Quellen ergänzen.
+- [ ] Abnahme auf Live-Browser: akustische Tonspur im Intro, lückenloser Übergang, Scrollfreiheit bei Desktop-Auflösung, Spielzeitlogik, Kontrast und Zugänglichkeit.
+
 ## Repository-Konsolidierung (17.10.2026)
 - [x] PR #32 nach grüner CI und Chromium-Smoke-Prüfung per Squash in `main` zusammengeführt.
 - [x] Legacy-Synthesizer-Musikengine und alte numerische Medienpfade aus der produktiven Struktur entfernt.

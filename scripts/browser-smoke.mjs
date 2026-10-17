@@ -28,10 +28,14 @@ try {
     await page.locator('.cover-card').first().waitFor();
     if (await page.locator('.cover-card').count() !== 15) failures.push('expected all 15 official album covers');
     await page.locator('[data-jukebox-download]').waitFor({state:'attached'});
-    await page.locator('[data-jukebox-import]').setInputFiles({
-      name: 'Kaiserliches leitmotiv 1200.mp3', mimeType:'audio/mpeg', buffer:Buffer.alloc(4096,0x41)
-    });
-    await page.locator('[data-jukebox-select] option').filter({hasText:'Kaiserliches Leitmotiv'}).first().waitFor({state:'attached'});
+    if (await page.locator('#opening-play, [data-music-volume], [data-audio-toggle]').count())
+      failures.push('redundant audio controls are still shown');
+    await page.locator('#epoch-info-toggle').click();
+    await page.locator('#epoch-description').getByText(/Industrialisierung/).waitFor();
+    await page.locator('[data-close-dialog="epoch-dialog"]').click();
+    await page.locator('#legal-open').click();
+    await page.locator('#legal-dialog').getByText(/Thomas Heisig/).first().waitFor();
+    await page.locator('[data-close-dialog="legal-dialog"]').click();
     await page.locator('#map-style').selectOption('isometric');
     if (await page.locator('#kingdom-map').getAttribute('data-projection') !== 'isometric') failures.push('map switch failed');
     if (await page.locator('#objectives .objective').count() !== 0) failures.push('sandbox should have zero mandatory goals');
