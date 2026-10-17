@@ -1,9 +1,11 @@
 # TODO — Kaiser von Deutschland
+
 **Verbindliche operative Aufgabenliste · Stand 17.10.2026 · Referenz main: 28e35c82**
 
 Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und den Meilensteinen der [Roadmap](docs/00-meta/roadmap.md). `[x]` bedeutet im Hauptspiel **implementiert und mindestens automatisiert geprüft**, `[~]` teilweise, `[ ]` offen. Ein in alten Unterlagen als „fertig“ bezeichnetes Modul ist ohne Benutzeroberfläche **nicht** abgeschlossen. Frühere Einträge gingen nicht verloren: [TODO-Archiv](docs/outdated/TODO-snapshot-2026-10-17.md), [README-Ideenbestand](docs/00-meta/backlog-from-readme.md), [historische Roadmap](docs/outdated/roadmap-snapshot-2026-10-17.md).
 
 ## P0 — Veröffentlichung und zuverlässiger Betrieb
+
 - [ ] **HTTPS live schalten:** Pages wurde selbst mit `enablement: true` nicht erstellt (`Resource not accessible by integration`); Eigentümer aktiviert Pages in Settings oder verbindet privaten Cloudflare-Pages-Host. **Nicht als deployed deklarieren.**
 - [ ] Anschließend echte URL mit HTTPS, HTTP 200/206 für MP3/MP4, korrektes Manifest, Scope und Service Worker messen.
 - [ ] PWA-Installation auf iPad/Safari, Android/Chrome und Windows/Edge sowie Offlinebetrieb mit Musik und Video im Flugmodus prüfen.
@@ -12,6 +14,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [x] CI Typecheck, Vitest, Build und Chromium-Smoke der aktuellen `main`-Version bestanden.
 
 ## P1 — Stabilität, Gameplay, Bürger und Generationen
+
 - [ ] Echte Partnervermittlung und Eheschließungen, regionale Namensräume sowie Geburten-/Sterblichkeitsbalance bei mehrjährigen Simulationen.
 - [ ] Ausbildung, Berufe, Arbeitsplätze, Karrierewechsel, Familienbesitz und generationsübergreifende Erbschaften kohärent verbinden.
 - [ ] Ratsdelegation: lebender früherer Delegierter / Zufall nach fünf Sekunden / manuelle Auswahl / Tod / Hotseat / Save-Load in vollständigen E2E-Tests abnehmen.
@@ -25,6 +28,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Einstellungen auf echtem iPad/Android mit Tastatur und Touch abnehmen.
 
 ## P2 — Spielerlebnis und Module
+
 - [ ] Historische Video-3/4/5-Inhalte nach tatsächlicher Sichtung epochengetreu benennen und verorten; Audio-/Video-Übergänge auf Geräten prüfen.
 - [ ] Hochauflösende Originalcover und vollständige Metadaten/Credits für 15 Musikstücke.
 - [ ] WebGPU-Gerätetest (Modell, Lizenz, Download, Speicher, Inferenz), optionale Ollama-/Mini-KI-Reaktionen; KI bleibt Opt-in.
@@ -35,6 +39,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Vollständige, reproduzierbare Tests für LAN-ZIP und Versionen am Heimnetzserver durchführen.
 
 ## P3 — Langfristige Vision / aus README und Roadmap übernommen
+
 - [ ] Online-Mehrspieler mit WebSocket, Reconnect, Lobby, Synchronisation, Schutz vor Betrug; kooperative Herrschaften.
 - [ ] Perspektivwechsel für jede Bevölkerungsschicht, Rollen-Mehrspieler, soziale Bewegungen, Bürgerämter und individuelle Politik.
 - [ ] Erweiterte historische Ereignisketten, Entdeckungsreisen, Finanzsysteme, Gerichte, Universitäten, Kunst, Medien, ökologische Wirkungen, Globalisierung.
@@ -50,6 +55,7 @@ Die historische README enthält detailliertere Funktionsumfänge als der bisheri
 - [ ] Auftragsergebnisse künftig mit tatsächlichen Epidemie-/Klima- und Kultureffekten statt nur Ressourcen- und Zufriedenheitswerten verbinden.
 
 ### P1 – Historische Rollen, gesellschaftliche Systeme und Ereignisse
+
 - [ ] **Rollen / Lebenssimulation:** Frühere 15, später 35 Rollen (Kaiser, König, Klerus, Adel, Beamte, Händler, Handwerker, Bauern, Gelehrte; Bankier, Architekt, Spion, Admiral, General, Journalist, Erfinder, Diplomat, Fabrikbesitzer, Philosoph) auf tatsächliche auswählbare Hauptspiel-Rollen abgleichen. Rollenwechsel, KI für nicht gespielte Charaktere, Rollenziele und rollenabhängige UI erst nach Integration als fertig melden.
 - [ ] **Lebensphasen:** Kindheit, Schulzeit, Erwachsenenleben, Lehre–Geselle–Meister, monatliches Tagesbudget, drei Zeitmodi (Tag/Monat/Jahr), Charaktererstellung und Persönlichkeit durchgehend im Hauptspiel testen.
 - [ ] **Geschichte und Krisen:** Die früher genannten 27 bzw. 70 historischen Ereignisse, zehn Persönlichkeiten, zehn Schlachten, acht Epidemien, acht Katastrophen und Ereignisketten anhand des tatsächlichen Katalogs inventarisieren und epochegerecht im Spiel verknüpfen.
@@ -57,6 +63,7 @@ Die historische README enthält detailliertere Funktionsumfänge als der bisheri
 - [ ] **Bevölkerung und Religion:** Religionen (frühere Angaben sieben bzw. zehn), acht Kulturen, religiöse Bauten, Konversion, kulturelle Spannungen, soziale Netzwerke, Migration, Klassenwechsel und Revolutionen nachvollziehbar integrieren.
 
 ### P2 – Originale Domänen und Detailmechanik
+
 - [ ] **Bauten / Forschung:** Historische Versprechen 23/68 Gebäudetypen, 24 Technologien, drei Weltwunder, Spezialbauten und Technologiebaum gegen verfügbare Bau- und Forschungsoptionen zählen und Lücken schließen.
 - [ ] **Handel / Verkehr / Wirtschaft:** Zehn Handelsrouten, 15 Transportarten, Bernsteinstraße/Hanse/EU-Binnenmarkt, Routenrisiko, aktive Routen, Einnahmen, Infrastrukturboni, Markt, regionale Produktionsketten, Inflation, Arbeitsplätze und Kohortenwirtschaft spielbar nachweisen.
 - [ ] **Umwelt:** Klima, Ressourcenregeneration, Landschaftsumbau, Bewässerung, Tierpopulationen, Artenschutz, historische Naturkatastrophen und Umweltpolitik zeitgebunden integrieren.
@@ -67,11 +74,13 @@ Die historische README enthält detailliertere Funktionsumfänge als der bisheri
 - [ ] **Sichtbarkeit und Umfang:** Alte reine Code-Module/Prototyp-Panels zuerst über verknüpfte UI, Engine, Migration und Tests integrieren; danach tatsächliche Zahlen und Verfügbarkeit dokumentieren. Die historische Behauptung über 80 Millionen Bürger ist **nicht** durch Performance-Tests der aktuellen Browser-App bestätigt.
 
 ### P3 – Gemeinschaft und Zukunft
+
 - [ ] **Online-Multiplayer:** Sechs Spieler inklusive Bots, Echtzeit/Rundenmodus, öffentliche/private Chats, Lobby, Sitzungen und wiederverbundene Clients sind eigene neue Implementierungsvorhaben; nicht mit 2–4 lokalem Hotseat verwechseln.
 - [ ] **Zukunft/Episoden:** 2050/2080/2100/2200, KI-Revolution, Fusion, Raumfahrt, alternative Verläufe, originale Episoden und zukünftige Rollen/Technologien als gesonderte Szenarien mit Konsistenztests realisieren.
 - [ ] **Sammlungen/Medien:** Historische Personen und Schlachten, 15 wissenschaftliche Entdeckungen, Kunst, Musik, Videos, Ursprungs-/Lizenzangaben sowie optional vertonte Geschichtserzählung konsistent katalogisieren.
 
 ## Qualität und Dokumentation
+
 - [ ] Testabdeckung nachvollziehbar messen und für Kernsysteme schrittweise auf 70 % bringen; Ist-Wert bisher nicht bestätigt.
 - [~] Legacy-Architektur und veraltete Berichte systematisch von Live-Dokumentation getrennt; API-Referenz und Handbuch regelmäßig weiter aktualisieren.
 - [x] Lokale Markdown-Links in README/TODO/Roadmap/Changelog/Status/Index/Ideenbestand automatisch in CI prüfen.
