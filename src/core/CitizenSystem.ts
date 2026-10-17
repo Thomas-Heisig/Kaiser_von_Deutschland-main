@@ -511,7 +511,7 @@ export class CitizenSystem {
    * Verarbeitet monatliche Updates für alle Bürger
    */
   public processMonth(currentYear: number, currentMonth: number): void {
-    for (const citizen of this.citizens.values()) {
+    for (const citizen of [...this.citizens.values()]) {
       if (!citizen.isAlive) continue;
       
       // Altern (einmal pro Jahr)
@@ -587,14 +587,37 @@ export class CitizenSystem {
     mother.health.isPregnant = false;
     mother.health.pregnancyMonth = undefined;
     
-    // Kind wird noch implementiert (benötigt Partner-Logik)
-    const event: LifeEvent = {
-      year,
-      month,
-      type: 'child_born',
-      description: 'Kind geboren'
-    };
-    mother.lifeEvents.push(event);
+    // A pregnancy now results in an actual citizen, not just a history entry.
+    // The mother and child share a family; parent and child relationships are bidirectional.
+    const parent = mother.familyRelations.find(relation => relation.relationType === 'spouse');
+    const father = parent ? this.citizens.get(parent.citizenId) : undefined;
+    const child = this.createCitizen({
+      firstName: mother.gender === 'female' ? 'Kind' : 'Nachwuchs',
+      lastName: mother.lastName,
+      gender: Math.random() < 0.5 ? 'female' : 'male',
+      age: 0,
+      birthYear: year,
+      birthMonth: month,
+      profession: 'unemployed',
+      regionId: mother.regionId,
+      socialClass: mother.socialClass,
+      familyId: mother.familyId
+    });
+    child.wealth = 0;
+    child.professionLevel = 0;
+    child.familyRelations.push({ citizenId: mother.id, relationType: 'parent' });
+    mother.familyRelations.push({ citizenId: child.id, relationType: 'child' });
+    if (father?.isAlive && father.id !== mother.id) {
+      child.familyRelations.push({ citizenId: father.id, relationType: 'parent' });
+      father.familyRelations.push({ citizenId: child.id, relationType: 'child' });
+    }
+    mother.lifeEvents.push({
+      year, month, type: 'child_born',
+      description: 'Geburt von ' + child.firstName + ' ' + child.lastName,
+      relatedCitizenIds: [child.id]
+    });
+    child.lifeEvents[0].description = 'Geboren als Kind von ' + mother.firstName + ' ' + mother.lastName;
+    // Existing older saves remain compatible; the new relation records use existing fields.
   }
   
   /**
