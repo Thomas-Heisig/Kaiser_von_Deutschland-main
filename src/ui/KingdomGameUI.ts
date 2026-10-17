@@ -866,7 +866,17 @@ export class KingdomGameUI {
             ${balance.net.food >= 0 ? '+' : ''}${format(balance.net.food)}</strong><small>Nahrung pro Monat</small></article>
           <article><span>Verwaltung</span><strong>${format(kingdom.taxRate * 100)} %</strong><small>Steuersatz</small></article>
           <article><span>Entwicklung</span><strong>${format(kingdom.stats.literacyRate)} %</strong><small>Alphabetisierung</small></article>
-        </div><div class="quick-actions"><button data-open="build" class="primary">Bauvorhaben planen →</button>
+        </div>
+        <section class="dashboard-shortcuts" aria-label="Deine Herrschaft direkt öffnen">
+          <button data-open="court">♟ Hofverwaltung</button>
+          <button data-open="council">♛ Reichsrat</button>
+          <button data-open="economy">⚖ Wirtschaft</button>
+          <button data-open="build">♜ Bauen</button>
+          <button data-open="research">✧ Forschung</button>
+          <button data-open="military">⚑ Garnison</button>
+          <button data-open="world">☼ Welt & Volk</button>
+          <button data-open="history">⌛ Geschichte</button>
+        </section><div class="quick-actions"><button data-open="build" class="primary">Bauvorhaben planen →</button>
           <button data-open="economy" class="secondary">Wirtschaft verwalten</button></div>
         <p class="muted tip">Du beginnst pausiert. Mit „Monat →“ kannst du die Simulation schrittweise erkunden.
           „Fortsetzen“ verarbeitet bei 1× alle vier Sekunden einen Monat.</p>`;
