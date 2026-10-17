@@ -95,6 +95,8 @@ export class KingdomGameUI {
   private subscriptions: Array<() => void> = [];
   private readonly audio: GameAudio;
   private readonly jukebox = new MusicJukebox(() => this.updateJukeboxStatus());
+  private automaticEraMusic = false;
+  private eraMusicSwitching = false;
   private readonly ambience = new GameAmbience();
   private motionEnabled = false;
   private actionBannerTimer?: number;
@@ -149,7 +151,8 @@ export class KingdomGameUI {
             <select data-jukebox-select aria-label="Musiktitel wählen"></select>
             <button type="button" data-jukebox-play>▶ Titel abspielen</button>
             <button type="button" data-jukebox-stop>■ Stop</button>
-            <label>Musikdatei hinzufügen <input type="file" data-jukebox-import accept=".mp3,.ogg,.wav,audio/*"></label>
+            <label class="jukebox-auto"><input type="checkbox" data-jukebox-auto> Musik folgt Epoche</label>
+            <label>Musikdatei hinzufügen <input type="file" data-jukebox-import multiple accept=".mp3,.ogg,.wav,audio/*"></label>
             <p data-jukebox-status role="status">Musikbibliothek bereit.</p>
           </div>
           <div class="audio-controls" aria-label="Audioeinstellungen">
@@ -189,6 +192,7 @@ export class KingdomGameUI {
           </form>
           <div class="continue-row"><button id="continue" class="secondary">Spielstand fortsetzen</button>
             <span>Lokaler Spielstand im Browser</span></div>
+          <p class="menu-note">Version: 2026-10-17 · 6 Epochenstücke · Jukebox und Kampagnen</p>
           <p class="menu-note">Startet pausiert · Ohne Anmeldung · Hotseat: alle Spieler an einem Gerät, Zug um Zug</p>
           <p id="notice" role="status" aria-live="polite"></p>
         </section>
@@ -295,7 +299,8 @@ export class KingdomGameUI {
           <strong>🎼 Jukebox</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
           <button type="button" data-jukebox-play>▶ Titel abspielen</button>
           <button type="button" data-jukebox-stop>■ Stop</button>
-          <label>Import MP3 <input data-jukebox-import type="file" accept=".mp3,.ogg,.wav,audio/*"></label>
+          <label class="jukebox-auto"><input type="checkbox" data-jukebox-auto> Musik folgt Epoche</label>
+          <label>Import MP3 <input data-jukebox-import type="file" multiple accept=".mp3,.ogg,.wav,audio/*"></label>
           <p data-jukebox-status role="status"></p>
         </section>
         <section class="resource-bar" aria-label="Ressourcen und monatliche Änderung">
@@ -376,7 +381,7 @@ export class KingdomGameUI {
               <div id="latest"></div><button data-view="chronicle" class="text-button">Chronik öffnen →</button></section>
           </aside>
         </div>
-        <footer class="game-footer">Jede Entscheidung zählt.<span id="footer-keys"></span></footer>
+        <footer class="game-footer">Version 2026-10-17 · Kaiser von Deutschland · Jede Entscheidung zählt.<span id="footer-keys"></span></footer>
       </div>`;
     this.bindAudioControls();
     this.bindJukeboxControls();
@@ -690,6 +695,15 @@ export class KingdomGameUI {
     const musicContext = {year:this.engine.getCurrentYear(),
       campaignId:this.engine.getCampaignDefinition().id,scene:musicScene};
     this.audio.setMusicContext(musicContext);
+    if (this.automaticEraMusic && !this.eraMusicSwitching) {
+      const matching = this.jukebox.getTrackForYear(musicContext.year);
+      if (matching && matching.id !== this.jukebox.getCurrentId()) {
+        this.eraMusicSwitching = true;
+        void this.jukebox.play(matching.id)
+          .catch(error => { this.automaticEraMusic = false; this.notify(error instanceof Error ? error.message : 'Epoche-Musik nicht verfügbar.', true); })
+          .finally(() => { this.eraMusicSwitching = false; this.updateJukeboxStatus(); });
+      }
+    }
     const theme = musicArrangement(musicContext);
     setText('music-era-label', MUSIC_EPOCH_NAMES[theme.epoch] + ' · ' + MUSIC_SCENE_NAMES[musicScene]);
     const panel = this.root.querySelector('#panel');
@@ -1572,19 +1586,36 @@ export class KingdomGameUI {
         const option=document.createElement('option');option.value=t.id;
         option.textContent=t.title+' · '+t.era;return option;
       }));
-      select.value=items.some(t=>t.id===chosen)?chosen:items[0]?.id??'';
+      select.value=items.some(t=>t.id===chosen)?chosen:(this.jukebox.getCurrentId() ?? items[0]?.id ?? '');
+      select.disabled = !items.length;
     });
     this.root.querySelectorAll<HTMLElement>('[data-jukebox-status]').forEach(el=>{
-      el.textContent=this.jukebox.isPlaying() ? '▶ Eigener Musiktitel läuft' :
-        'Wähle einen Titel und starte ihn. Importierte Dateien bleiben lokal im Browser.';
+      const current = this.jukebox.getTracks().find(track => track.id === this.jukebox.getCurrentId());
+      el.textContent = this.jukebox.isPlaying() ? '▶ ' + (current?.title ?? 'Aufnahme') + ' läuft' :
+        this.jukebox.getTracks().length ? 'Musik wählen oder bis zu sechs MP3-Dateien gleichzeitig importieren.' :
+          'Noch keine Musik vorhanden: Wähle deine sechs MP3-Dateien zum Import aus.';
     });
   }
 
   private bindJukeboxControls(): void {
     this.updateJukeboxStatus();
+    this.root.querySelectorAll<HTMLInputElement>('[data-jukebox-auto]').forEach(input => {
+      input.checked = this.automaticEraMusic;
+      input.addEventListener('change', () => {
+        this.automaticEraMusic = input.checked;
+        this.root.querySelectorAll<HTMLInputElement>('[data-jukebox-auto]').forEach(other => other.checked = this.automaticEraMusic);
+        if (this.automaticEraMusic) {
+          const match = this.jukebox.getTrackForYear(this.engine?.getCurrentYear() ?? 1200);
+          if (match) void this.run(async () => { if (this.audio.musicEnabled) await this.audio.toggleMusic(); await this.jukebox.play(match.id); });
+          else this.notify('Erst Musikstücke importieren, dann die Epochenmusik einschalten.', true);
+        }
+      });
+    });
     this.root.querySelectorAll<HTMLButtonElement>('[data-jukebox-play]').forEach(button=>
       button.addEventListener('click',()=>void this.run(async()=>{
         const id=this.root.querySelector<HTMLSelectElement>('[data-jukebox-select]')?.value??'';
+        this.automaticEraMusic = false;
+        this.root.querySelectorAll<HTMLInputElement>('[data-jukebox-auto]').forEach(input => input.checked = false);
         if(this.audio.musicEnabled) await this.audio.toggleMusic();
         await this.jukebox.play(id);
         this.updateAudioControls();
@@ -1593,11 +1624,11 @@ export class KingdomGameUI {
       button.addEventListener('click',()=>this.jukebox.stop()));
     this.root.querySelectorAll<HTMLInputElement>('[data-jukebox-import]').forEach(input=>
       input.addEventListener('change',()=>void this.run(async()=>{
-        const file=input.files?.[0];if(!file)return;
-        const track=await this.jukebox.importFile(file);
+        const files = Array.from(input.files ?? []); if (!files.length) return;
+        let lastTitle = '';
+        for (const file of files) { const track = await this.jukebox.importFile(file); lastTitle = track.title; }
         this.updateJukeboxStatus();
-        this.root.querySelectorAll<HTMLSelectElement>('[data-jukebox-select]').forEach(select=>select.value=track.id);
-        this.notify('Musiktitel importiert: '+track.title);
+        this.notify(files.length + ' Musikstück(e) importiert. Zuletzt: ' + lastTitle);
         input.value='';
       })));
   }
