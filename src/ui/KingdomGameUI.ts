@@ -775,6 +775,9 @@ export class KingdomGameUI {
       engine.on('historyMilestone', (detail: { milestone: { year: number; title: string; description: string; speculative?: boolean } }): void => {
         const item = detail.milestone;
         this.record('Weltgeschichte ' + item.year + ': ' + item.title);
+        const prefs=filmPreferences();
+        const clip=prefs.interludesEnabled?filmForRole(this.cinematicClips,'interlude',prefs):null;
+        if(clip)this.showInterlude(clip,item.year+' · '+item.title);
         this.showGameAction(item.speculative ? '✧ Zukunftsszenario' : '📜 Historischer Meilenstein',
           item.year + ': ' + item.title + ' – ' + item.description, 'science');
       }),
