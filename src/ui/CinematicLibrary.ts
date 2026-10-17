@@ -43,9 +43,7 @@ export async function loadCinematicLibrary(): Promise<CinematicClip[]> {
     if (!v || typeof v !== 'object') return false;
     const clip = v as Partial<CinematicClip>;
     return typeof clip.id === 'string' && typeof clip.title === 'string' &&
-      typeof clip.url === 'string' && new RegExp('^' + import.meta.env.BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\/^\/video\/[a-zA-Z0-9_.%+-]+$/.test(clip.url)') + 'video/[a-zA-Z0-9_.%+-]+;
-  });
-}
-).test(clip.url);
+      typeof clip.url === 'string' && clip.url.startsWith(import.meta.env.BASE_URL + 'video/') &&
+      /^[a-zA-Z0-9_.%+-]+$/.test(clip.url.slice((import.meta.env.BASE_URL + 'video/').length));
   });
 }
