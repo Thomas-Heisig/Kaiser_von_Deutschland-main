@@ -11,7 +11,7 @@ import type { KingdomMap } from './KingdomMap';
 import { SETTLEMENT_DISTRICTS, DistrictFilter, SEASON_LABELS } from './SettlementSceneModel';
 import { GameAudio } from './GameAudio';
 import { MusicJukebox } from './MusicJukebox';
-import { CAMPAIGNS, CampaignId } from '../core/CampaignCatalog';
+import { campaignsForYear, CAMPAIGNS, CampaignId } from '../core/CampaignCatalog';
 import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../core/CourtAssistantRegistry';
 import { GameAmbience, Soundscape } from './GameAmbience';
 import type { HistoryKind } from '../core/WorldHistoryCatalog';
@@ -95,6 +95,8 @@ export class KingdomGameUI {
   private readonly jukebox = new MusicJukebox(() => this.updateJukeboxStatus());
   private eraMusicSwitching = false;
   private introDismissed = false;
+  private cinematicTimeout?: number;
+  private introSource: 'opening' | 'outro' = 'opening';
   private openingAttempt = false;
   private resumeAfterCouncil = false;
   private readonly retryOpening = (): void => { void this.tryOpeningTheme(); };
@@ -138,7 +140,7 @@ export class KingdomGameUI {
     this.root.innerHTML = `
       <main class="welcome">
         <div class="intro-overlay" id="intro-overlay" aria-label="Filmischer Spieleinstieg">
-          <video id="intro-video" autoplay playsinline preload="auto" poster="/covers/zeit-vergeht.svg"><source src="/video/intro.mp4" type="video/mp4"></video>
+          <div class="production-card" id="production-card"><span class="production-sigil">♜</span><strong>Eine Thomas Heisig Produktion</strong><small>KAISER VON DEUTSCHLAND</small></div><video id="intro-video" playsinline preload="auto" poster="/covers/zeit-vergeht.svg"><source src="/video/intro-original.mp4" type="video/mp4"></video>
           <button type="button" id="intro-activation" class="intro-activation" hidden>▶ Intro mit Ton starten</button>
           <div class="intro-caption"><span>KAISER VON DEUTSCHLAND</span><p>Die Geschichte beginnt</p></div>
           <button type="button" id="intro-skip" class="intro-skip">Intro überspringen →</button>
@@ -156,7 +158,7 @@ export class KingdomGameUI {
             <strong id="start-era-summary">Mittelalter · 1200</strong>
             <p id="start-campaign-summary">Wähle Kampagne und Startzeit. Die Welt wächst mit deinem Reich.</p>
           </div></div>
-          <div class="opening-music" id="opening-music" aria-live="polite"><img src="/covers/zeit-vergeht.svg" alt="Cover Zeit vergeht"><span id="opening-music-label">♫ Zeit vergeht · Hauptthema nach dem Intro</span></div>
+          <div class="opening-music" id="opening-music" aria-live="polite"><img src="/covers/zeit-vergeht.svg" alt="Cover Zeit vergeht"><span id="opening-music-label">♫ Zeit vergeht · Hauptthema nach dem Intro</span><button type="button" id="opening-toggle" class="opening-toggle" aria-label="Musik pausieren">Ⅱ Pause</button></div>
           <form id="new-game">
             <label>Startepoche<select name="startYear" id="start-year">
               <option value="1200">1200 · Hochmittelalter</option>
@@ -206,9 +208,22 @@ export class KingdomGameUI {
         </section>
       </main>`;
     this.bindIntro();
+    this.root.querySelector('#opening-toggle')?.addEventListener('click', () => void this.toggleOpeningMusic());
     const campaignSelect = this.root.querySelector<HTMLSelectElement>('#campaign-select');
     const startYearSelect = this.root.querySelector<HTMLSelectElement>('#start-year');
     const updateStartSummary = (): void => {
+      const year = Number(startYearSelect?.value ?? 1200);
+      const available = campaignsForYear(year);
+      if (campaignSelect) {
+        const current = campaignSelect.value;
+        campaignSelect.replaceChildren(...available.map(campaign => {
+          const option = document.createElement('option');
+          option.value = campaign.id;
+          option.textContent = campaign.name + ' – ' + campaign.description;
+          return option;
+        }));
+        campaignSelect.value = available.some(campaign => campaign.id === current) ? current : (available.find(campaign => campaign.id !== 'frei')?.id ?? 'frei');
+      }
       const campaign = CAMPAIGNS.find(c => c.id === campaignSelect?.value) ?? CAMPAIGNS[0];
       const yearText = startYearSelect?.selectedOptions[0]?.textContent ?? '1200 · Mittelalter';
       const header = this.root.querySelector('#start-era-summary');
@@ -313,7 +328,7 @@ export class KingdomGameUI {
             <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog" aria-label="Informationen zur Epoche"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
             <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
             <button data-action="save" class="secondary">Speichern</button>
-            <button data-action="load" class="secondary">Laden</button></div>
+            <button data-action="load" class="secondary">Laden</button><button data-action="exit" class="secondary" title="Zum Hauptmenü zurück">Beenden</button></div>
         </header>
         <details class="game-music-settings" id="game-music-settings"><summary>🎼 Original-Soundtrack & Titelcover</summary>
         <section class="jukebox jukebox-ingame" aria-label="Musik-Jukebox">
@@ -1518,6 +1533,7 @@ export class KingdomGameUI {
       this.navigate('council');
       throw new Error('Der Reichsrat wartet auf deine Entscheidung.');
     }
+    if (action === 'exit') { await this.exitToMenu(); return; }
     if (action === 'pause') this.togglePause();
     if (action === 'month') {
       const wasRunning = engine.getGameState() === GameState.RUNNING;
@@ -1743,32 +1759,72 @@ export class KingdomGameUI {
   }
 
 
-  /** Play the intro with its own sound; prompt only when audible autoplay is blocked. */
+
+  /** Film presentation, with an audible soft whoosh following a short studio card. */
+  private playWhoosh(): void {
+    try {
+      const AudioCtx = window.AudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const duration = 0.85;
+      const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * duration), ctx.sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let i = 0; i < samples.length; i++) {
+        const t = i / samples.length;
+        const envelope = Math.sin(Math.PI * t) ** 1.8;
+        samples[i] = (Math.random() * 2 - 1) * envelope * 0.17;
+      }
+      const source = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      source.buffer = buffer;
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(360, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(2400, ctx.currentTime + 0.38);
+      filter.frequency.exponentialRampToValueAtTime(420, ctx.currentTime + duration);
+      gain.gain.value = 0.22;
+      source.connect(filter).connect(gain).connect(ctx.destination);
+      source.start();
+      source.onended = (): void => { void ctx.close(); };
+    } catch { /* Browsers may block Web Audio before interaction. */ }
+  }
+
   private bindIntro(): void {
     const overlay = this.root.querySelector<HTMLElement>('#intro-overlay');
     const video = this.root.querySelector<HTMLVideoElement>('#intro-video');
     const activate = this.root.querySelector<HTMLButtonElement>('#intro-activation');
     if (!overlay || !video || !activate) return;
-    video.muted = false; video.volume = 1;
+    this.introSource = 'opening';
+    video.muted = false;
+    video.volume = 1;
     const finish = (): void => {
       if (this.introDismissed) return;
       this.introDismissed = true;
+      window.clearTimeout(this.cinematicTimeout);
+      overlay.classList.add('cinematic-exit');
       video.pause();
-      overlay.remove();
-      void this.tryOpeningTheme();
+      this.cinematicTimeout = window.setTimeout(() => {
+        overlay.remove();
+        void this.tryOpeningTheme();
+      }, 550);
     };
     const playFilm = (): void => {
       video.muted = false;
-      void video.play().then(() => { activate.hidden = true; }).catch(() => { activate.hidden = false; });
+      void video.play().then(() => {
+        activate.hidden = true;
+        overlay.classList.add('film-playing');
+      }).catch(() => { activate.hidden = false; });
     };
     this.root.querySelector('#intro-skip')?.addEventListener('click', finish);
     video.addEventListener('ended', finish, { once: true });
     video.addEventListener('error', finish, { once: true });
-    activate.addEventListener('click', playFilm);
-    playFilm();
+    activate.addEventListener('click', () => { this.playWhoosh(); playFilm(); });
+    this.cinematicTimeout = window.setTimeout(() => {
+      this.playWhoosh();
+      playFilm();
+    }, 1600);
   }
 
-  /** Start the main theme automatically after the film, without a music button. */
   private async tryOpeningTheme(): Promise<void> {
     if (!this.introDismissed || this.jukebox.isPlaying() || this.openingAttempt) return;
     this.openingAttempt = true;
@@ -1777,6 +1833,7 @@ export class KingdomGameUI {
       const label = this.root.querySelector<HTMLElement>('#opening-music-label');
       if (label) label.textContent = played ? '♫ Zeit vergeht · Hauptthema läuft'
         : '♫ Zeit vergeht · Wiedergabe beim nächsten Klick';
+      this.updateOpeningMusicButton();
       if (played) {
         document.removeEventListener('pointerdown', this.retryOpening);
         document.removeEventListener('keydown', this.retryOpening);
@@ -1785,6 +1842,56 @@ export class KingdomGameUI {
         document.addEventListener('keydown', this.retryOpening, { once: true });
       }
     } finally { this.openingAttempt = false; }
+  }
+
+  private updateOpeningMusicButton(): void {
+    const button = this.root.querySelector<HTMLButtonElement>('#opening-toggle');
+    if (!button) return;
+    const playing = this.jukebox.isPlaying();
+    button.textContent = playing ? 'Ⅱ Pause' : '▶ Play';
+    button.setAttribute('aria-label', playing ? 'Musik pausieren' : 'Musik abspielen');
+  }
+
+  private async toggleOpeningMusic(): Promise<void> {
+    document.removeEventListener('pointerdown', this.retryOpening);
+    document.removeEventListener('keydown', this.retryOpening);
+    if (this.jukebox.isPlaying()) this.jukebox.stop();
+    else {
+      try { await this.jukebox.playOpening(); }
+      catch { this.notify('Musik konnte nicht abgespielt werden.', true); }
+    }
+    this.updateOpeningMusicButton();
+  }
+
+  private async exitToMenu(): Promise<void> {
+    this.engine?.pauseGame();
+    this.map?.dispose();
+    this.map = undefined;
+    for (const unsubscribe of this.subscriptions) unsubscribe();
+    this.subscriptions = [];
+    this.engine?.dispose();
+    this.engine = undefined;
+    this.player = undefined;
+    this.jukebox.stop();
+    this.showMenu();
+    const overlay = this.root.querySelector<HTMLElement>('#intro-overlay');
+    const video = this.root.querySelector<HTMLVideoElement>('#intro-video');
+    if (!overlay || !video) return;
+    window.clearTimeout(this.cinematicTimeout);
+    this.introSource = 'outro';
+    this.introDismissed = false;
+    overlay.querySelector('.production-card')?.remove();
+    video.querySelector('source')?.setAttribute('src', '/video/intro.mp4');
+    video.load();
+    const skip = this.root.querySelector('#intro-skip');
+    if (skip) skip.textContent = 'Zum Hauptmenü →';
+    this.cinematicTimeout = window.setTimeout(() => {
+      video.muted = false;
+      void video.play().catch(() => {
+        const activation = this.root.querySelector<HTMLButtonElement>('#intro-activation');
+        if (activation) activation.hidden = false;
+      });
+    }, 250);
   }
 
   private resumeAfterCouncilDecision(): void {
@@ -1935,6 +2042,7 @@ export class KingdomGameUI {
     document.removeEventListener('keydown', this.keyboardHandler);
     this.root.removeEventListener('click', this.buttonSoundHandler);
     this.audio.dispose();
+    window.clearTimeout(this.cinematicTimeout);
     this.jukebox.dispose();
     this.ambience.dispose();
     document.removeEventListener('pointerdown', this.retryOpening);
