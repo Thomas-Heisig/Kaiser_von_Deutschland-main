@@ -421,6 +421,13 @@ export class KingdomGameUI {
       engine.on('rivalDeveloped', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) this.record(detail.message);
       }),
+      engine.on('borderWatchPrepared', (detail: { playerId: string; message: string }): void => {
+        if (this.player?.id === detail.playerId) {
+          this.record(detail.message);
+          this.showGameAction('⚔ Grenzwache in Bereitschaft', detail.message, 'raid');
+          this.audio.playEffect('battle');
+        }
+      }),
       engine.on('financeEvent', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) this.record(detail.message);
       }),
@@ -833,6 +840,7 @@ export class KingdomGameUI {
         }).join('')}</div>`;
     } else if (this.view === 'war') {
       const finance = this.engine.getWarFinanceOverview(this.player.id);
+      const borderWatch = this.engine.hasBorderWatch(this.player.id);
       panel.innerHTML = heading('KRIEGSRAT', 'Feldzüge & Nachbarn',
         'Jeder Feldzug kostet Nachschub und Verluste. Pro Monat kann dein Heer einmal ausrücken.') +
         `<article class="build-card"><h3>Kriegsfinanzierung</h3>
@@ -842,6 +850,13 @@ export class KingdomGameUI {
            this.engine.getCurrentYear() > 1800 ? 'disabled' : ''}>
          ${finance.available ? 'Rüstungsdarlehen: 3.000 Gold aufnehmen' : 'Jahresdarlehen ausgeschöpft'}</button>
          <p class="muted">8 % Jahreszins, 24 Monatsraten. Bei Zahlungsrückstand sinken Zufriedenheit und Stabilität.</p>
+         </article>
+         <article class="build-card"><h3>Grenzwache</h3>
+           <p>Schütze dein Reich vor dem nächsten Überfall: +30 % Führung bei der Verteidigung im nächsten Monat.</p>
+           <button data-border-watch class="secondary" ${borderWatch || kingdom.resources.gold < 300 ||
+             kingdom.resources.wood < 150 ? 'disabled' : ''}>
+             ${borderWatch ? 'Grenzwache in Bereitschaft' : 'Grenzwache verstärken · 300 Gold, 150 Holz'}
+           </button>
          </article>` + this.renderWarRoom(this.player);
     } else if (this.view === 'character') {
       panel.innerHTML = heading('DEINE ROLLE', 'Der gespielte Charakter',
@@ -878,6 +893,11 @@ export class KingdomGameUI {
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
+    panel.querySelectorAll<HTMLButtonElement>('[data-border-watch]').forEach((button) => {
+      button.addEventListener('click', () => void this.run(() => {
+        this.notify(this.requireEngine().prepareBorderWatch(this.requirePlayer().id));
+      }));
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-war-loan]').forEach((button) => {
       button.addEventListener('click', () => void this.run(() => {
         this.notify(this.requireEngine().takeWarLoan(this.requirePlayer().id));

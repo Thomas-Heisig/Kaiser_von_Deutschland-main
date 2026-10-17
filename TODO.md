@@ -1,3 +1,9 @@
+## 🛡️ Grenzwache und Spieleraktionen (PR in Prüfung)
+- [x] Spieler kann für 300 Gold und 150 Holz eine Grenzwache alarmieren.
+- [x] Der nächste Simulationsmonat erhält echten Verteidigungsbonus (+30 Prozentpunkte Führungsbonus, gedeckelt auf 50 %); Aktion wird auch ohne Überfall verbraucht.
+- [x] Hotseat-Reichstrennung, Speichern/Laden, doppelte Vorbereitung und Kosten geprüft.
+- [ ] Ausführliche Gelände-, Belagerungs- und Logistikentscheidungen samt Interaktionsanimationen.
+
 ## ⚔️ Game-Action-Animationen (PR in Prüfung)
 - [x] Gegensätzliche Truppformationen (14 Figuren) laufen bei Gefechten sichtbar aufeinander zu.
 - [x] Der Sieger erhält eigene farbliche Hervorhebung; Animation verändert nie das Kampfergebnis.
