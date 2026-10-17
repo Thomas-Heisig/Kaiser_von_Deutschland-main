@@ -1,6 +1,5 @@
 import { filmForRole, filmPreferences, saveFilmPreferences, loadCinematicLibrary, type CinematicClip, type FilmRole } from './CinematicLibrary';
 import { doctrineForYear } from '../core/HistoricalGameplay';
-import { miniCouncilChoice } from '../core/EmbeddedMiniModel';
 import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
 import {
   CampaignGoal, CharacterAction, GameEngine, GameState, MarketResource, SaveMeta
