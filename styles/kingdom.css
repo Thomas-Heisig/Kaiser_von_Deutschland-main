@@ -633,3 +633,13 @@ html,body{width:100%;height:100%;min-height:100%;overflow-x:hidden}
  .kingdom-app .map-host{height:clamp(100px,28dvh,180px)}
  .kingdom-app .section-dialog{height:calc(var(--app-height) - 8px)}
 }
+
+
+/* Prevent nested document scrolling on tablet when the browser resizes chrome. */
+html,body,#app{height:var(--app-height);max-height:var(--app-height);overflow:hidden;overscroll-behavior:none}
+#app{min-height:0}
+.kingdom-app{height:100%;max-height:100%;min-height:0;overflow:hidden}
+.kingdom-app .game-layout{min-height:0;max-height:100%;overflow:hidden}
+.kingdom-app .workspace{min-height:0;position:relative;overflow-y:auto;scroll-padding-bottom:28px;overscroll-behavior-y:contain}
+.kingdom-app .game-footer{position:relative;z-index:0}
+@media(max-width:1180px){.kingdom-app .sidebar{min-height:0}.kingdom-app .workspace{height:100%;max-height:100%;overflow:auto}}
