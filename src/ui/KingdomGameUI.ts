@@ -429,8 +429,14 @@ export class KingdomGameUI {
         <dialog id="settings-dialog" class="info-dialog" aria-labelledby="settings-title"><h2 id="settings-title">Spieleinstellungen & KI</h2>
           <label>Ratsberater<select id="advisor-backend"><option value="off">Aus – keine KI-Unterstützung</option><option value="mini">Integriertes Mini-Netz (offline)</option><option value="rules">Regelberater</option><option value="webgpu">WebGPU (optional, Modelldownload)</option><option value="ollama">Ollama lokal (nur auf Wunsch)</option></select></label>
           <label id="ollama-config">Ollama-Modell <input id="ollama-model" type="text" maxlength="70" placeholder="gemma3:1b" autocomplete="off"></label>
-          <p id="advisor-hardware" class="muted"></p><p class="muted">KI ist optional. Modelle werden erst auf Anfrage heruntergeladen. Vorschläge werden nie automatisch umgesetzt. Die vorhandene Ollama-Anbindung ist noch nicht mit der öffentlichen Spieloberfläche verbunden.</p>
-          <button type="button" id="advisor-test" class="secondary">WebGPU prüfen</button><p id="advisor-status" role="status"></p>
+          <p id="advisor-hardware" class="muted"></p><p class="muted">KI ist optional. Modelle werden erst auf Anfrage heruntergeladen. Vorschläge werden nie automatisch umgesetzt. Ollama ist ausschließlich auf ausdrückliche Auswahl über localhost nutzbar.</p>
+          <div class="advisor-model-actions"><button type="button" id="advisor-test" class="secondary">WebGPU prüfen</button>
+          <button type="button" id="advisor-start" class="primary">▶ KI-Modell starten</button>
+          <button type="button" id="advisor-infer" class="secondary" disabled>🧪 Modellantwort testen</button></div>
+          <label for="advisor-progress">Modellstatus</label>
+          <progress id="advisor-progress" max="100" value="0" aria-label="KI-Modell-Ladefortschritt"></progress>
+          <p id="advisor-status" role="status" aria-live="polite">KI-Modell nicht geladen.</p>
+          <p id="advisor-inference-result" role="status"></p>
           <button type="button" data-close-dialog="settings-dialog">Schließen</button></dialog>
         <dialog id="epoch-dialog" class="info-dialog" aria-labelledby="epoch-title"><h2 id="epoch-title">Epoche</h2><p id="epoch-description"></p><p class="muted">Historische Einordnung; alternative Geschichte.</p><button type="button" data-close-dialog="epoch-dialog">Schließen</button></dialog>
         <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
@@ -488,25 +494,67 @@ export class KingdomGameUI {
     }
     const settingsDialog = this.root.querySelector<HTMLDialogElement>('#settings-dialog');
     const backendSelect = this.root.querySelector<HTMLSelectElement>('#advisor-backend');
-    if (backendSelect) backendSelect.value = readAdvisorConfig().backend;
+    const startButton = this.root.querySelector<HTMLButtonElement>('#advisor-start');
+    const inferenceButton = this.root.querySelector<HTMLButtonElement>('#advisor-infer');
+    const progressBar = this.root.querySelector<HTMLProgressElement>('#advisor-progress');
+    const status = this.root.querySelector<HTMLElement>('#advisor-status');
+    const inferenceResult = this.root.querySelector<HTMLElement>('#advisor-inference-result');
     const ollamaModel = this.root.querySelector<HTMLInputElement>('#ollama-model');
+    if (backendSelect) backendSelect.value = readAdvisorConfig().backend;
     if (ollamaModel) ollamaModel.value = readAdvisorConfig().ollamaModel ?? 'gemma3:1b';
     ollamaModel?.addEventListener('change', () => saveAdvisorConfig({ ...readAdvisorConfig(), ollamaModel: ollamaModel.value }));
-    const hw = this.root.querySelector<HTMLElement>('#advisor-hardware');
-    if (hw) hw.textContent = CouncilAdvisor.isWebGpuAvailable()
-      ? 'WebGPU verfügbar; Modell wird bei Bedarf geladen.'
-      : 'WebGPU nicht verfügbar; Regelberater nutzbar.';
-    this.root.querySelector('#settings-open')?.addEventListener('click', () => settingsDialog?.showModal());
+    const hardware = this.root.querySelector<HTMLElement>('#advisor-hardware');
+    if (hardware) hardware.textContent = CouncilAdvisor.isWebGpuAvailable()
+      ? 'WebGPU erkannt. Das Modell wird erst auf ausdrücklichen Wunsch geladen.'
+      : 'WebGPU hier nicht verfügbar. Das integrierte Mininetz arbeitet trotzdem offline.';
+    const updateModelUi = (): void => {
+      const webgpu = backendSelect?.value === 'webgpu';
+      const state = this.councilAdvisor.getStatus();
+      if (status) status.textContent = state.message;
+      if (progressBar) progressBar.value = state.percent;
+      if (startButton) {
+        startButton.disabled = !webgpu || !CouncilAdvisor.isWebGpuAvailable() || state.state === 'loading';
+        startButton.textContent = state.state === 'ready' ? '✓ KI-Modell bereit' : '▶ KI-Modell starten';
+      }
+      if (inferenceButton) inferenceButton.disabled = !webgpu || state.state !== 'ready';
+    };
+    this.root.querySelector('#settings-open')?.addEventListener('click', () => { updateModelUi(); settingsDialog?.showModal(); });
     backendSelect?.addEventListener('change', () => {
       const backend = backendSelect.value as AdvisorBackend;
       saveAdvisorConfig({ ...readAdvisorConfig(), backend });
+      if (inferenceResult) inferenceResult.textContent = '';
+      updateModelUi();
     });
     this.root.querySelector('#advisor-test')?.addEventListener('click', () => {
-      const status = this.root.querySelector<HTMLElement>('#advisor-status');
-      if (status) status.textContent = CouncilAdvisor.isWebGpuAvailable()
-        ? 'WebGPU erkannt. Der erste Modellstart kann einen größeren Download benötigen.'
-        : 'Kein WebGPU. Verwende den Regelberater.';
+      if (hardware) hardware.textContent = CouncilAdvisor.isWebGpuAvailable()
+        ? '✓ WebGPU-Unterstützung vorhanden. Lade das Modell mit „KI-Modell starten“.'
+        : '✕ WebGPU nicht verfügbar (Browser, HTTPS oder Grafiktreiber).';
+      updateModelUi();
     });
+    startButton?.addEventListener('click', () => {
+      if (backendSelect?.value !== 'webgpu') return;
+      if (inferenceResult) inferenceResult.textContent = '';
+      const config = readAdvisorConfig();
+      void this.councilAdvisor.loadModel(config, state => {
+        if (status) status.textContent = state.message;
+        if (progressBar) progressBar.value = state.percent;
+        if (startButton) startButton.disabled = state.state === 'loading';
+        if (state.state === 'ready' || state.state === 'error') updateModelUi();
+      }).then(() => updateModelUi()).catch(error => {
+        if (status) status.textContent = 'KI-Modell konnte nicht geladen werden: ' + (error instanceof Error ? error.message : String(error));
+        updateModelUi();
+      });
+      updateModelUi();
+    });
+    inferenceButton?.addEventListener('click', () => {
+      inferenceButton.disabled = true;
+      if (inferenceResult) inferenceResult.textContent = 'Modell arbeitet – Testfrage wird beantwortet …';
+      void this.councilAdvisor.testInference(readAdvisorConfig())
+        .then(answer => { if (inferenceResult) inferenceResult.textContent = '✓ Modell antwortet: ' + answer; })
+        .catch(error => { if (inferenceResult) inferenceResult.textContent = '✕ Inferenz fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)); })
+        .finally(updateModelUi);
+    });
+    updateModelUi();
     this.root.querySelector('#epoch-info-toggle')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#epoch-dialog')?.showModal());
     this.root.querySelector('#legal-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#legal-dialog')?.showModal());
     this.root.querySelectorAll<HTMLButtonElement>('[data-close-dialog]').forEach(button => button.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#' + button.dataset.closeDialog)?.close()));
