@@ -11,7 +11,9 @@
 - [x] Epochengebundene Bürgeraufträge vom Mittelalter bis zur Digitalisierung.
 - [x] Mehrmonatiger Verlauf, Vorabkosten, reale Abschlussbelohnung und Fähigkeitenentwicklung.
 - [x] Aufträge speichern/laden und im eigenen Spielfenster verwalten.
-- [ ] Persönlichkeiten und lokale Wirtschaft stärker in Auftragsausgänge einbeziehen.
+- [x] Fachberufe, Disziplin, Erfahrung und lokales Sicherheitsniveau wirken sich begrenzt auf zivile Auftragsresultate aus (Tests ergänzt).
+- [x] Fünf weitere zeitgebundene zivile Aufträge: Fischfang, Mühlen, Buchdruck, Eisenbahn, Elektrifizierung.
+- [ ] Regionales Produktionsmodell und echte Berufs-/Familienwechsel mit Bürgeraufträgen verbinden; bisher nur die persönliche Sicherheitskennzahl als lokaler Faktor.
 - [ ] Zusätzliche Berufsgruppen und zivile Geschichten mit fortlaufenden Beziehungen ergänzen.
 
 ## Geschichte & Gameplay – Militär (17.10.2026)
