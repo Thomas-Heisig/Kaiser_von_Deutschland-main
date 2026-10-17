@@ -93,8 +93,6 @@ export class KingdomGameUI {
   private subscriptions: Array<() => void> = [];
   private readonly audio: GameAudio;
   private readonly jukebox = new MusicJukebox(() => this.updateJukeboxStatus());
-  private automaticEraMusic = true;
-  private popupOpen = false;
   private eraMusicSwitching = false;
   private introDismissed = false;
   private openingAttempt = false;
@@ -419,7 +417,6 @@ export class KingdomGameUI {
       if (event.target === sectionDialog) sectionDialog.close();
     });
     sectionDialog?.addEventListener('close', () => {
-      this.popupOpen = false;
       const panel = this.root.querySelector<HTMLElement>('#panel');
       const workspace = this.root.querySelector<HTMLElement>('.workspace');
       if (panel && workspace) workspace.append(panel);
@@ -707,7 +704,6 @@ export class KingdomGameUI {
     const panel = this.root.querySelector<HTMLElement>('#panel');
     if (view === 'overview') {
       popup?.close();
-      this.popupOpen = false;
       const workspace = this.root.querySelector<HTMLElement>('.workspace');
       if (panel && workspace && !workspace.contains(panel)) workspace.append(panel);
       this.renderPanel();
@@ -716,7 +712,6 @@ export class KingdomGameUI {
     }
     if (popup && panel) {
       if (!popup.open) popup.showModal();
-      this.popupOpen = true;
       const title = this.root.querySelector<HTMLElement>('#section-dialog-title');
       const button = this.root.querySelector<HTMLButtonElement>('nav [data-view="' + view + '"]');
       if (title) title.textContent = button?.textContent?.trim() ?? 'Verwaltung';
@@ -1832,7 +1827,6 @@ export class KingdomGameUI {
           const select = this.root.querySelector<HTMLSelectElement>('[data-jukebox-select]');
           if (select) select.value = track.id;
           this.updateJukeboxStatus();
-          this.automaticEraMusic = false;
           this.jukebox.setPlaylistMode('sequential');
           const mode = this.root.querySelector<HTMLSelectElement>('#playlist-mode');
           if (mode) mode.value = 'sequential';
@@ -1866,7 +1860,6 @@ export class KingdomGameUI {
       mode.value = this.jukebox.getPlaylistMode();
       mode.addEventListener('change', () => {
         this.jukebox.setPlaylistMode(mode.value as 'era' | 'sequential' | 'shuffle');
-        this.automaticEraMusic = mode.value === 'era';
         if (mode.value === 'era' && this.engine) void this.jukebox.syncYear(this.engine.getCurrentYear());
       });
     }
@@ -1878,7 +1871,6 @@ export class KingdomGameUI {
     this.root.querySelectorAll<HTMLSelectElement>('[data-jukebox-select]').forEach(select => {
       select.addEventListener('change', () => {
         const id = select.value;
-        this.automaticEraMusic = false;
         this.jukebox.setPlaylistMode('sequential');
         if (mode) mode.value = 'sequential';
         this.updateJukeboxStatus();
