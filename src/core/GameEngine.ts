@@ -1,3 +1,4 @@
+import { chooseCitizenCouncilOption } from './CitizenCouncilChoice';
 import { CivicMissionSystem } from './CivicMissionSystem';
 // src/core/GameEngine.ts
 import { Player, PlayerCreationData } from './Player';
@@ -2160,6 +2161,17 @@ export class GameEngine {
   public getCouncilHistory(playerId: string) {
     this.requirePlayer(playerId);
     return this.council.getHistory(playerId);
+  }
+
+  /** Personal choice is based on the assigned person's abilities, not a generic advisor. */
+  public chooseCouncilOptionForCitizen(playerId: string, citizenId: string): string {
+    this.requirePlayer(playerId);
+    const decision = this.getPendingCouncilDecision(playerId);
+    if (!decision) throw new Error('Keine offene Ratsentscheidung.');
+    const citizen = this.citizenSystem.getCitizen(citizenId);
+    if (!citizen || !citizen.isAlive || citizen.isPlayerCharacter || citizen.age < 16)
+      throw new Error('Dieser Bürger ist nicht verfügbar.');
+    return chooseCitizenCouncilOption(citizen, decision, this.getCouncilChoices(playerId));
   }
 
   /** Delegate one pending council choice to a living, available citizen. */
