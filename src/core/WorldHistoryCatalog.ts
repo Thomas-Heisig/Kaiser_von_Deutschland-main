@@ -3,7 +3,7 @@ export interface WorldMilestone {
   id: string; year: number; title: string; kind: HistoryKind; description: string;
   place: string; sourceTitle: string; sourceUrl: string; speculative?: boolean;
 }
-export const WORLD_MILESTONES: readonly WorldMilestone[] = [
+const milestoneEntries: WorldMilestone[] = [
   {id:'university-bologna',year:1088,title:'Universität Bologna',kind:'culture',description:'Bologna wird traditionell als älteste Universität Europas bezeichnet und prägt die Entwicklung gelehrter Einrichtungen.',place:'Bologna',sourceTitle:'Università di Bologna – History',sourceUrl:'https://www.unibo.it/en/university/who-we-are/our-history'},
   {id:'gothic-notredame',year:1163,title:'Notre-Dame de Paris',kind:'art',description:'Mit dem Baubeginn der Kathedrale verbreiten sich monumentale gotische Bauformen.',place:'Paris',sourceTitle:'Notre-Dame de Paris – History',sourceUrl:'https://www.notredamedeparis.fr/en/understand/history/'},
   {id:'magna-carta',year:1215,title:'Magna Carta',kind:'society',description:'In England wird eine Urkunde besiegelt, die königliche Macht und Rechte neu verhandelt.',place:'England',sourceTitle:'UK Parliament – Magna Carta',sourceUrl:'https://www.parliament.uk/magnacarta/'},
@@ -26,7 +26,8 @@ export const WORLD_MILESTONES: readonly WorldMilestone[] = [
   {id:'crispr',year:2012,title:'CRISPR-Cas9 als Werkzeug',kind:'science',description:'Forschende zeigen, wie das System für gezielte Genomveränderungen eingesetzt werden kann.',place:'International',sourceTitle:'Nobel Prize – Chemistry 2020',sourceUrl:'https://www.nobelprize.org/prizes/chemistry/2020/summary/'},
   {id:'fusion-future',year:2050,title:'Fusionsenergie in Städten?',kind:'future',description:'Mögliches Zukunftsszenario des Spiels: kommerzielle Fusion ist nicht für dieses Jahr gesichert.',place:'Zukunftsszenario',sourceTitle:'ITER – Research',sourceUrl:'https://www.iter.org/',speculative:true},
   {id:'space-future',year:2150,title:'Dauerhafte Siedlungen außerhalb der Erde?',kind:'future',description:'Fiktive Entwicklung für die Zukunftskampagne, keine historische Tatsache oder verlässliche Prognose.',place:'Zukunftsszenario',sourceTitle:'NASA – Moon to Mars',sourceUrl:'https://www.nasa.gov/humans-in-space/',speculative:true}
-].sort((a,b)=>a.year-b.year);
+]; 
+export const WORLD_MILESTONES: readonly WorldMilestone[] = milestoneEntries.sort((a,b)=>a.year-b.year);
 export function epochForYear(year:number): string {
   if(year<500) return 'Antike';
   if(year<1500) return 'Mittelalter';
