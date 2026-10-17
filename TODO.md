@@ -1,3 +1,10 @@
+## 👥 Hofverwaltung / KI-Assistenz (PR in Prüfung)
+- [x] Drei optionale Hofämter mit lebenden Bürgern und monatlichem Kompetenzzuwachs.
+- [x] Beratungsmodus als Standard und begrenzte regelbasierte Automatik für Handel und Forschung, ohne Fremdmodell oder autonome Kriege.
+- [x] Pro-Spieler-Trennung und Save/Load kompatibel zu alten Spielständen.
+- [ ] Loyalität, Beraterkonflikte, echte Empfehlungen, ausgefeilte KI-Strategien sowie UI-Browser-E2E weiter ausbauen.
+- [~] Hanseroute: Hafenprüfung für Route korrigiert und Aktivierung einschließlich 15.029-/15.030-Gold-Grenze im Engine-Integrationstest erfasst; echte Playwright-UI-Aktivierung noch offen.
+
 ## 🏰 Belagerungen und Versorgung – neue Integration (PR in Prüfung)
 - [x] Feindliche Steinmauern durch spielbare mehrmonatige Belagerungen angreifen; Beginn 500 Gold/250 Nahrung und mindestens 40 Soldaten.
 - [x] Belagerungen verursachen monatlich 100 Gold und 100 Nahrung, laufen 5 Simulations-Tage je Monat und haben einen Rückzugs- sowie Nachschubbefehl.
