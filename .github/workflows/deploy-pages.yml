@@ -1,0 +1,55 @@
+name: Publish HTTPS PWA (GitHub Pages)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: npm
+      - run: npm ci
+      - name: Verify TypeScript
+        run: npm run check
+      - name: Unit tests
+        run: npx vitest run
+      - name: Build under GitHub Pages base
+        env:
+          GITHUB_PAGES: 'true'
+        run: npm run build
+      - name: Validate PWA and HTTPS paths
+        run: |
+          test -s dist/index.html
+          test -s dist/manifest.webmanifest
+          test -s dist/sw.js
+          test -s dist/video-catalog.json
+          test -s dist/downloads/kaiser-von-deutschland-offline.zip
+          grep -q '/Kaiser_von_Deutschland-main/' dist/index.html
+          grep -q '/Kaiser_von_Deutschland-main/video/' dist/video-catalog.json
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload built static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        name: Deploy to HTTPS GitHub Pages
+        uses: actions/deploy-pages@v4
