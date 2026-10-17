@@ -579,3 +579,57 @@ html,body,#app,.kingdom-app{width:100%;max-width:100%;min-width:0;margin:0}
 #settings-dialog select{max-width:100%}
 #settings-dialog #advisor-status{min-height:1.3em;margin:10px 0}
 @media(max-width:480px){.council-delegation{flex-direction:column}.council-delegation button{width:100%}.kingdom-app .header-actions #settings-open{min-height:34px;padding:6px 9px;font-size:.72rem}}
+
+
+/* iPad/Safari viewport fix: fill the visual viewport, respecting safe areas. */
+:root{--app-height:100dvh}
+html,body{width:100%;height:100%;min-height:100%;overflow-x:hidden}
+#app{display:block;align-items:initial;justify-content:initial;height:auto;min-height:100vh;min-height:100dvh;width:100%;max-width:none}
+.kingdom-app{width:100vw;max-width:100%;height:var(--app-height);min-height:var(--app-height);overflow:hidden}
+.kingdom-app .topbar,.kingdom-app .resource-bar,.kingdom-app .game-music-settings,.kingdom-app .game-footer{flex-shrink:0}
+.kingdom-app .game-layout{width:100%;height:auto;min-height:0;overflow:hidden;align-items:stretch}
+.kingdom-app .workspace,.kingdom-app .sidebar,.kingdom-app .council{min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.kingdom-app .workspace{scrollbar-width:thin}
+.kingdom-app .map-host{height:clamp(170px,31dvh,470px)}
+.kingdom-app .section-dialog{max-height:calc(var(--app-height) - 16px)}
+#settings-dialog{max-height:calc(var(--app-height) - 24px)}
+#settings-dialog label{display:grid;gap:6px}
+#settings-dialog input,#settings-dialog select{width:100%;max-width:100%;min-width:0;min-height:42px;font-size:16px}
+@media (min-width:761px) and (max-width:1180px){
+ .kingdom-app .game-layout{display:grid;grid-template-columns:clamp(116px,15vw,170px) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+ .kingdom-app .sidebar{grid-row:1;grid-column:1;overflow:auto;padding:7px 5px}
+ .kingdom-app .sidebar nav{display:grid;gap:2px;grid-template-columns:minmax(0,1fr)}
+ .kingdom-app .sidebar nav button{min-height:31px;font-size:clamp(.62rem,1.2vw,.78rem);padding:5px 6px;line-height:1.15}
+ .kingdom-app .workspace{grid-row:1;grid-column:2;padding:8px;overflow-y:auto}
+ .kingdom-app .council{display:none}
+ .kingdom-app .map-host{height:clamp(150px,30dvh,320px)}
+ .kingdom-app .topbar{padding:7px 10px;min-height:unset}
+ .kingdom-app .header-actions{max-width:100%;gap:5px}
+ .kingdom-app .header-actions button{padding:5px 7px;font-size:.71rem}
+ .kingdom-app .section-dialog{width:min(96vw,1000px);height:calc(var(--app-height) - 28px)}
+}
+@media (max-width:760px){
+ .kingdom-app{height:var(--app-height);min-height:var(--app-height)}
+ .kingdom-app .game-layout{display:flex;flex-direction:column;overflow:hidden}
+ .kingdom-app .sidebar{flex:0 0 auto;overflow:hidden;max-width:100%;border-right:0;padding:4px}
+ .kingdom-app .sidebar nav{display:flex;overflow-x:auto;overscroll-behavior-x:contain;white-space:nowrap;max-width:100%}
+ .kingdom-app .workspace{flex:1 1 auto;min-height:0;overflow-y:auto;padding:6px}
+ .kingdom-app .council{display:none}
+ .kingdom-app .topbar{padding-top:max(4px,env(safe-area-inset-top));gap:4px}
+ .kingdom-app .header-actions{max-width:100%;overflow-x:auto;flex-wrap:nowrap;white-space:nowrap;padding-bottom:3px}
+ .kingdom-app .header-actions button{flex:none;min-height:38px;padding:6px 8px}
+ .kingdom-app .resource-bar{width:100%;grid-template-columns:repeat(5,minmax(0,1fr))}
+ .kingdom-app .resource{min-width:0}
+ .kingdom-app .timebar{flex-wrap:wrap}
+ .kingdom-app .map-host{height:clamp(145px,30dvh,280px)}
+ .kingdom-app .section-dialog{width:100vw;height:var(--app-height);max-height:var(--app-height);border-radius:0}
+ .kingdom-app #section-dialog-body{overflow:auto;height:calc(100% - 51px)}
+ .kingdom-app .game-footer{padding-bottom:max(5px,env(safe-area-inset-bottom))}
+}
+@media (orientation:landscape) and (max-height:550px){
+ .kingdom-app .brand-seal,.kingdom-app .realm-health,.kingdom-app .map-tag{display:none}
+ .kingdom-app .topbar{min-height:0;padding:3px 8px}
+ .kingdom-app .resource-bar .resource{padding:2px}
+ .kingdom-app .map-host{height:clamp(100px,28dvh,180px)}
+ .kingdom-app .section-dialog{height:calc(var(--app-height) - 8px)}
+}
