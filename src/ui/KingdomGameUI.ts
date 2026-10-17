@@ -695,11 +695,16 @@ export class KingdomGameUI {
           ${this.renderTradeRoutes(this.player)}</section>`;
     } else if (this.view === 'research') {
       const progress = this.engine.getTechnologyProgress(this.player.id);
+      const impact = this.engine.getResearchImpact(this.player.id);
       const current = this.engine.getTechnologyOptions(this.player.id)
         .find((option) => option.technology.id === progress.currentResearch?.technologyId);
       const pointsPerMonth = kingdom.infrastructure.schools * 10 + kingdom.infrastructure.universities * 25;
       panel.innerHTML = heading('WISSEN & ERFINDUNGEN', 'Forschung im Reich',
         'Schulen und Universitäten erzeugen Forschungspunkte. Pro Reich kann gleichzeitig ein Projekt laufen.') + `
+        <p class="muted">Aktive Erkenntnisse: +${format(impact.foodPercent)} % Nahrung,
+        +${format(impact.industryPercent)} % Handwerk/Rohstoffe,
+        +${format(impact.goldPercent)} % Goldproduktion und
+        +${format(impact.researchPercent)} % Forschungspunkte.</p>
         <div class="summary-grid"><article><span>Forschungsvorrat</span><strong>${format(progress.researchPoints)}</strong>
           <small>+${format(pointsPerMonth)} Punkte/Monat aus Bildung</small></article>
           <article><span>Erforscht</span><strong>${progress.researched.length}</strong>
