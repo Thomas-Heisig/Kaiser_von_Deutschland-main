@@ -1813,7 +1813,6 @@ export class KingdomGameUI {
   private campaignBlocker(player: Player): string | null {
     const engine = this.requireEngine();
     const army = engine.getArmyOverview(player.id);
-    const doctrine = doctrineForYear(engine.getCurrentYear());
     if (!army.canCampaign) return 'Dein Heer ist in diesem Monat bereits ausgerückt.';
     if (army.soldiers < MIN_CAMPAIGN_SOLDIERS) return `Mindestens ${MIN_CAMPAIGN_SOLDIERS} Soldaten nötig.`;
     if (player.kingdom.resources.gold < army.cost.gold || player.kingdom.resources.food < army.cost.food) {
@@ -1855,6 +1854,7 @@ export class KingdomGameUI {
   private renderWarRoom(player: Player): string {
     const engine = this.requireEngine();
     const army = engine.getArmyOverview(player.id);
+    const doctrine = doctrineForYear(engine.getCurrentYear());
     const blocker = this.campaignBlocker(player);
     const percent = (value: number): string => `${Math.round(value * 100)} %`;
     const rivals = engine.getRivals(player.id).map((rival: RivalRealm): string => {
