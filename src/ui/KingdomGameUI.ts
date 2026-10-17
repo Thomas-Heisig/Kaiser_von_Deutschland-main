@@ -206,6 +206,7 @@ export class KingdomGameUI {
             <label class="checkbox"><input type="checkbox" name="events" checked> Zufällige Ereignisse zulassen</label>
             <button type="submit" class="primary wide">Herrschaft beginnen <span>→</span></button>
           </form>
+          <div class="continue-row"><button type="button" data-install-game class="secondary">⬇ Spiel installieren</button><span data-install-status role="status" class="muted">Über HTTPS als App auf dem Gerät speicherbar.</span></div>
           <div class="continue-row"><button id="continue" class="secondary">Spielstand fortsetzen</button>
             <span>Lokaler Spielstand im Browser</span></div>
           <p class="menu-note">Version: 2026-10-17 · Musikoptionen nach Spielstart</p>
