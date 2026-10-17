@@ -1,3 +1,11 @@
+## Filmischer Einstieg, Epochenkampagnen und PixiJS (17.10.2026)
+
+Beim ersten Öffnen folgt nach einer kurzen Pause die Einblendung **„Eine Thomas Heisig Produktion“** mit synthetischem Whoosh-Effekt. Das längere Original-Intro unter `public/video/intro-original.mp4` wird danach mit Ton abgespielt, sofern der Browser dies erlaubt. Das bisherige kurze Intro ist als Outro über **Beenden** im Spiel eingebunden. Überblendeffekte verbinden Studioeinblendung, Film und Menü. Im Hauptmenü gibt es direkt neben dem Titel „Zeit vergeht“ Play/Pause.
+
+Kampagnen richten sich nun nach dem gewählten Startjahr. Neue Szenarien führen durch Industrialisierung, Wiederaufbau und Digitalisierung; die offene Kampagne bleibt epochenübergreifend. Im PixiJS-Siedlungsbild kommen saisonale Atmosphären, weitere Gebäudedetails und moderne Infrastrukturakzente hinzu.
+
+**Internetnutzung:** Anleitung zur Veröffentlichung unter [Öffentliches Deployment](docs/06-development/public-deployment.md). Das private GitHub-Repository ist noch keine öffentlich erreichbare Spielwebsite. Für eine Live-URL braucht es ein mit GitHub verbundenes Static Hosting bzw. eine veröffentlichte `dist/`-Ausgabe.
+
 ## Musik, Bedienung und Figuren (17.10.2026)
 
 Die Playlist bietet kompakte Auswahl für **Nach Epoche**, **Reihenfolge** und **Zufällig**. Die Wiederholung ist zwischen **Alle**, **Titel** und **Aus** wählbar. Bei aktiver Epochenmusik folgt die Originalaufnahme dem aktuellen Spieljahr; alternative Playlist-Modi spielen die Titel nacheinander oder zufällig. Die Einstellungen werden im Browser gespeichert. Die Covergalerie ist einklappbar.
