@@ -1,4 +1,4 @@
-import { MusicContext, MusicArrangement, MusicVoice, musicArrangement, MUSIC_BPM, BEAT_SECONDS, BAR_SECONDS, soundtrackBars, midiFrequency } from './RoyalMusicScore';
+import { MusicContext, MusicArrangement, MusicVoice, musicArrangement, BEAT_SECONDS, BAR_SECONDS, soundtrackBars, midiFrequency } from './RoyalMusicScore';
 export type GameSoundEffect = 'click' | 'success' | 'build' | 'trade' | 'battle' | 'month';
 
 /**
