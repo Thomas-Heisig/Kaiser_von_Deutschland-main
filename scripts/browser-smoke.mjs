@@ -37,6 +37,10 @@ try {
     await page.locator('#settings-open').click();
     if (await page.locator('#advisor-backend').inputValue() !== 'off')
       failures.push('AI should default to disabled');
+    await page.locator('#advisor-backend').selectOption('webgpu');
+    if (await page.locator('#advisor-start').count() !== 1) failures.push('WebGPU model start button missing');
+    if (await page.locator('#advisor-progress').count() !== 1) failures.push('WebGPU load progress missing');
+    if (await page.locator('#advisor-infer').isEnabled()) failures.push('Inference enabled before model loaded');
     await page.locator('#advisor-backend').selectOption('mini');
     if (await page.locator('#advisor-backend').inputValue() !== 'mini')
       failures.push('embedded mini model cannot be enabled');
