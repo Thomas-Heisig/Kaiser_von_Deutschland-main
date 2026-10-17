@@ -1,7 +1,20 @@
 import { defineConfig } from 'vite';
 import path from 'path';
+import type { Plugin } from 'vite';
+
+function offlineBuildAssets(): Plugin {
+  return {
+    name: 'offline-build-assets',
+    generateBundle(_options, bundle) {
+      const assets = Object.keys(bundle).filter(name => !name.endsWith('.map'));
+      this.emitFile({ type: 'asset', fileName: 'offline-shell.json',
+        source: JSON.stringify({ files: ['index.html', ...assets] }) });
+    }
+  };
+}
 
 export default defineConfig({
+  plugins: [offlineBuildAssets()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
