@@ -1,0 +1,18 @@
+import { access, readFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
+
+const files=['README.md','TODO.md','CHANGELOG.md','docs/INDEX.md','docs/00-meta/status.md','docs/00-meta/roadmap.md','docs/00-meta/backlog-from-readme.md'];
+const root=process.cwd();const misses=[];
+for(const file of files){
+ const source=(await readFile(file,'utf8')).replace(/\x60{3}[\s\S]*?\x60{3}/g,'');
+ const links=source.matchAll(/(?<!!)\[[^\]]+\]\(([^)#]+)(?:#[^)]*)?\)/g);
+ for(const match of links){
+  const url=match[1].trim();
+  if(/^(https?:|mailto:|#)/i.test(url))continue;
+  const dest=resolve(root,dirname(file),decodeURIComponent(url));
+  if(!dest.startsWith(root+'/')&&dest!==root){misses.push(file+': path escapes repository: '+url);continue;}
+  try{await access(dest);}catch{misses.push(file+' → '+url);}
+ }
+}
+if(misses.length){console.error('Broken documentation links:\n'+misses.join('\n'));process.exitCode=1;}
+else console.log('Active documentation link gate passed: '+files.length+' primary documents.');
