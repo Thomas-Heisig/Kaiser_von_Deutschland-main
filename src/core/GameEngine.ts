@@ -195,6 +195,7 @@ export class GameEngine {
   private warFinanceUsed = new Map<string, number>();
   private campaignChapters = new Map<string, number>();
   private borderWatch = new Map<string, number>();
+  private siegeTargets = new Map<string, string>();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -618,6 +619,7 @@ export class GameEngine {
 
   private async processPlayerMonth(player: Player): Promise<void> {
     player.kingdom.processMonth();
+    this.processCampaignSiege(player);
     const bonus = researchProductionBonus(player.kingdom, this.requireTechnologySystem(player.id).getResearchedTechnologyIds());
     for (const resource of ['food', 'wood', 'stone', 'iron', 'gold'] as const) {
       player.kingdom.resources[resource] += bonus[resource];
@@ -710,6 +712,8 @@ export class GameEngine {
       this.warFinanceUsed.delete(playerId);
       this.campaignChapters.delete(playerId);
       this.borderWatch.delete(playerId);
+      this.siegeWarfareSystem.abandonSiege('siege-' + playerId);
+      this.siegeTargets.delete(playerId);
       this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
     }
@@ -952,6 +956,8 @@ export class GameEngine {
       warFinanceUsed: Array.from(this.warFinanceUsed),
       campaignChapters: Array.from(this.campaignChapters),
       borderWatch: Array.from(this.borderWatch),
+      siegeTargets: Array.from(this.siegeTargets),
+      siegeWarfare: this.siegeWarfareSystem.serialize(),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -1037,6 +1043,21 @@ export class GameEngine {
     this.warFinanceUsed = new Map(Array.isArray(saveData.warFinanceUsed) ? saveData.warFinanceUsed : []);
     this.campaignChapters = new Map();
     this.borderWatch = new Map();
+    this.siegeWarfareSystem = new SiegeWarfareSystem();
+    if (saveData.siegeWarfare) this.siegeWarfareSystem.deserialize(saveData.siegeWarfare);
+    this.siegeTargets = new Map();
+    if (saveData.siegeTargets !== undefined) {
+      if (!Array.isArray(saveData.siegeTargets) || saveData.siegeTargets.some((pair: unknown) =>
+        !Array.isArray(pair) || pair.length !== 2 ||
+        !restoredPlayers.some((player: Player) => player.id === pair[0]) ||
+        typeof pair[1] !== 'string' ||
+        !restoredWarfare.getRivals(pair[0]).some((rival) => rival.id === pair[1]) ||
+        !this.siegeWarfareSystem.getActiveSieges().some((siege) =>
+          siege.siegeId === 'siege-' + pair[0] && siege.defenderId === pair[1]))) {
+        throw new Error('Beschädigter Belagerungsstand im Spielstand.');
+      }
+      this.siegeTargets = new Map(saveData.siegeTargets);
+    }
     if (saveData.borderWatch !== undefined) {
       if (!Array.isArray(saveData.borderWatch) || saveData.borderWatch.some((entry: unknown) =>
         !Array.isArray(entry) || entry.length !== 2 ||
@@ -1534,6 +1555,92 @@ export class GameEngine {
    * @param playerId Player.
    * @returns Field soldiers, attack and defense power, supply cost and whether the army can still march this month.
    */
+  /** Read-only current siege including wall and supply progress. */
+  public getCampaignSiege(playerId: string) {
+    this.requirePlayer(playerId);
+    const target = this.siegeTargets.get(playerId);
+    const status = this.siegeWarfareSystem.getActiveSieges()
+      .find((siege) => siege.siegeId === 'siege-' + playerId);
+    return target && status ? { ...status, deployedWeapons: new Map(status.deployedWeapons), rivalId: target } : null;
+  }
+
+  public beginCampaignSiege(playerId: string, rivalId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    if (this.getCampaignSiege(playerId)) throw new Error('Ein Heer kann nur eine Belagerung gleichzeitig führen.');
+    if (this.hasRivalTruce(playerId, rivalId)) throw new Error('Ein Nichtangriffspakt verhindert eine Belagerung.');
+    const rival = this.warfare.getRivals(playerId).find((entry) => entry.id === rivalId && !entry.subjugated);
+    if (!rival) throw new Error('Kein belagerbares Ziel.');
+    if (CampaignWarfareSystem.fieldSoldiers(player.kingdom) < 40) throw new Error('Mindestens 40 Soldaten benötigt.');
+    if (player.kingdom.resources.gold < 500 || player.kingdom.resources.food < 250)
+      throw new Error('Für die Belagerung werden 500 Gold und 250 Nahrung benötigt.');
+    if (!this.siegeWarfareSystem.startSiege('siege-' + playerId, 'stone_wall', playerId,
+      rivalId, CampaignWarfareSystem.fieldSoldiers(player.kingdom), rival.soldiers))
+      throw new Error('Festung nicht gefunden.');
+    player.kingdom.resources.gold -= 500;
+    player.kingdom.resources.food -= 250;
+    this.siegeTargets.set(playerId, rivalId);
+    const message = 'Belagerungsring um ' + rival.name + ' geschlossen.';
+    this.emit('siegeEvent', { playerId, message });
+    return message;
+  }
+
+  public resupplyCampaignSiege(playerId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    if (!this.getCampaignSiege(playerId)) throw new Error('Keine Belagerung aktiv.');
+    if (player.kingdom.resources.gold < 200 || player.kingdom.resources.food < 250)
+      throw new Error('Nachschub kostet 200 Gold und 250 Nahrung.');
+    if (!this.siegeWarfareSystem.resupplySiege('siege-' + playerId, 20))
+      throw new Error('Die Vorratslager können nicht weiter aufgefüllt werden.');
+    player.kingdom.resources.gold -= 200;
+    player.kingdom.resources.food -= 250;
+    const message = 'Versorgungswagen erreichen das Belagerungsheer (+20 Tage Vorräte).';
+    this.emit('siegeEvent', { playerId, message });
+    return message;
+  }
+
+  public withdrawCampaignSiege(playerId: string): string {
+    this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    if (!this.siegeWarfareSystem.abandonSiege('siege-' + playerId))
+      throw new Error('Keine Belagerung aktiv.');
+    this.siegeTargets.delete(playerId);
+    const message = 'Das Heer bricht die Belagerung ab.';
+    this.emit('siegeEvent', { playerId, message });
+    return message;
+  }
+
+  /** Five days of siege progress each month. Only the final assault can subjugate the rival. */
+  private processCampaignSiege(player: Player): void {
+    const siege = this.getCampaignSiege(player.id);
+    if (!siege) return;
+    const provisions = player.kingdom.resources;
+    if (provisions.gold < 100 || provisions.food < 100 ||
+        CampaignWarfareSystem.fieldSoldiers(player.kingdom) < 40) {
+      this.siegeWarfareSystem.abandonSiege(siege.siegeId);
+      this.siegeTargets.delete(player.id);
+      this.emit('siegeEvent', { playerId: player.id,
+        message: 'Die Belagerung wurde mangels Nachschub oder Soldaten abgebrochen.' });
+      return;
+    }
+    provisions.gold -= 100;
+    provisions.food -= 100;
+    let result: { breached: boolean; surrendered: boolean } = { breached: false, surrendered: false };
+    for (let day = 0; day < 5; day++) {
+      result = this.siegeWarfareSystem.processSiegeDay(siege.siegeId);
+      if (result.breached || result.surrendered) break;
+    }
+    if (result.breached || result.surrendered) {
+      // The siege unlocks a weaker fortification in the existing battle system;
+      // it does NOT claim an unearned conquest or charge a second army's casualties.
+      this.warfare.weakenRivalFortification(player.id, siege.rivalId, 0.3);
+      this.siegeTargets.delete(player.id);
+      this.emit('siegeEvent', { playerId: player.id,
+        message: 'Die gegnerische Festung ist geschwächt! Ein anschließender Feldzug hat bessere Chancen.' });
+    }
+  }
+
   private requireWarFinance(playerId: string): WarFinancingSystem {
     this.requirePlayer(playerId);
     const finance = this.warFinanceByPlayer.get(playerId);

@@ -1,22 +1,29 @@
-## 🏰 Zwei weitere Kampagnen (PR in Prüfung)
+## 🏰 Belagerungen und Versorgung – neue Integration (PR in Prüfung)
+- [x] Feindliche Steinmauern durch spielbare mehrmonatige Belagerungen angreifen; Beginn 500 Gold/250 Nahrung und mindestens 40 Soldaten.
+- [x] Belagerungen verursachen monatlich 100 Gold und 100 Nahrung, laufen 5 Simulations-Tage je Monat und haben einen Rückzugs- sowie Nachschubbefehl.
+- [x] Bei Kapitulation oder Mauerbruch wird die Festungsstärke des Rivalen tatsächlich gesenkt; Eroberung erfordert danach weiterhin einen echten Feldzug.
+- [x] Spielstände sichern/stellen Belagerungsstände wieder her; Hotseat-Zugbindung und Waffen-/Nachschub-Eingabe validiert.
+- [~] Noch offen: reale Truppenverluste in Belagerung und Abgleich der aktiven Feldarmee, animierte Belagerungsmaschinen, Balance-Langläufe.
+
+## 🏰 Zwei weitere Kampagnen (PR #20 gemergt)
 - [x] „Glaube und Kultur“: drei Kapitel zu Kirchen, Bildung, Kultur und Zufriedenheit.
 - [x] „Der Weg zur Kaiserkrone“: Burgen, Märkte, aktive Nichtangriffspakte, Handel, Eroberungen.
 - [x] Ziele werden aus echtem Staats- und Vertragszustand berechnet; Spielstände bleiben kompatibel.
 - [x] Kapitel- und Chromium-Browser-Tests um die beiden Kampagnen erweitert.
 
-## 🛡️ Grenzwache und Spieleraktionen (PR in Prüfung)
+## 🛡️ Grenzwache und Spieleraktionen (PR #19 gemergt)
 - [x] Spieler kann für 300 Gold und 150 Holz eine Grenzwache alarmieren.
 - [x] Der nächste Simulationsmonat erhält echten Verteidigungsbonus (+30 Prozentpunkte Führungsbonus, gedeckelt auf 50 %); Aktion wird auch ohne Überfall verbraucht.
 - [x] Hotseat-Reichstrennung, Speichern/Laden, doppelte Vorbereitung und Kosten geprüft.
 - [ ] Ausführliche Gelände-, Belagerungs- und Logistikentscheidungen samt Interaktionsanimationen.
 
-## ⚔️ Game-Action-Animationen (PR in Prüfung)
+## ⚔️ Game-Action-Animationen (PR #17 gemergt)
 - [x] Gegensätzliche Truppformationen (14 Figuren) laufen bei Gefechten sichtbar aufeinander zu.
 - [x] Der Sieger erhält eigene farbliche Hervorhebung; Animation verändert nie das Kampfergebnis.
 - [x] Begrenzte Laufzeit, Timer-Cleanup und Abschaltung bei reduzierter Bewegung berücksichtigt.
 - [ ] Echte Schlachtkartographie, Pfeilsalven, Gebäudeschäden, authentische Audio-Samples und umfassende visuelle Abnahme.
 
-## 🔬 Wissenschaftliche Errungenschaften mit echten Auswirkungen (PR in Prüfung)
+## 🔬 Wissenschaftliche Errungenschaften mit echten Auswirkungen (PR #16 gemergt)
 - [x] Abgeschlossene Technologien verbessern nun tatsächlich Bildung, Kultur, Handelsmacht, Stabilität und teilweise Militärausrüstung.
 - [x] Nahrung, Rohstoffe und Gold erhalten begrenzte, pro Monat berechnete Forschungsboni, ohne kumulativ den Produktionsbasiswert zu verändern.
 - [x] Forschungsgeschwindigkeit wirkt auf neue monatliche Forschungspunkte.

@@ -141,6 +141,14 @@ export class CampaignWarfareSystem {
    * @param playerId Player filter; omit for all reports.
    * @returns Battle reports.
    */
+  /** A completed siege weakens a rival before the next field assault. */
+  public weakenRivalFortification(playerId: string, rivalId: string, amount: number): void {
+    const rival = this.rivals.find((entry) => entry.playerId === playerId && entry.id === rivalId);
+    if (!rival || rival.subjugated || !Number.isFinite(amount) || amount <= 0 || amount > 0.4)
+      throw new Error('Ungültiges Belagerungsziel.');
+    rival.fortification = Math.max(0.7, rival.fortification - amount);
+  }
+
   public getReports(playerId?: string): BattleReport[] {
     return this.reports.filter((report: BattleReport): boolean =>
       !playerId || report.playerIds.includes(playerId)).map((report: BattleReport): BattleReport => ({ ...report }));

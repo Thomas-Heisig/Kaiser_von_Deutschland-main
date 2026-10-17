@@ -421,6 +421,12 @@ export class KingdomGameUI {
       engine.on('rivalDeveloped', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) this.record(detail.message);
       }),
+      engine.on('siegeEvent', (detail: { playerId: string; message: string }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        this.record(detail.message);
+        this.showGameAction('⚔ Belagerung', detail.message, 'raid');
+        this.audio.playEffect('battle');
+      }),
       engine.on('borderWatchPrepared', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) {
           this.record(detail.message);
@@ -841,6 +847,7 @@ export class KingdomGameUI {
     } else if (this.view === 'war') {
       const finance = this.engine.getWarFinanceOverview(this.player.id);
       const borderWatch = this.engine.hasBorderWatch(this.player.id);
+      const siege = this.engine.getCampaignSiege(this.player.id);
       panel.innerHTML = heading('KRIEGSRAT', 'Feldzüge & Nachbarn',
         'Jeder Feldzug kostet Nachschub und Verluste. Pro Monat kann dein Heer einmal ausrücken.') +
         `<article class="build-card"><h3>Kriegsfinanzierung</h3>
@@ -857,6 +864,25 @@ export class KingdomGameUI {
              kingdom.resources.wood < 150 ? 'disabled' : ''}>
              ${borderWatch ? 'Grenzwache in Bereitschaft' : 'Grenzwache verstärken · 300 Gold, 150 Holz'}
            </button>
+         </article>
+         <article class="build-card"><h3>Belagerung & Versorgung</h3>
+          ${siege ? `<p>Belagerung läuft seit ${format(siege.duration)} Tagen ·
+            Vorräte ${format(siege.attackerSupplies)} Tage ·
+            Verteidiger-Moral ${format(siege.defenderMorale)} %</p>
+            <p>Monatsunterhalt: 100 Gold + 100 Nahrung. Ein erfolgreicher Belagerungsring
+              schwächt die Mauern für den anschließenden Feldzug.</p>
+            <button class="secondary" data-siege-resupply
+              ${kingdom.resources.gold < 200 || kingdom.resources.food < 250 ||
+                siege.attackerSupplies > 40 ? 'disabled' : ''}>Nachschub · 200 Gold, 250 Nahrung</button>
+            <button class="secondary" data-siege-withdraw>Belagerung aufgeben</button>`
+            : `<p>Belagere eine gegnerische Festung, um ihre Verteidigung über mehrere Monate zu schwächen.</p>
+              <p>Beginn: 500 Gold, 250 Nahrung und mindestens 40 Soldaten.</p>
+              ${this.engine.getRivals(this.player.id).filter((rival) => !rival.subjugated).map((rival) =>
+                `<button class="secondary" data-siege-target="${escape(rival.id)}"
+                  ${this.engine!.hasRivalTruce(this.player!.id, rival.id) ||
+                    kingdom.resources.gold < 500 || kingdom.resources.food < 250 ||
+                    this.engine!.getArmyOverview(this.player!.id).soldiers < 40 ? 'disabled' : ''}>
+                  ${escape(rival.name)} belagern</button>`).join('')}`}
          </article>` + this.renderWarRoom(this.player);
     } else if (this.view === 'character') {
       panel.innerHTML = heading('DEINE ROLLE', 'Der gespielte Charakter',
@@ -893,6 +919,22 @@ export class KingdomGameUI {
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
+    panel.querySelectorAll<HTMLButtonElement>('[data-siege-target]').forEach((button) => {
+      button.addEventListener('click', () => void this.run(() => {
+        this.notify(this.requireEngine().beginCampaignSiege(this.requirePlayer().id,
+          button.dataset.siegeTarget ?? ''));
+      }));
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-siege-resupply]').forEach((button) => {
+      button.addEventListener('click', () => void this.run(() => {
+        this.notify(this.requireEngine().resupplyCampaignSiege(this.requirePlayer().id));
+      }));
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-siege-withdraw]').forEach((button) => {
+      button.addEventListener('click', () => void this.run(() => {
+        this.notify(this.requireEngine().withdrawCampaignSiege(this.requirePlayer().id));
+      }));
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-border-watch]').forEach((button) => {
       button.addEventListener('click', () => void this.run(() => {
         this.notify(this.requireEngine().prepareBorderWatch(this.requirePlayer().id));
