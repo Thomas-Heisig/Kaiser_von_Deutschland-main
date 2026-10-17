@@ -467,6 +467,7 @@ export class KingdomGameUI {
     this.subscriptions = [
       engine.on('councilDecision', (detail: { playerId: string; title: string }): void => {
         if (this.player?.id !== detail.playerId) return;
+        if (!engine.isHotseat() && engine.getGameState() === GameState.RUNNING) this.resumeAfterCouncil = true;
         this.record('Der Reichsrat ruft: ' + detail.title);
         this.audio.playEffect('success');
         this.notify('Dringende Angelegenheit im Reichsrat: ' + detail.title);
@@ -642,6 +643,7 @@ export class KingdomGameUI {
       button.addEventListener('click', () => void this.run(() => {
         const outcome = this.requireEngine().resolveCouncilDecision(this.requirePlayer().id, choice.id);
         this.notify(outcome.message, !outcome.success);
+        this.resumeAfterCouncilDecision();
         dialog.close();
         dialog.remove();
         this.councilDialog = undefined;
@@ -1294,6 +1296,7 @@ export class KingdomGameUI {
           const result = this.requireEngine().resolveCouncilDecision(
             this.requirePlayer().id, button.dataset.councilChoice ?? '');
           this.notify(result.message, !result.success);
+          this.resumeAfterCouncilDecision();
           this.audio.playEffect(result.success ? 'success' : 'battle');
         });
       });
@@ -1461,8 +1464,10 @@ export class KingdomGameUI {
     }
     if (action === 'pause') this.togglePause();
     if (action === 'month') {
+      const wasRunning = engine.getGameState() === GameState.RUNNING;
       engine.pauseGame();
       await engine.advanceMonth();
+      if (wasRunning && !engine.getPendingCouncilDecision(this.requirePlayer().id)) engine.resumeGame();
     }
     if (action === 'endturn') {
       const finished = this.requirePlayer();
@@ -1473,10 +1478,15 @@ export class KingdomGameUI {
       this.showHandover(result.activePlayer, result.monthAdvanced);
     }
     if (action === 'save') {
+      const wasRunning = engine.getGameState() === GameState.RUNNING;
       engine.pauseGame();
-      await engine.saveGame('campaign');
-      this.saves = await engine.listSaves();
-      this.notify('Herrschaft gespeichert. Die Zeit bleibt pausiert.');
+      try {
+        await engine.saveGame('campaign');
+        this.saves = await engine.listSaves();
+        this.notify('Herrschaft gespeichert.');
+      } finally {
+        if (wasRunning && !engine.getPendingCouncilDecision(this.requirePlayer().id)) engine.resumeGame();
+      }
     }
     if (action === 'load') {
       engine.pauseGame();
@@ -1670,6 +1680,7 @@ export class KingdomGameUI {
   }
 
   private togglePause(): void {
+    this.resumeAfterCouncil = false;
     const engine = this.requireEngine();
     if (engine.getGameState() === GameState.RUNNING) engine.pauseGame();
     else engine.resumeGame();
