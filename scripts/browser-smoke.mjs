@@ -19,6 +19,9 @@ try {
     await page.getByRole('heading', { name: /Feste im Jahreskreis/i }).waitFor();
     await page.locator('nav [data-view="research"]').click();
     await page.getByRole('heading', { name: /Forschung im Reich/i }).waitFor();
+    await page.locator('nav [data-view="history"]').click();
+    await page.getByRole('heading', { name: /Erfindungen, Kunst und Kultur/i }).waitFor();
+    await page.getByRole('heading', { name: /Universität Bologna/i }).waitFor();
     await page.locator('nav [data-view="war"]').click();
     await page.getByRole('heading', { name: /Feldzüge & Nachbarn/i }).waitFor();
     await page.screenshot({ path: `smoke-${width}.png`, fullPage: true });
