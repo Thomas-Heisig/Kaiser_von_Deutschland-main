@@ -1,4 +1,5 @@
 import { KingdomGameUI } from './ui/KingdomGameUI';
+import { setupInstallButtons } from './ui/PwaInstall';
 import '/styles/kingdom.css';
 
 const root = document.getElementById('app');
@@ -12,6 +13,7 @@ const syncViewport = (): void => {
 syncViewport();
 window.addEventListener('resize', syncViewport);
 window.visualViewport?.addEventListener('resize', syncViewport);
+setupInstallButtons(root);
 const game = new KingdomGameUI(root);
 // HTTPS (or localhost) only; the browser can cache a full offline package on request.
 if ('serviceWorker' in navigator && window.isSecureContext) {

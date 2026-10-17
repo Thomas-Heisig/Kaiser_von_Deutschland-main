@@ -206,6 +206,7 @@ export class KingdomGameUI {
             <label class="checkbox"><input type="checkbox" name="events" checked> Zufällige Ereignisse zulassen</label>
             <button type="submit" class="primary wide">Herrschaft beginnen <span>→</span></button>
           </form>
+          <div class="continue-row"><button type="button" data-install-game class="secondary">⬇ Spiel installieren</button><span data-install-status role="status" class="muted">Über HTTPS als App auf dem Gerät speicherbar.</span></div>
           <div class="continue-row"><button id="continue" class="secondary">Spielstand fortsetzen</button>
             <span>Lokaler Spielstand im Browser</span></div>
           <p class="menu-note">Version: 2026-10-17 · Musikoptionen nach Spielstart</p>
@@ -334,7 +335,7 @@ export class KingdomGameUI {
           <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span></div>
           <div class="header-actions">
             <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog" aria-label="Informationen zur Epoche"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
-            <button type="button" id="civic-open" class="primary" aria-label="Bürgeraufträge direkt öffnen">⚒ Bürgeraufträge</button><button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen</button>
+            <button type="button" id="civic-open" class="primary" aria-label="Bürgeraufträge direkt öffnen">⚒ Bürgeraufträge</button><button type="button" data-install-game class="secondary">⬇ Spiel installieren</button><button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen</button>
             <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button><button data-action="exit" class="secondary" title="Zum Hauptmenü zurück">Beenden</button></div>
@@ -445,7 +446,7 @@ export class KingdomGameUI {
           <p id="advisor-inference-result" role="status"></p>
           <hr><h3>Musik & Diagnose</h3><button type="button" id="music-diagnose" class="secondary">Alle 15 MP3 prüfen</button>
           <p id="music-diagnosis" role="status">Bei Abspielfehlern die Serverdateien überprüfen.</p>
-          <hr><h3>Offline spielen / Heimnetz-Download</h3><p>Spiel, Musik, Cover und alle Videos als vollständiges ZIP herunterladen – auch über HTTP im vertrauenswürdigen Heimnetz. Nach dem Entpacken lokal über http://localhost starten. Für eine Browserinstallation auf Mobilgeräten bleibt HTTPS erforderlich.</p><a class="secondary" href="${import.meta.env.BASE_URL}downloads/kaiser-von-deutschland-offline.zip" download="kaiser-von-deutschland-offline.zip">↓ Komplettes Spiel als ZIP herunterladen (LAN/HTTP möglich)</a><p>Zusätzlich: Spiel einmalig in diesem Browser speichern (nur HTTPS oder localhost; der Browser kann Cache bei Speichermangel löschen).</p>
+          <hr><h3>Installation als App</h3><button type="button" data-install-game class="primary">⬇ Spiel installieren</button><p data-install-status role="status" class="muted">Für iPad: Safari → Teilen → Zum Home-Bildschirm.</p><hr><h3>Offline spielen / Heimnetz-Download</h3><p>Spiel, Musik, Cover und alle Videos als vollständiges ZIP herunterladen – auch über HTTP im vertrauenswürdigen Heimnetz. Nach dem Entpacken lokal über http://localhost starten. Für eine Browserinstallation auf Mobilgeräten bleibt HTTPS erforderlich.</p><a class="secondary" href="${import.meta.env.BASE_URL}downloads/kaiser-von-deutschland-offline.zip" download="kaiser-von-deutschland-offline.zip">↓ Komplettes Spiel als ZIP herunterladen (LAN/HTTP möglich)</a><p>Zusätzlich: Spiel einmalig in diesem Browser speichern (nur HTTPS oder localhost; der Browser kann Cache bei Speichermangel löschen).</p>
           <button type="button" id="offline-save" class="primary">↓ Spiel im Browser speichern</button>
           <p id="offline-status" role="status">Offline-Paket noch nicht überprüft.</p>
           <hr><h3>Filmvorführungen</h3>
