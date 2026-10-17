@@ -14,6 +14,8 @@
 - Release-Gate in CI für 15 MP3s, fünf MP4-Dateien, Filmdatenbank, ZIP und PWA-Pfade.
 
 ### Changed
+- Frühere README-Featureversprechen (Rollen, Gebäude, Technologie, Geschichte, Politik, Religion, Militär, Marine, Umwelt, Kultur, Wirtschaft und Mehrspieler) mit konkreten Nachweis- und Integrationsaufgaben in Roadmap/TODO zurückgeführt.
+- Dokumente TODO und CHANGELOG nach einem früheren fehlerhaften Austausch wieder ihren korrekten Inhalten zugeordnet.
 - Einstellungssystem in fünf responsiven Kategorien gruppiert, auf Startbildschirm und im Spiel erreichbar; Bürgeraufträge, Installation und Animationsschalter aus der Kopfzeile entfernt. Anzeigepräferenzen lokal speicherbar.
 - Responsives Tablet-/Mobil-Layout, sichtbare Bürgeraufträge, WebGPU-Start-/Statusanzeige und optionale lokale Mini-KI.
 - README, Status, Roadmap und operative TODO werden gegen den tatsächlichen aktiven Git-Stand abgegrenzt; sämtliche älteren Planungen bleiben archiviert.
