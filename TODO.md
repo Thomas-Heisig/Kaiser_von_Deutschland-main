@@ -1,4 +1,10 @@
-## 📚 Weltgeschichte und langfristiger Epochenwechsel (PR in Prüfung)
+## 🎨 Kulturförderung aus historischer Weltgeschichte (PR in Prüfung)
+- [x] Vergangenheit liefert optionale Ausstellungen mit echtem Goldpreis und +2 kulturellem Einfluss.
+- [x] Historische Forschung wird dabei ausdrücklich nicht automatisch freigeschaltet.
+- [x] Einmalige Förderung je Reich, im Spielstand erhalten; Zukunftsszenarien ausgeschlossen.
+- [ ] Museen als Baugebäude, Kunstsammlungen, historische Künstler und Langzeit-Kulturkarrieren verknüpfen.
+
+## 📚 Weltgeschichte und langfristiger Epochenwechsel (PR #23 gemergt)
 - [x] Separate zugängliche Weltgeschichte-Oberfläche für ausgewählte reale Erfindungen, Wissenschaft, Kunst, Architektur und Kultur mit Datierung, Ort, Beschreibung und Quellen.
 - [x] Zeitabhängige Epochenüberschrift, Jahrgangs-Ereignisse und deutlich gekennzeichnete spekulative Zukunftsinhalte.
 - [x] Informationsereignisse vergeben keine automatischen Fortschritte in der eigentlichen Technologie-Forschung.
