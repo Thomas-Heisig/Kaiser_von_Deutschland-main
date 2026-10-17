@@ -570,7 +570,7 @@ export class KingdomGameUI {
         if (!this.saves.length) throw new Error('Noch kein Spielstand vorhanden. Beginne eine neue Herrschaft.');
         await this.engine.loadGame(this.saves[0].slot);
         this.player = this.engine.getActivePlayer();
-        this.journal = [];
+        this.journal = this.engine.getChronicle();
         await this.showGame();
         this.notify(this.engine.isHotseat()
           ? `Spielstand geladen. ${this.player.name} ist am Zug.` : 'Spielstand geladen. Die Zeit ist pausiert.');
@@ -1648,7 +1648,7 @@ export class KingdomGameUI {
           </article>`).join('') || '<p>In diesem Zeitraum liegen noch keine Einträge vor.</p>'}</div>`;
     } else if (this.view === 'chronicle') {
       panel.innerHTML = heading('DIE GESCHICHTE DEINER HERRSCHAFT', 'Reichschronik',
-        'Die letzten 100 Meldungen dieser Sitzung. Dein eigentlicher Spielzustand wird separat gespeichert.') + `
+        'Die letzten 100 wichtigen Meldungen deiner Herrschaft bleiben auch nach dem Laden erhalten.') + `
         <ol class="journal">${this.journal.map((entry: JournalEntry) =>
           `<li><time>${escape(entry.date)}</time><p>${escape(entry.message)}</p></li>`).join('')}</ol>`;
     } else {
@@ -2512,8 +2512,8 @@ export class KingdomGameUI {
   }
 
   private record(message: string): void {
-    this.journal.unshift({ date: this.date(), message });
-    this.journal = this.journal.slice(0, 100);
+    this.engine?.recordChronicle(message);
+    this.journal = this.engine?.getChronicle().map(entry => ({date: entry.date, message: entry.message})) ?? [];
   }
 
   private date(): string {
