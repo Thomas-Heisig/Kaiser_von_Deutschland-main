@@ -93,7 +93,8 @@ export class KingdomGameUI {
   private subscriptions: Array<() => void> = [];
   private readonly audio: GameAudio;
   private readonly jukebox = new MusicJukebox(() => this.updateJukeboxStatus());
-  private automaticEraMusic = false;
+  private automaticEraMusic = true;
+  private popupOpen = false;
   private eraMusicSwitching = false;
   private introDismissed = false;
   private openingAttempt = false;
@@ -320,7 +321,8 @@ export class KingdomGameUI {
         <section class="jukebox jukebox-ingame" aria-label="Musik-Jukebox">
           <strong>🎼 Original-Soundtrack · 15 Titel</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
           <div class="jukebox-nowplaying"><img data-jukebox-cover src="/covers/zeit-vergeht.svg" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>15 historische und thematische Aufnahmen</small></div></div>
-          <div class="jukebox-gallery" data-jukebox-gallery aria-label="Alle Titelcover"></div>
+          <div class="playlist-toolbar"><label>Wiedergabe <select id="playlist-mode"><option value="era">Nach Epoche</option><option value="sequential">Reihenfolge</option><option value="shuffle">Zufällig</option></select></label><label>Wiederholen <select id="playlist-repeat"><option value="all">Alle</option><option value="one">Titel</option><option value="off">Aus</option></select></label></div>
+          <details class="playlist-covers"><summary>Alle 15 Titelcover anzeigen</summary><div class="jukebox-gallery" data-jukebox-gallery aria-label="Alle Titelcover"></div></details>
           <a data-jukebox-download class="jukebox-download" href="#" download>↓ Titel herunterladen</a>
           <p data-jukebox-status role="status"></p>
         </section></details>
@@ -407,10 +409,21 @@ export class KingdomGameUI {
           </aside>
         </div>
         <footer class="game-footer">© 2026 Thomas Heisig · Kaiser von Deutschland · <button type="button" id="legal-open" class="legal-link">Urheberrecht · KI · Datenschutz</button><span id="footer-keys"></span></footer>
+        <dialog id="section-dialog" class="section-dialog" aria-label="Spielbereich"><div class="section-dialog-head"><strong id="section-dialog-title">Verwaltung</strong><button type="button" id="section-dialog-close" aria-label="Bereich schließen">✕</button></div><div id="section-dialog-body"></div></dialog>
         <dialog id="epoch-dialog" class="info-dialog" aria-labelledby="epoch-title"><h2 id="epoch-title">Epoche</h2><p id="epoch-description"></p><p class="muted">Historische Einordnung; alternative Geschichte.</p><button type="button" data-close-dialog="epoch-dialog">Schließen</button></dialog>
         <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
       </div>`;
     this.bindJukeboxControls();
+    const sectionDialog = this.root.querySelector<HTMLDialogElement>('#section-dialog');
+    sectionDialog?.addEventListener('click', (event) => {
+      if (event.target === sectionDialog) sectionDialog.close();
+    });
+    sectionDialog?.addEventListener('close', () => {
+      this.popupOpen = false;
+      this.view = 'overview';
+      this.root.querySelector('.kingdom-app')?.setAttribute('data-view', 'overview');
+    });
+    this.root.querySelector('#section-dialog-close')?.addEventListener('click', () => sectionDialog?.close());
     this.root.querySelector<HTMLSelectElement>('#settlement-filter')?.addEventListener('change', (event) => {
       const target = event.currentTarget as HTMLSelectElement;
       this.districtFilter = target.value as DistrictFilter;
@@ -686,9 +699,30 @@ export class KingdomGameUI {
 
   private navigate(view: View): void {
     this.view = view;
+    const popup = this.root.querySelector<HTMLDialogElement>('#section-dialog');
+    const panel = this.root.querySelector<HTMLElement>('#panel');
+    if (view === 'overview') {
+      popup?.close();
+      this.popupOpen = false;
+      this.renderPanel();
+      this.refresh();
+      return;
+    }
+    if (popup && panel) {
+      if (!popup.open) popup.showModal();
+      this.popupOpen = true;
+      const title = this.root.querySelector<HTMLElement>('#section-dialog-title');
+      const button = this.root.querySelector<HTMLButtonElement>('nav [data-view="' + view + '"]');
+      if (title) title.textContent = button?.textContent?.trim() ?? 'Verwaltung';
+      this.renderPanel();
+      const body = this.root.querySelector<HTMLElement>('#section-dialog-body');
+      body?.replaceChildren(panel);
+      popup.scrollTop = 0;
+      this.refresh();
+      return;
+    }
     this.renderPanel();
     this.refresh();
-    if (view !== 'overview') this.root.querySelector('#panel')?.scrollIntoView({ block: 'start' });
   }
 
   private refresh(): void {
@@ -805,7 +839,8 @@ export class KingdomGameUI {
       kingdom.currentSeason === 'winter' ? 'winter' : 'village';
     this.ambience.setScene(scene);
     const musicContext = { year: this.engine.getCurrentYear() };
-    if (this.automaticEraMusic && !this.eraMusicSwitching) {
+    this.jukebox.setCurrentYear(musicContext.year);
+    if (this.jukebox.getPlaylistMode() === 'era' && !this.eraMusicSwitching) {
       const matching = this.jukebox.getTrackForYear(musicContext.year);
       if (matching && matching.id !== this.jukebox.getCurrentId()) {
         this.eraMusicSwitching = true;
@@ -1666,7 +1701,7 @@ export class KingdomGameUI {
     const engine = this.requireEngine();
     const character = engine.getCurrentCharacter(player.id);
     const canAct = character !== null && engine.canCharacterAct(player.id);
-    const candidates = engine.getPlayableCharacters(12).map((citizen: Citizen): string => `<li>
+    const candidates = engine.getPlayableCharacters(30).map((citizen: Citizen): string => `<li>
         <div><strong>${escape(citizen.firstName)} ${escape(citizen.lastName)}</strong>
           <small>${format(citizen.age)} Jahre · ${PROFESSIONS[citizen.profession] ?? escape(citizen.profession)} · ${
             CLASSES[citizen.socialClass]} · Führung ${format(citizen.skills.leadership)} · Kampf ${
@@ -1695,7 +1730,7 @@ export class KingdomGameUI {
           : 'Dein Charakter hat in diesem Monat bereits gehandelt. Warte auf den nächsten Monat.'}</p>
       <div class="build-grid">${actions}</div>
       <h3>Rolle wechseln</h3>
-      <p class="muted">Die bisherige Figur lebt als Bürger weiter. Adelige und Soldaten sind die besten Feldherren.</p>
+      <p class="muted">Die bisherige Figur lebt als Bürger weiter. Du kannst auch Bauern, Handwerker, Händler und andere gesellschaftliche Gruppen übernehmen.</p>
       <ul class="character-list">${candidates}</ul>`;
   }
 
@@ -1792,6 +1827,9 @@ export class KingdomGameUI {
           if (select) select.value = track.id;
           this.updateJukeboxStatus();
           this.automaticEraMusic = false;
+          this.jukebox.setPlaylistMode('sequential');
+          const mode = this.root.querySelector<HTMLSelectElement>('#playlist-mode');
+          if (mode) mode.value = 'sequential';
           void this.run(async () => { await this.jukebox.play(track.id); });
         });
         gallery.append(button);
@@ -1816,10 +1854,27 @@ export class KingdomGameUI {
 
   private bindJukeboxControls(): void {
     this.updateJukeboxStatus();
+    const mode = this.root.querySelector<HTMLSelectElement>('#playlist-mode');
+    const repeat = this.root.querySelector<HTMLSelectElement>('#playlist-repeat');
+    if (mode) {
+      mode.value = this.jukebox.getPlaylistMode();
+      mode.addEventListener('change', () => {
+        this.jukebox.setPlaylistMode(mode.value as 'era' | 'sequential' | 'shuffle');
+        this.automaticEraMusic = mode.value === 'era';
+        if (mode.value === 'era' && this.engine) void this.jukebox.syncYear(this.engine.getCurrentYear());
+      });
+    }
+    if (repeat) {
+      repeat.value = this.jukebox.getRepeatMode();
+      repeat.addEventListener('change', () =>
+        this.jukebox.setRepeatMode(repeat.value as 'all' | 'one' | 'off'));
+    }
     this.root.querySelectorAll<HTMLSelectElement>('[data-jukebox-select]').forEach(select => {
       select.addEventListener('change', () => {
         const id = select.value;
         this.automaticEraMusic = false;
+        this.jukebox.setPlaylistMode('sequential');
+        if (mode) mode.value = 'sequential';
         this.updateJukeboxStatus();
         void this.run(async () => { await this.jukebox.play(id); });
       });
