@@ -444,7 +444,7 @@ export class KingdomGameUI {
           <p id="advisor-inference-result" role="status"></p>
           <hr><h3>Musik & Diagnose</h3><button type="button" id="music-diagnose" class="secondary">Alle 15 MP3 prüfen</button>
           <p id="music-diagnosis" role="status">Bei Abspielfehlern die Serverdateien überprüfen.</p>
-          <hr><h3>Offline spielen</h3><p>Einmal online alle Mediendateien und das Spiel für diesen Browser speichern (ca. 75 MB). Der Browser kann diese Daten bei Speichermangel löschen.</p>
+          <hr><h3>Offline spielen / Heimnetz-Download</h3><p>Spiel, Musik, Cover und alle Videos als vollständiges ZIP herunterladen – auch über HTTP im vertrauenswürdigen Heimnetz. Nach dem Entpacken lokal über http://localhost starten. Für eine Browserinstallation auf Mobilgeräten bleibt HTTPS erforderlich.</p><a class="secondary" href="/downloads/kaiser-von-deutschland-offline.zip" download="kaiser-von-deutschland-offline.zip">↓ Komplettes Spiel als ZIP herunterladen (LAN/HTTP möglich)</a><p>Zusätzlich: Spiel einmalig in diesem Browser speichern (nur HTTPS oder localhost; der Browser kann Cache bei Speichermangel löschen).</p>
           <button type="button" id="offline-save" class="primary">↓ Spiel im Browser speichern</button>
           <p id="offline-status" role="status">Offline-Paket noch nicht überprüft.</p>
           <hr><h3>Filmvorführungen</h3>
@@ -2045,10 +2045,20 @@ export class KingdomGameUI {
     try { this.cinematicClips = await loadCinematicLibrary(); }
     catch (error) { console.warn('Filmkatalog:',error); }
     this.updateFilmSettings();
+    // The catalog loads asynchronously; respect intro selection even at first launch.
+    const introVideo = this.root.querySelector<HTMLVideoElement>('#intro-video');
+    if (introVideo && !this.introDismissed && introVideo.paused) {
+      const chosen = filmForRole(this.cinematicClips, 'intro', filmPreferences());
+      const source = introVideo.querySelector('source');
+      if (chosen && source && !source.src.endsWith(chosen.url)) {
+        source.src = chosen.url;
+        introVideo.load();
+      }
+    }
   }
   private updateFilmSettings(): void {
     const status=this.root.querySelector<HTMLElement>('#film-library-status');
-    if(status)status.textContent=this.cinematicClips.length+' Filmdateien gefunden. Weitere Videos bitte in public/video hochladen.';
+    if(status)status.textContent=this.cinematicClips.length+' Filmdateien verfügbar (einschließlich zusätzlicher Clips).';
     const prefs=filmPreferences();
     for(const role of ['intro','outro','interlude'] as FilmRole[]){
       const select=this.root.querySelector<HTMLSelectElement>('#film-'+role);
