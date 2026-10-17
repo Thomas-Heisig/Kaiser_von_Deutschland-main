@@ -46,6 +46,9 @@ Das Gesamtprojekt bleibt in Entwicklung.
 Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
 Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Stand 17.10.2026 – sichtbare Versionskennung und sechs Musikstücke
+Die Startseite und der Spielfuß enthalten eine erkennbare Versionskennung. Im Hauptmenü können die sechs MP3-Aufnahmen 1200, 1300, 1400, 1500, 1600 und 1750 **gemeinsam** über die Dateiauswahl importiert werden. Dateinamen mit Jahreszahl werden automatisch Titel und Epoche zugeordnet. Die Checkbox **Musik folgt Epoche** wählt im laufenden Spiel den passenden vorhandenen Titel (die jüngste Aufnahme, deren Jahr nicht in der Zukunft liegt). Manuelle Titelwahl schaltet diese Automatik ab. Audio startet aus Browser-Sicherheitsgründen erst nach einer Nutzeraktion. Die im Chat hochgeladenen MP3s werden nicht automatisch in GitHub übernommen; sie stehen in dieser Sitzung zur Verfügung, können über die Jukebox importiert oder später als Binärdateien in `public/music/` committed werden. Für Live-Deployments muss außerdem der tatsächlich verwendete Deployment-Weg die neue `main`-Version übernehmen. Der Quellcode-Sync allein aktualisiert keine bereits laufende Seite.
+
 ## 🎧 Jukebox für echte Musikdateien
 Die Jukebox bietet im Hauptmenü und während des Spiels eine **Titelwahl**, Wiedergabe,
 Stopp sowie Import eigener MP3-, OGG- oder WAV-Dateien (bis 30 MB). Die Datei wird
