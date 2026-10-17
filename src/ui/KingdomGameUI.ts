@@ -129,7 +129,7 @@ export class KingdomGameUI {
     });
     this.root.addEventListener('click', this.buttonSoundHandler);
     this.showMenu();
-    void this.jukebox.initialize().then(() => this.updateJukeboxStatus()).catch(error => console.error('Musikbibliothek:',error));
+    void this.jukebox.initialize().then(async () => { this.updateJukeboxStatus(); await this.tryOpeningTheme(); }).catch(error => console.error('Musikbibliothek:',error));
     document.addEventListener('keydown', this.keyboardHandler);
   }
 
@@ -149,6 +149,7 @@ export class KingdomGameUI {
             <strong id="start-era-summary">Mittelalter · 1200</strong>
             <p id="start-campaign-summary">Wähle Kampagne und Startzeit. Die Welt wächst mit deinem Reich.</p>
           </div></div>
+          <div class="opening-music" id="opening-music" aria-live="polite"><span id="opening-music-label">♫ Zeit vergeht – Hauptthema</span><button type="button" id="opening-play" class="secondary">▶ Titel starten</button></div>
           <div class="audio-controls" aria-label="Audioeinstellungen">
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
@@ -206,6 +207,7 @@ export class KingdomGameUI {
       </main>`;
     this.audio.setMusicContext({year:1200,scene:'menu'});
     this.bindAudioControls();
+    this.root.querySelector('#opening-play')?.addEventListener('click', () => void this.tryOpeningTheme(true));
     const campaignSelect = this.root.querySelector<HTMLSelectElement>('#campaign-select');
     const startYearSelect = this.root.querySelector<HTMLSelectElement>('#start-year');
     const updateStartSummary = (): void => {
@@ -322,6 +324,7 @@ export class KingdomGameUI {
           <strong>🎼 Jukebox</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
           <button type="button" data-jukebox-play>▶ Titel abspielen</button>
           <button type="button" data-jukebox-stop>■ Stop</button>
+          <a data-jukebox-download class="jukebox-download" href="#" download>↓ Titel herunterladen</a>
           <label class="jukebox-auto"><input type="checkbox" data-jukebox-auto> Musik folgt Epoche</label>
           <label>Import MP3 <input data-jukebox-import type="file" multiple accept=".mp3,.ogg,.wav,audio/*"></label>
           <p data-jukebox-status role="status"></p>
@@ -1685,6 +1688,17 @@ export class KingdomGameUI {
     else engine.resumeGame();
   }
 
+  private async tryOpeningTheme(force = false): Promise<void> {
+    if (!this.root.querySelector('.welcome')) return;
+    if (this.jukebox.isPlaying() && !force) return;
+    const played = await this.jukebox.playOpening();
+    const button = this.root.querySelector<HTMLButtonElement>('#opening-play');
+    const label = this.root.querySelector<HTMLElement>('#opening-music-label');
+    if (label) label.textContent = played ? '♫ Zeit vergeht · Hauptthema läuft' : '♫ Zeit vergeht · Zum Abspielen klicken (Browser-Autoplay-Sperre)';
+    if (button) button.textContent = played ? '↻ Neu starten' : '▶ Musik starten';
+    this.updateAudioControls();
+  }
+
   private updateJukeboxStatus(): void {
     this.root.querySelectorAll<HTMLSelectElement>('[data-jukebox-select]').forEach(select => {
       const chosen=select.value;
@@ -1696,6 +1710,12 @@ export class KingdomGameUI {
       select.value=items.some(t=>t.id===chosen)?chosen:(this.jukebox.getCurrentId() ?? items[0]?.id ?? '');
       select.disabled = !items.length;
     });
+    this.root.querySelectorAll<HTMLAnchorElement>('[data-jukebox-download]').forEach(anchor => {
+      const selected = this.root.querySelector<HTMLSelectElement>('[data-jukebox-select]')?.value ?? '';
+      const link = this.jukebox.getDownloadUrl(selected);
+      anchor.hidden = !link;
+      if (link) { anchor.href=link; anchor.download=link.split('/').pop() ?? 'musik.mp3'; }
+    });
     this.root.querySelectorAll<HTMLElement>('[data-jukebox-status]').forEach(el=>{
       const current = this.jukebox.getTracks().find(track => track.id === this.jukebox.getCurrentId());
       el.textContent = this.jukebox.isPlaying() ? '▶ ' + (current?.title ?? 'Aufnahme') + ' läuft' :
@@ -1706,6 +1726,7 @@ export class KingdomGameUI {
 
   private bindJukeboxControls(): void {
     this.updateJukeboxStatus();
+    this.root.querySelectorAll<HTMLSelectElement>('[data-jukebox-select]').forEach(select => select.addEventListener('change', () => this.updateJukeboxStatus()));
     this.root.querySelectorAll<HTMLInputElement>('[data-jukebox-auto]').forEach(input => {
       input.checked = this.automaticEraMusic;
       input.addEventListener('change', () => {
