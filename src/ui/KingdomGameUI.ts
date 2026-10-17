@@ -333,7 +333,7 @@ export class KingdomGameUI {
           <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span></div>
           <div class="header-actions">
             <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog" aria-label="Informationen zur Epoche"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
-            <button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen</button>
+            <button type="button" id="civic-open" class="primary" aria-label="Bürgeraufträge direkt öffnen">⚒ Bürgeraufträge</button><button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen</button>
             <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button><button data-action="exit" class="secondary" title="Zum Hauptmenü zurück">Beenden</button></div>
@@ -653,6 +653,7 @@ export class KingdomGameUI {
       });
     });
     this.bindFilmSettings();
+    this.root.querySelector('#civic-open')?.addEventListener('click', () => this.navigate('civic'));
     this.root.querySelector('#epoch-info-toggle')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#epoch-dialog')?.showModal());
     this.root.querySelector('#legal-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#legal-dialog')?.showModal());
     this.root.querySelectorAll<HTMLButtonElement>('[data-close-dialog]').forEach(button => button.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#' + button.dataset.closeDialog)?.close()));
