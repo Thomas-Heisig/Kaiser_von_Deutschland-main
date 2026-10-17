@@ -1,3 +1,15 @@
+## Musik-/Intro-Integration (17.10.2026, Folge-Pull-Request)
+- [x] Neue GitHub-Uploads erkannt: 15 MP3s (001–015), zwei MP4-Intros.
+- [x] MP3-Dateien unter `public/music/` mit lesbaren Namen versioniert; Git-Blob-Inhalte unverändert.
+- [x] Videos unter `public/video/` umbenannt; `intro.mp4` als Filmstart mit Überspringen, Stummschaltung für Browser-Autoplay.
+- [x] 15 visuelle Cover-Platzhalter, Titel- und Epochenmetadaten, Covergalerie, Downloadlinks.
+- [x] Procedural-Musikmotor `RoyalMusicScore` entfernt; `GameAudio` nur für UI-Effekte.
+- [x] Bedienung verbessert: echte Musik statt Synthesizer, kompakter Header, mobile Coverkarten.
+- [ ] CI- und Browser-Smoke-Ergebnisse aus dem PR endgültig bestätigen; Medienwiedergabe auf dem Zielgerät testen.
+- [ ] Original-Cover, Entstehungsjahr, Künstler/Komponist, Lizenz und ausführliche Titelbeschreibungen nachreichen.
+- [ ] Live-Deployment von `main` prüfen; Web-Browser lassen tonhaltigen Autoplay meist nur nach Interaktion zu.
+- [ ] Covergrafik-Ersetzung mit vom Rechteinhaber bereitgestellten Bildern; die SVGs sind vorläufige Albumillustrationen.
+
 ## Offizielle Musikbibliothek – alle 15 Stücke (17.10.2026)
 - [x] Alle 15 hochgeladenen MP3-Originale per Dateigröße und SHA-256 im lokalen ZIP geprüft und in sauber benanntem Einbaupaket `public/music/` aufbereitet.
 - [x] In GitHub: zentraler, erweiterbarer 15-Titel-Katalog mit Sonderstücken und Epoche.

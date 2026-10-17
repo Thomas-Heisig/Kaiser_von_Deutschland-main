@@ -8,6 +8,8 @@ try {
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+    await page.locator('#intro-video').waitFor({ timeout: 15000 });
+    await page.locator('#intro-skip').click();
     await page.getByRole('heading', { name: /Kaiser von/i }).waitFor({ timeout: 15000 });
     await page.locator('#start-year').waitFor();
     await page.locator('#opening-music').waitFor();
@@ -23,6 +25,8 @@ try {
     await page.locator('#game-music-settings').waitFor();
     await page.locator('#game-music-settings summary').click();
     await page.locator('[data-jukebox-select]').waitFor();
+    await page.locator('.cover-card').first().waitFor();
+    if (await page.locator('.cover-card').count() !== 15) failures.push('expected all 15 official album covers');
     await page.locator('[data-jukebox-download]').waitFor({state:'attached'});
     await page.locator('[data-jukebox-import]').setInputFiles({
       name: 'Kaiserliches leitmotiv 1200.mp3', mimeType:'audio/mpeg', buffer:Buffer.alloc(4096,0x41)
@@ -74,6 +78,7 @@ try {
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+    await page.locator('#intro-skip').click();
     await page.locator('#campaign-select').selectOption(campaign);
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
@@ -90,6 +95,7 @@ try {
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+    await page.locator('#intro-skip').click();
     await page.evaluate(async () => {
       const { GameEngine } = await import('/src/core/GameEngine.ts');
       const engine = new GameEngine({ startingYear: 1200, randomEvents: false, enableWiki: false });
@@ -110,6 +116,7 @@ try {
       engine.dispose();
     });
     await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('#intro-skip').click();
     await page.locator('#continue').click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
     await page.locator('nav [data-view="economy"]').click();
