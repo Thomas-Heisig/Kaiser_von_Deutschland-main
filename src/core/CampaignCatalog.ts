@@ -9,7 +9,7 @@ export const CAMPAIGNS: readonly CampaignDefinition[] = [
   { id: 'wissenschaft', name: 'Zeitalter des Wissens', description: 'Fördere Bildung und eigene Forschung.', year: 1200, minYear: 1500, maxYear: 9999 },
   { id: 'grenzland', name: 'Die bedrohte Mark', description: 'Schütze dein Land und stärke das Heer.', year: 1200, minYear: 1200, maxYear: 1750 },
   { id: 'kultur', name: 'Glaube und Kultur', description: 'Stärke geistliches Leben und höfische Künste.', year: 1200, minYear: 1200, maxYear: 1750 },
-  { id: 'kaiserkrone', name: 'Der Weg zur Kaiserkrone', description: 'Vereine Bündnispolitik, Festungen und Reichtum.', year: 1200, minYear: 1200, maxYear: 1750 }
+  { id: 'kaiserkrone', name: 'Der Weg zur Kaiserkrone', description: 'Vereine Bündnispolitik, Festungen und Reichtum.', year: 1200, minYear: 1200, maxYear: 1750 },
   { id: 'industrie', name: 'Dampf und Stahl', description: 'Modernisiere Werkstätten, Straßen und den Handel.', year: 1820, minYear: 1820, maxYear: 1890 },
   { id: 'wiederaufbau', name: 'Ein Land wird neu', description: 'Baue Infrastruktur, Gesundheitswesen und Vertrauen wieder auf.', year: 1945, minYear: 1945, maxYear: 1970 },
   { id: 'digital', name: 'Das vernetzte Reich', description: 'Verbinde Forschung, Technik und gesellschaftliche Entwicklung.', year: 2000, minYear: 2000 }
