@@ -2038,11 +2038,79 @@ export class KingdomGameUI {
     } catch { /* Browsers may block Web Audio before interaction. */ }
   }
 
+  private async refreshCinematicClips(): Promise<void> {
+    try { this.cinematicClips = await loadCinematicLibrary(); }
+    catch (error) { console.warn('Filmkatalog:',error); }
+    this.updateFilmSettings();
+  }
+  private updateFilmSettings(): void {
+    const status=this.root.querySelector<HTMLElement>('#film-library-status');
+    if(status)status.textContent=this.cinematicClips.length+' Filmdateien gefunden. Weitere Videos bitte in public/video hochladen.';
+    const prefs=filmPreferences();
+    for(const role of ['intro','outro','interlude'] as FilmRole[]){
+      const select=this.root.querySelector<HTMLSelectElement>('#film-'+role);
+      if(!select)continue;
+      select.replaceChildren();
+      if(role==='interlude')select.add(new Option('Kein Zwischenvideo',''));
+      for(const clip of this.cinematicClips)select.add(new Option(clip.title,clip.id));
+      select.value=prefs[role];
+    }
+    const enabled=this.root.querySelector<HTMLInputElement>('#film-interludes-enabled');
+    if(enabled)enabled.checked=prefs.interludesEnabled;
+  }
+  private bindFilmSettings(): void {
+    this.updateFilmSettings();
+    for(const role of ['intro','outro','interlude'] as FilmRole[]){
+      this.root.querySelector<HTMLSelectElement>('#film-'+role)?.addEventListener('change',event=>{
+        const select=event.currentTarget as HTMLSelectElement;
+        saveFilmPreferences({...filmPreferences(),[role]:select.value});
+      });
+    }
+    this.root.querySelector<HTMLInputElement>('#film-interludes-enabled')?.addEventListener('change',event=>{
+      saveFilmPreferences({...filmPreferences(),interludesEnabled:(event.currentTarget as HTMLInputElement).checked});
+    });
+    this.root.querySelector('#film-preview')?.addEventListener('click',()=>{
+      const clip=filmForRole(this.cinematicClips,'interlude',filmPreferences());
+      if(clip)this.showInterlude(clip,'Filmvorschau');
+      else this.notify('Bitte erst ein Zwischenvideo auswählen.',true);
+    });
+    const close=()=>this.interludeDialog?.close();
+    this.root.querySelector('#film-dialog-close')?.addEventListener('click',close);
+    this.root.querySelector('#film-dialog-skip')?.addEventListener('click',close);
+    this.root.querySelector('#film-dialog-play')?.addEventListener('click',()=>{
+      const video=this.root.querySelector<HTMLVideoElement>('#film-dialog-video');
+      if(video){video.muted=false;void video.play().catch(()=>this.notify('Video benötigt eine Benutzeraktion.',true));}
+    });
+    const dialog=this.root.querySelector<HTMLDialogElement>('#film-dialog');
+    dialog?.addEventListener('close',()=>{
+      const video=this.root.querySelector<HTMLVideoElement>('#film-dialog-video');
+      video?.pause();if(video)video.removeAttribute('src');
+      if(this.engine&&!this.engine.isHotseat()&&this.engine.getGameState()===GameState.PAUSED&&!this.engine.getPendingCouncilDecision(this.player?.id??'')){
+        // Deliberately leave gameplay paused: never resume a game the player paused.
+      }
+      this.interludeDialog=undefined;
+    });
+  }
+  private showInterlude(clip:CinematicClip,title:string):void {
+    const dialog=this.root.querySelector<HTMLDialogElement>('#film-dialog');
+    const video=this.root.querySelector<HTMLVideoElement>('#film-dialog-video');
+    if(!dialog||!video||dialog.open)return;
+    const titleElement=this.root.querySelector<HTMLElement>('#film-dialog-title');
+    if(titleElement)titleElement.textContent=title;
+    this.interludeDialog=dialog;
+    video.src=clip.url;video.muted=false;
+    video.onended=()=>dialog.close();
+    dialog.showModal();
+    void video.play().catch(()=>{video.pause();});
+  }
+
   private bindIntro(): void {
     const overlay = this.root.querySelector<HTMLElement>('#intro-overlay');
     const video = this.root.querySelector<HTMLVideoElement>('#intro-video');
     const activate = this.root.querySelector<HTMLButtonElement>('#intro-activation');
     if (!overlay || !video || !activate) return;
+    const intro=filmForRole(this.cinematicClips,'intro',filmPreferences());
+    if(intro){const source=video.querySelector('source');if(source){source.src=intro.url;video.load();}}
     video.muted = false;
     video.volume = 1;
     const finish = (): void => {
@@ -2128,7 +2196,7 @@ export class KingdomGameUI {
     window.clearTimeout(this.cinematicTimeout);
     this.introDismissed = false;
     overlay.querySelector('.production-card')?.remove();
-    video.querySelector('source')?.setAttribute('src', '/video/intro.mp4');
+    video.querySelector('source')?.setAttribute('src', filmForRole(this.cinematicClips,'outro',filmPreferences())?.url ?? '/video/intro.mp4');
     video.load();
     const skip = this.root.querySelector('#intro-skip');
     if (skip) skip.textContent = 'Zum Hauptmenü →';
@@ -2291,6 +2359,7 @@ export class KingdomGameUI {
     this.root.removeEventListener('click', this.buttonSoundHandler);
     this.audio.dispose();
     window.clearTimeout(this.cinematicTimeout);
+    this.interludeDialog?.close();
     this.jukebox.dispose();
     this.ambience.dispose();
     document.removeEventListener('pointerdown', this.retryOpening);
