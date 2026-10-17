@@ -781,6 +781,7 @@ export class KingdomGameUI {
     const latest = this.root.querySelector('#latest');
     if (latest) latest.innerHTML = this.journal.slice(0, 2).map((entry: JournalEntry) =>
       `<p><small>${escape(entry.date)}</small>${escape(entry.message)}</p>`).join('');
+    this.root.querySelector('.kingdom-app')?.setAttribute('data-view', this.view);
     this.root.querySelectorAll<HTMLButtonElement>('nav [data-view]').forEach((button: HTMLButtonElement): void => {
       button.setAttribute('aria-current', button.dataset.view === this.view ? 'page' : 'false');
     });
