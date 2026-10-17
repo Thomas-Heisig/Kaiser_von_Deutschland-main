@@ -1,31 +1,80 @@
-# Changelog
-Änderungen im Git-Repository, nach [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Die Paketversion ist weiterhin `2.5.1`; nachstehende Änderungen sind bisher **unveröffentlicht**. Die vollständige historische Änderungsliste wurde vor der Neuordnung archiviert.
+# TODO — Kaiser von Deutschland
+**Verbindliche operative Aufgabenliste · Stand 17.10.2026 · Referenz main: 28e35c82**
 
-## [Unreleased] — Stand 17.10.2026
+Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und den Meilensteinen der [Roadmap](docs/00-meta/roadmap.md). `[x]` bedeutet im Hauptspiel **implementiert und mindestens automatisiert geprüft**, `[~]` teilweise, `[ ]` offen. Ein in alten Unterlagen als „fertig“ bezeichnetes Modul ist ohne Benutzeroberfläche **nicht** abgeschlossen. Frühere Einträge gingen nicht verloren: [TODO-Archiv](docs/outdated/TODO-snapshot-2026-10-17.md), [README-Ideenbestand](docs/00-meta/backlog-from-readme.md), [historische Roadmap](docs/outdated/roadmap-snapshot-2026-10-17.md).
 
-### Added
-- Browserbasierte Hauptoberfläche, mehrere Epochen, sechs Kampagnen und Hotseat (2–4) mit Forschungs-, Handels- und Ratsentscheidungen.
-- Vollständige Musikbibliothek mit 15 MP3-Titeln, Covergalerie und Download; fünf MP4-Filme mit Intro-/Outro-/Zwischenszene.
-- Bürgeraufträge mit Epochenverfügbarkeit, Kosten, Abschluss und Biografie; Bürgerauswahl berücksichtigt Beruf/Fähigkeiten.
-- Wiederkehrende Ratsereignisse merken den früheren lebenden Delegierten, andernfalls Vorauswahl nach fünf Sekunden; Entscheidungen bleiben ausdrücklich nutzerbestätigt.
-- Auswirkungen von Beruf, Charakterzügen, Ansehen und Führungserfahrung auf delegierte Ratsentscheidungen.
-- Echte Familiengeburten, Eltern-Kind-Beziehungen, schwangerschaftsgebundene Familienmechanik, epochenbezogene Vornamen und echte demografische Geburtenzählung.
-- Offline-ZIP für vertrauenswürdiges Heimnetz, PWA-Manifest, Service Worker, Installationsbutton, PNG-Icons und HTTPS-Pages-Workflow.
-- Release-Gate in CI für 15 MP3s, fünf MP4-Dateien, Filmdatenbank, ZIP und PWA-Pfade.
+## P0 — Veröffentlichung und zuverlässiger Betrieb
+- [ ] **HTTPS live schalten:** Pages wurde selbst mit `enablement: true` nicht erstellt (`Resource not accessible by integration`); Eigentümer aktiviert Pages in Settings oder verbindet privaten Cloudflare-Pages-Host. **Nicht als deployed deklarieren.**
+- [ ] Anschließend echte URL mit HTTPS, HTTP 200/206 für MP3/MP4, korrektes Manifest, Scope und Service Worker messen.
+- [ ] PWA-Installation auf iPad/Safari, Android/Chrome und Windows/Edge sowie Offlinebetrieb mit Musik und Video im Flugmodus prüfen.
+- [ ] Vor öffentlicher Freigabe Impressum, Datenschutz, Musik-/Video- und Coverrechte, Urheber-/KI-Credits vervollständigen.
+- [x] Installationsbutton, PNG-App-Icons 192/512, Offline-ZIP, dynamischer Videokatalog sowie Release-Prüfung der 15 MP3 und 5 MP4 im Build.
+- [x] CI Typecheck, Vitest, Build und Chromium-Smoke der aktuellen `main`-Version bestanden.
 
-### Changed
-- Einstellungssystem in fünf responsiven Kategorien gruppiert, auf Startbildschirm und im Spiel erreichbar; Bürgeraufträge, Installation und Animationsschalter aus der Kopfzeile entfernt. Anzeigepräferenzen lokal speicherbar.
-- Responsives Tablet-/Mobil-Layout, sichtbare Bürgeraufträge, WebGPU-Start-/Statusanzeige und optionale lokale Mini-KI.
-- README, Status, Roadmap und operative TODO werden gegen den tatsächlichen aktiven Git-Stand abgegrenzt; sämtliche älteren Planungen bleiben archiviert.
+## P1 — Stabilität, Gameplay, Bürger und Generationen
+- [ ] Echte Partnervermittlung und Eheschließungen, regionale Namensräume sowie Geburten-/Sterblichkeitsbalance bei mehrjährigen Simulationen.
+- [ ] Ausbildung, Berufe, Arbeitsplätze, Karrierewechsel, Familienbesitz und generationsübergreifende Erbschaften kohärent verbinden.
+- [ ] Ratsdelegation: lebender früherer Delegierter / Zufall nach fünf Sekunden / manuelle Auswahl / Tod / Hotseat / Save-Load in vollständigen E2E-Tests abnehmen.
+- [ ] Langfristiges Vertrauen, Loyalität, Rivalitäten, politische Fraktionen und regionale Produktion als Folgen von Rats-/Bürgeraufträgen.
+- [ ] Ereignis- und Kampagnenschleifen mit historischen Epochen, Konfliktlösung ohne Krieg, technische Einheiten und Balance über Jahrhunderte.
+- [ ] Chronik über Sitzungen hinweg speichern und bei großen Spielständen mit Begrenzung/Migration testen.
+- [ ] Größere Spielstände, Bürgerzahlen >5.000 / 100.000, Browser-Latenz, Profiling, Benchmarks, deterministische Langläufe prüfen.
+- [ ] Browser-E2E für Hotseat, Save/Load, Ratsentscheidungen, Tutorials und Fortschritt; WCAG und Touchgeräte ergänzen.
 
-### Fixed
-- Historisch eingeschränkte Bürger-/Militäraktionen und Savegame-kompatible Familienbeziehungen.
-- Release-Prüfung von Audio-/Filmdateien; Typcheck- und Testfehler aus den zugehörigen Feature-Branches korrigiert.
+- [x] Einstellungen als fünf Tabs bereits im Startmenü und laufenden Spiel zugänglich; Bürgeraufträge nur in Navigation, Animation/Installation ausschließlich in Einstellungen.
+- [ ] Einstellungen auf echtem iPad/Android mit Tastatur und Touch abnehmen.
 
-### Known limitations (unreleased)
-- GitHub Pages **nicht öffentlich verfügbar**: Fehler `Resource not accessible by integration` bei automatischem Aktivierungsversuch.
-- Keine Endgeräteabnahme für PWA, Medienrechte/Impressum/Datenschutz vor Veröffentlichung offen.
-- Generations-Balance, Partnervermittlung, Erbschaften, Online-Mehrspieler und große Epochen-Simulation weiterhin Roadmap-Themen.
+## P2 — Spielerlebnis und Module
+- [ ] Historische Video-3/4/5-Inhalte nach tatsächlicher Sichtung epochengetreu benennen und verorten; Audio-/Video-Übergänge auf Geräten prüfen.
+- [ ] Hochauflösende Originalcover und vollständige Metadaten/Credits für 15 Musikstücke.
+- [ ] WebGPU-Gerätetest (Modell, Lizenz, Download, Speicher, Inferenz), optionale Ollama-/Mini-KI-Reaktionen; KI bleibt Opt-in.
+- [ ] Bürgeraufträge und Regionen, Produktion, Transport sowie lokale Sicherheit mit Wirtschaft und Familien verbinden.
+- [ ] Vorhandene Legacy-Module (Religion, Marine, Recht, Bildung, Lebensphasen, Tagesrhythmus, Stadt, Ökologie) einzeln im Standardspiel zugänglich machen, nur danach als spielbar markieren.
+- [ ] Geführtes Tutorial, historische Szenarien, achtsame Barrierefreiheit und internationales UI.
+- [ ] Code-Splitting, Worker, verlässliche lokale Speicherung und optionales Cloud-Sync-Konzept.
+- [ ] Vollständige, reproduzierbare Tests für LAN-ZIP und Versionen am Heimnetzserver durchführen.
 
-## Historische Versionseinträge
-Die vollständige alte Versionschronik, einschließlich der alten 2.3.x–2.6.0-Entwicklungsberichte, wurde **wortgetreu** nach [Changelog-Archiv](docs/outdated/CHANGELOG-snapshot-2026-10-17.md) übernommen. Ältere „fertig“-Meldungen sind Projektberichte ihrer Zeit und nicht automatisch Freigaben der jetzigen Standardkampagne.
+## P3 — Langfristige Vision / aus README und Roadmap übernommen
+- [ ] Online-Mehrspieler mit WebSocket, Reconnect, Lobby, Synchronisation, Schutz vor Betrug; kooperative Herrschaften.
+- [ ] Perspektivwechsel für jede Bevölkerungsschicht, Rollen-Mehrspieler, soziale Bewegungen, Bürgerämter und individuelle Politik.
+- [ ] Erweiterte historische Ereignisketten, Entdeckungsreisen, Finanzsysteme, Gerichte, Universitäten, Kunst, Medien, ökologische Wirkungen, Globalisierung.
+- [ ] Modding-API, Plugins, eigene Szenarien, Replays, Communities, Schul-/Wissenschaftsversion.
+- [ ] Electron/Capacitor, Desktop-/Mobile-Distribution, optionale Cloud-Spielstände, lokalisierte Sprachversionen.
+- [ ] Perspektivisch 3D-Schlachtfeld, VR/AR, Raumfahrt, Zukunft, alternative Realitäten und prozedurale Narrative.
+
+## Abgleich mit den konkreten Funktionsversprechen der alten README (17.10.2026)
+
+Die historische README enthält detailliertere Funktionsumfänge als der bisherige Sammel-Backlog. **Quelle:** [vollständiges Original](docs/outdated/README-snapshot-2026-10-17.md) und [Ideenbestand](docs/00-meta/backlog-from-readme.md). In der Hauptkampagne sind viele alte Module zwar als Quellcode vorhanden, aber nicht bis zur Bedienoberfläche und zum Spielstand durchgängig verbunden. Deshalb bleiben sie bis zur tatsächlichen Integration offen.
+
+- [x] Drei zusätzliche, epocheabhängige Bürgeraufträge aus alter README in Standardspiel ergänzt: Seuchenhilfe, Bewässerung bei Dürre, Kulturfest; Zeitraumtests ergänzt.
+- [ ] Auftragsergebnisse künftig mit tatsächlichen Epidemie-/Klima- und Kultureffekten statt nur Ressourcen- und Zufriedenheitswerten verbinden.
+
+### P1 – Historische Rollen, gesellschaftliche Systeme und Ereignisse
+- [ ] **Rollen / Lebenssimulation:** Frühere 15, später 35 Rollen (Kaiser, König, Klerus, Adel, Beamte, Händler, Handwerker, Bauern, Gelehrte; Bankier, Architekt, Spion, Admiral, General, Journalist, Erfinder, Diplomat, Fabrikbesitzer, Philosoph) auf tatsächliche auswählbare Hauptspiel-Rollen abgleichen. Rollenwechsel, KI für nicht gespielte Charaktere, Rollenziele und rollenabhängige UI erst nach Integration als fertig melden.
+- [ ] **Lebensphasen:** Kindheit, Schulzeit, Erwachsenenleben, Lehre–Geselle–Meister, monatliches Tagesbudget, drei Zeitmodi (Tag/Monat/Jahr), Charaktererstellung und Persönlichkeit durchgehend im Hauptspiel testen.
+- [ ] **Geschichte und Krisen:** Die früher genannten 27 bzw. 70 historischen Ereignisse, zehn Persönlichkeiten, zehn Schlachten, acht Epidemien, acht Katastrophen und Ereignisketten anhand des tatsächlichen Katalogs inventarisieren und epochegerecht im Spiel verknüpfen.
+- [ ] **Politik und Diplomatie:** Früher angegebene 33/53 Maßnahmen, acht Politikbereiche, Umwelt-, Digital-, Wissenschafts- und Sicherheitspolitik, Bündnisse, Vasallen, Friedensverträge, Nichtangriffspakte und politische Folgeereignisse mit echter UI/Savegame-Wirkung prüfen.
+- [ ] **Bevölkerung und Religion:** Religionen (frühere Angaben sieben bzw. zehn), acht Kulturen, religiöse Bauten, Konversion, kulturelle Spannungen, soziale Netzwerke, Migration, Klassenwechsel und Revolutionen nachvollziehbar integrieren.
+
+### P2 – Originale Domänen und Detailmechanik
+- [ ] **Bauten / Forschung:** Historische Versprechen 23/68 Gebäudetypen, 24 Technologien, drei Weltwunder, Spezialbauten und Technologiebaum gegen verfügbare Bau- und Forschungsoptionen zählen und Lücken schließen.
+- [ ] **Handel / Verkehr / Wirtschaft:** Zehn Handelsrouten, 15 Transportarten, Bernsteinstraße/Hanse/EU-Binnenmarkt, Routenrisiko, aktive Routen, Einnahmen, Infrastrukturboni, Markt, regionale Produktionsketten, Inflation, Arbeitsplätze und Kohortenwirtschaft spielbar nachweisen.
+- [ ] **Umwelt:** Klima, Ressourcenregeneration, Landschaftsumbau, Bewässerung, Tierpopulationen, Artenschutz, historische Naturkatastrophen und Umweltpolitik zeitgebunden integrieren.
+- [ ] **Militär und Marine:** Fünfzehn Militäreinheiten, Geländeeffekte, Wetter, Formationen, Nachschub, Belagerungen, Befestigungen, Marine (acht Schiffstypen/zehn Technologien), Seeschlachten, Blockaden, Piraterie und friedliche Alternativen prüfen.
+- [ ] **Geheimdienst / Gefangene / Kriegsfinanzierung:** Agenten, Sabotage, Doppelagenten; Gefangenenlager, Austausch, Lösegeld, Fluchten; zwölf Finanzierungsformen, Kriegsanleihen, Kredite, Rückzahlung, Inflation und diplomatische Konsequenzen integrieren.
+- [ ] **Städte / Wissen / Kultur / Recht:** Stadtbezirke, Nachtzyklus, Künstler, elf Kunststile, zwölf Kulturereignisse, Medien/Gerüchte/Zensur, Gerichte, Bibliothek, Universitäten, 15 Entdeckungen, zehn Rechts- und zwölf Steuermodelle integrieren.
+- [ ] **Wissensquellen:** Historische Wikipedia-Anreicherung nur optional, mit Quellenhinweisen und Cache-/Offline-Verhalten.
+- [ ] **Sichtbarkeit und Umfang:** Alte reine Code-Module/Prototyp-Panels zuerst über verknüpfte UI, Engine, Migration und Tests integrieren; danach tatsächliche Zahlen und Verfügbarkeit dokumentieren. Die historische Behauptung über 80 Millionen Bürger ist **nicht** durch Performance-Tests der aktuellen Browser-App bestätigt.
+
+### P3 – Gemeinschaft und Zukunft
+- [ ] **Online-Multiplayer:** Sechs Spieler inklusive Bots, Echtzeit/Rundenmodus, öffentliche/private Chats, Lobby, Sitzungen und wiederverbundene Clients sind eigene neue Implementierungsvorhaben; nicht mit 2–4 lokalem Hotseat verwechseln.
+- [ ] **Zukunft/Episoden:** 2050/2080/2100/2200, KI-Revolution, Fusion, Raumfahrt, alternative Verläufe, originale Episoden und zukünftige Rollen/Technologien als gesonderte Szenarien mit Konsistenztests realisieren.
+- [ ] **Sammlungen/Medien:** Historische Personen und Schlachten, 15 wissenschaftliche Entdeckungen, Kunst, Musik, Videos, Ursprungs-/Lizenzangaben sowie optional vertonte Geschichtserzählung konsistent katalogisieren.
+
+## Qualität und Dokumentation
+- [ ] Testabdeckung nachvollziehbar messen und für Kernsysteme schrittweise auf 70 % bringen; Ist-Wert bisher nicht bestätigt.
+- [~] Legacy-Architektur und veraltete Berichte systematisch von Live-Dokumentation getrennt; API-Referenz und Handbuch regelmäßig weiter aktualisieren.
+- [x] Lokale Markdown-Links in README/TODO/Roadmap/Changelog/Status/Index/Ideenbestand automatisch in CI prüfen.
+- [x] Verbindliche Ist-/Plan-Trennung, historische README-, TODO- und Roadmap-Snapshots, aktive Dokumentationsnavigation und Changelog-Reihenfolge angelegt.
+
+**Vollständige historische Ideen:** [README-Ideenbestand](docs/00-meta/backlog-from-readme.md). Ausführliche technische Einträge, frühere PR-Notizen und alle Legacy-TODOs bleiben lesbar im [unveränderten TODO-Snapshot](docs/outdated/TODO-snapshot-2026-10-17.md); ein Archiv-Eintrag ist nicht stillschweigend erledigt.
