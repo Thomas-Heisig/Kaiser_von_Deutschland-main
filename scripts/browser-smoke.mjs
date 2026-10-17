@@ -94,6 +94,7 @@ try {
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
     await page.locator('#intro-skip').click();
+    if (campaign === 'wissenschaft') await page.locator('#start-year').selectOption('1500');
     await page.locator('#campaign-select').selectOption(campaign);
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
