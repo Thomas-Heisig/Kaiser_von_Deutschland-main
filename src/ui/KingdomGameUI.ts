@@ -10,6 +10,8 @@ import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
 import { SETTLEMENT_DISTRICTS, DistrictFilter, SEASON_LABELS } from './SettlementSceneModel';
 import { GameAudio } from './GameAudio';
+import type { MusicScene } from './RoyalMusicScore';
+import { musicArrangement, MUSIC_EPOCH_NAMES, MUSIC_SCENE_NAMES } from './RoyalMusicScore';
 import { CAMPAIGNS, CampaignId } from '../core/CampaignCatalog';
 import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../core/CourtAssistantRegistry';
 import { GameAmbience, Soundscape } from './GameAmbience';
@@ -144,6 +146,7 @@ export class KingdomGameUI {
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
             <button type="button" class="secondary" data-audio-toggle="ambience" aria-pressed="false">🌿 Umgebung: Aus</button>
+            <label class="ambience-volume">Musiklautstärke <input type="range" data-music-volume min="0" max="100" value="28" step="2" aria-label="Musiklautstärke"></label>
             <label class="ambience-volume">Umgebung: Lautstärke <input type="range" data-ambience-volume min="0" max="100" value="45" step="5" aria-label="Lautstärke der Umgebungsgeräusche"></label>
           </div>
           <form id="new-game">
@@ -180,6 +183,7 @@ export class KingdomGameUI {
           <p id="notice" role="status" aria-live="polite"></p>
         </section>
       </main>`;
+    this.audio.setMusicContext({year:1200,scene:'menu'});
     this.bindAudioControls();
     const playerCount = this.root.querySelector<HTMLSelectElement>('#player-count');
     playerCount?.addEventListener('change', (): void => {
@@ -270,6 +274,7 @@ export class KingdomGameUI {
           <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span></div>
           <div class="header-actions">
             <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
+            <label class="ambience-volume">Musik <input type="range" data-music-volume min="0" max="100" value="28" step="2" aria-label="Musiklautstärke"></label><span id="music-era-label" class="muted"></span>
             <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
             <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
             <button data-action="save" class="secondary">Speichern</button>
@@ -659,6 +664,15 @@ export class KingdomGameUI {
       this.view === 'economy' ? 'market' :
       kingdom.currentSeason === 'winter' ? 'winter' : 'village';
     this.ambience.setScene(scene);
+    const musicScene: MusicScene = this.engine.getPendingCouncilDecision(this.player.id) ? 'crisis' :
+      this.view === 'war' || this.view === 'military' ? 'war' :
+      this.view === 'economy' ? 'trade' :
+      this.view === 'court' || this.view === 'council' || this.view === 'diplomacy' ? 'court' : 'city';
+    const musicContext = {year:this.engine.getCurrentYear(),
+      campaignId:this.engine.getCampaignDefinition().id,scene:musicScene};
+    this.audio.setMusicContext(musicContext);
+    const theme = musicArrangement(musicContext);
+    setText('music-era-label', MUSIC_EPOCH_NAMES[theme.epoch] + ' · ' + MUSIC_SCENE_NAMES[musicScene]);
     const panel = this.root.querySelector('#panel');
     if (!panel?.contains(document.activeElement)) this.renderPanel();
   }
@@ -1548,6 +1562,15 @@ export class KingdomGameUI {
       input.value = String(Math.round(this.ambience.getVolume() * 100));
       input.addEventListener('input', () => {
         this.ambience.setVolume(Number(input.value) / 100);
+      });
+    });
+    this.root.querySelectorAll<HTMLInputElement>('[data-music-volume]').forEach(input => {
+      input.value=String(Math.round(this.audio.getMusicVolume()*100));
+      input.addEventListener('input', () => {
+        this.audio.setMusicVolume(Number(input.value)/100);
+        this.root.querySelectorAll<HTMLInputElement>('[data-music-volume]').forEach(other=>{
+          if(other!==input) other.value=input.value;
+        });
       });
     });
     this.updateAudioControls();
