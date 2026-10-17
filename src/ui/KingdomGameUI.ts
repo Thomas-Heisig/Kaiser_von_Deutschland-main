@@ -142,7 +142,7 @@ export class KingdomGameUI {
     this.root.innerHTML = `
       <main class="welcome">
         <div class="intro-overlay" id="intro-overlay" aria-label="Filmischer Spieleinstieg">
-          <div class="production-card" id="production-card"><span class="production-sigil">♜</span><strong>Eine Thomas Heisig Produktion</strong><small>KAISER VON DEUTSCHLAND</small></div><video id="intro-video" playsinline preload="auto" poster="/covers/zeit-vergeht.svg"><source src="/video/intro-original.mp4" type="video/mp4"></video>
+          <div class="production-card" id="production-card"><span class="production-sigil">♜</span><strong>Eine Thomas Heisig Produktion</strong><small>KAISER VON DEUTSCHLAND</small></div><video id="intro-video" playsinline preload="auto" poster="/covers/zeit-vergeht.webp"><source src="/video/intro-original.mp4" type="video/mp4"></video>
           <button type="button" id="intro-activation" class="intro-activation" hidden>▶ Intro mit Ton starten</button>
           <div class="intro-caption"><span>KAISER VON DEUTSCHLAND</span><p>Die Geschichte beginnt</p></div>
           <button type="button" id="intro-skip" class="intro-skip">Intro überspringen →</button>
@@ -160,7 +160,7 @@ export class KingdomGameUI {
             <strong id="start-era-summary">Mittelalter · 1200</strong>
             <p id="start-campaign-summary">Wähle Kampagne und Startzeit. Die Welt wächst mit deinem Reich.</p>
           </div></div>
-          <div class="opening-music" id="opening-music" aria-live="polite"><img src="/covers/zeit-vergeht.svg" alt="Cover Zeit vergeht"><span id="opening-music-label">♫ Zeit vergeht · Hauptthema nach dem Intro</span><button type="button" id="opening-toggle" class="opening-toggle" aria-label="Musik pausieren">Ⅱ Pause</button></div>
+          <div class="opening-music" id="opening-music" aria-live="polite"><img src="/covers/zeit-vergeht.webp" alt="Cover Zeit vergeht"><span id="opening-music-label">♫ Zeit vergeht · Hauptthema nach dem Intro</span><button type="button" id="opening-toggle" class="opening-toggle" aria-label="Musik pausieren">Ⅱ Pause</button></div>
           <form id="new-game">
             <label>Startepoche<select name="startYear" id="start-year">
               <option value="1200">1200 · Hochmittelalter</option>
@@ -336,7 +336,7 @@ export class KingdomGameUI {
         <details class="game-music-settings" id="game-music-settings"><summary>🎼 Original-Soundtrack & Titelcover</summary>
         <section class="jukebox jukebox-ingame" aria-label="Musik-Jukebox">
           <strong>🎼 Original-Soundtrack · 15 Titel</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
-          <div class="jukebox-nowplaying"><img data-jukebox-cover src="/covers/zeit-vergeht.svg" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>15 historische und thematische Aufnahmen</small></div></div>
+          <div class="jukebox-nowplaying"><img data-jukebox-cover src="/covers/zeit-vergeht.webp" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>15 historische und thematische Aufnahmen</small></div></div>
           <div class="playlist-toolbar"><label>Wiedergabe <select id="playlist-mode"><option value="era">Nach Epoche</option><option value="sequential">Reihenfolge</option><option value="shuffle">Zufällig</option></select></label><label>Wiederholen <select id="playlist-repeat"><option value="all">Alle</option><option value="one">Titel</option><option value="off">Aus</option></select></label></div>
           <details class="playlist-covers"><summary>Alle 15 Titelcover anzeigen</summary><div class="jukebox-gallery" data-jukebox-gallery aria-label="Alle Titelcover"></div></details>
           <a data-jukebox-download class="jukebox-download" href="#" download>↓ Titel herunterladen</a>
@@ -1984,7 +1984,7 @@ export class KingdomGameUI {
       ?? this.jukebox.getCurrentId() ?? 'zeit-vergeht';
     const selectedTrack = this.jukebox.getTracks().find(t => t.id === selectedId);
     const cover = this.root.querySelector<HTMLImageElement>('[data-jukebox-cover]');
-    if (cover && selectedTrack) { cover.src = selectedTrack.coverUrl ?? '/covers/zeit-vergeht.svg'; cover.alt = 'Cover: ' + selectedTrack.title; }
+    if (cover && selectedTrack) { cover.src = selectedTrack.coverUrl ?? '/covers/zeit-vergeht.webp'; cover.alt = 'Cover: ' + selectedTrack.title; }
     const title = this.root.querySelector<HTMLElement>('[data-jukebox-title]');
     if (title) title.textContent = selectedTrack?.title ?? 'Soundtrack';
     const desc = this.root.querySelector<HTMLElement>('[data-jukebox-description]');
