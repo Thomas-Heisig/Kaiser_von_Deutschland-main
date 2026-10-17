@@ -651,3 +651,14 @@ html,body,#app{height:var(--app-height);max-height:var(--app-height);overflow:hi
 .kingdom-app .workspace{height:auto!important;max-height:none!important;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable}
 .kingdom-app .game-footer{flex:0 0 auto}
 @media(max-width:1180px){.kingdom-app .workspace{height:auto!important;max-height:none!important;min-height:0;overflow-y:auto}}
+
+
+/* Compact district picker: one visible row, finger-scroll horizontally instead of
+   pushing the map's buttons below the usable screen on iPad in portrait. */
+@media(max-width:1180px){
+ .kingdom-app .settlement-districts{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-height:52px;min-height:42px;padding:4px 7px;scrollbar-width:thin;overscroll-behavior-x:contain}
+ .kingdom-app .settlement-districts button{flex:0 0 auto;white-space:nowrap;min-height:34px;padding:5px 9px}
+ .kingdom-app .settlement-controls{padding:4px 8px}
+ .kingdom-app .settlement-details{padding:4px 8px}
+ .kingdom-app .map-host{max-height:28dvh}
+}
