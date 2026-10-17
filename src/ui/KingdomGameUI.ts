@@ -19,7 +19,7 @@ import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../
 import { GameAmbience, Soundscape } from './GameAmbience';
 import type { HistoryKind } from '../core/WorldHistoryCatalog';
 
-type View = 'modernization' | 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
+type View = 'civic' | 'modernization' | 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
 interface StructureInfo { name: string; description: string; symbol: string }
 interface NewPlayer { name: string; kingdomName: string }
@@ -355,7 +355,7 @@ export class KingdomGameUI {
             <p class="eyebrow nav-label">DEINE HERRSCHAFT</p>
             <nav aria-label="Spielbereiche">
               ${([
-                ['overview', '◈', 'Reichsübersicht'], ['court', '♟', 'Hofverwaltung'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
+                ['overview', '◈', 'Reichsübersicht'], ['civic', '⚒', 'Bürgeraufträge'], ['court', '♟', 'Hofverwaltung'], ['council', '♛', 'Reichsrat'], ['build', '♜', 'Bauvorhaben'],
                 ['economy', '⚖', 'Wirtschaft'], ['research', '✧', 'Forschung'], ['modernization', '⚙', 'Modernisierung'], ['military', '⚑', 'Garnison'],
                 ['war', '⚔', 'Feldzüge'], ['intelligence', '◉', 'Geheimdienst'], ['world', '☼', 'Welt & Volk'], ['culture', '♫', 'Kultur & Feste'], ['diplomacy', '✉', 'Diplomatie'], ['character', '♙', 'Charakter'],
                 ['chronicle', '▤', 'Chronik'], ['history', '⌛', 'Weltgeschichte'], ['help', '?', 'Spielhilfe']
@@ -716,6 +716,9 @@ export class KingdomGameUI {
           this.showGameAction('⚔ Grenzwache in Bereitschaft', detail.message, 'raid');
           this.audio.playEffect('battle');
         }
+      }),
+      engine.on('civicMissionEvent',(detail:{playerId:string;message:string}):void=>{
+        if(this.player?.id===detail.playerId)this.record(detail.message);
       }),
       engine.on('courtEvent', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) this.record(detail.message);
@@ -1104,6 +1107,26 @@ export class KingdomGameUI {
         `<h3>Entscheidungs-Chronik</h3><ol class="journal">${history.slice(0, 20).map((entry) =>
           `<li><time>${escape(entry.date)}</time><p>${escape(entry.message)}</p></li>`).join('') ||
           '<li>Noch keine Ratsbeschlüsse gefasst.</li>'}</ol>`;
+    } else if (this.view === 'civic') {
+      const data = this.engine.getCivicMissions(this.player.id);
+      panel.innerHTML = heading('GESELLSCHAFT & ARBEIT', 'Aufträge an Bürger',
+        'Verteile Aufgaben passend zum Jahrhundert. Bürger arbeiten mehrere Spielmonate und verbessern ihre Fähigkeiten.') +
+        '<p class="muted">Bis zu drei parallele Aufträge. Ressourcen werden bei Beginn verbraucht; Erträge kommen nach Abschluss.</p>' +
+        '<h3>Aktuelle Aufträge</h3><div class="build-grid">' +
+        (data.active.map(a => {
+          const mission = data.options.find(m=>m.id===a.missionId);
+          return '<article class="build-card"><h3>'+escape(mission?.title??a.missionId)+'</h3><p>Fortschritt: '+a.completedMonths+'/'+(mission?.months??'?')+' Monate</p></article>';
+        }).join('')||'<p class="muted">Noch kein Auftrag vergeben.</p>')+
+        '</div><h3>Verfügbare Aufgaben</h3><div class="build-grid">' +
+        data.options.map(m=>'<article class="build-card"><h3>'+escape(m.title)+'</h3><p>'+escape(m.description)+'</p>'+
+          '<p class="cost">'+m.months+' Monate · '+Object.entries(m.cost).map(([k,v])=>v+' '+escape(k)).join(' · ')+'</p>'+
+          '<label>Bürger <select data-civic-citizen="'+escape(m.id)+'">'+data.citizens.map(c=>
+            '<option value="'+escape(c.id)+'">'+escape(c.name)+' · '+escape(c.profession)+
+            ' · '+escape(m.preferredSkill)+' '+c.skills[m.preferredSkill]+'</option>').join('')+'</select></label>'+
+          '<button data-civic-assign="'+escape(m.id)+'" '+(!data.citizens.length||data.active.length>=3?'disabled':'')+
+          '>Auftrag vergeben</button></article>').join('')+
+        '</div><h3>Abgeschlossene Aufträge</h3><ol class="journal">'+
+        data.history.slice(0,15).map(h=>'<li>'+escape(h.message)+'</li>').join('')+'</ol>';
     } else if (this.view === 'overview') {
       panel.innerHTML = heading('DAS REICH AUF EINEN BLICK', 'Deine nächste Entscheidung',
         'Sichere die Versorgung, investiere gezielt und beobachte die Folgen im nächsten Monat.') + `
@@ -1114,7 +1137,7 @@ export class KingdomGameUI {
           <article><span>Entwicklung</span><strong>${format(kingdom.stats.literacyRate)} %</strong><small>Alphabetisierung</small></article>
         </div>
         <section class="dashboard-shortcuts" aria-label="Deine Herrschaft direkt öffnen">
-          <button data-open="court">♟ Hofverwaltung</button>
+          <button data-open="court">♟ Hofverwaltung</button><button data-open="civic">⚒ Bürgeraufträge</button>
           <button data-open="council">♛ Reichsrat</button>
           <button data-open="economy">⚖ Wirtschaft</button>
           <button data-open="build">♜ Bauen</button>
@@ -1461,6 +1484,13 @@ export class KingdomGameUI {
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
           Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
     }
+    panel.querySelectorAll<HTMLButtonElement>('[data-civic-assign]').forEach(button => {
+      button.addEventListener('click',()=>void this.run(()=>{
+        const missionId=button.dataset.civicAssign??'';
+        const citizenId=panel.querySelector<HTMLSelectElement>('[data-civic-citizen="'+missionId+'"]')?.value??'';
+        this.notify(this.requireEngine().assignCivicMission(this.requirePlayer().id,citizenId,missionId));
+      }));
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-court-appoint]').forEach((button) => {
       button.addEventListener('click', () => void this.run(() => {
         const select = panel.querySelector<HTMLSelectElement>(
