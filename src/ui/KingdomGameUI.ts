@@ -96,6 +96,9 @@ export class KingdomGameUI {
   private automaticEraMusic = false;
   private eraMusicSwitching = false;
   private introDismissed = false;
+  private openingAttempt = false;
+  private resumeAfterCouncil = false;
+  private readonly retryOpening = (): void => { void this.tryOpeningTheme(); };
   private readonly ambience = new GameAmbience();
   private motionEnabled = false;
   private mapStyle: 'flat' | 'isometric' = 'flat';
@@ -104,7 +107,7 @@ export class KingdomGameUI {
   private readonly buttonSoundHandler = (event: MouseEvent): void => {
     if (!(event.target instanceof Element)) return;
     const button = event.target.closest('button');
-    if (button && !button.hasAttribute('data-audio-toggle')) this.audio.playEffect('click');
+    if (button) this.audio.playEffect('click');
   };
   private readonly keyboardHandler = (event: KeyboardEvent): void => {
     if (event.target instanceof HTMLElement &&
@@ -136,7 +139,8 @@ export class KingdomGameUI {
     this.root.innerHTML = `
       <main class="welcome">
         <div class="intro-overlay" id="intro-overlay" aria-label="Filmischer Spieleinstieg">
-          <video id="intro-video" autoplay muted playsinline preload="metadata" poster="/covers/zeit-vergeht.svg"><source src="/video/intro.mp4" type="video/mp4"></video>
+          <video id="intro-video" autoplay playsinline preload="auto" poster="/covers/zeit-vergeht.svg"><source src="/video/intro.mp4" type="video/mp4"></video>
+          <button type="button" id="intro-activation" class="intro-activation" hidden>▶ Intro mit Ton starten</button>
           <div class="intro-caption"><span>KAISER VON DEUTSCHLAND</span><p>Die Geschichte beginnt</p></div>
           <button type="button" id="intro-skip" class="intro-skip">Intro überspringen →</button>
         </div>
@@ -153,14 +157,7 @@ export class KingdomGameUI {
             <strong id="start-era-summary">Mittelalter · 1200</strong>
             <p id="start-campaign-summary">Wähle Kampagne und Startzeit. Die Welt wächst mit deinem Reich.</p>
           </div></div>
-          <div class="opening-music" id="opening-music" aria-live="polite"><img src="/covers/zeit-vergeht.svg" alt="Cover Zeit vergeht"><span id="opening-music-label">♫ Zeit vergeht – Hauptthema</span><button type="button" id="opening-play" class="secondary">▶ Titel starten</button></div>
-          <div class="audio-controls" aria-label="Audioeinstellungen">
-            <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
-            <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
-            <button type="button" class="secondary" data-audio-toggle="ambience" aria-pressed="false">🌿 Umgebung: Aus</button>
-            <label class="ambience-volume">Musiklautstärke <input type="range" data-music-volume min="0" max="100" value="28" step="2" aria-label="Musiklautstärke"></label>
-            <label class="ambience-volume">Umgebung: Lautstärke <input type="range" data-ambience-volume min="0" max="100" value="45" step="5" aria-label="Lautstärke der Umgebungsgeräusche"></label>
-          </div>
+          <div class="opening-music" id="opening-music" aria-live="polite"><img src="/covers/zeit-vergeht.svg" alt="Cover Zeit vergeht"><span id="opening-music-label">♫ Zeit vergeht · Hauptthema nach dem Intro</span></div>
           <form id="new-game">
             <label>Startepoche<select name="startYear" id="start-year">
               <option value="1200">1200 · Hochmittelalter</option>
@@ -210,8 +207,6 @@ export class KingdomGameUI {
         </section>
       </main>`;
     this.bindIntro();
-    this.bindAudioControls();
-    this.root.querySelector('#opening-play')?.addEventListener('click', () => void this.tryOpeningTheme(true));
     const campaignSelect = this.root.querySelector<HTMLSelectElement>('#campaign-select');
     const startYearSelect = this.root.querySelector<HTMLSelectElement>('#start-year');
     const updateStartSummary = (): void => {
@@ -316,24 +311,17 @@ export class KingdomGameUI {
             <span>KAISER<small>VON DEUTSCHLAND</small></span></a>
           <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span></div>
           <div class="header-actions">
-            <button type="button" class="secondary" data-audio-toggle="music" aria-pressed="false">♫ Musik: Aus</button>
-            <span id="music-era-label" class="muted"></span>
-            <button type="button" class="secondary" data-audio-toggle="effects" aria-pressed="true">🔊 Effekte: An</button>
+            <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog" aria-label="Informationen zur Epoche"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
             <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button></div>
         </header>
-        <details class="game-music-settings" id="game-music-settings"><summary>♫ Musik & Klangeinstellungen</summary>
+        <details class="game-music-settings" id="game-music-settings"><summary>🎼 Original-Soundtrack & Titelcover</summary>
         <section class="jukebox jukebox-ingame" aria-label="Musik-Jukebox">
           <strong>🎼 Original-Soundtrack · 15 Titel</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
           <div class="jukebox-nowplaying"><img data-jukebox-cover src="/covers/zeit-vergeht.svg" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>15 historische und thematische Aufnahmen</small></div></div>
           <div class="jukebox-gallery" data-jukebox-gallery aria-label="Alle Titelcover"></div>
-          <label class="jukebox-volume">Lautstärke <input type="range" data-music-volume min="0" max="100" value="28" step="2"></label>
-          <button type="button" data-jukebox-play>▶ Titel abspielen</button>
-          <button type="button" data-jukebox-stop>■ Stop</button>
           <a data-jukebox-download class="jukebox-download" href="#" download>↓ Titel herunterladen</a>
-          <label class="jukebox-auto"><input type="checkbox" data-jukebox-auto> Musik folgt Epoche</label>
-          <label>Import MP3 <input data-jukebox-import type="file" multiple accept=".mp3,.ogg,.wav,audio/*"></label>
           <p data-jukebox-status role="status"></p>
         </section></details>
         <section class="resource-bar" aria-label="Ressourcen und monatliche Änderung">
@@ -420,7 +408,6 @@ export class KingdomGameUI {
         </div>
         <footer class="game-footer">Version 2026-10-17 · Kaiser von Deutschland · Jede Entscheidung zählt.<span id="footer-keys"></span></footer>
       </div>`;
-    this.bindAudioControls();
     this.bindJukeboxControls();
     this.root.querySelector<HTMLSelectElement>('#settlement-filter')?.addEventListener('change', (event) => {
       const target = event.currentTarget as HTMLSelectElement;
@@ -1688,35 +1675,56 @@ export class KingdomGameUI {
     else engine.resumeGame();
   }
 
+
+  /** Play the intro with its own sound; prompt only when audible autoplay is blocked. */
   private bindIntro(): void {
     const overlay = this.root.querySelector<HTMLElement>('#intro-overlay');
     const video = this.root.querySelector<HTMLVideoElement>('#intro-video');
-    if (!overlay || !video) return;
-    if (this.introDismissed) { overlay.remove(); return; }
-    const dismiss = (): void => {
+    const activate = this.root.querySelector<HTMLButtonElement>('#intro-activation');
+    if (!overlay || !video || !activate) return;
+    video.muted = false; video.volume = 1;
+    const finish = (): void => {
       if (this.introDismissed) return;
       this.introDismissed = true;
       video.pause();
       overlay.remove();
       void this.tryOpeningTheme();
     };
-    this.root.querySelector('#intro-skip')?.addEventListener('click', dismiss);
-    video.addEventListener('ended', dismiss, { once: true });
-    video.addEventListener('error', dismiss, { once: true });
-    video.addEventListener('click', dismiss);
-    void video.play().catch(() => { overlay.querySelector('.intro-caption')?.insertAdjacentHTML('beforeend',
-      '<p>Zum Starten auf „Intro überspringen“ klicken.</p>'); });
+    const playFilm = (): void => {
+      video.muted = false;
+      void video.play().then(() => { activate.hidden = true; }).catch(() => { activate.hidden = false; });
+    };
+    this.root.querySelector('#intro-skip')?.addEventListener('click', finish);
+    video.addEventListener('ended', finish, { once: true });
+    video.addEventListener('error', finish, { once: true });
+    activate.addEventListener('click', playFilm);
+    playFilm();
   }
 
-  private async tryOpeningTheme(force = false): Promise<void> {
-    if (!this.root.querySelector('.welcome') || !this.introDismissed) return;
-    if (this.jukebox.isPlaying() && !force) return;
-    const played = await this.jukebox.playOpening();
-    const button = this.root.querySelector<HTMLButtonElement>('#opening-play');
-    const label = this.root.querySelector<HTMLElement>('#opening-music-label');
-    if (label) label.textContent = played ? '♫ Zeit vergeht · Hauptthema läuft' : this.jukebox.getTracks().some(t=>t.id==='zeit-vergeht') ? '♫ Zeit vergeht · Zum Abspielen klicken (Browser-Autoplay-Sperre)' : '♫ Zeit vergeht · Die Musikdatei muss noch bereitgestellt werden';
-    if (button) { button.textContent = played ? '↻ Neu starten' : '▶ Musik starten'; button.hidden = !this.jukebox.getTracks().some(t=>t.id==='zeit-vergeht'); }
-    this.updateAudioControls();
+  /** Start the main theme automatically after the film, without a music button. */
+  private async tryOpeningTheme(): Promise<void> {
+    if (!this.introDismissed || this.jukebox.isPlaying() || this.openingAttempt) return;
+    this.openingAttempt = true;
+    try {
+      const played = await this.jukebox.playOpening();
+      const label = this.root.querySelector<HTMLElement>('#opening-music-label');
+      if (label) label.textContent = played ? '♫ Zeit vergeht · Hauptthema läuft'
+        : '♫ Zeit vergeht · Wiedergabe beim nächsten Klick';
+      if (played) {
+        document.removeEventListener('pointerdown', this.retryOpening);
+        document.removeEventListener('keydown', this.retryOpening);
+      } else {
+        document.addEventListener('pointerdown', this.retryOpening, { once: true });
+        document.addEventListener('keydown', this.retryOpening, { once: true });
+      }
+    } finally { this.openingAttempt = false; }
+  }
+
+  private resumeAfterCouncilDecision(): void {
+    if (!this.resumeAfterCouncil || !this.engine || !this.player || this.engine.isHotseat()) return;
+    if (this.engine.getPendingCouncilDecision(this.player.id)) return;
+    this.resumeAfterCouncil = false;
+    if (this.engine.getGameState() === GameState.PAUSED) this.engine.resumeGame();
   }
 
   private updateJukeboxStatus(): void {
@@ -1752,7 +1760,8 @@ export class KingdomGameUI {
           const select = this.root.querySelector<HTMLSelectElement>('[data-jukebox-select]');
           if (select) select.value = track.id;
           this.updateJukeboxStatus();
-          void this.run(async () => { await this.jukebox.play(track.id); this.updateAudioControls(); });
+          this.automaticEraMusic = false;
+          void this.run(async () => { await this.jukebox.play(track.id); });
         });
         gallery.append(button);
       });
@@ -1776,104 +1785,13 @@ export class KingdomGameUI {
 
   private bindJukeboxControls(): void {
     this.updateJukeboxStatus();
-    this.root.querySelectorAll<HTMLSelectElement>('[data-jukebox-select]').forEach(select => select.addEventListener('change', () => this.updateJukeboxStatus()));
-    this.root.querySelectorAll<HTMLInputElement>('[data-jukebox-auto]').forEach(input => {
-      input.checked = this.automaticEraMusic;
-      input.addEventListener('change', () => {
-        this.automaticEraMusic = input.checked;
-        this.root.querySelectorAll<HTMLInputElement>('[data-jukebox-auto]').forEach(other => other.checked = this.automaticEraMusic);
-        if (this.automaticEraMusic) {
-          const match = this.jukebox.getTrackForYear(this.engine?.getCurrentYear() ?? 1200);
-          if (match) void this.run(async () => { await this.jukebox.play(match.id); });
-          else this.notify('Erst Musikstücke importieren, dann die Epochenmusik einschalten.', true);
-        }
-      });
-    });
-    this.root.querySelectorAll<HTMLButtonElement>('[data-jukebox-play]').forEach(button=>
-      button.addEventListener('click',()=>void this.run(async()=>{
-        const id=this.root.querySelector<HTMLSelectElement>('[data-jukebox-select]')?.value??'';
+    this.root.querySelectorAll<HTMLSelectElement>('[data-jukebox-select]').forEach(select => {
+      select.addEventListener('change', () => {
+        const id = select.value;
         this.automaticEraMusic = false;
-        this.root.querySelectorAll<HTMLInputElement>('[data-jukebox-auto]').forEach(input => input.checked = false);
-        await this.jukebox.play(id);
-        this.updateAudioControls();
-      })));
-    this.root.querySelectorAll<HTMLButtonElement>('[data-jukebox-stop]').forEach(button=>
-      button.addEventListener('click',()=>{ this.jukebox.stop(); this.updateAudioControls(); }));
-    this.root.querySelectorAll<HTMLInputElement>('[data-jukebox-import]').forEach(input=>
-      input.addEventListener('change',()=>void this.run(async()=>{
-        const files = Array.from(input.files ?? []); if (!files.length) return;
-        let lastTitle = '';
-        for (const file of files) { const track = await this.jukebox.importFile(file); lastTitle = track.title; }
         this.updateJukeboxStatus();
-        this.notify(files.length + ' Musikstück(e) importiert. Zuletzt: ' + lastTitle);
-        input.value='';
-      })));
-  }
-
-  private bindAudioControls(): void {
-    this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
-      button.addEventListener('click', (): void => {
-        if (button.dataset.audioToggle === 'music') {
-          const musicSettings = this.root.querySelector<HTMLDetailsElement>('#game-music-settings');
-          if (musicSettings) musicSettings.open = true;
-          void this.toggleMusic();
-        }
-        else if (button.dataset.audioToggle === 'ambience') {
-          void this.ambience.toggle()
-            .then((): void => this.updateAudioControls())
-            .catch((error: unknown): void => {
-              this.notify(error instanceof Error ? error.message : 'Umgebungsgeräusche nicht verfügbar.', true);
-            });
-        } else this.toggleEffects();
+        void this.run(async () => { await this.jukebox.play(id); });
       });
-    });
-    this.root.querySelectorAll<HTMLInputElement>('[data-ambience-volume]').forEach((input) => {
-      input.value = String(Math.round(this.ambience.getVolume() * 100));
-      input.addEventListener('input', () => {
-        this.ambience.setVolume(Number(input.value) / 100);
-      });
-    });
-    this.root.querySelectorAll<HTMLInputElement>('[data-music-volume]').forEach(input => {
-      input.value=String(Math.round(this.jukebox.getVolume()*100));
-      input.addEventListener('input', () => {
-        this.jukebox.setVolume(Number(input.value)/100);
-        this.root.querySelectorAll<HTMLInputElement>('[data-music-volume]').forEach(other=>{
-          if(other!==input) other.value=input.value;
-        });
-      });
-    });
-    this.updateAudioControls();
-  }
-
-  private async toggleMusic(): Promise<void> {
-    try {
-      if (this.jukebox.isPlaying()) this.jukebox.stop();
-      else await this.jukebox.play(this.jukebox.getCurrentId() ?? 'zeit-vergeht');
-      this.updateAudioControls();
-    } catch (error) {
-      this.notify(error instanceof Error ? error.message : 'Musik konnte nicht gestartet werden.', true);
-    }
-  }
-
-  private toggleEffects(): void {
-    this.audio.toggleEffects();
-    this.updateAudioControls();
-    if (this.audio.effectsEnabled) this.audio.playEffect('success');
-  }
-
-  private updateAudioControls(): void {
-    this.root.querySelectorAll<HTMLButtonElement>('[data-audio-toggle]').forEach((button: HTMLButtonElement): void => {
-      const isMusic = button.dataset.audioToggle === 'music';
-      const isAmbience = button.dataset.audioToggle === 'ambience';
-      const enabled = isMusic ? this.jukebox.isPlaying()
-        : isAmbience ? this.ambience.enabled : this.audio.effectsEnabled;
-      button.textContent = isMusic
-        ? `♫ Musik: ${enabled ? 'An' : 'Aus'}`
-        : isAmbience ? `🌿 Umgebung: ${enabled ? 'An' : 'Aus'}`
-        : `🔊 Effekte: ${enabled ? 'An' : 'Aus'}`;
-      button.setAttribute('aria-pressed', String(enabled));
-      button.disabled = isAmbience ? !this.ambience.supported : isMusic ? !this.jukebox.getTracks().length : !this.audio.supported;
-      if (!this.audio.supported && !isMusic) button.title = 'Dieser Browser unterstützt keine Audioausgabe.';
     });
   }
 
@@ -1935,5 +1853,7 @@ export class KingdomGameUI {
     this.audio.dispose();
     this.jukebox.dispose();
     this.ambience.dispose();
+    document.removeEventListener('pointerdown', this.retryOpening);
+    document.removeEventListener('keydown', this.retryOpening);
   }
 }
