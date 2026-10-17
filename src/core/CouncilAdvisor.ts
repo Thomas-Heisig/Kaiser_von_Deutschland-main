@@ -20,8 +20,13 @@ interface WebLlmEngine {
     messages: Array<{ role: string; content: string }>; temperature?: number; max_tokens?: number
   }) => Promise<{ choices?: Array<{message?: { content?: string }}> }> } };
 }
+export type AdvisorLoadState = 'idle' | 'loading' | 'ready' | 'error';
+export interface AdvisorProgress { state: AdvisorLoadState; percent: number; message: string; }
 export class CouncilAdvisor {
   private engine?: WebLlmEngine;
+  private modelName?: string;
+  private loadState: AdvisorProgress = { state: 'idle', percent: 0, message: 'Modell noch nicht geladen.' };
+  public getStatus(): AdvisorProgress { return { ...this.loadState }; }
   private loading?: Promise<WebLlmEngine>;
   public static isWebGpuAvailable(): boolean {
     return typeof navigator !== 'undefined' && 'gpu' in navigator && isSecureContext;
@@ -31,24 +36,65 @@ export class CouncilAdvisor {
     if (!affordable.length) throw new Error('Keine finanzierbare Entscheidung.');
     return [...affordable].sort((a,b) => (b.probability ?? 1) - (a.probability ?? 1))[0].id;
   }
-  private async getEngine(model: string): Promise<WebLlmEngine> {
-    if (this.engine) return this.engine;
-    if (!CouncilAdvisor.isWebGpuAvailable()) throw new Error('WebGPU braucht einen unterstützten Browser und HTTPS.');
-    if (!this.loading) {
-      this.loading = (async () => {
-        // Lazy runtime: downloads model weights locally only after explicit opt-in.
-        const moduleUrl = 'https://esm.run/@mlc-ai/web-llm@0.2.80';
-        const library = await import(/* @vite-ignore */ moduleUrl) as {
-          CreateMLCEngine: (model: string) => Promise<WebLlmEngine>;
-        };
-        const engine = await library.CreateMLCEngine(model);
-        this.engine = engine;
-        return engine;
-      })();
-    }
-    try { return await this.loading; }
-    catch (error) { this.loading = undefined; throw error; }
+
+  /** Explicitly start the optional WebGPU model, reporting download and initialization. */
+  public async loadModel(config: AdvisorConfig, onProgress?: (state: AdvisorProgress) => void): Promise<void> {
+    if (config.backend !== 'webgpu') throw new Error('Bitte zuerst WebGPU als KI-Modus auswählen.');
+    await this.getEngine(config.model, onProgress);
   }
+  private report(state: AdvisorProgress, callback?: (state: AdvisorProgress) => void): void {
+    this.loadState = state;
+    callback?.({ ...state });
+  }
+  private async getEngine(model: string, onProgress?: (state: AdvisorProgress) => void): Promise<WebLlmEngine> {
+    if (this.engine && this.modelName === model) {
+      this.report({ state: 'ready', percent: 100, message: 'KI-Modell geladen und bereit.' }, onProgress);
+      return this.engine;
+    }
+    if (!CouncilAdvisor.isWebGpuAvailable()) {
+      this.report({ state: 'error', percent: 0, message: 'WebGPU nicht verfügbar. HTTPS und GPU-Browserunterstützung prüfen.' }, onProgress);
+      throw new Error(this.loadState.message);
+    }
+    if (this.loading) return this.loading;
+    this.report({ state: 'loading', percent: 0, message: 'WebGPU-Laufzeit wird geladen …' }, onProgress);
+    this.loading = (async () => {
+      const moduleUrl = 'https://esm.run/@mlc-ai/web-llm@0.2.80';
+      const library = await import(/* @vite-ignore */ moduleUrl) as {
+        CreateMLCEngine: (model: string, options?: {
+          initProgressCallback?: (report: { progress: number; text: string }) => void;
+        }) => Promise<WebLlmEngine>;
+      };
+      this.report({ state: 'loading', percent: 1, message: 'KI-Modell wird heruntergeladen und initialisiert …' }, onProgress);
+      const loaded = await library.CreateMLCEngine(model, {
+        initProgressCallback: progress => {
+          const percent = Math.max(0, Math.min(99, Math.round(progress.progress * 100)));
+          this.report({ state: 'loading', percent, message: progress.text || 'Modellinitialisierung …' }, onProgress);
+        }
+      });
+      this.engine = loaded;
+      this.modelName = model;
+      this.report({ state: 'ready', percent: 100, message: 'KI-Modell geladen und bereit.' }, onProgress);
+      return loaded;
+    })();
+    try { return await this.loading; }
+    catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.report({ state: 'error', percent: 0, message: 'KI-Laden fehlgeschlagen: ' + message }, onProgress);
+      throw error;
+    } finally { this.loading = undefined; }
+  }
+  public async testInference(config: AdvisorConfig): Promise<string> {
+    if (config.backend !== 'webgpu') throw new Error('WebGPU auswählen.');
+    const engine = await this.getEngine(config.model);
+    const result = await engine.chat.completions.create({
+      messages: [{ role: 'user', content: 'Antworte mit genau einem Wort: Bereit' }],
+      temperature: 0, max_tokens: 16
+    });
+    const text = result.choices?.[0]?.message?.content?.trim() ?? '';
+    if (!text) throw new Error('Das Modell lieferte keine Antwort.');
+    return text;
+  }
+
   public async suggest(
     config: AdvisorConfig, context: { year: number; title: string; story: string },
     choices: readonly { id: string; title: string; affordable: boolean; probability: number | null }[]
