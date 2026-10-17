@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 title Kaiser von Deutschland
 cd /d "%~dp0"
 
@@ -30,20 +30,43 @@ if not errorlevel 1 (
     exit /b 0
 )
 
+REM ---- IP-Adressen ermitteln ----
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /i "IPv4"') do (
+    set "IP=%%a"
+    goto :ipfound
+)
+:ipfound
+set "LOCAL_IP=%IP: =%"
+
+REM Oeffentliche IP im Hintergrund abfragen (max 3 Sekunden)
+set "PUBLIC_IP=Unbekannt"
+if "%PUBLIC_IP_CACHE%"=="" (
+    powershell -NoProfile -Command ^
+        "$wc = New-Object System.Net.WebClient; $wc.Headers.Add('User-Agent', 'Mozilla/5.0'); " ^
+        "try { $wc.DownloadString('https://api.ipify.org') } catch { '' }" > "%TEMP%\public_ip.tmp" 2>nul
+    if exist "%TEMP%\public_ip.tmp" (
+        set /p PUBLIC_IP=<"%TEMP%\public_ip.tmp"
+        del "%TEMP%\public_ip.tmp" 2>nul
+    )
+)
+
 echo.
 echo ============================================
 echo   Kaiser von Deutschland
 echo ============================================
 echo.
-echo Starte Spiel auf Port %PORT% ...
+echo   Port:         %PORT%
 echo.
 echo   Lokal:        %URL%
+echo   Netzwerk:     http://%LOCAL_IP%:%PORT%
+echo   Internet:     http://%PUBLIC_IP%:%PORT%
 echo.
-echo   Im Netzwerk:  http://%%COMPUTERNAME%%:%PORT%  ^(ueber Computername^)
-echo.
-echo   Von aussen:   Oeffentliche IP erfragen unter
-echo                  https://www.ipify.org/
-echo                  und dann http://^<IP^>:%PORT%
+echo   Hinweise:
+echo   - Netzwerk-Zugriff nur, wenn die Firewall
+echo     den Port %PORT% freigibt.
+echo   - Internet-Zugriff erfordert zusaetzlich
+echo     eine Portweiterleitung im Router.
+echo   - Mobilgeraet: Gleiches WLAN wie dieser PC.
 echo.
 echo ============================================
 echo.
