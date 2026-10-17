@@ -34,5 +34,22 @@ Die [TODO](../../TODO.md) ist die *einzige operative Aufgabenliste*. Diese Roadm
 - Optional echte 3D-Schlachten, VR/AR, transhumanistische und futuristische Szenarien bis 2200, parallele Geschichtsverläufe.
 Die vollständig erhaltenen 2025/2026-Episoden **Sturm des Mittelalters, Funken der Renaissance, Donner der Revolution, Flammen der Weltkriege, Licht der Moderne, Schatten der Zukunft und Ewigkeit der Geschichte** stehen im [unveränderten Roadmap-Archiv](../outdated/roadmap-snapshot-2026-10-17.md).
 
+## Themenpakete aus der ursprünglichen README – vollständige Wiedereingliederung
+
+Die alte README wurde auf konkrete, ehemals als „NEU“ deklarierte Bereiche geprüft. Der Status ist **Ideen-/Prototyp-Backlog**, bis eine aktive Hauptspiel-Integration nachgewiesen ist. Die [TODO](../../TODO.md) enthält die einzelnen überprüfbaren Aufgaben; vollständiger Wortlaut im [Original](../outdated/README-snapshot-2026-10-17.md).
+
+| Paket | Früher genannte Funktionsgruppen | Roadmap-Gate |
+| --- | --- | --- |
+| Rollen und Leben | 15/35 Rollen, Wechsel jeder lebenden Figur, KI-Bürger, Lebensphasen, Tagespläne, Karriere, Ehe, Generationen | B, D |
+| Politische Geschichte | 27/70 historische Ereignisse, 10 Persönlichkeiten/Schlachten, 33/53 politische Maßnahmen, 8 Episoden/Dynastien, Ereignisketten | C |
+| Gesellschaft | 7/10 Religionen, 8 Kulturen, Migration, Recht, Revolutionen, Soziales, Information, Religion, Bibliothek | B, C |
+| Land und Wohlstand | 23/68 Bauten, 24 Technologien, 3 Weltwunder, 10 Handelsrouten, 15 Transportarten, Städte, Ökologie, Tierwelt, Kohorten | C, D |
+| Krieg und Frieden | 15 Einheiten, Marine, Wetter, Versorgung, Belagerung, Gefangene, Kriegsanleihen, Friedensverhandlungen, Spionage | C |
+| Bildung und Kultur | 11 Kunststile, 12 Feste, 15 Entdeckungen, Gerichte, Universitäten, Bibliotheken, mediale Kommunikation | C |
+| Mehrspieler/Technik | 6 Online-Spieler, Bots, Chat, Lobby, Wikipedia-Kontext, Modding, weitere Perspektiven und 3D | D, langfristig |
+| Zukunft | 2050/2080/2100/2200, alternative Ereignisse, Raumfahrt und utopische/technische Szenarien | langfristig |
+
+Die früheren Zahlen sind **Prüfziele aus alten Unterlagen**, keine bestätigten Live-Feature-Zahlen. Alle Quellcode-Module müssen schrittweise über Engine, aktive UI, Persistenz und Tests in die Standardkampagne integriert werden.
+
 ## Abnahmeregel pro Ticket
 Kernlogik + UI-Erreichbarkeit + Tests + Savegame-Verhalten (falls zustandsbehaftet) + Dokumentation; Veröffentlichung zusätzlich mit echtem Server-/Gerätenachweis. `main`-Merge != Internet-Deployment.
