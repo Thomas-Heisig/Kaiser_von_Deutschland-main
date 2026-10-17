@@ -1694,8 +1694,8 @@ export class KingdomGameUI {
     const played = await this.jukebox.playOpening();
     const button = this.root.querySelector<HTMLButtonElement>('#opening-play');
     const label = this.root.querySelector<HTMLElement>('#opening-music-label');
-    if (label) label.textContent = played ? '♫ Zeit vergeht · Hauptthema läuft' : '♫ Zeit vergeht · Zum Abspielen klicken (Browser-Autoplay-Sperre)';
-    if (button) button.textContent = played ? '↻ Neu starten' : '▶ Musik starten';
+    if (label) label.textContent = played ? '♫ Zeit vergeht · Hauptthema läuft' : this.jukebox.getTracks().some(t=>t.id==='zeit-vergeht') ? '♫ Zeit vergeht · Zum Abspielen klicken (Browser-Autoplay-Sperre)' : '♫ Zeit vergeht · Die Musikdatei muss noch bereitgestellt werden';
+    if (button) { button.textContent = played ? '↻ Neu starten' : '▶ Musik starten'; button.hidden = !this.jukebox.getTracks().some(t=>t.id==='zeit-vergeht'); }
     this.updateAudioControls();
   }
 
