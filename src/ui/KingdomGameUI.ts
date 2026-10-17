@@ -96,7 +96,6 @@ export class KingdomGameUI {
   private eraMusicSwitching = false;
   private introDismissed = false;
   private cinematicTimeout?: number;
-  private introSource: 'opening' | 'outro' = 'opening';
   private openingAttempt = false;
   private resumeAfterCouncil = false;
   private readonly retryOpening = (): void => { void this.tryOpeningTheme(); };
@@ -1794,7 +1793,6 @@ export class KingdomGameUI {
     const video = this.root.querySelector<HTMLVideoElement>('#intro-video');
     const activate = this.root.querySelector<HTMLButtonElement>('#intro-activation');
     if (!overlay || !video || !activate) return;
-    this.introSource = 'opening';
     video.muted = false;
     video.volume = 1;
     const finish = (): void => {
@@ -1878,7 +1876,6 @@ export class KingdomGameUI {
     const video = this.root.querySelector<HTMLVideoElement>('#intro-video');
     if (!overlay || !video) return;
     window.clearTimeout(this.cinematicTimeout);
-    this.introSource = 'outro';
     this.introDismissed = false;
     overlay.querySelector('.production-card')?.remove();
     video.querySelector('source')?.setAttribute('src', '/video/intro.mp4');
@@ -1887,6 +1884,7 @@ export class KingdomGameUI {
     if (skip) skip.textContent = 'Zum Hauptmenü →';
     this.cinematicTimeout = window.setTimeout(() => {
       video.muted = false;
+      overlay.classList.add('film-playing');
       void video.play().catch(() => {
         const activation = this.root.querySelector<HTMLButtonElement>('#intro-activation');
         if (activation) activation.hidden = false;
