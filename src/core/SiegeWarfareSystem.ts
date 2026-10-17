@@ -624,6 +624,16 @@ export class SiegeWarfareSystem {
     return Array.from(this.activeSieges.values());
   }
 
+  /** Detached and validated campaign read-model for siege planning. */
+  public getSiegeWeapons(): SiegeWeapon[] {
+    return Array.from(this.siegeWeapons.values()).map((weapon) => ({ ...weapon }));
+  }
+
+  public getFortification(id: string): Fortification | undefined {
+    const fortification = this.fortifications.get(id);
+    return fortification ? { ...fortification } : undefined;
+  }
+
   /**
    * Serialize for save
    */
