@@ -26,3 +26,6 @@ The repository contains **90 Markdown files** at the starting commit, including 
 ## Future audit work
 
 Review and refresh legacy domain/API/user guides individually alongside code changes. Perform a markdown-link checker across existing paths; separate archival links from active docs. Do not retroactively revise historical records to claim current completion.
+
+## Dokumentationslink-Gate
+Die zentralen, aktuellen Markdown-Dateien werden über `node scripts/verify-doc-links.mjs` gegen vorhandene Repository-Pfade geprüft. Historische Berichte mit älteren oder ausdrücklich geplanten Dateipfaden bleiben unberührt.
