@@ -21,7 +21,11 @@ export class MusicJukebox {
   public async initialize(): Promise<void> {
     const list = (await STORAGE.getItem<JukeboxTrack[]>(KEY)) ?? [];
     const valid = list.filter(x => x && x.source === 'import' && typeof x.id === 'string' && typeof x.title === 'string');
-    this.tracks = [...BUNDLED_TRACKS, ...valid];
+    const available: JukeboxTrack[] = [];
+    for (const item of BUNDLED_TRACKS) {
+      try { if ((await fetch(item.url!, {method:'HEAD'})).ok) available.push(item); } catch { /* optional asset absent */ }
+    }
+    this.tracks = [...available, ...valid];
     this.onChange();
   }
   public async importFile(file: File, era = 'Mittelalter'): Promise<JukeboxTrack> {
@@ -33,7 +37,7 @@ export class MusicJukebox {
     await STORAGE.setItem('audio-' + id, file);
     const next = [...this.tracks.filter(t=>t.source==='import'),track];
     await STORAGE.setItem(KEY,next);
-    this.tracks=[...BUNDLED_TRACKS,...next]; this.onChange();
+    this.tracks=[...this.tracks.filter(t=>t.source==='library'),...next]; this.onChange();
     return track;
   }
   public async remove(id: string): Promise<void> {
@@ -48,7 +52,6 @@ export class MusicJukebox {
   public async play(id: string): Promise<void> {
     const track=this.tracks.find(t=>t.id===id);
     if(!track) throw new Error('Musiktitel nicht gefunden.');
-    const wasPlaying=this.enabled;
     this.stop();
     let src=track.url;
     if(track.source==='import') {
@@ -68,7 +71,6 @@ export class MusicJukebox {
       this.stop();
       throw error;
     }
-    void wasPlaying;
   }
   public pause(): void { this.audio?.pause(); this.enabled=false; this.onChange(); }
   public setVolume(value: number): void {
