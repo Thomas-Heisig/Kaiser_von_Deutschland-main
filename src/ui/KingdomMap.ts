@@ -1,24 +1,6 @@
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { Kingdom, KingdomInfrastructure } from '../core/Kingdom';
-
-interface MapLocation {
-  type: keyof KingdomInfrastructure;
-  name: string;
-  x: number;
-  y: number;
-  color: number;
-}
-
-const LOCATIONS: MapLocation[] = [
-  { type: 'farms', name: 'Ackerland', x: 265, y: 410, color: 0xd0b266 },
-  { type: 'markets', name: 'Marktviertel', x: 530, y: 350, color: 0xc78f68 },
-  { type: 'castles', name: 'Herrschaftssitz', x: 510, y: 195, color: 0xaeb9b0 },
-  { type: 'churches', name: 'Kirchplatz', x: 670, y: 245, color: 0xd4c5a1 },
-  { type: 'mines', name: 'Bergwerke', x: 760, y: 135, color: 0x9fafa3 },
-  { type: 'workshops', name: 'Handwerk', x: 720, y: 405, color: 0xc6a47a },
-  { type: 'barracks', name: 'Garnison', x: 385, y: 265, color: 0xb79279 },
-  { type: 'schools', name: 'Schulviertel', x: 525, y: 480, color: 0xa9bda9 },
-];
+import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature } from './SettlementSceneModel';
 
 /**
  * PixiJS settlement overview. Counts represent infrastructure, not geographic claims.
@@ -27,6 +9,8 @@ export class KingdomMap {
   private readonly app = new Application();
   private readonly world = new Container();
   private readonly settlements = new Container();
+  private districtFilter: DistrictFilter = 'alle';
+  private lastSignature = '';
   private observer?: ResizeObserver;
   private zoom: number = 1;
   private offset = { x: 0, y: 0 };
@@ -74,7 +58,7 @@ export class KingdomMap {
   private readonly visibility = (): void => {
     if (this.destroyed || !this.initialized) return;
     if (document.hidden) this.app.ticker.stop();
-    else if (this.motionEnabled) this.app.ticker.start();
+    else if (this.motionEnabled || this.actionVisual) this.app.ticker.start();
   };
 
   /**
@@ -151,7 +135,7 @@ export class KingdomMap {
         const rect = canvas.getBoundingClientRect();
         const x = (event.clientX - rect.left - this.world.x) / this.world.scale.x;
         const y = (event.clientY - rect.top - this.world.y) / this.world.scale.y;
-        const location = LOCATIONS.find((place: MapLocation) => Math.hypot(place.x - x, place.y - y) < 65);
+        const location = visibleDistricts(this.districtFilter).find((place: SettlementDistrict) => Math.hypot(place.x - x, place.y - y) < 47);
         if (location) onSelect(location.type);
       }
       drag = undefined;
@@ -242,13 +226,24 @@ export class KingdomMap {
    * @param selected Highlighted infrastructure district.
    * @returns Nothing.
    */
-  public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure): void {
+  public setDistrictFilter(filter: DistrictFilter): void {
+    this.districtFilter = filter;
+    this.lastSignature = '';
+  }
+
+  public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure, completed: readonly string[] = []): void {
     if (!this.initialized || this.destroyed) return;
+    const signature = districtSceneSignature(kingdom.infrastructure, selected,
+      this.districtFilter, kingdom.currentSeason, completed);
+    if (signature === this.lastSignature) return;
+    this.lastSignature = signature;
     this.chimneys.length = 0;
     for (const child of this.settlements.removeChildren()) child.destroy({ children: true });
-    for (const location of LOCATIONS) {
+    for (const location of visibleDistricts(this.districtFilter)) {
       const count = kingdom.infrastructure[location.type];
       const group = new Container();
+      const modernization = districtModernization(location.type, completed);
+      const winter = kingdom.currentSeason === 'winter';
       group.position.set(location.x, location.y);
       const ground = new Graphics()
         .ellipse(0, 10, 62, 30).fill({ color: location.color, alpha: 0.12 })
@@ -257,13 +252,27 @@ export class KingdomMap {
           width: selected === location.type ? 2 : 1, alpha: selected === location.type ? 1 : 0.35
         });
       group.addChild(ground);
-      if (location.type === 'farms') {
+      if (modernization && count > 0) {
+        group.addChild(new Graphics().roundRect(-29, -62, 58, 42, 5)
+          .fill({ color: 0x587f84, alpha: 0.95 }).roundRect(-24, -56, 48, 6, 2)
+          .fill(0xc2d4ce).rect(-16, -42, 11, 16).rect(5, -42, 11, 16).fill(0xecdcb0));
+      } else if (location.type === 'farms') {
         const fields = new Graphics();
         for (let i = 0; i < 5; i++) {
           fields.poly([-43 + i * 17, -13, -30 + i * 17, -20, -8 + i * 17, 0, -21 + i * 17, 8])
             .fill({ color: i % 2 ? 0xa99857 : 0x8e9a5c, alpha: 0.85 });
         }
         group.addChild(fields);
+      } else if (location.type === 'ports') {
+        group.addChild(new Graphics().rect(-38, -2, 76, 15).fill(0x775b45)
+          .poly([-25, 2, 0, -33, 26, 2]).fill({ color: count ? 0xc4ae83 : 0x66776c, alpha: 0.85 })
+          .rect(-2, -37, 4, 40).fill(0xd5cbb3));
+      } else if (location.type === 'walls') {
+        group.addChild(new Graphics().rect(-47, -17, 94, 24).fill({ color: 0xa0aca2, alpha: count ? 1 : 0.25 })
+          .rect(-38, -31, 20, 14).rect(18, -31, 20, 14).fill(0x8d9f96));
+      } else if (location.type === 'roads') {
+        group.addChild(new Graphics().moveTo(-40, 20).lineTo(0, -26).lineTo(44, 19)
+          .stroke({ width: count ? 14 : 7, color: modernization ? 0x7e8d93 : 0xbca57c }));
       } else if (location.type === 'mines') {
         group.addChild(new Graphics().poly([-32, 13, 0, -38, 35, 13]).fill(0x6e817b)
           .poly([0, -38, 9, 13, 35, 13]).fill(0x4a625e)
@@ -290,8 +299,10 @@ export class KingdomMap {
           }
         }
       }
+      if (winter) group.addChild(new Graphics().ellipse(0, 20, 51, 8)
+        .fill({ color: 0xe1e9e6, alpha: 0.38 }));
       const label = new Text({
-        text: `${location.name} · ${count}`,
+        text: `${location.name} · ${count}${modernization ? ' ⚙' : ''}`,
         style: { fontFamily: 'Segoe UI', fontSize: 14, fill: 0xede8d2, fontWeight: '500' }
       });
       label.anchor.set(0.5, 0);
@@ -345,7 +356,7 @@ export class KingdomMap {
     for (let i = 0; i < 90; i++) {
       const x = 70 + ((i * 137) % 850);
       const y = 70 + ((i * 83) % 470);
-      if (LOCATIONS.some((place: MapLocation) => Math.hypot(place.x - x, place.y - y) < 85) ||
+      if (SETTLEMENT_DISTRICTS.some((place: SettlementDistrict) => Math.hypot(place.x - x, place.y - y) < 62) ||
           (x > 130 && x < 300)) continue;
       terrain.rect(x - 2, y, 4, 10).fill(0x22352d);
       terrain.poly([x - 12, y + 3, x, y - 24, x + 12, y + 3]).fill(i % 2 ? 0x47634b : 0x38573f);

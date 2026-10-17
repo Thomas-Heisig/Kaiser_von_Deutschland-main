@@ -1,4 +1,11 @@
-## ⚙️ Spielbare Modernisierung (PR in Prüfung)
+## 🏘️ Siedlungsansicht (PR #26 in Prüfung)
+- [x] Alle 16 realen Infrastrukturbezirke auf der PixiJS-Siedlungskarte, mit filterbarer und tastaturbedienbarer Liste.
+- [x] Hafen, Felder, Straßen und Stadtmauern differenziert dargestellt; Winterüberlagerung und abgeschlossene Modernisierungsprojekte sichtbar.
+- [x] Kartenaktualisierungen bei identischem Zustand übersprungen, Bezirkswahl führt zur echten Bauverwaltung.
+- [ ] Individuelle Gebäudeplatzierung, animierter Baufortschritt, Fahrzeuge, Bevölkerungsdichte, Stadtbrände und langfristige Stadtentwicklung.
+- [ ] Manuelle visuelle Abnahme auf verschiedenen Geräten und längere Performanceprofile.
+
+## ⚙️ Spielbare Modernisierung (PR #25 gemergt)
 - [x] Sechs optional finanzierbare Modernisierungsprojekte von Dampf bis KI-Zukunft.
 - [x] Zeit-/Forschungs-/Materialgates, gebuchte Ressourcen und einmalige reale Kultur-/Stabilitäts-/Handelsboni.
 - [x] Eigener UI-Bereich und kompatible Save-/Load-Daten je Reich.

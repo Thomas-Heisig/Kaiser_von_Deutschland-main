@@ -11,6 +11,15 @@ try {
     await page.getByRole('heading', { name: /Kaiser von/i }).waitFor({ timeout: 15000 });
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
+    const districtButtons = page.locator('#settlement-districts button');
+    if (await districtButtons.count() !== 16)
+      failures.push(`viewport ${width}: expected 16 settlement districts`);
+    await page.locator('#settlement-filter').selectOption('versorgung');
+    if (await districtButtons.count() !== 4)
+      failures.push(`viewport ${width}: expected 4 supply districts`);
+    await page.locator('#settlement-filter').selectOption('alle');
+    await page.locator('[data-district="ports"]').click();
+    await page.locator('#settlement-details').getByText('Hafen').waitFor();
     await page.locator('nav [data-view="help"]').click();
     await page.getByRole('heading', { name: 'Deine ersten Schritte' }).waitFor();
     await page.locator('nav [data-view="diplomacy"]').click();

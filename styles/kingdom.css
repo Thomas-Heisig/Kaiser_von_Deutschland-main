@@ -322,3 +322,17 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
   .sidebar nav button { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
   .sidebar nav button span { flex: 0 0 auto; }
 }
+
+
+/* Settlement visualization: live district selection and mobile-friendly controls. */
+.settlement-controls { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:10px 17px; color:#d7d9bd; border-top:1px solid #344d3f; }
+.settlement-controls label { display:flex; align-items:center; gap:8px; font-size:.75rem; }
+.settlement-controls select { min-height:40px; max-width:220px; background:#213a30; color:#f2ead6; border:1px solid #7b8a70; padding:6px; }
+#settlement-season { color:#c1cda8; font-size:.72rem; }
+.settlement-districts { display:flex; flex-wrap:wrap; gap:5px; padding:12px 15px; border-top:1px solid #344d3f; }
+.settlement-districts button { display:flex; align-items:center; gap:6px; justify-content:space-between; background:#273f33; color:#e4e6cd; padding:6px 9px; border:1px solid #48624d; font-size:.7rem; min-height:36px; }
+.settlement-districts button[aria-pressed="true"] { color:#1b2b22; background:#dbc790; border-color:#f3dca1; }
+.settlement-districts strong { font-size:.79rem; }
+.settlement-details { display:flex; align-items:center; flex-wrap:wrap; gap:11px; padding:11px 17px; background:#1a3027; color:#e8dbc2; font-size:.8rem; border-top:1px solid #344d3f; }
+.settlement-details button { margin-left:auto; padding:6px 12px; min-height:38px; }
+@media(max-width:400px) { .settlement-controls { padding:9px; } .settlement-districts { padding:8px; } .settlement-districts button { flex:1 1 42%; } .settlement-details button { margin-left:0; width:100%; } }

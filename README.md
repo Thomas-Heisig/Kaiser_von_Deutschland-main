@@ -46,6 +46,21 @@ Das Gesamtprojekt bleibt in Entwicklung.
 Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
 Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## 🏘️ Erweiterte Siedlungsansicht
+Die PixiJS-Siedlungskarte berücksichtigt jetzt **alle 16 Infrastrukturarten** statt
+nur acht Bezirke. Versorgung, Stadt, Bildung und Verteidigung sind filterbar.
+Ein zugänglicher Bezirkswähler zeigt die echten Gebäudebestände; ein ausgewählter
+Bezirk führt weiterhin zum regulären Bau-Menü und berechnet keinerlei gesonderte
+Wirtschaftsdaten. Kartenoptik unterscheidet Felder, Häfen, Straßen und Mauern.
+Im Winter werden Schneeakzente gezeigt. Abgeschlossene Modernisierungsprojekte
+ändern die Darstellung bestimmter Viertel (Werkstätten, Straßen, Lager, Märkte,
+Schulen und Hospitäler). Nicht gebaute Bezirke bleiben als Bauorte sichtbar.
+Die Szene wird bei identischem Spielzustand nicht unnötig neu erzeugt.
+
+Die Gebäude sind **schematisch**, keine reale Stadtgeografie; animierte Bürger sind
+Darstellungsfiguren, nicht die einzelnen gespeicherten Bürger. Ein frei platzierbares
+Gebäuderaster, realistische Stadtwege, Fahrzeugverkehr und Gebäudeschäden bleiben offen.
+
 ## ⚙️ Modernisierung vom Dampfzeitalter zur Zukunft
 Im neuen Bereich **Modernisierung** stehen sechs konkrete und optionale
 Epochenprojekte zur Wahl: mechanisierte Manufakturen, Eisenbahnnetz,
