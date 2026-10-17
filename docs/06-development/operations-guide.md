@@ -1,3 +1,5 @@
+> **Verifizierter Ausgangspunkt 17.10.2026:** `npm ci`, `npm run check`, `npx vitest run`, `npm run build` und `node scripts/verify-release-assets.mjs` gehören zum Release-Gate. GitHub Pages ist nicht aktiviert; `main`-Build bedeutet nicht Live-Deployment. See [Deployment](public-deployment.md) and [Status](../00-meta/status.md).
+
 # Betriebshandbuch – Aufbaukampagne
 
 ## Lokal starten
