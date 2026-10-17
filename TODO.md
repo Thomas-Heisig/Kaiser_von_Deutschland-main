@@ -1,3 +1,10 @@
+## 🔬 Wissenschaftliche Errungenschaften mit echten Auswirkungen (PR in Prüfung)
+- [x] Abgeschlossene Technologien verbessern nun tatsächlich Bildung, Kultur, Handelsmacht, Stabilität und teilweise Militärausrüstung.
+- [x] Nahrung, Rohstoffe und Gold erhalten begrenzte, pro Monat berechnete Forschungsboni, ohne kumulativ den Produktionsbasiswert zu verändern.
+- [x] Forschungsgeschwindigkeit wirkt auf neue monatliche Forschungspunkte.
+- [x] Forschungsansicht zeigt aktuelle Boni an; Rechenlogik mit Unit-Tests abgedeckt.
+- [ ] Langzeit-Balancing von Forschungseffekten, Rückwirkungsstrategie für ältere Spielstände und vollständige Prüfung im Browser.
+
 ## 🎮 Mehr Kampagnen und Game-Actions (PR #14 gemergt, Kapitel-Fortsetzung in Prüfung)
 - [x] Vier auswählbare Kampagnen: Aufbau, Hanse, Wissenschaft, Grenzland, mit jeweils sechs Live-Zielen.
 - [x] Wissenschaftliche Errungenschaften erscheinen als sichtbare Ereignisaktion mit Map-Puls und Klang.
