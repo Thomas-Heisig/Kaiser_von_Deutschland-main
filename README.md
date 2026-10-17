@@ -1,3 +1,9 @@
+## Originalcover und sichtbarer WebGPU-Start (17.10.2026)
+
+Die fünfzehn Original-Covermotive wurden aus den drei vom Projektinhaber bereitgestellten Screenshots den Titel-IDs zugeordnet und ersetzen die SVG-Platzhalter. Die WebP-Dateien liegen unter `public/covers/`. Aufgrund der begrenzten Screenshot-Auflösung sind sie eine Übergangslösung bis zum Vorliegen der höher aufgelösten Originalcover.
+
+Im Menü **⚙ Einstellungen → WebGPU** zeigt das Spiel nun einen expliziten Button **„KI-Modell starten“**, den prozentualen Download-/Initialisierungsfortschritt, den Bereit- bzw. Fehlerstatus und **„Modellantwort testen“**. Die WebGPU-KI startet nur nach ausdrücklichem Klick und bleibt standardmäßig deaktiviert. Ein sichtbarer bereiter Zustand setzt ein erfolgreich geladenes Modell voraus; tatsächliche Antworten müssen separat getestet werden.
+
 ## Integrierte Mini-KI und optionale Modelle (17.10.2026)
 
 **Standard: KI aus.** Ein kleines, vollständig mitgeliefertes neuronales Entscheidungsnetz (`EmbeddedMiniModel.ts`, sechs festgewichtete Neuronen) kann in **⚙ Einstellungen** ausdrücklich eingeschaltet werden. Es arbeitet offline und benötigt keinen Modelldownload. Es ist ein heuristisches Mini-Neuronennetz, **kein** vortrainiertes Sprachmodell und kein generativer Chatbot. Das Netz bewertet ausschließlich bezahlbare Ratsoptionen und verändert Spielstände nicht selbstständig.
