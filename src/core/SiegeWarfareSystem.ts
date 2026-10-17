@@ -452,10 +452,31 @@ export class SiegeWarfareSystem {
    */
   public deploySiegeWeapon(siegeId: string, weaponId: string, count: number): boolean {
     const siege = this.activeSieges.get(siegeId);
-    if (!siege) return false;
+    if (!siege || siege.status !== 'ongoing' || !this.siegeWeapons.has(weaponId) ||
+        !Number.isSafeInteger(count) || count < 1 || count > 6) return false;
 
     const current = siege.deployedWeapons.get(weaponId) || 0;
+    if (current + count > 6) return false;
     siege.deployedWeapons.set(weaponId, current + count);
+    return true;
+  }
+
+  /** Feed a besieging army, without resetting progress or granting infinite supply. */
+  public resupplySiege(siegeId: string, days: number): boolean {
+    const siege = this.activeSieges.get(siegeId);
+    if (!siege || siege.status !== 'ongoing' || !Number.isSafeInteger(days) ||
+        days < 1 || days > 30 || siege.attackerSupplies + days > 60) return false;
+    siege.attackerSupplies += days;
+    siege.attackerMorale = Math.min(100, siege.attackerMorale + 5);
+    return true;
+  }
+
+  /** Withdraw from the existing siege without claiming victory or losing progress from others. */
+  public abandonSiege(siegeId: string): boolean {
+    const siege = this.activeSieges.get(siegeId);
+    if (!siege || siege.status !== 'ongoing') return false;
+    siege.status = 'abandoned';
+    this.endSiege(siegeId);
     return true;
   }
 
