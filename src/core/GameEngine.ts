@@ -55,6 +55,7 @@ import { encodeSave, decodeSave } from './SaveCodec';
 import { CAMPAIGNS, campaignGoals, CampaignId } from './CampaignCatalog';
 import { chapterStatus, CampaignChapterStatus } from './CampaignChapters';
 import { CourtAssistantRegistry, COURT_OFFICES, CourtOffice, AssistantMode } from './CourtAssistantRegistry';
+import { MODERNIZATION_PROJECTS, applyModernization } from './ModernizationProjects';
 import { epochForYear, milestonesInYear, milestonesThrough } from './WorldHistoryCatalog';
 import { applyScienceDiscovery, researchImpact, researchProductionBonus } from './ScienceImpact';
 import { KingdomInfrastructure } from './Kingdom';
@@ -200,6 +201,7 @@ export class GameEngine {
   private siegeTargets = new Map<string, string>();
   private courtAssistants = new CourtAssistantRegistry();
   private culturalExhibitions = new Map<string, number>();
+  private modernizationCompleted = new Map<string, string[]>();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -342,6 +344,36 @@ export class GameEngine {
 
   public getPlayerById(id: string): Player | undefined {
     return this.players.get(id);
+  }
+
+  public getModernizationOptions(playerId: string) {
+    const player = this.requirePlayer(playerId);
+    const researched = this.requireTechnologySystem(playerId);
+    const completed = this.modernizationCompleted.get(playerId) ?? [];
+    return MODERNIZATION_PROJECTS.map((project) => {
+      const blockers: string[] = [];
+      if (this.currentYear < project.year) blockers.push('Verfügbar ab ' + project.year);
+      if (!researched.isResearched(project.requiredTechnology)) blockers.push('Erfordert Forschung: ' + project.requiredTechnology);
+      if (completed.includes(project.id)) blockers.push('Bereits umgesetzt');
+      for (const resource of ['gold','wood','stone','iron'] as const)
+        if (player.kingdom.resources[resource] < project.cost[resource]) blockers.push(resource + ' fehlt');
+      return {project,completed:completed.includes(project.id),canStart:blockers.length===0,blockers};
+    });
+  }
+
+  public launchModernization(playerId: string, projectId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    const item = this.getModernizationOptions(playerId).find(o=>o.project.id===projectId);
+    if (!item) throw new Error('Unbekanntes Modernisierungsprojekt.');
+    if (!item.canStart) throw new Error(item.blockers.join(' · '));
+    for (const res of ['gold','wood','stone','iron'] as const)
+      player.kingdom.resources[res] -= item.project.cost[res];
+    applyModernization(item.project,player.kingdom);
+    this.modernizationCompleted.set(playerId,[...(this.modernizationCompleted.get(playerId)??[]),item.project.id]);
+    const message = item.project.name + ' abgeschlossen: ' + item.project.effect;
+    this.emit('modernizationCompleted',{playerId,message});
+    return message;
   }
 
   public getHistoricalTimeline() { return milestonesThrough(this.currentYear); }
@@ -1003,6 +1035,7 @@ export class GameEngine {
       siegeWarfare: this.siegeWarfareSystem.serialize(),
       courtAssistants: this.courtAssistants.serialize(),
       culturalExhibitions: Array.from(this.culturalExhibitions),
+      modernizationCompleted: Array.from(this.modernizationCompleted),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -1084,6 +1117,17 @@ export class GameEngine {
     this.technologySystems = restoredTechnology;
     this.rivalDiplomacy = new Map();
     this.festivalsHeld = new Map(Array.isArray(saveData.festivalsHeld) ? saveData.festivalsHeld : []);
+    this.modernizationCompleted = new Map();
+    if (saveData.modernizationCompleted !== undefined) {
+      if (!Array.isArray(saveData.modernizationCompleted) ||
+          saveData.modernizationCompleted.some((entry: unknown) =>
+            !Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== 'string' ||
+            !restoredPlayers.some((p: Player) => p.id === entry[0]) ||
+            !Array.isArray(entry[1]) || entry[1].some((id: unknown) =>
+              typeof id !== 'string' || !MODERNIZATION_PROJECTS.some((p) => p.id === id))))
+        throw new Error('Beschädigte Modernisierungsdaten.');
+      this.modernizationCompleted = new Map(saveData.modernizationCompleted);
+    }
     this.culturalExhibitions = new Map();
     if (saveData.culturalExhibitions !== undefined) {
       if (!Array.isArray(saveData.culturalExhibitions) || saveData.culturalExhibitions.length > 5000 ||
