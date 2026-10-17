@@ -35,7 +35,7 @@ export function filmForRole(clips: readonly CinematicClip[], role: FilmRole, pre
   return clips.find(clip => clip.id === fallback) ?? clips[0] ?? null;
 }
 export async function loadCinematicLibrary(): Promise<CinematicClip[]> {
-  const response = await fetch('/video-catalog.json', { cache: 'no-cache' });
+  const response = await fetch(import.meta.env.BASE_URL + 'video-catalog.json', { cache: 'no-cache' });
   if (!response.ok) throw Error('Filmkatalog nicht erreichbar (HTTP ' + response.status + ')');
   const data: unknown = await response.json();
   if (!data || typeof data !== 'object' || !('videos' in data) || !Array.isArray(data.videos)) throw Error('Filmkatalog ungültig.');
@@ -43,6 +43,9 @@ export async function loadCinematicLibrary(): Promise<CinematicClip[]> {
     if (!v || typeof v !== 'object') return false;
     const clip = v as Partial<CinematicClip>;
     return typeof clip.id === 'string' && typeof clip.title === 'string' &&
-      typeof clip.url === 'string' && /^\/video\/[a-zA-Z0-9_.%+-]+$/.test(clip.url);
+      typeof clip.url === 'string' && new RegExp('^' + import.meta.env.BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\/^\/video\/[a-zA-Z0-9_.%+-]+$/.test(clip.url)') + 'video/[a-zA-Z0-9_.%+-]+;
+  });
+}
+).test(clip.url);
   });
 }
