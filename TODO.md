@@ -1,3 +1,9 @@
+## ⚔️ Game-Action-Animationen (PR in Prüfung)
+- [x] Gegensätzliche Truppformationen (14 Figuren) laufen bei Gefechten sichtbar aufeinander zu.
+- [x] Der Sieger erhält eigene farbliche Hervorhebung; Animation verändert nie das Kampfergebnis.
+- [x] Begrenzte Laufzeit, Timer-Cleanup und Abschaltung bei reduzierter Bewegung berücksichtigt.
+- [ ] Echte Schlachtkartographie, Pfeilsalven, Gebäudeschäden, authentische Audio-Samples und umfassende visuelle Abnahme.
+
 ## 🔬 Wissenschaftliche Errungenschaften mit echten Auswirkungen (PR in Prüfung)
 - [x] Abgeschlossene Technologien verbessern nun tatsächlich Bildung, Kultur, Handelsmacht, Stabilität und teilweise Militärausrüstung.
 - [x] Nahrung, Rohstoffe und Gold erhalten begrenzte, pro Monat berechnete Forschungsboni, ohne kumulativ den Produktionsbasiswert zu verändern.
@@ -9,7 +15,7 @@
 - [x] Vier auswählbare Kampagnen: Aufbau, Hanse, Wissenschaft, Grenzland, mit jeweils sechs Live-Zielen.
 - [x] Wissenschaftliche Errungenschaften erscheinen als sichtbare Ereignisaktion mit Map-Puls und Klang.
 - [x] Überfälle und Feldschlachten lösen Game-Action-Banner und Kartenmarkierung aus.
-- [~] Alle vier Kampagnen erhalten je drei aufeinanderfolgende Kapitel mit persistiertem Fortschritt, einmaliger Gold-/Prestigebelohnung und Kapitelnachricht; komplexe Verzweigungen, echte animierte Truppen und Geräusch-Samples bleiben offen.
+- [~] Je drei Kampagnenkapitel und dauerhafte Belohnungen integriert; komplexe Verzweigungen, realistische Audio-Samples und tiefere historische Geschichten offen.
 
 # ✅ TODO – Kaiser von Deutschland
 

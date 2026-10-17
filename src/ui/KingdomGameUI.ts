@@ -405,7 +405,7 @@ export class KingdomGameUI {
         this.record(detail.report.summary);
         this.audio.playEffect('battle');
         if (this.player && detail.report.playerIds.includes(this.player.id)) {
-          this.showGameAction(detail.report.kind === 'raid' ? '⚔ Überfall auf dein Reich!' : '⚔ Die Schlacht ist entschieden!', detail.report.summary, 'raid');
+          this.showGameAction(detail.report.kind === 'raid' ? '⚔ Überfall auf dein Reich!' : '⚔ Die Schlacht ist entschieden!', detail.report.summary, 'raid', this.wonBattle(detail.report));
         }
         if (this.player && detail.report.playerIds.includes(this.player.id) && detail.report.kind === 'raid') {
           this.notify(detail.report.summary, !this.wonBattle(detail.report));
@@ -469,7 +469,7 @@ export class KingdomGameUI {
     }
   }
 
-  private showGameAction(title: string, message: string, kind: 'raid' | 'science'): void {
+  private showGameAction(title: string, message: string, kind: 'raid' | 'science', playerWon: boolean = false): void {
     const banner = this.root.querySelector<HTMLElement>('#game-action-banner');
     if (!banner) return;
     window.clearTimeout(this.actionBannerTimer);
@@ -481,7 +481,7 @@ export class KingdomGameUI {
     description.textContent = message;
     banner.append(heading, description);
     banner.hidden = false;
-    this.map?.playAction(kind);
+    this.map?.playAction(kind, playerWon);
     this.actionBannerTimer = window.setTimeout(() => { banner.hidden = true; }, 4500);
   }
 
