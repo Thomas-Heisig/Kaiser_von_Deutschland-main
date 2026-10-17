@@ -2,7 +2,8 @@
 - [x] Dynamischer Filmkatalog aus tatsächlich vorhandenen Dateien beim Build; Auswahl von Intro, Outro und Zwischenfilm.
 - [x] Optionale Zwischenfilme für historische Meilensteine mit Überspringen, Tonsteuerung und Vorschau.
 - [x] Bürgeraufträge bewerten auch Berufserfahrung/Disziplin; Abschlüsse schreiben Lebenslaufereignisse.
-- [ ] Die drei zusätzlich angekündigten Videos in `public/video/` hochladen, anschließend Katalog und thematische Epochenzuordnung prüfen (in GitHub bisher nur zwei Videos sichtbar).
+- [x] Drei weitere Videos (`Video 3.mp4`, `Video 4.mp4`, `Video 5.mp4`) liegen auf `main` und erscheinen automatisch im Filmkatalog; Offline-Medienliste ergänzt.
+- [ ] Inhaltliche Epochenzuordnung der drei Clips nach tatsächlicher Sichtung, endgültige Filmtitel, passende Zwischenszenen festlegen.
 - [ ] Authentische Zeitabschnitte, historische Sprechertexte, Filmrechte und Fades am tatsächlichen Endgerät abnehmen.
 - [ ] Echte mehrstufige Familien-, Berufs- und Gesellschaftsentwicklung inklusive Spielerentscheidungen erweitern.
 
@@ -21,6 +22,13 @@
 - [x] Tests für Epochen, Einheiten, Rivalen und Speicherstandskompatibilität.
 - [ ] Weitere zivile Aufträge, NPC-Lebensläufe und diplomatische Systeme dynamisch an die Epoche binden.
 - [ ] Spätere Epochen um eigenständige technische Einheiten und nichtmilitärische Konfliktlösung ergänzen.
+
+## Heimnetz-HTTP und Offline-ZIP (17.10.2026)
+- [x] Direktdownload der vollständigen Spielversion als erzeugtes ZIP über LAN-HTTP bereitstellen; Spiel, 15 Musikstücke, Cover, fünf MP4 und lokale Windows-Startanleitung.
+- [x] Service-Worker-Caching bleibt auf HTTPS/localhost begrenzt; HTTP-ZIP-Download benötigt keinen sicheren Browserkontext.
+- [ ] **HTTPS-Spielseite erzeugen und veröffentlichen**: Hosting-Anbieter, Domain, TLS-Zertifikat, automatische Deployments aus `main`, echte öffentliche URL und PWA-Installation auf Mobilgeräten.
+- [ ] Vollständigen ZIP-LAN-Download auf Windows im Heimnetz prüfen, lokal entpacken und ohne Internet starten; Browser-Cache und Speicherplatz beobachten.
+- [ ] Neues ZIP und Dateiversion auf dem echten Heimnetzserver nach jedem Release prüfen; Vite-Dev-Server nicht als öffentliches Hosting verwenden.
 
 ## Offlinezugriff & Medienfehler (17.10.2026)
 - [x] Audiofehler beim Abspielen mit konkreter Netzwerk-/Formatdiagnose und 15-Titel-Check.
