@@ -1,3 +1,9 @@
+## Videothek und Bürgerlebensläufe (17.10.2026)
+
+Der Videokatalog wird beim Build automatisch aus tatsächlich vorhandenen Dateien in `public/video/` erzeugt (MP4, WebM, M4V). In den Spieleinstellungen lassen sich alternative Intro-/Outrofilme und ein optionales Zwischenvideo für historische Meilensteine auswählen und probeweise abspielen. Ohne ausgewählten Zwischenfilm wird keiner abgespielt. Zurzeit liegen nach Repository-Prüfung nur `intro-original.mp4` und `intro.mp4` vor: drei weitere angekündigte Dateien sind **noch nicht im GitHub-Verzeichnis nachgewiesen**, daher können sie erst nach Upload ausgewählt werden. Ton-Autoplay unterliegt Browserrestriktionen; Start/Überspringen bleiben möglich.
+
+Zivile Bürgeraufträge berücksichtigen zusätzlich Berufserfahrung und Disziplin. Abgeschlossene Missionen verbessern Berufserfahrung und Ansehen und erzeugen ein Lebenslaufereignis, das mit dem Bürger gespeichert wird. Die aktuelle Lösung ist ein weiterer Schritt zur lebendigen Bürgergesellschaft, noch keine vollständige autonome Berufs-/Familiensimulation.
+
 ## Bürgeraufträge nach Epoche (17.10.2026)
 
 Neuer Menüpunkt **Bürgeraufträge**: Acht epochengebundene zivile Missionen in Versorgung, Zunftwesen, Handel, Bildung, Mechanisierung, Hygiene, Wiederaufbau und Digitalisierung. Bis zu drei lebende erwachsene Bürger übernehmen Aufgaben über mehrere Spielmonate. Ressourcen werden bei Annahme belastet; nach Abschluss folgen begrenzte Erträge, Fähigkeitsfortschritt und soziale Effekte. Aufträge samt Chronik werden im Spielstand gesichert. KI- oder Ollama-Aktivierung ist nicht nötig; Spieler vergeben Aufträge ausdrücklich.
