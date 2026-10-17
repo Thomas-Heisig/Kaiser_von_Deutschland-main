@@ -1,6 +1,5 @@
 import { filmForRole, filmPreferences, saveFilmPreferences, loadCinematicLibrary, type CinematicClip, type FilmRole } from './CinematicLibrary';
 import { doctrineForYear } from '../core/HistoricalGameplay';
-import { miniCouncilChoice } from '../core/EmbeddedMiniModel';
 import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
 import {
   CampaignGoal, CharacterAction, GameEngine, GameState, MarketResource, SaveMeta
@@ -898,10 +897,7 @@ export class KingdomGameUI {
       if (!dialog.open || !this.engine || !this.player || !select.value) return;
       this.cancelCouncilSelectionTimer();
       void this.run(() => {
-        const offers = this.requireEngine().getCouncilChoices(this.requirePlayer().id);
-        const chosen = readAdvisorConfig().backend === 'mini'
-          ? miniCouncilChoice({year:this.requireEngine().getCurrentYear()},offers)
-          : CouncilAdvisor.chooseByRules(offers);
+        const chosen = this.requireEngine().chooseCouncilOptionForCitizen(this.requirePlayer().id, select.value);
         const outcome = this.requireEngine().delegateCouncilDecision(this.requirePlayer().id, select.value, chosen);
         this.notify(outcome.message, !outcome.success);
         this.resumeAfterCouncilDecision();
