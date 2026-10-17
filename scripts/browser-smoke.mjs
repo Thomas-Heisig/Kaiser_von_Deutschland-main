@@ -9,6 +9,12 @@ try {
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: /Kaiser von/i }).waitFor({ timeout: 15000 });
+    await page.locator('[data-jukebox-select]').waitFor();
+    await page.locator('[data-jukebox-import]').setInputFiles({
+      name: 'jukebox-smoke.mp3', mimeType: 'audio/mpeg',
+      buffer: Buffer.alloc(4096, 0x41)
+    });
+    await page.locator('[data-jukebox-select] option').filter({ hasText: 'jukebox-smoke' }).waitFor();
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
     const districtButtons = page.locator('#settlement-districts button');
