@@ -769,7 +769,7 @@ export class KingdomGameUI {
       <button data-open-district class="secondary">Bezirk ausbauen →</button>`;
     setText('settlement-season', SEASON_LABELS[kingdom.currentSeason] + ' · ' + this.engine.getCurrentEpoch());
     this.map?.update(kingdom, this.selected, this.engine.getModernizationOptions(this.player.id)
-      .filter(option => option.completed).map(option => option.project.id));
+      .filter(option => option.completed).map(option => option.project.id), this.engine.getCurrentYear());
     const scene: Soundscape = this.view === 'war' ? 'battle' :
       this.view === 'culture' ? 'culture' :
       this.view === 'economy' ? 'market' :
