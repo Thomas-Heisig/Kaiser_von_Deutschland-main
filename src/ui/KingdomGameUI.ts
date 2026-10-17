@@ -420,7 +420,11 @@ export class KingdomGameUI {
     });
     sectionDialog?.addEventListener('close', () => {
       this.popupOpen = false;
+      const panel = this.root.querySelector<HTMLElement>('#panel');
+      const workspace = this.root.querySelector<HTMLElement>('.workspace');
+      if (panel && workspace) workspace.append(panel);
       this.view = 'overview';
+      this.renderPanel();
       this.root.querySelector('.kingdom-app')?.setAttribute('data-view', 'overview');
     });
     this.root.querySelector('#section-dialog-close')?.addEventListener('click', () => sectionDialog?.close());
@@ -704,6 +708,8 @@ export class KingdomGameUI {
     if (view === 'overview') {
       popup?.close();
       this.popupOpen = false;
+      const workspace = this.root.querySelector<HTMLElement>('.workspace');
+      if (panel && workspace && !workspace.contains(panel)) workspace.append(panel);
       this.renderPanel();
       this.refresh();
       return;
