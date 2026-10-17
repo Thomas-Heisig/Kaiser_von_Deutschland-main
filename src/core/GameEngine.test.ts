@@ -57,7 +57,7 @@ describe('Playable campaign integration', (): void => {
     expect(t?.requiredTechnology).toBe('sailing');
     expect(engine.activateTradeRoute(player, 'hanseatic_routes').success).toBe(false);
     player.kingdom.infrastructure.schools = 2;
-    await engine.advanceMonth();
+    for (let month = 0; month < 6; month++) await engine.advanceMonth();
     player.kingdom.resources.gold = 50000;
     engine.startResearch(player.id, 'sailing');
     await engine.advanceMonth();
