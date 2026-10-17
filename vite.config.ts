@@ -30,7 +30,7 @@ export default defineConfig({
       return isNaN(port) ? 4100 : port;
     })(),
     host: true,
-    open: true
+    open: false
   },
   build: {
     outDir: 'dist',
