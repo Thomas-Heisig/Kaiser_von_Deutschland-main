@@ -10,6 +10,9 @@ try {
     await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: /Kaiser von/i }).waitFor({ timeout: 15000 });
     await page.locator('[data-jukebox-select]').waitFor();
+    await page.getByText(/Version: 2026-10-17/).waitFor();
+    await page.locator('[data-jukebox-auto]').waitFor();
+    if (!(await page.locator('[data-jukebox-import]').getAttribute('multiple') !== null)) failures.push('MP3-Multiupload fehlt');
     await page.locator('[data-jukebox-import]').setInputFiles({
       name: 'jukebox-smoke.mp3', mimeType: 'audio/mpeg',
       buffer: Buffer.alloc(4096, 0x41)
