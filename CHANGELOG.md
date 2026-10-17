@@ -5,6 +5,7 @@
 ## [Unreleased] — Stand 17.10.2026
 
 ### Added
+- P1-Integrationstest der Industrie-Kampagne mit Bauen, Forschung, drei Kapiteln, Save/Load und Sieg sowie 60-Monats-Wirtschaftsstabilität.
 
 - Drei historisch begrenzte Bürgeraufträge aus dem ursprünglichen Ideenbestand: Seuchenhilfe, Bewässerung und Kulturförderung.
 - Browserbasierte Hauptoberfläche, mehrere Epochen, sechs Kampagnen und Hotseat (2–4) mit Forschungs-, Handels- und Ratsentscheidungen.
