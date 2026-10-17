@@ -45,13 +45,23 @@ jobs:
         run: |
           test -s dist/index.html
           test -s dist/manifest.webmanifest
+          test -s dist/icons/kaiser-192.png
+          test -s dist/icons/kaiser-512.png
           test -s dist/sw.js
           test -s dist/video-catalog.json
           test -s dist/downloads/kaiser-von-deutschland-offline.zip
           grep -q '/Kaiser_von_Deutschland-main/' dist/index.html
           grep -q '/Kaiser_von_Deutschland-main/video/' dist/video-catalog.json
-      - name: Configure GitHub Pages
+      - name: Upload deployable site even if Pages is not enabled
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaiser-https-site
+          path: dist
+          retention-days: 7
+      - name: Configure or enable GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Upload built static site
         uses: actions/upload-pages-artifact@v3
         with:

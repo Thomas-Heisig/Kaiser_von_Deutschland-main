@@ -1,3 +1,10 @@
+## HTTPS/PWA Freischaltung und Fallback (17.10.2026)
+- [x] PWA-App-Icons als echte PNGs (192/512 px) automatisch beim Build generieren und im Manifest referenzieren.
+- [x] HTTPS-Workflow versucht GitHub Pages mit enablement=true zu aktivieren.
+- [x] Separates buildbares Website-Artefakt in GitHub Actions hinterlegen, falls GitHub Pages nicht für privates Repository verfügbar ist.
+- [ ] Prüfen, ob GitHub-Plan und Repository-Einstellungen die Pages-Aktivierung erlauben; bei 404/403 Pages manuell aktivieren oder externen HTTPS-Host konfigurieren.
+- [ ] Exakte HTTPS-Adresse mit echtem Gerät öffnen, Installation sowie Offline-Modus verifizieren.
+
 ## Browserinstallation – PWA-Bedienung (17.10.2026)
 - [x] Sichtbaren „Spiel installieren“-Button in der Spielleiste und den Einstellungen eingebaut.
 - [x] Browser-Installationsdialog bei entsprechender Browserfreigabe anbieten; iPad/Safari-Fallback mit „Zum Home-Bildschirm“ erläutern.
