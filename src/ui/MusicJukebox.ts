@@ -23,7 +23,7 @@ export class MusicJukebox {
     const valid = list.filter(x => x && x.source === 'import' && typeof x.id === 'string' && typeof x.title === 'string');
     const available: JukeboxTrack[] = [];
     for (const item of BUNDLED_TRACKS) {
-      try { if ((await fetch(item.url!, {method:'HEAD'})).ok) available.push(item); } catch { /* optional asset absent */ }
+      try { const response = await fetch(item.url!, {method:'HEAD'}); if (response.ok && (response.headers.get('content-type') ?? '').startsWith('audio/')) available.push(item); } catch { /* optional asset absent */ }
     }
     this.tracks = [...available, ...valid];
     this.onChange();
