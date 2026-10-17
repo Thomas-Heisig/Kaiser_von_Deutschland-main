@@ -1962,10 +1962,19 @@ export class GameEngine {
    */
   public getPlayableCharacters(limit: number = 12): Citizen[] {
     const rank: Record<Citizen['socialClass'], number> = { royal: 3, noble: 2, middle: 1, peasant: 0 };
-    return this.citizenSystem.getAliveCitizens()
-      .filter((citizen: Citizen): boolean => !citizen.isPlayerCharacter)
-      .sort((a: Citizen, b: Citizen): number =>
-        rank[b.socialClass] - rank[a.socialClass] || b.reputation - a.reputation || a.age - b.age)
+    const pool = this.citizenSystem.getAliveCitizens()
+      .filter((citizen: Citizen): boolean => !citizen.isPlayerCharacter);
+    const classes: Citizen['socialClass'][] = ['royal', 'noble', 'middle', 'peasant'];
+    const selected: Citizen[] = [];
+    for (const socialClass of classes) {
+      const candidates = pool.filter(citizen => citizen.socialClass === socialClass)
+        .sort((a, b) => b.reputation - a.reputation || a.age - b.age);
+      if (candidates[0]) selected.push(candidates[0]);
+    }
+    const selectedIds = new Set(selected.map(citizen => citizen.id));
+    return [...selected, ...pool.filter(citizen => !selectedIds.has(citizen.id))
+      .sort((a, b) => rank[b.socialClass] - rank[a.socialClass] ||
+        b.reputation - a.reputation || a.age - b.age)]
       .slice(0, Math.max(0, limit));
   }
 
