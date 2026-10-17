@@ -73,7 +73,6 @@ export class DemographicSystem {
   private lastYearProcessed: number = 0;
   
   // Konfigurierbare Parameter
-  private baseBirthRate: number = 35; // pro 1000 pro Jahr
   private baseDeathRate: number = 25; // pro 1000 pro Jahr
   private infantMortalityBase: number = 150; // pro 1000 Geburten
   
@@ -199,7 +198,8 @@ export class DemographicSystem {
       this.lastYearProcessed = currentYear;
     }
     
-    // Geburten
+    // The citizen simulation creates the actual children. Record only real births,
+    // rather than rounding an expected birth count (which was often zero).
     this.processBirths(citizenSystem, currentYear, currentMonth);
     
     // Todesfälle
@@ -215,30 +215,12 @@ export class DemographicSystem {
   /**
    * Verarbeitet Geburten
    */
-  private processBirths(
-    citizenSystem: CitizenSystem,
-    _year: number,
-    _month: number
-  ): void {
-    const citizens = citizenSystem.getAllCitizens().filter(c => c.isAlive);
-    const population = citizens.length;
-    
-    if (population === 0) return;
-    
-    // Monatliche Geburtenrate (Jahresrate / 12)
-    const monthlyBirthRate = this.baseBirthRate / 12 / 1000;
-    const expectedBirths = Math.floor(population * monthlyBirthRate);
-    
-    // Qualität des Lebens beeinflusst Geburtenrate
-    const avgHappiness = citizens.reduce((sum, c) => sum + c.happiness, 0) / population;
-    const happinessFactor = avgHappiness / 100;
-    
-    const actualBirths = Math.max(0, Math.floor(expectedBirths * (0.5 + happinessFactor * 0.5)));
-    
-    this.birthsThisYear += actualBirths;
-    
-    // Geburten werden in CitizenSystem durch Schwangerschaften gehandhabt
-    // Hier könnten zusätzliche Geburten-Events generiert werden
+  private processBirths(citizenSystem: CitizenSystem, year: number, month: number): void {
+    // Derive this year's births from stored child records, so a save/load
+    // does not invent population or count the same child repeatedly.
+    this.birthsThisYear = citizenSystem.getAllCitizens().filter(c =>
+      c.birthYear === year && c.birthMonth >= 1 && c.birthMonth <= month &&
+      c.lifeEvents?.some(e => e.type === 'birth' && e.year === c.birthYear)).length;
   }
   
   /**

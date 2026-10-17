@@ -40,3 +40,20 @@ describe('Bürgerfamilien und Geburten', () => {
     expect(system.getPopulation()).toBe(before+1);
   });
 });
+
+describe('Geburtenstatistik', () => {
+  it('counts children who were actually born, without phantom births', async () => {
+    const { DemographicSystem } = await import('./DemographicSystem');
+    const citizens = new CitizenSystem();
+    const mother = citizens.createCitizen({firstName:'Greta',lastName:'Meyer',gender:'female',
+      age:27,birthYear:1200,birthMonth:2,profession:'farmer',regionId:'dorf'});
+    const statistics = new DemographicSystem();
+    const base=statistics.calculateStatistics(citizens).birthRate;
+    expect(base).toBe(0);
+    mother.health.isPregnant=true;
+    mother.health.pregnancyMonth=8;
+    citizens.processMonth(1230,7);
+    statistics.processMonth(citizens,1230,7);
+    expect(statistics.calculateStatistics(citizens).birthRate).toBeGreaterThan(0);
+  });
+});

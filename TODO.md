@@ -3,7 +3,8 @@
 - [x] Schwangerschaftsende erzeugt tatsächlich einen neuen Bürger mit Familienzuordnung und beidseitigen Eltern-Kind-Relationen.
 - [x] Bereits vorhandene Familien- und Spielstanddatenfelder verwenden; Geburt beim monatlichen Bürgerdurchlauf ohne Map-Mutation-Probleme.
 - [ ] Historisch und kulturell angepasste Vornamen und geregelte Partner-/Schwangerschaftslogik ergänzen (derzeit Platzhaltername).
-- [ ] Geburtenstatistik mit tatsächlichen Geburten in der Demografie zusammenführen; derzeit bestehende Demografiezählung nur statistisch.
+- [x] Demografische Geburtenzählung aus tatsächlich erzeugten Kindern im aktuellen Spieljahr ableiten; keine simulierten Phantomgeburten mehr.
+- [ ] Prüfen, ob bei alten Speicherständen unterschiedliche Geburtsdaten und Datumsübergänge eine Migration benötigen.
 - [ ] Generationsübergreifende Vermögensverteilung, Jugend-/Ausbildungsphase, Familiengründung und Sterbefälle langfristig balancieren.
 - [ ] Live-Deployment prüfen, damit die neue Schaltfläche auf der tatsächlich geöffneten Spielseite sichtbar ist.
 
