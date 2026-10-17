@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build && node scripts/create-offline-archive.mjs",
     "preview": "vite preview",
+    "serve:lan": "vite preview --host 0.0.0.0 --port 4173",
     "check": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui"
