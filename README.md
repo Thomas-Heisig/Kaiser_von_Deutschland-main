@@ -1,12 +1,18 @@
+## Kompakte Bedienung, Epoche und automatische Zeit (17.10.2026)
+
+Die Hauptansicht erhält weniger Abstände, eine verkürzte Karte, engere Navigationszeilen und direkte Schaltflächen für Herrschaftsbereiche. Die aktuelle Epoche und das Spieljahr sind als klickbare Information rechts im Kopf angeordnet; ein Dialog erläutert den historischen Zeitraum.
+
+Im Einzelspielermodus wird eine zuvor laufende automatische Zeit nach einer Ratsentscheidung und nach einer manuellen Speicherung fortgesetzt. Bewusst angehaltene Spiele bleiben angehalten. Hotseat arbeitet weiterhin zugbasiert. Der Fußbereich enthält Angaben zu Thomas Heisig, Software-/Medienrechten, KI-Einsatz und lokaler Spielstandspeicherung; vollständige Kontaktdaten und titelbezogene Credits sind vor öffentlicher Veröffentlichung zu ergänzen.
+
 ## Aktueller Stand – Spiel, Filmstart und Original-Soundtrack (17.10.2026)
 
 Der produktive Quellcode liegt auf **main**. Der Spieleinstieg erfolgt über `src/main.ts` → `src/ui/KingdomGameUI.ts` → `src/core/GameEngine.ts`. Die Anwendung ist eine browserlokale TypeScript-/Vite-Simulation, kein installierter Backenddienst. Den aktuellen Auslieferungsstand der tatsächlich verwendeten Website gesondert verifizieren.
 
 ### Video und Musik
-- Filmischer Programmstart: `public/video/intro.mp4` (kurze Fassung), mit Schaltfläche zum Überspringen; alternative Originalfassung in `public/video/intro-original.mp4`. Autoplay des Videos ist stumm (`muted`), da Browser automatische Wiedergabe mit Ton häufig sperren.
-- Anschließend Hauptmenü und **„Zeit vergeht“** als Hauptthema. Falls der Browser Musik-Autoplay blockiert, steht ein sichtbarer Startknopf bereit.
+- Filmischer Programmstart: `public/video/intro.mp4` (kurze Fassung), mit Schaltfläche zum Überspringen; alternative Originalfassung in `public/video/intro-original.mp4`. Das Video versucht mit Originalton automatisch zu starten. Sperrt der Browser tonhaltiges Autoplay, erscheint direkt auf dem Intro die Schaltfläche „Intro mit Ton starten“.
+- Anschließend Hauptmenü und **„Zeit vergeht“** als Hauptthema. Die Hauptmusik wird ohne separaten Startknopf unmittelbar nach dem Intro angestoßen; sollte der Browser Audiowiedergabe blockieren, wird sie bei der nächsten Nutzerinteraktion erneut versucht.
 - **15 Originalaufnahmen** sind fest in `public/music/*.mp3` gespeichert und über `src/data/json/music-catalog.json` benannt. Für alle 15 Titel existieren vorläufige, einzeln gestaltete Cover in `public/covers/*.svg`.
-- Im Spiel: **Musik & Klangeinstellungen** öffnen, Titel per Dropdown oder Cover wählen, herunterladen, Lautstärke einstellen oder Epochenautomatik aktivieren. Lokaler Dateiimport bleibt zusätzlich möglich.
+- Im Spiel: **Original-Soundtrack & Titelcover** öffnen, Titel per Dropdown oder Cover wählen und herunterladen. Separate Lautstärkeregler, Musik- und Effektschalter sowie eine zusätzliche Starttaste wurden zugunsten eines einfachen Ablaufs entfernt. Lokaler Dateiimport bleibt zusätzlich möglich.
 - Die frühere prozedurale Hintergrundmusik (`RoyalMusicScore`) wurde entfernt. `GameAudio` erzeugt nur kurze Bedien-/Spieleffekte; `GameAmbience` liefert separat aktivierbare Umgebungsgeräusche.
 - Die 15 Covers sind **vorläufige Illustrationen**, keine vom Komponisten bereitgestellten Originalcover. Künstler, Lizenz und ausführliche Stückinformationen sind noch zu ergänzen.
 
