@@ -14,7 +14,7 @@ try {
       name: 'jukebox-smoke.mp3', mimeType: 'audio/mpeg',
       buffer: Buffer.alloc(4096, 0x41)
     });
-    await page.locator('[data-jukebox-select] option').filter({ hasText: 'jukebox-smoke' }).waitFor();
+    await page.locator('[data-jukebox-select]').locator('option').filter({ hasText: 'jukebox-smoke' }).first().waitFor({ state: 'attached' });
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
     const districtButtons = page.locator('#settlement-districts button');
