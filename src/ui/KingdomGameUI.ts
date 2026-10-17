@@ -146,7 +146,7 @@ export class KingdomGameUI {
     this.root.innerHTML = `
       <main class="welcome">
         <div class="intro-overlay" id="intro-overlay" aria-label="Filmischer Spieleinstieg">
-          <div class="production-card" id="production-card"><span class="production-sigil">♜</span><strong>Eine Thomas Heisig Produktion</strong><small>KAISER VON DEUTSCHLAND</small></div><video id="intro-video" playsinline preload="auto" poster="/covers/zeit-vergeht.webp"><source src="/video/intro-original.mp4" type="video/mp4"></video>
+          <div class="production-card" id="production-card"><span class="production-sigil">♜</span><strong>Eine Thomas Heisig Produktion</strong><small>KAISER VON DEUTSCHLAND</small></div><video id="intro-video" playsinline preload="auto" poster="${import.meta.env.BASE_URL}covers/zeit-vergeht.webp"><source src="${import.meta.env.BASE_URL}video/intro-original.mp4" type="video/mp4"></video>
           <button type="button" id="intro-activation" class="intro-activation" hidden>▶ Intro mit Ton starten</button>
           <div class="intro-caption"><span>KAISER VON DEUTSCHLAND</span><p>Die Geschichte beginnt</p></div>
           <button type="button" id="intro-skip" class="intro-skip">Intro überspringen →</button>
@@ -164,7 +164,7 @@ export class KingdomGameUI {
             <strong id="start-era-summary">Mittelalter · 1200</strong>
             <p id="start-campaign-summary">Wähle Kampagne und Startzeit. Die Welt wächst mit deinem Reich.</p>
           </div></div>
-          <div class="opening-music" id="opening-music" aria-live="polite"><img src="/covers/zeit-vergeht.webp" alt="Cover Zeit vergeht"><span id="opening-music-label">♫ Zeit vergeht · Hauptthema nach dem Intro</span><button type="button" id="opening-toggle" class="opening-toggle" aria-label="Musik pausieren">Ⅱ Pause</button></div>
+          <div class="opening-music" id="opening-music" aria-live="polite"><img src="${import.meta.env.BASE_URL}covers/zeit-vergeht.webp" alt="Cover Zeit vergeht"><span id="opening-music-label">♫ Zeit vergeht · Hauptthema nach dem Intro</span><button type="button" id="opening-toggle" class="opening-toggle" aria-label="Musik pausieren">Ⅱ Pause</button></div>
           <form id="new-game">
             <label>Startepoche<select name="startYear" id="start-year">
               <option value="1200">1200 · Hochmittelalter</option>
@@ -342,7 +342,7 @@ export class KingdomGameUI {
         <details class="game-music-settings" id="game-music-settings"><summary>🎼 Original-Soundtrack & Titelcover</summary>
         <section class="jukebox jukebox-ingame" aria-label="Musik-Jukebox">
           <strong>🎼 Original-Soundtrack · 15 Titel</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
-          <div class="jukebox-nowplaying"><img data-jukebox-cover src="/covers/zeit-vergeht.webp" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>15 historische und thematische Aufnahmen</small></div></div>
+          <div class="jukebox-nowplaying"><img data-jukebox-cover src="${import.meta.env.BASE_URL}covers/zeit-vergeht.webp" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>15 historische und thematische Aufnahmen</small></div></div>
           <div class="playlist-toolbar"><label>Wiedergabe <select id="playlist-mode"><option value="era">Nach Epoche</option><option value="sequential">Reihenfolge</option><option value="shuffle">Zufällig</option></select></label><label>Wiederholen <select id="playlist-repeat"><option value="all">Alle</option><option value="one">Titel</option><option value="off">Aus</option></select></label></div>
           <details class="playlist-covers"><summary>Alle 15 Titelcover anzeigen</summary><div class="jukebox-gallery" data-jukebox-gallery aria-label="Alle Titelcover"></div></details>
           <a data-jukebox-download class="jukebox-download" href="#" download>↓ Titel herunterladen</a>
@@ -445,7 +445,7 @@ export class KingdomGameUI {
           <p id="advisor-inference-result" role="status"></p>
           <hr><h3>Musik & Diagnose</h3><button type="button" id="music-diagnose" class="secondary">Alle 15 MP3 prüfen</button>
           <p id="music-diagnosis" role="status">Bei Abspielfehlern die Serverdateien überprüfen.</p>
-          <hr><h3>Offline spielen / Heimnetz-Download</h3><p>Spiel, Musik, Cover und alle Videos als vollständiges ZIP herunterladen – auch über HTTP im vertrauenswürdigen Heimnetz. Nach dem Entpacken lokal über http://localhost starten. Für eine Browserinstallation auf Mobilgeräten bleibt HTTPS erforderlich.</p><a class="secondary" href="/downloads/kaiser-von-deutschland-offline.zip" download="kaiser-von-deutschland-offline.zip">↓ Komplettes Spiel als ZIP herunterladen (LAN/HTTP möglich)</a><p>Zusätzlich: Spiel einmalig in diesem Browser speichern (nur HTTPS oder localhost; der Browser kann Cache bei Speichermangel löschen).</p>
+          <hr><h3>Offline spielen / Heimnetz-Download</h3><p>Spiel, Musik, Cover und alle Videos als vollständiges ZIP herunterladen – auch über HTTP im vertrauenswürdigen Heimnetz. Nach dem Entpacken lokal über http://localhost starten. Für eine Browserinstallation auf Mobilgeräten bleibt HTTPS erforderlich.</p><a class="secondary" href="${import.meta.env.BASE_URL}downloads/kaiser-von-deutschland-offline.zip" download="kaiser-von-deutschland-offline.zip">↓ Komplettes Spiel als ZIP herunterladen (LAN/HTTP möglich)</a><p>Zusätzlich: Spiel einmalig in diesem Browser speichern (nur HTTPS oder localhost; der Browser kann Cache bei Speichermangel löschen).</p>
           <button type="button" id="offline-save" class="primary">↓ Spiel im Browser speichern</button>
           <p id="offline-status" role="status">Offline-Paket noch nicht überprüft.</p>
           <hr><h3>Filmvorführungen</h3>
@@ -2263,7 +2263,7 @@ export class KingdomGameUI {
     window.clearTimeout(this.cinematicTimeout);
     this.introDismissed = false;
     overlay.querySelector('.production-card')?.remove();
-    video.querySelector('source')?.setAttribute('src', filmForRole(this.cinematicClips,'outro',filmPreferences())?.url ?? '/video/intro.mp4');
+    video.querySelector('source')?.setAttribute('src', filmForRole(this.cinematicClips,'outro',filmPreferences())?.url ?? (import.meta.env.BASE_URL + 'video/intro.mp4'));
     video.load();
     const skip = this.root.querySelector('#intro-skip');
     if (skip) skip.textContent = 'Zum Hauptmenü →';
@@ -2299,7 +2299,7 @@ export class KingdomGameUI {
       ?? this.jukebox.getCurrentId() ?? 'zeit-vergeht';
     const selectedTrack = this.jukebox.getTracks().find(t => t.id === selectedId);
     const cover = this.root.querySelector<HTMLImageElement>('[data-jukebox-cover]');
-    if (cover && selectedTrack) { cover.src = selectedTrack.coverUrl ?? '/covers/zeit-vergeht.webp'; cover.alt = 'Cover: ' + selectedTrack.title; }
+    if (cover && selectedTrack) { cover.src = selectedTrack.coverUrl ?? (import.meta.env.BASE_URL + 'covers/zeit-vergeht.webp'); cover.alt = 'Cover: ' + selectedTrack.title; }
     const title = this.root.querySelector<HTMLElement>('[data-jukebox-title]');
     if (title) title.textContent = selectedTrack?.title ?? 'Soundtrack';
     const desc = this.root.querySelector<HTMLElement>('[data-jukebox-description]');

@@ -22,8 +22,8 @@ export const BUNDLED_TRACKS: readonly JukeboxTrack[] = musicCatalog.tracks.map(t
   era: track.era,
   ...(typeof track.year === 'number' ? { year: track.year } : {}),
   source: 'library' as const,
-  url: '/music/' + track.filename,
-  coverUrl: track.cover,
+  url: import.meta.env.BASE_URL + 'music/' + track.filename,
+  coverUrl: import.meta.env.BASE_URL + track.cover.replace(/^\//, ''),
   description: track.description
 }));
 

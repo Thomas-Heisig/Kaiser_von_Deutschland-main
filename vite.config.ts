@@ -24,7 +24,7 @@ function offlineBuildAssets(): Plugin {
     },
     generateBundle(_options, bundle) {
       const assets = Object.keys(bundle).filter(name => !name.endsWith('.map'));
-      this.emitFile({ type: 'asset', fileName: 'video-catalog.json', source: JSON.stringify(cinemaCatalog()) });
+      this.emitFile({ type: 'asset', fileName: 'video-catalog.json', source: JSON.stringify({ videos: cinemaCatalog().videos.map(video => ({ ...video, url: (process.env.GITHUB_PAGES === 'true' ? '/Kaiser_von_Deutschland-main' : '') + video.url })) }) });
       this.emitFile({ type: 'asset', fileName: 'offline-shell.json',
         source: JSON.stringify({ files: ['index.html', ...assets] }) });
     }
@@ -32,6 +32,7 @@ function offlineBuildAssets(): Plugin {
 }
 
 export default defineConfig({
+  base: process.env.GITHUB_PAGES === 'true' ? '/Kaiser_von_Deutschland-main/' : '/',
   plugins: [offlineBuildAssets()],
   resolve: {
     alias: {
