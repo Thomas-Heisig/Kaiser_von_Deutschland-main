@@ -89,13 +89,14 @@ export class MusicJukebox {
   public getRepeatMode(): RepeatMode { return this.repeatMode; }
   public setPlaylistMode(mode: PlaylistMode): void {
     this.playlistMode = mode;
+    if (this.audio) this.audio.loop = this.repeatMode === 'one' || (this.repeatMode !== 'off' && mode === 'era');
     localStorage.setItem('kaiser-playlist-mode', mode);
     this.onChange();
   }
   public setRepeatMode(mode: RepeatMode): void {
     this.repeatMode = mode;
     localStorage.setItem('kaiser-repeat-mode', mode);
-    if (this.audio) this.audio.loop = mode === 'one' || mode === 'era';
+    if (this.audio) this.audio.loop = mode === 'one' || (mode !== 'off' && this.playlistMode === 'era');
     this.onChange();
   }
   public setCurrentYear(year: number): void { this.currentYear = year; }
@@ -189,7 +190,7 @@ export class MusicJukebox {
     }
     if (!source) throw new Error('Audiodatei fehlt.');
     const audio = new Audio(source);
-    audio.loop = this.repeatMode === 'one' || this.playlistMode === 'era';
+    audio.loop = this.repeatMode === 'one' || (this.repeatMode !== 'off' && this.playlistMode === 'era');
     audio.addEventListener('ended', () => { if (this.playbackSerial === serial) void this.advancePlaylist(); });
     audio.preload = 'auto';
     audio.volume = this.volume;
