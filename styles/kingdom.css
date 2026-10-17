@@ -623,3 +623,10 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
 }
 #settings-dialog label{display:grid;gap:6px}
 #settings-dialog input,#settings-dialog select{max-width:100%;width:100%;min-height:42px;font-size:16px}
+
+
+.advisor-model-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.advisor-model-actions button{flex:1 1 140px;min-height:40px}
+#advisor-progress{display:block;width:100%;height:12px;accent-color:#dabe7b;margin:8px 0}
+#advisor-status,#advisor-inference-result{overflow-wrap:anywhere;line-height:1.4;min-height:1.5em}
+#settings-dialog{max-width:min(93vw,650px)}
