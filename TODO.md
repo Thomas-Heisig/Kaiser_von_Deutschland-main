@@ -14,6 +14,7 @@
 - [x] Fachberufe, Disziplin, Erfahrung und lokales Sicherheitsniveau wirken sich begrenzt auf zivile Auftragsresultate aus (Tests ergänzt).
 - [x] Fünf weitere zeitgebundene zivile Aufträge: Fischfang, Mühlen, Buchdruck, Eisenbahn, Elektrifizierung.
 - [ ] Regionales Produktionsmodell und echte Berufs-/Familienwechsel mit Bürgeraufträgen verbinden; bisher nur die persönliche Sicherheitskennzahl als lokaler Faktor.
+- [x] Bürgerauswahl für Aufträge priorisiert passende Berufe und Fähigkeiten, blendet bereits Beauftragte aus und zeigt Erfahrung.
 - [ ] Zusätzliche Berufsgruppen und zivile Geschichten mit fortlaufenden Beziehungen ergänzen.
 
 ## Geschichte & Gameplay – Militär (17.10.2026)
