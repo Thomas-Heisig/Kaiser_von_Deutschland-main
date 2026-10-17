@@ -20,6 +20,8 @@ export interface CouncilDecision {
   title: string;
   story: string;
   choices: CouncilChoice[];
+  minYear?: number;
+  maxYear?: number;
 }
 
 export interface PendingCouncilDecision {
@@ -34,6 +36,8 @@ export interface CouncilHistoryEntry {
   success: boolean;
   date: string;
   message: string;
+  delegatedCitizenId?: string;
+  delegatedCitizenName?: string;
 }
 
 export interface CouncilSnapshot {
@@ -63,7 +67,7 @@ export const COUNCIL_DECISIONS: readonly CouncilDecision[] = [
     ]
   },
   {
-    id: 'border_alarm', category: 'SICHERHEIT', title: 'Rauch an der Grenze',
+    id: 'border_alarm', maxYear: 1890, category: 'SICHERHEIT', title: 'Rauch an der Grenze',
     story: 'Grenzwachen melden bewaffnete Plünderer. Händler verlangen Schutz, die Feldherren drängen zum Handeln.',
     choices: [
       { id: 'guards', title: 'Grenzposten verstärken', description: 'Vorräte und Gold für eine sichere Grenze.',
@@ -76,7 +80,7 @@ export const COUNCIL_DECISIONS: readonly CouncilDecision[] = [
     ]
   },
   {
-    id: 'guild_petition', category: 'HANDEL', title: 'Die Gilden erheben Anspruch',
+    id: 'guild_petition', maxYear: 1750, category: 'HANDEL', title: 'Die Gilden erheben Anspruch',
     story: 'Kaufleute und Handwerker fordern Privilegien. Ihr Angebot könnte das Reich reich machen.',
     choices: [
       { id: 'charter', title: 'Handelsrechte verleihen', description: 'Hoher Ertrag, aber weniger Rückhalt beim Volk.',
@@ -89,7 +93,7 @@ export const COUNCIL_DECISIONS: readonly CouncilDecision[] = [
     ]
   },
   {
-    id: 'court_intrigue', category: 'INTRIGE', title: 'Ein Komplott am Hof',
+    id: 'court_intrigue', maxYear: 1890, category: 'INTRIGE', title: 'Ein Komplott am Hof',
     story: 'Es kursieren Gerüchte über Bestechung im Rat. Wer vorschnell urteilt, könnte treue Verbündete verlieren.',
     choices: [
       { id: 'inquiry', title: 'Öffentliche Untersuchung', description: 'Aufwendig, aber gut für Vertrauen und Ordnung.',
@@ -141,7 +145,7 @@ export const COUNCIL_DECISIONS: readonly CouncilDecision[] = [
     ]
   },
   {
-    id: 'pilgrims', category: 'GLAUBE', title: 'Pilger vor den Toren',
+    id: 'pilgrims', maxYear: 1750, category: 'GLAUBE', title: 'Pilger vor den Toren',
     story: 'Hunderte Reisende ersuchen Unterkunft. Die Geistlichkeit und Kaufleute sind uneins.',
     choices: [
       { id: 'welcome', title: 'Pilger aufnehmen', description: 'Versorge Gäste und gewinne Ansehen.',
@@ -154,7 +158,7 @@ export const COUNCIL_DECISIONS: readonly CouncilDecision[] = [
     ]
   },
   {
-    id: 'miners_dispute', category: 'HANDWERK', title: 'Streit im Bergwerk',
+    id: 'miners_dispute', minYear: 1750, category: 'HANDWERK', title: 'Streit im Bergwerk',
     story: 'Bergleute verweigern die Arbeit. Sie fordern höhere Löhne und sichere Stollen.',
     choices: [
       { id: 'safety', title: 'Stollen sichern', description: 'Material und Gold schützen die Arbeitenden.',
@@ -166,7 +170,7 @@ export const COUNCIL_DECISIONS: readonly CouncilDecision[] = [
     ]
   },
   {
-    id: 'merchant_caravan', category: 'HANDEL', title: 'Eine fremde Karawane',
+    id: 'merchant_caravan', maxYear: 1800, category: 'HANDEL', title: 'Eine fremde Karawane',
     story: 'Ein Händlerzug mit seltenen Waren bittet um Handelsrechte und Schutz.',
     choices: [
       { id: 'tariff', title: 'Zoll verlangen', description: 'Schnelle Einnahmen zulasten des Ansehens.',
@@ -192,7 +196,7 @@ export const COUNCIL_DECISIONS: readonly CouncilDecision[] = [
     ]
   },
   {
-    id: 'noble_wedding', category: 'HOF', title: 'Eine Hochzeit am Hof',
+    id: 'noble_wedding', maxYear: 1900, category: 'HOF', title: 'Eine Hochzeit am Hof',
     story: 'Zwei Adelsfamilien möchten mit einer großen Feier ihre Fehde beenden.',
     choices: [
       { id: 'sponsor', title: 'Die Feier ausrichten', description: 'Luxus kostet Geld, stärkt jedoch die politische Ordnung.',
@@ -201,6 +205,46 @@ export const COUNCIL_DECISIONS: readonly CouncilDecision[] = [
         cost: { gold: 100 }, effect: { prestige: 1, stability: 1 } },
       { id: 'refuse', title: 'Eine Vermählung untersagen', description: 'Bewahre die Staatskasse, riskiere einen Aufruhr.',
         cost: {}, effect: { stability: -7, happiness: -3 } }
+    ]
+  },
+  {
+    id: "industrial_unrest", minYear: 1820, category: "ARBEIT", title: "Streik in den Manufakturen", story: "Arbeiter fordern Schutz und geregelte Arbeitszeiten. Die Betriebe drohen stillzustehen.",
+    choices: [
+      { id: "reform", title: "Arbeitsschutz einführen", description: "Arbeitsschutz einführen", cost: {"gold":500,"iron":50}, effect: {"happiness":6,"stability":3} },
+      { id: "mediate", title: "Schlichter entsenden", description: "Schlichter entsenden", cost: {"gold":240}, effect: {"stability":2,"happiness":2} },
+      { id: "crackdown", title: "Streik unterdrücken", description: "Streik unterdrücken", cost: {}, effect: {"gold":650,"stability":-6,"happiness":-7} }
+    ]
+  },
+  {
+    id: "railway_works", minYear: 1820, category: "INFRASTRUKTUR", title: "Die Eisenbahnlinie stockt", story: "Ein beschädigter Bahndamm bedroht Lieferungen und Versorgung.",
+    choices: [
+      { id: "repair", title: "Gleise und Brücke reparieren", description: "Gleise und Brücke reparieren", cost: {"iron":260,"stone":200,"gold":350}, effect: {"stability":4,"gold":500} },
+      { id: "bypass", title: "Ersatztransporte organisieren", description: "Ersatztransporte organisieren", cost: {"food":180,"gold":220}, effect: {"happiness":2} },
+      { id: "gamble", title: "Notbetrieb wagen", description: "Notbetrieb wagen", cost: {"gold":160}, effect: {"gold":1100,"prestige":2}, successChance: 0.56, failure: {"gold":-380,"stability":-4} }
+    ]
+  },
+  {
+    id: "postwar_housing", minYear: 1945, category: "WIEDERAUFBAU", title: "Wohnungen für Vertriebene", story: "Zerstörte Häuser und ankommende Familien führen zu Wohnungsnot.",
+    choices: [
+      { id: "build_homes", title: "Notwohnungen errichten", description: "Notwohnungen errichten", cost: {"wood":340,"stone":240,"gold":450}, effect: {"happiness":7,"stability":3} },
+      { id: "shelter", title: "Gemeinschaftsunterkünfte einrichten", description: "Gemeinschaftsunterkünfte einrichten", cost: {"food":340,"gold":180}, effect: {"happiness":3} },
+      { id: "private", title: "Private Bauträger beauftragen", description: "Private Bauträger beauftragen", cost: {"gold":400}, effect: {"happiness":6,"prestige":2}, successChance: 0.68, failure: {"stability":-3,"gold":-280} }
+    ]
+  },
+  {
+    id: "power_outage", minYear: 1970, category: "ENERGIE", title: "Großflächiger Stromausfall", story: "Ein Defekt unterbricht Unternehmen und Kliniken.",
+    choices: [
+      { id: "grid", title: "Stromnetz instand setzen", description: "Stromnetz instand setzen", cost: {"iron":250,"gold":620}, effect: {"stability":6,"happiness":4} },
+      { id: "generators", title: "Notstrom bereitstellen", description: "Notstrom bereitstellen", cost: {"gold":390,"food":150}, effect: {"stability":3,"happiness":2} },
+      { id: "risk", title: "Schnelle Wiedereinschaltung wagen", description: "Schnelle Wiedereinschaltung wagen", cost: {"gold":140}, effect: {"gold":550,"prestige":1}, successChance: 0.55, failure: {"stability":-7,"happiness":-4} }
+    ]
+  },
+  {
+    id: "cyber_incident", minYear: 2000, category: "DIGITALISIERUNG", title: "Angriff auf Verwaltungsnetze", story: "Unbekannte stören digitale Behörden und Zahlungsverkehr.",
+    choices: [
+      { id: "isolate", title: "Systeme isolieren und prüfen", description: "Systeme isolieren und prüfen", cost: {"gold":600,"iron":80}, effect: {"stability":7,"happiness":2} },
+      { id: "response", title: "IT-Krisenstab einrichten", description: "IT-Krisenstab einrichten", cost: {"gold":350}, effect: {"stability":4} },
+      { id: "shortcut", title: "Sicherheitswarnung ignorieren", description: "Sicherheitswarnung ignorieren", cost: {}, effect: {"gold":500,"stability":-9,"happiness":-5} }
     ]
   }
 ];
@@ -248,6 +292,8 @@ export class CouncilDecisionSystem {
 
     const kingdom = player.kingdom;
     const candidates = COUNCIL_DECISIONS.filter((decision) => {
+      if (decision.minYear !== undefined && year < decision.minYear) return false;
+      if (decision.maxYear !== undefined && year > decision.maxYear) return false;
       if (decision.id === this.lastDecision.get(player.id)) return false;
       if (decision.id === 'failed_harvest') return kingdom.resources.food < 2400 ||
         kingdom.getMonthlyBalance().net.food < 0;
@@ -266,7 +312,7 @@ export class CouncilDecisionSystem {
     return choice;
   }
 
-  public resolve(player: Player, choiceId: string, year: number, month: number): CouncilHistoryEntry {
+  public resolve(player: Player, choiceId: string, year: number, month: number, delegate?: { id: string; name: string }): CouncilHistoryEntry {
     const decision = this.getPending(player.id);
     if (!decision) throw new Error('Zurzeit liegt keine Ratsentscheidung vor.');
     const choice = this.getChoices(player).find((offer) => offer.id === choiceId);
@@ -286,8 +332,9 @@ export class CouncilDecisionSystem {
 
     const result: CouncilHistoryEntry = {
       playerId: player.id, decisionId: decision.id, choiceId: choice.id, success,
+      ...(delegate ? { delegatedCitizenId: delegate.id, delegatedCitizenName: delegate.name } : {}),
       date: String(month).padStart(2, '0') + '/' + year,
-      message: decision.title + ': ' + choice.title + (choice.probability === null ? '.' :
+      message: (delegate ? delegate.name + ' übernimmt: ' : '') + decision.title + ': ' + choice.title + (choice.probability === null ? '.' :
         success ? ' – der Plan gelingt.' : ' – der Plan scheitert.')
     };
     this.pending.delete(player.id);

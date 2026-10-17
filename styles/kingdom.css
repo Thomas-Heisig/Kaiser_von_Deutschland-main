@@ -569,3 +569,13 @@ html,body,#app,.kingdom-app{width:100%;max-width:100%;min-width:0;margin:0}
 .opening-toggle{min-width:90px;min-height:36px;padding:6px 12px}
 @keyframes studio-reveal{from{opacity:0;transform:scale(.82);filter:blur(12px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
 @media(prefers-reduced-motion:reduce){.production-sigil{animation:none}.intro-overlay,.intro-overlay video,.intro-caption,.production-card{transition:none}}
+
+
+/* Council delegation and AI settings stay usable at narrow mobile widths */
+.council-delegation {display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;padding:12px;border:1px solid #65745d;border-radius:8px;background:#1d3429}
+.council-delegation select{flex:1 1 180px;max-width:100%}
+.council-delegation button{flex:0 1 auto;min-height:38px;padding:6px 10px}
+#settings-dialog label{margin:15px 0}
+#settings-dialog select{max-width:100%}
+#settings-dialog #advisor-status{min-height:1.3em;margin:10px 0}
+@media(max-width:480px){.council-delegation{flex-direction:column}.council-delegation button{width:100%}.kingdom-app .header-actions #settings-open{min-height:34px;padding:6px 9px;font-size:.72rem}}

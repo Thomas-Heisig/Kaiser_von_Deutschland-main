@@ -1,3 +1,4 @@
+import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
 import {
   CampaignGoal, CharacterAction, GameEngine, GameState, MarketResource, SaveMeta
 } from '../core/GameEngine';
@@ -98,6 +99,7 @@ export class KingdomGameUI {
   private cinematicTimeout?: number;
   private openingAttempt = false;
   private resumeAfterCouncil = false;
+  private readonly councilAdvisor = new CouncilAdvisor();
   private readonly retryOpening = (): void => { void this.tryOpeningTheme(); };
   private readonly ambience = new GameAmbience();
   private motionEnabled = false;
@@ -325,6 +327,7 @@ export class KingdomGameUI {
           <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span></div>
           <div class="header-actions">
             <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog" aria-label="Informationen zur Epoche"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
+            <button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen</button>
             <button type="button" id="motion-toggle" class="secondary" aria-pressed="false">✨ Animation: Aus</button>
             <button data-action="save" class="secondary">Speichern</button>
             <button data-action="load" class="secondary">Laden</button><button data-action="exit" class="secondary" title="Zum Hauptmenü zurück">Beenden</button></div>
@@ -422,6 +425,11 @@ export class KingdomGameUI {
         </div>
         <footer class="game-footer">© 2026 Thomas Heisig · Kaiser von Deutschland · <button type="button" id="legal-open" class="legal-link">Urheberrecht · KI · Datenschutz</button><span id="footer-keys"></span></footer>
         <dialog id="section-dialog" class="section-dialog" aria-label="Spielbereich"><div class="section-dialog-head"><strong id="section-dialog-title">Verwaltung</strong><button type="button" id="section-dialog-close" aria-label="Bereich schließen">✕</button></div><div id="section-dialog-body"></div></dialog>
+        <dialog id="settings-dialog" class="info-dialog" aria-labelledby="settings-title"><h2 id="settings-title">Spieleinstellungen & KI</h2>
+          <label>Ratsberater<select id="advisor-backend"><option value="rules">Lokaler Regelberater</option><option value="webgpu">Kleines KI-Modell im Browser (WebGPU)</option></select></label>
+          <p id="advisor-hardware" class="muted"></p><p class="muted">KI ist optional. Modelle werden erst auf Anfrage heruntergeladen. Vorschläge werden nie automatisch umgesetzt. Die vorhandene Ollama-Anbindung ist noch nicht mit der öffentlichen Spieloberfläche verbunden.</p>
+          <button type="button" id="advisor-test" class="secondary">WebGPU prüfen</button><p id="advisor-status" role="status"></p>
+          <button type="button" data-close-dialog="settings-dialog">Schließen</button></dialog>
         <dialog id="epoch-dialog" class="info-dialog" aria-labelledby="epoch-title"><h2 id="epoch-title">Epoche</h2><p id="epoch-description"></p><p class="muted">Historische Einordnung; alternative Geschichte.</p><button type="button" data-close-dialog="epoch-dialog">Schließen</button></dialog>
         <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
       </div>`;
@@ -476,6 +484,24 @@ export class KingdomGameUI {
       motionToggle.disabled = true;
       motionToggle.title = 'Reduzierte Bewegung ist im Betriebssystem aktiviert.';
     }
+    const settingsDialog = this.root.querySelector<HTMLDialogElement>('#settings-dialog');
+    const backendSelect = this.root.querySelector<HTMLSelectElement>('#advisor-backend');
+    if (backendSelect) backendSelect.value = readAdvisorConfig().backend;
+    const hw = this.root.querySelector<HTMLElement>('#advisor-hardware');
+    if (hw) hw.textContent = CouncilAdvisor.isWebGpuAvailable()
+      ? 'WebGPU verfügbar; Modell wird bei Bedarf geladen.'
+      : 'WebGPU nicht verfügbar; Regelberater nutzbar.';
+    this.root.querySelector('#settings-open')?.addEventListener('click', () => settingsDialog?.showModal());
+    backendSelect?.addEventListener('change', () => {
+      const backend: AdvisorBackend = backendSelect.value === 'webgpu' ? 'webgpu' : 'rules';
+      saveAdvisorConfig({ ...readAdvisorConfig(), backend });
+    });
+    this.root.querySelector('#advisor-test')?.addEventListener('click', () => {
+      const status = this.root.querySelector<HTMLElement>('#advisor-status');
+      if (status) status.textContent = CouncilAdvisor.isWebGpuAvailable()
+        ? 'WebGPU erkannt. Der erste Modellstart kann einen größeren Download benötigen.'
+        : 'Kein WebGPU. Verwende den Regelberater.';
+    });
     this.root.querySelector('#epoch-info-toggle')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#epoch-dialog')?.showModal());
     this.root.querySelector('#legal-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#legal-dialog')?.showModal());
     this.root.querySelectorAll<HTMLButtonElement>('[data-close-dialog]').forEach(button => button.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#' + button.dataset.closeDialog)?.close()));
@@ -684,12 +710,50 @@ export class KingdomGameUI {
       }));
       choices.append(button);
     }
+    const delegation = document.createElement('div');
+    delegation.className = 'council-delegation';
+    const select = document.createElement('select');
+    select.setAttribute('aria-label', 'Bürger für Ratsentscheidung');
+    const empty = document.createElement('option');
+    empty.value = ''; empty.textContent = 'Bürger auswählen'; select.append(empty);
+    for (const citizen of this.engine.getCouncilDelegates(this.player.id)) {
+      const option = document.createElement('option'); option.value = citizen.id;
+      option.textContent = citizen.firstName + ' ' + citizen.lastName + ' · ' + citizen.profession;
+      select.append(option);
+    }
+    const delegate = document.createElement('button');
+    delegate.type = 'button'; delegate.className = 'secondary'; delegate.textContent = 'An Bürger übergeben';
+    delegate.addEventListener('click', () => void this.run(() => {
+      if (!select.value) throw new Error('Bitte einen Bürger auswählen.');
+      const chosen = CouncilAdvisor.chooseByRules(this.requireEngine().getCouncilChoices(this.requirePlayer().id));
+      const outcome = this.requireEngine().delegateCouncilDecision(this.requirePlayer().id, select.value, chosen);
+      this.notify(outcome.message, !outcome.success);
+      this.resumeAfterCouncilDecision(); dialog.close();
+    }));
+    const suggest = document.createElement('button');
+    suggest.type = 'button'; suggest.className = 'secondary'; suggest.textContent = '🤖 Ratsvorschlag';
+    suggest.addEventListener('click', () => void this.run(async () => {
+      const engine = this.requireEngine(); const player = this.requirePlayer();
+      const pending = engine.getPendingCouncilDecision(player.id);
+      if (!pending) return;
+      suggest.disabled = true;
+      try {
+        const hint = await this.councilAdvisor.suggest(readAdvisorConfig(),
+          { year: engine.getCurrentYear(), title: pending.title, story: pending.story },
+          engine.getCouncilChoices(player.id));
+        const choice = engine.getCouncilChoices(player.id).find(c => c.id === hint.id);
+        this.notify(hint.explanation + ' ' + (choice?.title ?? ''), false);
+      } catch (error) {
+        this.notify((error instanceof Error ? error.message : 'KI nicht verfügbar') + ' · Regelberater in Einstellungen wählen.', true);
+      } finally { suggest.disabled = false; }
+    }));
+    delegation.append(select, delegate, suggest);
     const later = document.createElement('button');
     later.type = 'button';
     later.className = 'secondary';
     later.textContent = 'Später im Reichsrat entscheiden';
     later.addEventListener('click', () => dialog.close());
-    dialog.append(heading, story, choices, later);
+    dialog.append(heading, story, choices, delegation, later);
     dialog.addEventListener('close', () => { if (this.councilDialog === dialog) this.councilDialog = undefined; dialog.remove(); });
     this.root.append(dialog);
     this.councilDialog = dialog;

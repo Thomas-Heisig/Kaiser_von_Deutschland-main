@@ -2132,6 +2132,28 @@ export class GameEngine {
     return this.council.getHistory(playerId);
   }
 
+  /** Delegate one pending council choice to a living, available citizen. */
+  public delegateCouncilDecision(playerId: string, citizenId: string, choiceId: string) {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    if (!this.getPendingCouncilDecision(playerId)) throw new Error('Keine offene Ratsentscheidung.');
+    const citizen = this.citizenSystem.getCitizen(citizenId);
+    if (!citizen || !citizen.isAlive || citizen.isPlayerCharacter) throw new Error('Dieser Bürger ist nicht verfügbar.');
+    const name = citizen.firstName + ' ' + citizen.lastName;
+    const outcome = this.council.resolve(player, choiceId, this.currentYear, this.currentMonth,
+      { id: citizen.id, name });
+    this.emit('councilResolved', { playerId, outcome });
+    return outcome;
+  }
+
+  public getCouncilDelegates(playerId: string): Citizen[] {
+    this.requirePlayer(playerId);
+    return this.citizenSystem.getAliveCitizens()
+      .filter(citizen => !citizen.isPlayerCharacter)
+      .sort((a,b) => (b.skills.leadership + b.skills.literacy) - (a.skills.leadership + a.skills.literacy))
+      .slice(0, 20);
+  }
+
   public resolveCouncilDecision(playerId: string, choiceId: string) {
     const player = this.requirePlayer(playerId);
     if (this.isHotseat() && this.getActivePlayer().id !== playerId) {
