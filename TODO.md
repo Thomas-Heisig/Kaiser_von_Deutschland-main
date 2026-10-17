@@ -1,4 +1,10 @@
-## 🏘️ Siedlungsansicht (PR #26 in Prüfung)
+## 🎼 Ein Reich, viele Zeiten – Musik (PR in Prüfung)
+- [x] Eigenes Leitmotiv (76 BPM, Moll/Dur), 48-Takte-Menüfassung, 16-Takte-Spielszenen.
+- [x] Epochenfarben für Mittelalter/Hanse/Neuzeit/Industrie/Moderne/Zukunft und Spielsituationen Aufbau/Handel/Hof/Krise/Krieg.
+- [x] Nur nach Nutzerinteraktion aktiv, getrennte Musiklautstärke, Browsertab-Pause, Aufräumen von Synthesizerstimmen.
+- [ ] Echte instrumentale Einspielungen, Studiomischung, Hörabnahme, Crossfade von Orchesteraufnahmen, 3D-Audio und weiterführende historische Musikthemen.
+
+## 🏘️ Siedlungsansicht (PR #26 gemergt)
 - [x] Alle 16 realen Infrastrukturbezirke auf der PixiJS-Siedlungskarte, mit filterbarer und tastaturbedienbarer Liste.
 - [x] Hafen, Felder, Straßen und Stadtmauern differenziert dargestellt; Winterüberlagerung und abgeschlossene Modernisierungsprojekte sichtbar.
 - [x] Kartenaktualisierungen bei identischem Zustand übersprungen, Bezirkswahl führt zur echten Bauverwaltung.
