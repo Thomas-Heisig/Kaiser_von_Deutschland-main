@@ -194,6 +194,7 @@ export class GameEngine {
   private warFinanceByPlayer = new Map<string, WarFinancingSystem>();
   private warFinanceUsed = new Map<string, number>();
   private campaignChapters = new Map<string, number>();
+  private borderWatch = new Map<string, number>();
 
   constructor(config: Partial<GameConfig> = {}) {
     this.config = {
@@ -625,9 +626,16 @@ export class GameEngine {
     if (debtPayment.cannotAfford) this.emit('financeEvent', { playerId: player.id,
       message: 'Eine Kriegsdarlehensrate konnte nicht bezahlt werden.' });
 
+    // Border watch is consumed by the very next month, with or without a raid.
+    const watch = this.borderWatch.get(player.id) ?? 0;
+    const commander = this.getCommanderModifiers(player.id);
+    const defenseModifiers: PowerModifiers = {
+      ...commander, commanderBonus: Math.min(0.5, (commander.commanderBonus ?? 0) + watch)
+    };
+    this.borderWatch.delete(player.id);
     const raid = this.warfare.processMonth(player.id, player.kingdom,
       { year: this.currentYear, month: this.currentMonth },
-      { raids: this.config.randomEvents, modifiers: this.getCommanderModifiers(player.id),
+      { raids: this.config.randomEvents, modifiers: defenseModifiers,
         protectedByTreaty: (rivalId: string): boolean => this.hasRivalTruce(player.id, rivalId) });
     if (raid) this.emit('battleResolved', { report: raid });
     this.processRivalDiplomacy(player);
@@ -701,6 +709,7 @@ export class GameEngine {
       this.warFinanceByPlayer.delete(playerId);
       this.warFinanceUsed.delete(playerId);
       this.campaignChapters.delete(playerId);
+      this.borderWatch.delete(playerId);
       this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
     }
@@ -942,6 +951,7 @@ export class GameEngine {
       warFinanceByPlayer: Object.fromEntries(Array.from(this.warFinanceByPlayer, ([id, finance]) => [id, finance.serialize()])),
       warFinanceUsed: Array.from(this.warFinanceUsed),
       campaignChapters: Array.from(this.campaignChapters),
+      borderWatch: Array.from(this.borderWatch),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -1026,6 +1036,15 @@ export class GameEngine {
     this.warFinanceByPlayer = new Map();
     this.warFinanceUsed = new Map(Array.isArray(saveData.warFinanceUsed) ? saveData.warFinanceUsed : []);
     this.campaignChapters = new Map();
+    this.borderWatch = new Map();
+    if (saveData.borderWatch !== undefined) {
+      if (!Array.isArray(saveData.borderWatch) || saveData.borderWatch.some((entry: unknown) =>
+        !Array.isArray(entry) || entry.length !== 2 ||
+        !restoredPlayers.some((player: Player) => player.id === entry[0]) || entry[1] !== 0.3)) {
+        throw new Error('Ungültige Grenzwachen im Spielstand.');
+      }
+      this.borderWatch = new Map(saveData.borderWatch);
+    }
     if (saveData.campaignChapters !== undefined) {
       if (!Array.isArray(saveData.campaignChapters) ||
           saveData.campaignChapters.some((entry: unknown) =>
@@ -1537,6 +1556,26 @@ export class GameEngine {
   public getWarFinanceOverview(playerId: string) {
     return { stats: this.requireWarFinance(playerId).getStats(),
       available: this.warFinanceUsed.get(playerId) !== this.currentYear };
+  }
+
+  /** One-month active defense action; uses the existing CampaignWarfare modifiers. */
+  public prepareBorderWatch(playerId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    if (this.borderWatch.has(playerId)) throw new Error('Eine Grenzwache ist bereits vorbereitet.');
+    if (player.kingdom.resources.gold < 300 || player.kingdom.resources.wood < 150)
+      throw new Error('Die Grenzwache benötigt 300 Gold und 150 Holz.');
+    player.kingdom.resources.gold -= 300;
+    player.kingdom.resources.wood -= 150;
+    this.borderWatch.set(playerId, 0.3);
+    const message = 'Grenzwache alarmiert: +30 % Verteidigungsführung im nächsten Monat.';
+    this.emit('borderWatchPrepared', { playerId, message });
+    return message;
+  }
+
+  public hasBorderWatch(playerId: string): boolean {
+    this.requirePlayer(playerId);
+    return this.borderWatch.has(playerId);
   }
 
   public getArmyOverview(playerId: string): {
