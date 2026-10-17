@@ -8,7 +8,7 @@ describe('SettlementSceneModel', () => {
     expect(SETTLEMENT_DISTRICTS).toHaveLength(Object.keys(kingdom.infrastructure).length);
     expect(new Set(SETTLEMENT_DISTRICTS.map(x => x.type)).size).toBe(16);
     for (const district of SETTLEMENT_DISTRICTS) {
-      expect(Object.hasOwn(kingdom.infrastructure, district.type)).toBe(true);
+      expect(Object.prototype.hasOwnProperty.call(kingdom.infrastructure, district.type)).toBe(true);
     }
     expect(visibleDistricts('versorgung')).toHaveLength(4);
   });
