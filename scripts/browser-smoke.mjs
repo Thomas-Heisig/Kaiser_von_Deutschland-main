@@ -44,6 +44,10 @@ try {
     await page.locator('#advisor-backend').selectOption('mini');
     if (await page.locator('#advisor-backend').inputValue() !== 'mini')
       failures.push('embedded mini model cannot be enabled');
+    if (await page.locator('#film-intro option').count() < 5)
+      failures.push('five videos not available in film selector');
+    if (!(await page.locator('a[href="/downloads/kaiser-von-deutschland-offline.zip"]').count()))
+      failures.push('LAN-HTTP complete game ZIP link missing');
     await page.locator('#advisor-backend').selectOption('off');
     await page.locator('[data-close-dialog="settings-dialog"]').click();
     const geometry = await page.evaluate(() => {
