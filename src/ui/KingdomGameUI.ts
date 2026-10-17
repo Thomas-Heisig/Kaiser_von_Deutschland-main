@@ -1137,15 +1137,22 @@ export class KingdomGameUI {
         '<h3>Aktuelle Aufträge</h3><div class="build-grid">' +
         (data.active.map(a => {
           const mission = data.options.find(m=>m.id===a.missionId);
-          return '<article class="build-card"><h3>'+escape(mission?.title??a.missionId)+'</h3><p>Fortschritt: '+a.completedMonths+'/'+(mission?.months??'?')+' Monate</p></article>';
+          const agent=data.citizens.find(c=>c.id===a.citizenId);
+          return '<article class="build-card"><h3>'+escape(mission?.title??a.missionId)+'</h3>'+
+            '<p>Verantwortlich: '+escape(agent?.name??'Bürger '+a.citizenId.slice(0,8))+'</p>'+
+            '<p>Fortschritt: '+a.completedMonths+'/'+(mission?.months??'?')+' Monate</p></article>';
         }).join('')||'<p class="muted">Noch kein Auftrag vergeben.</p>')+
         '</div><h3>Verfügbare Aufgaben</h3><div class="build-grid">' +
         data.options.map(m=>'<article class="build-card"><h3>'+escape(m.title)+'</h3><p>'+escape(m.description)+'</p>'+
           '<p class="cost">'+m.months+' Monate · '+Object.entries(m.cost).map(([k,v])=>v+' '+escape(k)).join(' · ')+'</p>'+
-          '<label>Bürger <select data-civic-citizen="'+escape(m.id)+'">'+data.citizens.map(c=>
-            '<option value="'+escape(c.id)+'">'+escape(c.name)+' · '+escape(c.profession)+
-            ' · '+escape(m.preferredSkill)+' '+c.skills[m.preferredSkill]+'</option>').join('')+'</select></label>'+
-          '<button data-civic-assign="'+escape(m.id)+'" '+(!data.citizens.length||data.active.length>=3?'disabled':'')+
+          '<label>Bürger <select data-civic-citizen="'+escape(m.id)+'">'+data.citizens
+            .filter(c=>!data.active.some(a=>a.citizenId===c.id))
+            .sort((a,b)=>Number(Boolean(m.professions?.includes(b.profession)))-Number(Boolean(m.professions?.includes(a.profession))) ||
+              b.skills[m.preferredSkill]-a.skills[m.preferredSkill] || a.name.localeCompare(b.name,'de'))
+            .map(c=>'<option value="'+escape(c.id)+'">'+escape(c.name)+' · '+escape(PROFESSIONS[c.profession]??c.profession)+
+              (m.professions?.includes(c.profession)?' ✓ passend':'')+
+              ' · Fähigkeit '+c.skills[m.preferredSkill]+' · Erfahrung '+c.professionLevel+'</option>').join('')+'</select></label>'+
+          '<button data-civic-assign="'+escape(m.id)+'" '+(!data.citizens.some(c=>!data.active.some(a=>a.citizenId===c.id))||data.active.length>=3?'disabled':'')+
           '>Auftrag vergeben</button></article>').join('')+
         '</div><h3>Abgeschlossene Aufträge</h3><ol class="journal">'+
         data.history.slice(0,15).map(h=>'<li>'+escape(h.message)+'</li>').join('')+'</ol>';
