@@ -23,6 +23,8 @@ jobs:
         run: npm run check
       - name: Production build
         run: npm run build
+      - name: Verify authoritative Markdown links
+        run: node scripts/verify-doc-links.mjs
       - name: Verify media and installable archive
         run: node scripts/verify-release-assets.mjs
       - name: Automated tests (non-watch)
