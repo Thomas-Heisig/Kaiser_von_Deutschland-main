@@ -16,7 +16,7 @@ const game = new KingdomGameUI(root);
 // HTTPS (or localhost) only; the browser can cache a full offline package on request.
 if ('serviceWorker' in navigator && window.isSecureContext) {
   window.addEventListener('load', () => {
-    void navigator.serviceWorker.register('/sw.js').catch(error => console.warn('Offline-Dienst:', error));
+    void navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js', { scope: import.meta.env.BASE_URL }).catch(error => console.warn('Offline-Dienst:', error));
   });
 }
 window.addEventListener('pagehide', (): void => game.dispose());
