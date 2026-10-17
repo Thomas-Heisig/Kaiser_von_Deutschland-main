@@ -36,6 +36,10 @@ npm run preview
 
 Alle angegebenen Bereiche sind Teil der aktuellen Aufbaukampagne; die Reife einzelner Inhalte steht im [Status](docs/00-meta/status.md).
 
+## Ideen und Vorarbeiten aus der alten README
+
+Die historische README beschreibt zahlreiche Erweiterungen, die teils in Quellcode oder separaten Panels existieren, aber noch nicht vollständig mit der laufenden Aufbaukampagne verbunden sind: zusätzliche Rollen und Lebensphasen, Religions- und Kulturgruppen, historische Ereignisketten, Migrations-, Umwelt-, Marine-, Spionage-, Gefangenen- und Finanzsysteme sowie Online-Mehrspieler. Die **vollständige, konkret nach Themen gegliederte Integrationsliste** steht in [TODO](TODO.md) und [Roadmap](docs/00-meta/roadmap.md). Keine der früheren Ideen wurde gelöscht; die Zahlen aus alten Releases sind keine aktuelle Zusage.
+
 ## Veröffentlichung und Sicherheit
 
 Ein erfolgreicher Build ist **kein** Nachweis für ein öffentliches Deployment. Der GitHub-Pages-Workflow ist vorhanden, aber die Pages-Aktivierung ist durch Repository-/Token-Berechtigungen blockiert. Details: [Deployment-Anleitung](docs/06-development/public-deployment.md) und [TODO](TODO.md). Für öffentliche Veröffentlichung müssen außerdem vollständiges Impressum, Datenschutz und Rechte an Medien geprüft werden.
