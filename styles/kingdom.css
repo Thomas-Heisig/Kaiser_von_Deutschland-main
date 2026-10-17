@@ -376,3 +376,12 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 @media(max-width:760px){.game-layout{display:flex;flex-direction:column}.resource-bar{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}.resource{min-width:0}.header-actions{justify-content:flex-start}.header-actions label{min-width:110px}.settlement-controls{justify-content:flex-start}.settlement-controls label{flex:1 1 145px}.settlement-controls select{max-width:100%}.council{display:flex;flex-direction:column}.welcome-content{padding:24px 16px}.game-music-settings>summary{padding:12px}.summary-grid{grid-template-columns:repeat(auto-fit,minmax(135px,1fr))}}
 @media(max-width:380px){.resource-bar{grid-template-columns:repeat(2,minmax(0,1fr))}.map-tools{flex-wrap:wrap}.time-actions{justify-content:flex-start}.game-footer{overflow-wrap:anywhere}}
 @media(prefers-reduced-motion:reduce){.map-host canvas{transition:none!important}}
+
+
+.map-fallback{min-height:300px;justify-content:flex-start}
+.fallback-city{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;max-width:950px}
+.fallback-city button{display:grid;place-items:center;gap:5px;min-height:90px;padding:9px 5px;background:linear-gradient(165deg,#355748,#1f342f);border:1px solid #71825e;font-size:.73rem;text-align:center}
+.fallback-city button>span:first-child{font-size:25px;color:#f0d99e}
+.fallback-city button>strong{font-size:1rem;color:#f0d99e}
+.fallback-city button:hover{background:#466e57}
+@media(max-width:760px){.fallback-city{grid-template-columns:repeat(2,minmax(0,1fr))}}
