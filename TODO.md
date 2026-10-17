@@ -1,3 +1,12 @@
+## Offlinezugriff & Medienfehler (17.10.2026)
+- [x] Audiofehler beim Abspielen mit konkreter Netzwerk-/Formatdiagnose und 15-Titel-Check.
+- [x] WebGPU-Prüfung mit tatsächlicher Grafikkartenadapter-Abfrage repariert.
+- [x] Einstellungsfenster um Musiklautstärke, Kartenanimation und Offline-Paket erweitert.
+- [x] Service Worker + Installationsmanifest; alle produktiven JS/CSS/HTML-Ressourcen und Medien nach Klick vollständig cachen.
+- [ ] Website auf HTTPS-Hosting veröffentlichen, konkrete öffentliche Adresse prüfen.
+- [ ] Reale Offline-Abnahme auf iPad/Android/Windows im Flugmodus (inkl. Musik und Video).
+- [ ] Fehlgeschlagene MP3-URLs auf dem Live-Hosting kontrollieren und gegebenenfalls nachdeployen.
+
 ## Musikcover und WebGPU-Betriebszustand (17.10.2026)
 - [x] Alle 15 Screenshot-Cover den Musiktiteln zugeordnet und statt SVG-Platzhaltern eingebaut.
 - [x] WebGPU-KI erhält expliziten Startbutton und prozentuale Lade-/Initialisierungsanzeige.
