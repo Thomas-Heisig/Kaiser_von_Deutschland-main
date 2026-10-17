@@ -1,3 +1,12 @@
+## Repository-Konsolidierung (17.10.2026)
+- [x] PR #32 nach grüner CI und Chromium-Smoke-Prüfung per Squash in `main` zusammengeführt.
+- [x] Legacy-Synthesizer-Musikengine und alte numerische Medienpfade aus der produktiven Struktur entfernt.
+- [x] Dokumentation und README an 15 Originaltitel, Filmstart und Cover angepasst.
+- [x] 24 ältere Feature-/Fix-/Testbranches gegen `main` geprüft: viele historisch divergiert, obwohl ihr Funktionsumfang bereits via frühere PRs integriert wurde.
+- [ ] Divergierte Altbranches **nicht** blind mergen; bei konkreter Funktionslücke gezielt nacharbeiten oder selektiv übernehmen.
+- [ ] Altbranches nach archivierter Zuordnung/Abgleich über GitHub-Oberfläche löschen (keine historisch wertvolle Arbeit ohne Abgleich löschen).
+- [ ] Live-Deployment-Pipeline für `main` dokumentieren und End-to-End prüfen.
+
 ## Musik-/Intro-Integration (17.10.2026, Folge-Pull-Request)
 - [x] Neue GitHub-Uploads erkannt: 15 MP3s (001–015), zwei MP4-Intros.
 - [x] MP3-Dateien unter `public/music/` mit lesbaren Namen versioniert; Git-Blob-Inhalte unverändert.
@@ -5,7 +14,8 @@
 - [x] 15 visuelle Cover-Platzhalter, Titel- und Epochenmetadaten, Covergalerie, Downloadlinks.
 - [x] Procedural-Musikmotor `RoyalMusicScore` entfernt; `GameAudio` nur für UI-Effekte.
 - [x] Bedienung verbessert: echte Musik statt Synthesizer, kompakter Header, mobile Coverkarten.
-- [ ] CI- und Browser-Smoke-Ergebnisse aus dem PR endgültig bestätigen; Medienwiedergabe auf dem Zielgerät testen.
+- [x] CI und Chromium Browser Smoke für PR #32 bestanden; Integration nach `main` erfolgt.
+- [ ] Medienwiedergabe auf Zielgerät inkl. Ton, Video und Browser-Autoplay manuell prüfen.
 - [ ] Original-Cover, Entstehungsjahr, Künstler/Komponist, Lizenz und ausführliche Titelbeschreibungen nachreichen.
 - [ ] Live-Deployment von `main` prüfen; Web-Browser lassen tonhaltigen Autoplay meist nur nach Interaktion zu.
 - [ ] Covergrafik-Ersetzung mit vom Rechteinhaber bereitgestellten Bildern; die SVGs sind vorläufige Albumillustrationen.
@@ -15,7 +25,8 @@
 - [x] In GitHub: zentraler, erweiterbarer 15-Titel-Katalog mit Sonderstücken und Epoche.
 - [x] `Zeit vergeht` als Startthema mit Autoplay-Versuch und Klick-Ersatz, ohne Titelwahl im Startmenü.
 - [x] In-Game-Titelauswahl und Downloadlink für feste Musikdateien.
-- [ ] 15 originale MP3-Binärdateien aus dem Einbaupaket in GitHub unter `public/music/` übernehmen, dann Browser-Hörtest mit echten Medien durchführen.
+- [x] 15 originale MP3-Binärdateien unter `public/music/` eingebunden (PR #32).
+- [ ] Reale Hörabnahme mit den 15 Medien auf Live-Deployment durchführen.
 - [ ] Vom Nutzer gelieferte weitergehende Angaben zu Komponist, Lizenz, Cover, Stil und Szeneneinsatz im Katalog nachtragen.
 - [ ] Hörabnahme: Ein-/Ausblenden, Lautheitsabgleich, Wiedergabe bei Speicher/Ladewechsel und Mobile-Autoplay.
 
@@ -27,20 +38,21 @@
 - [x] 2D / isometrische 3D-Look-Umschaltung und interaktive 2D-Bezirksansicht als Pixi-/WebGL-Fallback.
 - [x] Responsive CSS und sichtbare epochenspezifische Stadt- und Oberflächenmerkmale.
 - [x] Elf historische Aufnahmen und ein Bonus-Leitmotiv mit festen Namen und Dateipfaden im Musikkatalog registriert.
-- [ ] Die 12 MP3-Binärdateien mit dem vorbereiteten Einbaupaket in `public/music/` committen; erst danach sind alle Titel für alle Spielenden automatisch vorhanden.
+- [x] Anstelle des früheren 12er-Pakets jetzt alle 15 Originaltitel im Git unter `public/music/` integriert.
 - [ ] Echtes 3D (WebGL-Szene mit Kamera) statt isometrischer 2D-Projektion, weiterführende moderne Gebäudemodelle und historische Rebalancing-Abnahme.
 - [ ] Laufende Veröffentlichung aus `main` und reale Browser-/Audio-/Mobile-/Langzeit-Tests auf dem Zielsystem ergänzen.
 
 ## 🎧 Musik-Jukebox (PR #28 gemergt; Folgeverbesserung 17.10.2026)
 - [x] Sechs benannte Epochenaufnahmen (1200/1300/1400/1500/1600/1750) als optionaler Bibliothekskatalog und Import-Metadaten.
 - [x] Mehrfachimport der MP3-Dateien, sichtbare Version und wählbarer automatischer Titelwechsel bei Epochenfortschritt.
-- [ ] Originaldateien als echte Binärassets in `public/music/` übertragen, auf dem Zielserver bereitstellen und Hörtests mit echten MP3s durchführen.
+- [x] Originaldateien als echte Binärassets in `public/music/` übertragen.
+- [ ] Zielserver-Auslieferung und Hörtests mit echten MP3s prüfen.
 - [ ] Deployment/Release-Pipeline verbindlich an main anschließen und Live-Version im ausgelieferten HTML prüfen.
 
 ## 🎧 Musik-Jukebox (PR #28 gemergt)
 - [x] Echte MP3-/OGG-/WAV-Dateien lokal importieren, auswählen, speichern und abspielen.
 - [x] Jukebox im Menü und Spiel, Lautstärke mit vorhandener Steuerung verbunden.
-- [ ] Hochgeladene MP3 zusätzlich als Git-Asset `public/music/krone-und-land.mp3` bereitstellen; Binärtransfer über die verfügbaren GitHub-Texttools nicht möglich.
+- [x] Veralteten Einzeltitel-Upload durch vollständige 15-Titel-Bibliothek ersetzt (PR #32).
 - [ ] Weitere Epochenstücke, Titelverwaltung und automatische Wechsel weiter ausbauen.
 
 ## 🎼 Ein Reich, viele Zeiten – Musik (PR #27 gemergt)
