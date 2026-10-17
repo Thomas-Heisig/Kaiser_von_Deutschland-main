@@ -1,3 +1,9 @@
+## Bürgerpersönlichkeit bei delegierten Ratsentscheidungen (17.10.2026)
+- [x] Bürger wählen bei ausdrücklich delegierten Ratsentscheidungen anhand von Beruf, Fähigkeiten, Mut, Ehrgeiz, Disziplin und Mitgefühl.
+- [x] Nur finanzierbare Antworten zulassen; keine externe KI oder automatisches Ausführen einer Ratsentscheidung.
+- [ ] Historische Persönlichkeitsentwicklung und langfristige Reputationseffekte mit Ratsentscheidungen verbinden.
+- [ ] Browserabnahme von erneutem Ratsereignis nach Charaktertod und Hotseat.
+
 ## Wiederkehrende Ratsereignisse – Bürgerauswahl (17.10.2026)
 - [x] Beim wiederkehrenden Ratsereignis bevorzugt denselben zuvor beauftragten Bürger, wenn er noch lebt und verfügbar ist.
 - [x] Falls es keine lebende frühere Bezugsperson gibt, nach fünf Sekunden einen zufälligen lebenden Erwachsenen vorauswählen.
