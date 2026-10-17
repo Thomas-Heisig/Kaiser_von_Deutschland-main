@@ -1,3 +1,5 @@
+> **Aktueller Stand:** Änderungen an aktiven Features müssen [TODO](TODO.md), [Roadmap](docs/00-meta/roadmap.md) und [Status](docs/00-meta/status.md) berücksichtigen. `npm test` startet Vitest im Watchmodus; für CI und Pull Requests `npx vitest run` verwenden. `main`-Merge ist kein HTTPS-Deployment. Ältere Pfade in den Beispielen unten können Legacy-Module bezeichnen.
+
 # Contributing to Kaiser von Deutschland
 
 Vielen Dank, dass Sie einen Beitrag zu Kaiser von Deutschland in Erwägung ziehen! 🎮👑
@@ -49,7 +51,7 @@ Wir freuen uns besonders über Beiträge in folgenden Bereichen:
 
 ### Voraussetzungen
 
-- **Node.js**: Version 18.x oder höher (LTS empfohlen)
+- **Node.js**: Version 20.x oder höher (LTS empfohlen)
 - **npm**: Version 9.x oder höher (kommt mit Node.js)
 - **Git**: Für Version Control
 - **Code-Editor**: VS Code empfohlen (mit TypeScript-Unterstützung)
@@ -59,15 +61,13 @@ Wir freuen uns besonders über Beiträge in folgenden Bereichen:
 1. **Repository forken**
    ```bash
    # Fork auf GitHub erstellen, dann:
-   git clone https://github.com/IHR-USERNAME/Kaiser_von_Deutschland.git
-   cd Kaiser_von_Deutschland
+   git clone https://github.com/IHR-USERNAME/Kaiser_von_Deutschland-main.git
+   cd Kaiser_von_Deutschland-main
    ```
 
 2. **Dependencies installieren**
    ```bash
-   npm install
-   # oder
-   npm ci  # für reproduzierbare Builds
+   npm ci  # reproduzierbare Builds
    ```
 
 3. **Entwicklungsserver starten**
@@ -78,7 +78,7 @@ Wir freuen uns besonders über Beiträge in folgenden Bereichen:
 
 4. **Upstream konfigurieren**
    ```bash
-   git remote add upstream https://github.com/Thomas-Heisig/Kaiser_von_Deutschland.git
+   git remote add upstream https://github.com/Thomas-Heisig/Kaiser_von_Deutschland-main.git
    git fetch upstream
    ```
 
@@ -218,7 +218,7 @@ refactor: Verbessere PolicySystem Struktur
 1. **Code-Qualität sicherstellen**
    ```bash
    npm run check  # TypeScript ohne Fehler
-   npm test       # Alle Tests grün (falls vorhanden)
+   npx vitest run # Tests einmalig ausführen
    npm run build  # Build erfolgreich
    ```
 
