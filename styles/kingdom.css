@@ -484,3 +484,71 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 .dashboard-shortcuts button {min-height:30px;padding:5px 6px;font-size:.72rem;text-align:left}
 @media(max-width:760px){.dashboard-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1101px){.kingdom-app[data-view="overview"] .quick-actions {display:none}}
+
+
+/* Fluid viewport shell: no outer horizontal scrolling; long menus scroll inside dialogs. */
+html,body,#app,.kingdom-app{width:100%;max-width:100%;min-width:0;margin:0}
+.kingdom-app{min-height:100dvh;display:flex;flex-direction:column;overflow-x:clip}
+.kingdom-app .game-layout{flex:1 1 auto;width:100%;max-width:none;min-height:0}
+.kingdom-app .workspace,.kingdom-app .sidebar,.kingdom-app .council{min-width:0}
+.kingdom-app .workspace{overflow:hidden}
+.kingdom-app[data-view="overview"] .map-host{height:clamp(150px,30dvh,390px)}
+.kingdom-app .resource-bar{width:100%}
+.kingdom-app .game-music-settings:not([open]){flex:0 0 auto}
+.kingdom-app .game-music-settings[open] .jukebox{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px 14px}
+.kingdom-app .jukebox-nowplaying{grid-column:1/-1;gap:9px;padding:7px}
+.kingdom-app .jukebox-nowplaying img{width:62px;height:62px}
+.kingdom-app .jukebox-nowplaying strong{font-size:1rem}
+.kingdom-app .playlist-toolbar{display:flex;flex-wrap:wrap;gap:9px;grid-column:1/-1}
+.kingdom-app .playlist-toolbar label{display:flex;gap:6px;align-items:center;font-size:.8rem}
+.kingdom-app .playlist-toolbar select{min-width:110px;max-width:190px;padding:6px;min-height:35px}
+.kingdom-app .playlist-covers{grid-column:1/-1}
+.kingdom-app .playlist-covers summary{cursor:pointer;padding:7px}
+.kingdom-app .jukebox-gallery{grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:6px}
+.kingdom-app .cover-card{padding:5px}
+.kingdom-app .section-dialog{position:fixed;inset:0;margin:auto;width:min(94vw,1250px);max-width:none;max-height:none;height:min(90dvh,920px);padding:0;border:1px solid #a89363;border-radius:10px;background:#172b25;color:#eee4ce;overflow:hidden;box-shadow:0 22px 70px #000b}
+.kingdom-app .section-dialog::backdrop{background:#010604b8}
+.kingdom-app .section-dialog-head{height:51px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 16px;background:#263b30;border-bottom:1px solid #52664f}
+.kingdom-app .section-dialog-head strong{font:1.2rem Georgia,serif;color:#e5ce9f}
+.kingdom-app .section-dialog-head button{min-width:40px;min-height:40px}
+.kingdom-app #section-dialog-body{height:calc(100% - 51px);overflow-y:auto;overscroll-behavior:contain;padding:10px 14px}
+.kingdom-app #section-dialog-body .content-panel{margin:0;padding:14px;border:0}
+.kingdom-app #section-dialog-body .build-grid{grid-template-columns:repeat(auto-fit,minmax(min(225px,100%),1fr))}
+.kingdom-app #section-dialog-body .character-list{max-width:100%}
+@media(max-width:1100px){
+ .kingdom-app .game-layout{grid-template-columns:140px minmax(0,1fr)}
+ .kingdom-app .sidebar{grid-row:auto}
+ .kingdom-app .council{grid-column:2;padding:9px}
+ .kingdom-app .workspace{padding:8px}
+ .kingdom-app .map-host{height:clamp(160px,26dvh,320px)}
+}
+@media(max-width:760px){
+ .kingdom-app{min-height:100dvh}
+ .kingdom-app .topbar{padding:5px 9px;gap:6px}
+ .kingdom-app .resource-bar{grid-template-columns:repeat(5,minmax(0,1fr));padding:0}
+ .kingdom-app .resource{padding:4px 2px;gap:1px;min-width:0}
+ .kingdom-app .resource strong{font-size:clamp(12px,3.2vw,19px)}
+ .kingdom-app .resource small{font-size:9px}
+ .kingdom-app .game-layout{display:flex;flex-direction:column;min-height:0}
+ .kingdom-app .sidebar{padding:4px 6px}
+ .kingdom-app .sidebar nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;scroll-snap-type:x proximity}
+ .kingdom-app .sidebar nav button{flex:0 0 auto;white-space:nowrap;min-height:38px;scroll-snap-align:start;padding:4px 9px;font-size:.72rem}
+ .kingdom-app .sidebar nav button span{width:auto}
+ .kingdom-app .realm-health{display:none}
+ .kingdom-app .workspace{padding:6px;flex:1;min-height:0}
+ .kingdom-app .timebar{margin-bottom:5px;gap:6px}
+ .kingdom-app .time-actions{width:auto}
+ .kingdom-app .map-host{height:clamp(135px,25dvh,275px)}
+ .kingdom-app .map-heading,.kingdom-app .settlement-controls{padding:4px 7px}
+ .kingdom-app .settlement-districts{max-height:64px;overflow-y:auto;padding:4px}
+ .kingdom-app .map-footer{padding:4px 7px}
+ .kingdom-app .content-panel{margin-top:5px;padding:8px}
+ .kingdom-app .council{display:none}
+ .kingdom-app .section-dialog{width:100vw;height:100dvh;border-radius:0}
+ .kingdom-app #section-dialog-body{padding:8px}
+ .kingdom-app .game-music-settings[open] .jukebox{display:flex;flex-direction:column;padding:8px}
+ .kingdom-app .playlist-toolbar{width:100%}
+ .kingdom-app .jukebox select{width:auto;max-width:100%;min-width:0}
+ .kingdom-app .header-actions{width:auto;margin-left:auto;gap:4px}
+}
+@media(max-width:390px){.kingdom-app .map-host{height:140px}.kingdom-app .map-tag{display:none}.kingdom-app .time-actions button{min-height:35px;padding:4px 6px}.kingdom-app .speed-label select{min-height:35px}}
