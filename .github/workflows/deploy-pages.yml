@@ -41,6 +41,7 @@ jobs:
         run: |
           npm run build
           cp /tmp/kaiser-offline-standalone.zip dist/downloads/kaiser-von-deutschland-offline.zip
+          node scripts/verify-release-assets.mjs
       - name: Validate PWA and HTTPS paths
         run: |
           test -s dist/index.html

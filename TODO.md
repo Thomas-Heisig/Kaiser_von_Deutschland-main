@@ -1,3 +1,9 @@
+## Medien- und Offline-Release-Gates (17.10.2026)
+- [x] CI prüft physische Präsenz aller 15 MP3-Dateien und 5 MP4-Videos im fertigen Build.
+- [x] CI validiert Musikheader, Videocontainer, PWA-PNG-Icons, HTTPS-Unterpfad und Offline-ZIP-Kopf.
+- [x] HTTPS-Deployment kontrolliert die Medienliste auch im GitHub-Pages-Build.
+- [ ] Tatsächliche Medienantworten (HTTP 200/206, Content-Type, Audio-Wiedergabe) erst nach Live-Deployment und auf den Endgeräten kontrollieren.
+
 ## Roadmap: Generationen und Lebensläufe (17.10.2026)
 - [x] Zeittypische Vornamen für geborene Bürger, verschiedene Namensgruppen vom Mittelalter bis Moderne (fiktionale Simulation).
 - [x] Einfache regelgebundene Schwangerschaftsentstehung für zusammenlebende erwachsene Ehepaare, Gesundheits- und Nahrungsschranken, Geburtenabstand.
