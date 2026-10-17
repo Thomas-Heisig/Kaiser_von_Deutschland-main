@@ -643,3 +643,11 @@ html,body,#app{height:var(--app-height);max-height:var(--app-height);overflow:hi
 .kingdom-app .workspace{min-height:0;position:relative;overflow-y:auto;scroll-padding-bottom:28px;overscroll-behavior-y:contain}
 .kingdom-app .game-footer{position:relative;z-index:0}
 @media(max-width:1180px){.kingdom-app .sidebar{min-height:0}.kingdom-app .workspace{height:100%;max-height:100%;overflow:auto}}
+
+
+/* Ensure page-level scrolling cannot shift fixed header/footer over map tap targets. */
+.kingdom-app{position:fixed;inset:0;width:100%;height:var(--app-height);min-height:0;max-height:var(--app-height)}
+.kingdom-app .game-layout{flex:1 1 0;min-height:0;height:auto;max-height:100%;overflow:hidden}
+.kingdom-app .workspace{height:auto!important;max-height:none!important;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable}
+.kingdom-app .game-footer{flex:0 0 auto}
+@media(max-width:1180px){.kingdom-app .workspace{height:auto!important;max-height:none!important;min-height:0;overflow-y:auto}}
