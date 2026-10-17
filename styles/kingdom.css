@@ -385,3 +385,10 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 .fallback-city button>strong{font-size:1rem;color:#f0d99e}
 .fallback-city button:hover{background:#466e57}
 @media(max-width:760px){.fallback-city{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Fifteen-track soundtrack: intro play and save options */
+.opening-music{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;background:#1b2d26;border:1px solid #5c644e;border-radius:6px;padding:9px 13px;margin:14px 0;color:#eadbbd;font-size:.82rem}
+.opening-music button{min-height:35px}
+.jukebox-download{display:inline-flex;align-items:center;justify-content:center;color:#1c2a21;background:#dfc48b;min-height:38px;border-radius:5px;padding:7px 12px;text-decoration:none;font-size:.8rem;font-weight:650}
+.jukebox-download:hover{background:#f0d79f}
+@media(max-width:400px){.opening-music button{width:100%}.jukebox-download{width:100%}}
