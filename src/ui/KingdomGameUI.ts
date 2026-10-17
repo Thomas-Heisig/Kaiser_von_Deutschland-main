@@ -437,6 +437,14 @@ export class KingdomGameUI {
           <progress id="advisor-progress" max="100" value="0" aria-label="KI-Modell-Ladefortschritt"></progress>
           <p id="advisor-status" role="status" aria-live="polite">KI-Modell nicht geladen.</p>
           <p id="advisor-inference-result" role="status"></p>
+          <hr><h3>Musik & Diagnose</h3><button type="button" id="music-diagnose" class="secondary">Alle 15 MP3 prüfen</button>
+          <p id="music-diagnosis" role="status">Bei Abspielfehlern die Serverdateien überprüfen.</p>
+          <hr><h3>Offline spielen</h3><p>Einmal online alle Mediendateien und das Spiel für diesen Browser speichern (ca. 75 MB). Der Browser kann diese Daten bei Speichermangel löschen.</p>
+          <button type="button" id="offline-save" class="primary">↓ Spiel im Browser speichern</button>
+          <p id="offline-status" role="status">Offline-Paket noch nicht überprüft.</p>
+          <hr><h3>Anzeige und Musik</h3>
+          <label>Musiklautstärke <input id="setting-music-volume" type="range" min="0" max="100" value="28"></label>
+          <label><input type="checkbox" id="setting-motion" checked> Kartenanimation aktivieren</label>
           <button type="button" data-close-dialog="settings-dialog">Schließen</button></dialog>
         <dialog id="epoch-dialog" class="info-dialog" aria-labelledby="epoch-title"><h2 id="epoch-title">Epoche</h2><p id="epoch-description"></p><p class="muted">Historische Einordnung; alternative Geschichte.</p><button type="button" data-close-dialog="epoch-dialog">Schließen</button></dialog>
         <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
@@ -526,9 +534,23 @@ export class KingdomGameUI {
       updateModelUi();
     });
     this.root.querySelector('#advisor-test')?.addEventListener('click', () => {
-      if (hardware) hardware.textContent = CouncilAdvisor.isWebGpuAvailable()
-        ? '✓ WebGPU-Unterstützung vorhanden. Lade das Modell mit „KI-Modell starten“.'
-        : '✕ WebGPU nicht verfügbar (Browser, HTTPS oder Grafiktreiber).';
+      if (hardware) hardware.textContent = 'Grafikadapter wird überprüft …';
+      void (async () => {
+        if (!CouncilAdvisor.isWebGpuAvailable()) {
+          if (hardware) hardware.textContent = '✕ WebGPU fehlt. HTTPS, Browser und Hardware-Beschleunigung kontrollieren.';
+          return;
+        }
+        try {
+          const gpu = (navigator as Navigator & {gpu?: {requestAdapter: () => Promise<unknown | null>}}).gpu;
+          const adapter = await gpu?.requestAdapter();
+          if (hardware) hardware.textContent = adapter
+            ? '✓ WebGPU-Grafikadapter gefunden. Der Modellstart kann jetzt getestet werden.'
+            : '✕ WebGPU ist vorhanden, aber kein geeigneter Grafikadapter verfügbar.';
+        } catch (error) {
+          if (hardware) hardware.textContent = '✕ WebGPU-Prüfung fehlgeschlagen: ' +
+            (error instanceof Error ? error.message : String(error));
+        }
+      })();
       updateModelUi();
     });
     startButton?.addEventListener('click', () => {
@@ -555,6 +577,62 @@ export class KingdomGameUI {
         .finally(updateModelUi);
     });
     updateModelUi();
+    const volume = this.root.querySelector<HTMLInputElement>('#setting-music-volume');
+    if (volume) {
+      volume.value = String(Math.round(this.jukebox.getVolume() * 100));
+      volume.addEventListener('input', () => this.jukebox.setVolume(Number(volume.value) / 100));
+    }
+    const motionSetting = this.root.querySelector<HTMLInputElement>('#setting-motion');
+    if (motionSetting) {
+      motionSetting.checked = this.motionEnabled;
+      motionSetting.addEventListener('change', () => {
+        this.motionEnabled = motionSetting.checked;
+        this.map?.setMotion(this.motionEnabled);
+        const toggle = this.root.querySelector<HTMLButtonElement>('#motion-toggle');
+        if (toggle) toggle.textContent = this.motionEnabled ? '✨ Animation: An' : '✨ Animation: Aus';
+      });
+    }
+    this.root.querySelector('#music-diagnose')?.addEventListener('click', () => {
+      const output = this.root.querySelector<HTMLElement>('#music-diagnosis');
+      void this.jukebox.diagnoseTracks((done,total,title) => {
+        if (output) output.textContent = 'Prüfung ' + done + '/' + total + ': ' + title;
+      }).then(errors => {
+        if (output) output.textContent = errors.length ? errors.join(' | ') : '✓ Alle 15 MP3-Dateien sind erreichbar und besitzen einen MP3-Header.';
+      }).catch(error => { if (output) output.textContent = String(error); });
+    });
+    this.root.querySelector('#offline-save')?.addEventListener('click', () => {
+      const output = this.root.querySelector<HTMLElement>('#offline-status');
+      const button = this.root.querySelector<HTMLButtonElement>('#offline-save');
+      if (!('serviceWorker' in navigator) || !window.isSecureContext) {
+        if (output) output.textContent = 'Offline-Installation benötigt HTTPS oder localhost.';
+        return;
+      }
+      if (button) button.disabled = true;
+      void navigator.serviceWorker.ready.then(registration => {
+        const worker = registration.active;
+        if (!worker) throw new Error('Offline-Dienst noch nicht bereit. Seite neu laden.');
+        const channel = new MessageChannel();
+        channel.port1.onmessage = (event: MessageEvent) => {
+          const data = event.data as { type: string; done?: number; total?: number; file?: string; message?: string };
+          if (data.type === 'PROGRESS' && output)
+            output.textContent = 'Speichere ' + data.done + '/' + data.total + ': ' + data.file;
+          if (data.type === 'DONE') {
+            if (output) output.textContent = '✓ Spiel und Medien in diesem Browser gespeichert. Offline-Test über Flugmodus durchführen.';
+            if (button) button.disabled = false;
+            channel.port1.close();
+          }
+          if (data.type === 'ERROR') {
+            if (output) output.textContent = '✕ Offline-Speicherung fehlgeschlagen: ' + data.message;
+            if (button) button.disabled = false;
+            channel.port1.close();
+          }
+        };
+        worker.postMessage({ type: 'DOWNLOAD' }, [channel.port2]);
+      }).catch(error => {
+        if (output) output.textContent = '✕ ' + String(error);
+        if (button) button.disabled = false;
+      });
+    });
     this.root.querySelector('#epoch-info-toggle')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#epoch-dialog')?.showModal());
     this.root.querySelector('#legal-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#legal-dialog')?.showModal());
     this.root.querySelectorAll<HTMLButtonElement>('[data-close-dialog]').forEach(button => button.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#' + button.dataset.closeDialog)?.close()));
@@ -2070,7 +2148,7 @@ export class KingdomGameUI {
     this.root.querySelectorAll<HTMLElement>('[data-jukebox-status]').forEach(el=>{
       const current = this.jukebox.getTracks().find(track => track.id === this.jukebox.getCurrentId());
       el.textContent = this.jukebox.isPlaying() ? '▶ ' + (current?.title ?? 'Aufnahme') + ' läuft' :
-        this.jukebox.getTracks().length ? 'Musik wählen oder bis zu sechs MP3-Dateien gleichzeitig importieren.' :
+        this.jukebox.getLastError() ? '✕ ' + this.jukebox.getLastError() : this.jukebox.getTracks().length ? 'Titel auswählen; bei Ladefehlern ⚙ Einstellungen → MP3-Diagnose öffnen.' :
           'Noch keine Musik vorhanden: Wähle deine sechs MP3-Dateien zum Import aus.';
     });
   }

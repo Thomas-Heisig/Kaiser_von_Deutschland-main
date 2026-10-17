@@ -83,6 +83,8 @@ export class MusicJukebox {
   private repeatMode: RepeatMode = 'all';
   private currentYear = 1200;
   private playbackSerial = 0;
+  private lastError = '';
+  public getLastError(): string { return this.lastError; }
 
   constructor(onChange?: () => void) { if (onChange) this.onChange = onChange; }
   public getPlaylistMode(): PlaylistMode { return this.playlistMode; }
@@ -180,6 +182,7 @@ export class MusicJukebox {
     const track = this.tracks.find(item => item.id === id);
     if (!track) throw new Error('Der Musiktitel ist nicht verfügbar.');
     this.stop();
+    this.lastError = '';
     const serial = ++this.playbackSerial;
     let source = track.url;
     if (track.source === 'import') {
@@ -190,6 +193,7 @@ export class MusicJukebox {
     }
     if (!source) throw new Error('Audiodatei fehlt.');
     const audio = new Audio(source);
+    audio.addEventListener('error', () => { this.lastError = 'Audio nicht abrufbar oder nicht lesbar: ' + (track.title || id) + '. Prüfe die Serverdatei und den Offline-Cache.'; this.onChange(); });
     audio.loop = this.repeatMode === 'one' || (this.repeatMode !== 'off' && this.playlistMode === 'era');
     audio.addEventListener('ended', () => { if (this.playbackSerial === serial) void this.advancePlaylist(); });
     audio.preload = 'auto';
@@ -202,9 +206,37 @@ export class MusicJukebox {
       this.autoplayBlocked = false;
       this.onChange();
     } catch (error) {
+      const code = audio.error?.code;
+      this.lastError = code === 4 ? 'Quelle nicht unterstützt oder Dateipfad falsch: ' + track.title :
+        code === 3 ? 'MP3-Decodierung fehlgeschlagen: ' + track.title :
+          code === 2 ? 'Netzwerkfehler beim Laden: ' + track.title :
+            error instanceof Error ? error.message : 'Titel konnte nicht geladen werden.';
       this.stop();
-      throw error;
+      this.onChange();
+      throw new Error(this.lastError);
     }
+  }
+
+  public async diagnoseTracks(onProgress: (done: number, total: number, title: string) => void): Promise<string[]> {
+    const failures: string[] = [];
+    const bundled = this.tracks.filter(track => track.source === 'library');
+    for (let i = 0; i < bundled.length; i++) {
+      const track = bundled[i];
+      try {
+        const response = await fetch(track.url!, { headers: { Range: 'bytes=0-4095' }, cache: 'no-store' });
+        if (!response.ok || (response.status !== 206 && response.status !== 200))
+          throw new Error('HTTP ' + response.status);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (bytes.length < 4) throw new Error('Leere Audiodatei');
+        const mp3 = (bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) ||
+          (bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0);
+        if (!mp3) throw new Error('Kein MP3-Header; mögliche HTML-Fehlerseite');
+      } catch (error) {
+        failures.push(track.title + ': ' + (error instanceof Error ? error.message : String(error)));
+      }
+      onProgress(i + 1, bundled.length, track.title);
+    }
+    return failures;
   }
 
   public async advancePlaylist(): Promise<void> {
