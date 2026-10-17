@@ -1,3 +1,9 @@
+## 🏰 Zwei weitere Kampagnen (PR in Prüfung)
+- [x] „Glaube und Kultur“: drei Kapitel zu Kirchen, Bildung, Kultur und Zufriedenheit.
+- [x] „Der Weg zur Kaiserkrone“: Burgen, Märkte, aktive Nichtangriffspakte, Handel, Eroberungen.
+- [x] Ziele werden aus echtem Staats- und Vertragszustand berechnet; Spielstände bleiben kompatibel.
+- [x] Kapitel- und Chromium-Browser-Tests um die beiden Kampagnen erweitert.
+
 ## 🛡️ Grenzwache und Spieleraktionen (PR in Prüfung)
 - [x] Spieler kann für 300 Gold und 150 Holz eine Grenzwache alarmieren.
 - [x] Der nächste Simulationsmonat erhält echten Verteidigungsbonus (+30 Prozentpunkte Führungsbonus, gedeckelt auf 50 %); Aktion wird auch ohne Überfall verbraucht.
@@ -18,7 +24,7 @@
 - [ ] Langzeit-Balancing von Forschungseffekten, Rückwirkungsstrategie für ältere Spielstände und vollständige Prüfung im Browser.
 
 ## 🎮 Mehr Kampagnen und Game-Actions (PR #14 gemergt, Kapitel-Fortsetzung in Prüfung)
-- [x] Vier auswählbare Kampagnen: Aufbau, Hanse, Wissenschaft, Grenzland, mit jeweils sechs Live-Zielen.
+- [x] Sechs auswählbare Kampagnen: Aufbau, Hanse, Wissenschaft, Grenzland, Kultur und Kaiserkrone, mit jeweils sechs Live-Zielen.
 - [x] Wissenschaftliche Errungenschaften erscheinen als sichtbare Ereignisaktion mit Map-Puls und Klang.
 - [x] Überfälle und Feldschlachten lösen Game-Action-Banner und Kartenmarkierung aus.
 - [~] Je drei Kampagnenkapitel und dauerhafte Belohnungen integriert; komplexe Verzweigungen, realistische Audio-Samples und tiefere historische Geschichten offen.

@@ -1,14 +1,16 @@
 import type { Kingdom } from './Kingdom';
-export type CampaignId = 'aufbau' | 'hanse' | 'wissenschaft' | 'grenzland';
+export type CampaignId = 'aufbau' | 'hanse' | 'wissenschaft' | 'grenzland' | 'kultur' | 'kaiserkrone';
 export interface CampaignDefinition { id: CampaignId; name: string; description: string; year: number; }
 export interface CampaignObjective { label: string; done: boolean }
 export const CAMPAIGNS: readonly CampaignDefinition[] = [
   { id: 'aufbau', name: 'Ein neuer Anfang', description: 'Baue ein blühendes Lehen auf.', year: 1200 },
   { id: 'hanse', name: 'Aufstieg der Hanse', description: 'Errichte Häfen und ein Handelsnetz.', year: 1200 },
   { id: 'wissenschaft', name: 'Zeitalter des Wissens', description: 'Fördere Bildung und eigene Forschung.', year: 1200 },
-  { id: 'grenzland', name: 'Die bedrohte Mark', description: 'Schütze dein Land und stärke das Heer.', year: 1200 }
+  { id: 'grenzland', name: 'Die bedrohte Mark', description: 'Schütze dein Land und stärke das Heer.', year: 1200 },
+  { id: 'kultur', name: 'Glaube und Kultur', description: 'Stärke geistliches Leben und höfische Künste.', year: 1200 },
+  { id: 'kaiserkrone', name: 'Der Weg zur Kaiserkrone', description: 'Vereine Bündnispolitik, Festungen und Reichtum.', year: 1200 }
 ] as const;
-export function campaignGoals(id: CampaignId, kingdom: Kingdom, researched: number, subdued: number, tradeRoutes: number): CampaignObjective[] {
+export function campaignGoals(id: CampaignId, kingdom: Kingdom, researched: number, subdued: number, tradeRoutes: number, truces: number = 0): CampaignObjective[] {
   const infra = kingdom.infrastructure;
   switch (id) {
     case 'hanse': return [
@@ -34,6 +36,22 @@ export function campaignGoals(id: CampaignId, kingdom: Kingdom, researched: numb
       { label: 'Militärausbildung auf 20 % steigern', done: kingdom.military.trainingLevel >= 20 },
       { label: 'Einen Gegner unterwerfen', done: subdued >= 1 },
       { label: 'Stabilität von 60 % erreichen', done: kingdom.stats.stability >= 60 }
+    ];
+    case 'kultur': return [
+      { label: '2 Kirchen errichten', done: infra.churches >= 2 },
+      { label: '2 Schulen errichten', done: infra.schools >= 2 },
+      { label: 'Mindestens 45 % kultureller Einfluss', done: kingdom.stats.culturalInfluence >= 45 },
+      { label: 'Eine Universität errichten', done: infra.universities >= 1 },
+      { label: '75 % Zufriedenheit', done: kingdom.happiness >= 75 },
+      { label: 'Stabilität von 75 % sichern', done: kingdom.stats.stability >= 75 }
+    ];
+    case 'kaiserkrone': return [
+      { label: 'Eine Burg errichten', done: infra.castles >= 1 },
+      { label: 'Mindestens 2 Marktplätze', done: infra.markets >= 2 },
+      { label: 'Einen Nichtangriffspakt schließen', done: truces >= 1 },
+      { label: 'Handelsmacht auf 45 steigern', done: kingdom.stats.tradePower >= 45 },
+      { label: 'Einen Rivalen unterwerfen', done: subdued >= 1 },
+      { label: '20.000 Gold in der Schatzkammer', done: kingdom.resources.gold >= 20000 }
     ];
     default: {
       const balance = kingdom.getMonthlyBalance();

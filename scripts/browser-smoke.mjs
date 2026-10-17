@@ -33,7 +33,9 @@ try {
     aufbau: 'Das hungernde Lehen',
     hanse: 'Die ersten Segel',
     wissenschaft: 'Die Saat des Wissens',
-    grenzland: 'Schutz für die Mark'
+    grenzland: 'Schutz für die Mark',
+    kultur: 'Die Glocken der Stadt',
+    kaiserkrone: 'Ein starker Herrschaftssitz'
   };
   for (const [campaign, chapter] of Object.entries(campaignNames)) {
     const page = await browser.newPage({ viewport: { width: 1280, height: 740 }, reducedMotion: 'reduce' });

@@ -51,7 +51,7 @@ describe('Playable campaign integration', (): void => {
   };
 
   it('loads each campaign with six independent objectives and retains selection after saving', async (): Promise<void> => {
-    for (const campaignId of ['aufbau', 'hanse', 'wissenschaft', 'grenzland'] as const) {
+    for (const campaignId of ['aufbau', 'hanse', 'wissenschaft', 'grenzland', 'kultur', 'kaiserkrone'] as const) {
       const engine = new GameEngine({ enableWiki: false, randomEvents: false, campaignId });
       engines.push(engine);
       const ruler = engine.addPlayer({ name: 'Anna', kingdomName: 'Testmark', gender: 'other' });

@@ -1293,7 +1293,8 @@ export class GameEngine {
     }
     return campaignGoals(this.getCampaignId(), player.kingdom,
       this.requireTechnologySystem(playerId).getResearchedTechnologyIds().length,
-      this.warfare.subjugatedCount(playerId), player.kingdom.getActiveTradeRoutes().length);
+      this.warfare.subjugatedCount(playerId), player.kingdom.getActiveTradeRoutes().length,
+      this.getRivalTreaties(playerId).filter((treaty) => treaty.type === 'non_aggression').length);
   }
 
   // === Warfare (v3.0) ===
