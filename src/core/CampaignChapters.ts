@@ -25,6 +25,16 @@ export const CHAPTERS: Record<CampaignId, readonly [StoryChapter, StoryChapter, 
     { title: 'Schutz für die Mark', narrative: 'Baue Kasernen und eine befestigte Residenz.' },
     { title: 'Die wehrhaften Städte', narrative: 'Stadtmauern und ausgebildete Truppen halten den Feind auf.' },
     { title: 'Frieden durch Stärke', narrative: 'Sichere eine Eroberung und die Stabilität im Grenzland.' }
+  ],
+  kultur: [
+    { title: 'Die Glocken der Stadt', narrative: 'Errichte geistliche und schulische Zentren.' },
+    { title: 'Gelehrte und Baumeister', narrative: 'Heb den kulturellen Einfluss und gründe eine Universität.' },
+    { title: 'Frieden im Volk', narrative: 'Sichere eine glückliche, stabile Gesellschaft.' }
+  ],
+  kaiserkrone: [
+    { title: 'Ein starker Herrschaftssitz', narrative: 'Baue eine Burg und belebe die Märkte.' },
+    { title: 'Die Kunst des Friedens', narrative: 'Knüpfe diplomatische Bande und entwickle den Handel.' },
+    { title: 'Die Krone des Reiches', narrative: 'Besiege einen Rivalen und festige den königlichen Schatz.' }
   ]
 };
 export interface CampaignChapterStatus {
