@@ -25,6 +25,7 @@
 - README, Status, Roadmap und operative TODO werden gegen den tatsächlichen aktiven Git-Stand abgegrenzt; sämtliche älteren Planungen bleiben archiviert.
 
 ### Fixed
+- Kampagnen: Industrie und Wiederaufbau beginnen nicht mehr mit bereits erfüllten ersten Kapitelzielen; Siegmeldung verlangt tatsächlich alle drei abgeschlossenen Kapitel und Fortschrittsanzeige fokussiert das aktuelle Kapitel.
 
 - Historisch eingeschränkte Bürger-/Militäraktionen und Savegame-kompatible Familienbeziehungen.
 - Release-Prüfung von Audio-/Filmdateien; Typcheck- und Testfehler aus den zugehörigen Feature-Branches korrigiert.
