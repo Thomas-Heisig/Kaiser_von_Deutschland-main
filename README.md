@@ -82,42 +82,12 @@ Das Gesamtprojekt bleibt in Entwicklung.
 Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
 Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Stand 17.10.2026 – sichtbare Versionskennung und sechs Musikstücke
-Die Startseite und der Spielfuß enthalten eine erkennbare Versionskennung. Im Hauptmenü können die sechs MP3-Aufnahmen 1200, 1300, 1400, 1500, 1600 und 1750 **gemeinsam** über die Dateiauswahl importiert werden. Dateinamen mit Jahreszahl werden automatisch Titel und Epoche zugeordnet. Die Checkbox **Musik folgt Epoche** wählt im laufenden Spiel den passenden vorhandenen Titel (die jüngste Aufnahme, deren Jahr nicht in der Zukunft liegt). Manuelle Titelwahl schaltet diese Automatik ab. Audio startet aus Browser-Sicherheitsgründen erst nach einer Nutzeraktion. Die im Chat hochgeladenen MP3s werden nicht automatisch in GitHub übernommen; sie stehen in dieser Sitzung zur Verfügung, können über die Jukebox importiert oder später als Binärdateien in `public/music/` committed werden. Für Live-Deployments muss außerdem der tatsächlich verwendete Deployment-Weg die neue `main`-Version übernehmen. Der Quellcode-Sync allein aktualisiert keine bereits laufende Seite.
+## 🎧 Musik-Jukebox und Originalaufnahmen
+Die 15 Originalaufnahmen liegen als echte Dateien in `public/music/`. Auf dem Startbildschirm wird **„Zeit vergeht“** als Hauptthema verwendet; die Stückauswahl befindet sich ausschließlich während des Spiels unter „Musik & Klangeinstellungen“. Alle Titel können als MP3 heruntergeladen werden.
 
-## 🎧 Jukebox für echte Musikdateien
-Die Jukebox bietet im Hauptmenü und während des Spiels eine **Titelwahl**, Wiedergabe,
-Stopp sowie Import eigener MP3-, OGG- oder WAV-Dateien (bis 30 MB). Die Datei wird
-im Browserprofil via IndexedDB/localforage gespeichert und bleibt nach dem Neuladen
-verfügbar. Eingespielte Aufnahmen ersetzen auf Wunsch den synthetischen Soundtrack,
-dessen Schalter und Effekt-/Umgebungssteuerung bestehen bleiben.
+Die Musikauswahl umfasst Covergalerie, Wiedergabe, Stopp, Lautstärke und automatischen Epochenwechsel. Zusätzlich dürfen Spieler private MP3-/OGG-/WAV-Aufnahmen (bis 30 MB pro Datei) importieren. Diese verbleiben im jeweiligen Browserprofil über LocalForage.
 
-**Wichtiger Bereitstellungsschritt:** Die mit dieser Unterhaltung übermittelte
-MP3 `davinci_erstelle_einen_mehrmin_tigen__loopf_higen_instrume.mp3` ist
-ca. 162 Sekunden lang, aber **noch nicht als Binärdatei im Git-Repository**.
-Sie kann unmittelbar über die Jukebox-Dateiauswahl importiert werden. Alternativ
-wird eine Datei `public/music/krone-und-land.mp3` automatisch als fest hinterlegter
-Titel erwartet, sobald sie separat in das Repository hochgeladen wird.
-Ohne diese Datei funktioniert der importierte Browser-Titel trotzdem.
-Die vorhandene README und alte Roadmap bleiben bestehen.
-
-## 🎼 Musik – Ein Reich, viele Zeiten / Krone und Land
-Ein neues, **eigens aus Tönen zusammengesetztes** wiederkehrendes Leitmotiv
-(D–E–F–G–F–E–D, mit Dur-Variante) erklingt bei 76 BPM im 4/4-Takt.
-Die Web-Audio-Komposition ist komplett lokal generiert und benötigt
-keine externen Samples oder Netzwerkverbindung. Eine 48-Takte-Menüform
-dauert etwa 2:32 Minuten, kürzere Szenen wiederholen 16 Takte.
-Klangfarben orientieren sich stilistisch an früher/höherer Mittelalterzeit,
-Hansezeit, höfischer Musik, Industrialisierung, Moderne und Zukunft.
-Aufbau, Handel, Hof, Krise und Feldzug ändern die Instrumentierung und
-Tonart. Die Klänge sind **synthetische Annäherungen**, keine echten
-Einspielungen von Fiedel, Drehleier oder historischer Orchesterbesetzung.
-Musik startet erst durch bewusstes Einschalten und besitzt eine eigene
-Lautstärkeregelung. Effekte und Umgebungsgeräusche bleiben separat.
-Bei verdecktem Browserfenster wird die Musik pausiert; beim Szenenwechsel
-werden laufende Stimmen beendet und neu eingeleitet.
-Das zusätzlich bereitgestellte 5-Sekunden-MP4 ist nur eine Referenz
-und wird nicht als lizenzfreier Endlossoundtrack ausgegeben.
+Der frühere Abschnitt „Ein Reich, viele Zeiten / Krone und Land“ beschreibt ein **entferntes** prozedurales Musiksystem und gilt nicht mehr. Kurze synthetisierte UI-Effekte und separat aktivierbare Umweltklänge bestehen weiterhin.
 
 ## 🏘️ Erweiterte Siedlungsansicht
 Die PixiJS-Siedlungskarte berücksichtigt jetzt **alle 16 Infrastrukturarten** statt
