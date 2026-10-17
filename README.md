@@ -1,3 +1,7 @@
+## Epochenabhängige militärische Spielmechanik (17.10.2026)
+
+Die Feldzugsimulation nutzt historische Doktrinen ab Antike, Mittelalter, früher Feuerwaffenzeit, Linientaktik, Industrialisierung, Motorisierung und vernetzter Gegenwart. Die drei vorhandenen Armeekategorien bleiben für ältere Spielstände gespeichert, werden jedoch epochenabhängig benannt und mit unterschiedlichen Kampfstärken berechnet. Mauern und Burgen verlieren über die Jahrhunderte relativ an Wirkung. Auch die Rivalennamen und Beschreibungen passen zum Zeitalter. Vorschau und tatsächliche Schlacht verwenden dieselbe historische Kampflogik. Die Struktur bleibt eine abstrahierte alternative Geschichte – keine genaue historische Simulation einzelner Nationen oder Waffenmodelle.
+
 ## Offline-Browserinstallation, Audioprüfung und Einstellungen (17.10.2026)
 
 Unter **⚙ Einstellungen** stehen nun ein Audio-Diagnosetest für sämtliche 15 MP3-Dateien, Musiklautstärke, Kartenanimation und **„Spiel im Browser speichern“** bereit. Über ein Service-Worker-/PWA-Paket werden bei ausdrücklicher Zustimmung die gebauten Anwendungsdateien, beide Introfilme, Titelcover und alle 15 MP3-Dateien lokal zwischengespeichert. Das Herunterladen braucht beim ersten Mal eine erreichbare HTTPS-Spielseite und genügend freien Gerätespeicher. Offline-Nutzung ist browser-/gerätgebunden; iOS darf Cache bei Speichermangel löschen. WebGPU-Prüfung fordert jetzt tatsächlich einen Grafikadapter an und meldet das Ergebnis.

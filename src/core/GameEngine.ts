@@ -1643,7 +1643,7 @@ export class GameEngine {
 
   public getRivals(playerId: string): RivalRealm[] {
     this.requirePlayer(playerId);
-    return this.warfare.getRivals(playerId);
+    return this.warfare.getRivals(playerId, this.currentYear);
   }
 
   /**
@@ -1799,8 +1799,8 @@ export class GameEngine {
     const modifiers = this.getCommanderModifiers(playerId);
     return {
       soldiers: CampaignWarfareSystem.fieldSoldiers(player.kingdom),
-      attack: CampaignWarfareSystem.armyPower(player.kingdom, modifiers),
-      defense: CampaignWarfareSystem.defensePower(player.kingdom, modifiers),
+      attack: CampaignWarfareSystem.armyPower(player.kingdom, modifiers, this.currentYear),
+      defense: CampaignWarfareSystem.defensePower(player.kingdom, modifiers, this.currentYear),
       cost: CampaignWarfareSystem.campaignCost(player.kingdom),
       canCampaign: this.warfare.canCampaign(playerId, this.currentYear * 12 + this.currentMonth),
       commanderBonus: modifiers.commanderBonus ?? 0
@@ -1815,15 +1815,15 @@ export class GameEngine {
    */
   public getVictoryChance(playerId: string, target: string): number {
     const player = this.requirePlayer(playerId);
-    const attack = CampaignWarfareSystem.armyPower(player.kingdom, this.getCommanderModifiers(playerId));
+    const attack = CampaignWarfareSystem.armyPower(player.kingdom, this.getCommanderModifiers(playerId), this.currentYear);
     const opponent = this.players.get(target);
     if (opponent) {
       return CampaignWarfareSystem.victoryChance(attack,
-        CampaignWarfareSystem.defensePower(opponent.kingdom, this.getCommanderModifiers(target)));
+        CampaignWarfareSystem.defensePower(opponent.kingdom, this.getCommanderModifiers(target), this.currentYear));
     }
     const rival = this.warfare.getRivals(playerId).find((entry: RivalRealm): boolean => entry.id === target);
     if (!rival) throw new Error('Unbekannter Gegner.');
-    return CampaignWarfareSystem.victoryChance(attack, CampaignWarfareSystem.rivalPower(rival));
+    return CampaignWarfareSystem.victoryChance(attack, CampaignWarfareSystem.rivalPower(rival, this.currentYear));
   }
 
   /**

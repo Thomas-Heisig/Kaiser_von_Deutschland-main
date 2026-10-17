@@ -1,3 +1,4 @@
+import { doctrineForYear } from '../core/HistoricalGameplay';
 import { miniCouncilChoice } from '../core/EmbeddedMiniModel';
 import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
 import {
@@ -1228,14 +1229,16 @@ export class KingdomGameUI {
           ${completed?'Bereits umgesetzt':'Modernisieren'}</button>
           ${blockers.length ? `<p class="muted">${blockers.map(escape).join(' · ')}</p>` : ''}</article>`).join('')}</div>`;
     } else if (this.view === 'military') {
+      const doctrine = doctrineForYear(this.engine.getCurrentYear());
       panel.innerHTML = heading('SICHERHEIT & VERTEIDIGUNG', 'Die Garnison',
         'Rekruten kommen aus der bäuerlichen Bevölkerung. Mehr Truppen kosten Unterhalt und fehlen auf den Feldern.') + `
+        <p class="muted">${escape(doctrine.label)} · ${escape(doctrine.context)}</p>
         <p class="muted">Moral: ${format(kingdom.military.morale)} % · Ausbildung: ${
           format(kingdom.military.trainingLevel)} % · Ausrüstung: ${format(kingdom.military.equipmentQuality)} %</p>
         <div class="build-grid">${([
-          ['infantry', 'Infanterie', 50, '50 Gold · 10 Nahrung'],
-          ['archers', 'Bogenschützen', 75, '75 Gold · 15 Nahrung · 10 Holz'],
-          ['cavalry', 'Kavallerie', 150, '150 Gold · 30 Nahrung · 5 Eisen']
+          ['infantry', doctrine.units.infantry, 50, '50 Gold · 10 Nahrung'],
+          ['archers', doctrine.units.archers, 75, '75 Gold · 15 Nahrung · 10 Holz'],
+          ['cavalry', doctrine.units.cavalry, 150, '150 Gold · 30 Nahrung · 5 Eisen']
         ] as const).map(([type, name, gold, cost]) => `<article class="build-card">
           <h3>${name}</h3><strong class="troop-count">${format(kingdom.military[type])}</strong>
           <p>${cost} je Rekrut</p><button class="secondary" data-recruit="${type}"
@@ -1332,11 +1335,12 @@ export class KingdomGameUI {
           </article>`;
         }).join('')}</div>`;
     } else if (this.view === 'war') {
+      const doctrine = doctrineForYear(this.engine.getCurrentYear());
       const finance = this.engine.getWarFinanceOverview(this.player.id);
       const borderWatch = this.engine.hasBorderWatch(this.player.id);
       const siege = this.engine.getCampaignSiege(this.player.id);
-      panel.innerHTML = heading('KRIEGSRAT', 'Feldzüge & Nachbarn',
-        'Jeder Feldzug kostet Nachschub und Verluste. Pro Monat kann dein Heer einmal ausrücken.') +
+      panel.innerHTML = heading('KRIEGSRAT', doctrine.conflict + ' & Nachbarn',
+        doctrine.context + ' Pro Monat kann dein Heer einmal ausrücken.') +
         `<article class="build-card"><h3>Kriegsfinanzierung</h3>
          <p>Darlehensschuld: ${format(finance.stats.totalWarDebt)} Gold ·
          Monatliche Rate: ${format(finance.stats.monthlyDebtPayment)} Gold</p>
@@ -1850,6 +1854,7 @@ export class KingdomGameUI {
   private renderWarRoom(player: Player): string {
     const engine = this.requireEngine();
     const army = engine.getArmyOverview(player.id);
+    const doctrine = doctrineForYear(engine.getCurrentYear());
     const blocker = this.campaignBlocker(player);
     const percent = (value: number): string => `${Math.round(value * 100)} %`;
     const rivals = engine.getRivals(player.id).map((rival: RivalRealm): string => {
@@ -1860,7 +1865,7 @@ export class KingdomGameUI {
           <h3>${escape(rival.name)}</h3><small>${rival.subjugated ? 'Unterworfen' : 'Feindlich'}</small></div>
         <p>${escape(rival.description)}</p>
         <dl class="stat-list"><div><dt>Soldaten</dt><dd>${format(rival.soldiers)}</dd></div>
-          <div><dt>Stärke</dt><dd>${format(CampaignWarfareSystem.rivalPower(rival))}</dd></div>
+          <div><dt>Stärke</dt><dd>${format(CampaignWarfareSystem.rivalPower(rival, engine.getCurrentYear()))}</dd></div>
           <div><dt>${rival.subjugated ? 'Tribut' : 'Siegchance'}</dt><dd class="${rival.subjugated || chance >= 0.5
             ? 'positive' : 'negative'}">${rival.subjugated ? `${format(rival.loot / 24)} Gold/Mo.` : percent(chance)}</dd></div>
         </dl>
@@ -1893,7 +1898,7 @@ export class KingdomGameUI {
             percent(report.victoryChance)} · Verluste ${format(report.attackerLosses)} / ${
             format(report.defenderLosses)}${report.plunder ? ` · Beute ${format(report.plunder)} Gold` : ''}</small></div></li>`;
     }).join('');
-    return `<div class="summary-grid war-summary">
+    return `<p class="muted"><strong>${escape(doctrine.label)}</strong> · ${escape(doctrine.context)}</p><div class="summary-grid war-summary">
         <article><span>Feldheer</span><strong>${format(army.soldiers)}</strong><small>Soldaten</small></article>
         <article><span>Angriff</span><strong>${format(army.attack)}</strong><small>inkl. ${
           percent(army.commanderBonus)} Feldherrenbonus</small></article>
