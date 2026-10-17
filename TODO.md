@@ -1,3 +1,11 @@
+## Playlist, Bildschirm und Charaktere (17.10.2026)
+- [x] Playback: epochenabhängig, zufällig, sequenziell; wiederholen alle/ein Titel/aus, lokal gespeichert.
+- [x] Kompakte Playlist mit einklappbarer Titelcovergalerie.
+- [x] Sidebar-Bereiche als responsives Dialogfenster mit Außenklick, Escape und Schließen.
+- [x] Layout für Desktop, Tablet und Handy auf verfügbare Breite/Höhe angepasst.
+- [x] Figurenangebot ausgewogen nach sozialen Klassen statt vorwiegend Adelige.
+- [ ] Manuelle Touch-/Portrait-/Landscape-Prüfungen auf Zielgeräten und echter Test von Epoche-Playlist-Wechseln.
+
 ## Kompakter Hauptscreen und Ton-Autoplay (17.10.2026)
 - [x] Film versucht Wiedergabe mit Originalton; bei Browser-Autoplay-Sperre kann das Intro mit einem Klick freigegeben werden.
 - [x] „Zeit vergeht“ startet im Anschluss automatisch; kein separater Musikstartknopf. Browserautoplay kann dennoch eine Interaktion erfordern.
