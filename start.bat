@@ -23,12 +23,23 @@ if not exist "node_modules\" (
     )
 )
 
-powershell -NoProfile -Command "try { Invoke-WebRequest '%URL%' -UseBasicParsing -TimeoutSec 2 | Out-Null; exit 0 } catch { exit 1 }" >nul 2>nul
-if not errorlevel 1 (
-    echo Spiel laeuft bereits auf %URL%
-    start "" "%URL%"
-    exit /b 0
-)
+REM ---- Alte Vite/Node-Prozesse im Projektverzeichnis beenden ----
+echo Pruefe auf laufende Spiel-Prozesse ...
+
+powershell -NoProfile -Command ^
+    "$projDir = '%CD:\=\\%'; " ^
+    "Get-Process -Name 'node' -ErrorAction SilentlyContinue | Where-Object { " ^
+    "  try { $_.CommandLine -match [regex]::Escape($projDir) } catch { $false } " ^
+    "} | ForEach-Object { " ^
+    "  Write-Host (\"  -> Beende Prozess PID \" + $_.Id + \" (\" + $_.ProcessName + \")\"); " ^
+    "  Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue " ^
+    "}" ^
+    "if ((Get-Process -Name 'node' -ErrorAction SilentlyContinue | Where-Object { try { $_.CommandLine -match [regex]::Escape($projDir) } catch { $false } }).Count -eq 0) { " ^
+    "  Write-Host '  -> Keine alten Prozesse gefunden.' " ^
+    "}"
+
+REM Kurz warten, damit Prozesse sich schliessen koennen
+timeout /t 1 /nobreak >nul
 
 REM ---- IP-Adressen ermitteln ----
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /i "IPv4"') do (
