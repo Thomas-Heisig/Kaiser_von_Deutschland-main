@@ -30,7 +30,23 @@ if not errorlevel 1 (
     exit /b 0
 )
 
-echo Starte Kaiser von Deutschland auf %URL% ...
+echo.
+echo ============================================
+echo   Kaiser von Deutschland
+echo ============================================
+echo.
+echo Starte Spiel auf Port %PORT% ...
+echo.
+echo   Lokal:        %URL%
+echo.
+echo   Im Netzwerk:  http://%%COMPUTERNAME%%:%PORT%  ^(ueber Computername^)
+echo.
+echo   Von aussen:   Oeffentliche IP erfragen unter
+echo                  https://www.ipify.org/
+echo                  und dann http://^<IP^>:%PORT%
+echo.
+echo ============================================
+echo.
 start "" cmd /c "timeout /t 4 /nobreak >nul & start "" "%URL%""
 call npm run dev
 
