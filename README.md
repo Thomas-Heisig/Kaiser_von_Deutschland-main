@@ -46,6 +46,58 @@ Das Gesamtprojekt bleibt in Entwicklung.
 Prüfanleitung: [GAMEPLAY_TESTING_GUIDE.md](GAMEPLAY_TESTING_GUIDE.md).
 Feedback: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## 🏛️ Hofverwaltung und Delegation (neue spielbare Erweiterung)
+
+Die umfangreiche Reichsverwaltung kann optional an **Bürger mit eigenen Fähigkeiten** delegiert werden.
+Im Menü **Hofverwaltung** stehen Kämmerer, Hofgelehrte und Marschall zur Verfügung.
+Jedem Amt wird ein freier lebender Bürger zugeordnet; derselbe Bürger darf nicht mehrere
+Ämter übernehmen, und gespielte Figuren bleiben von einer Ernennung ausgeschlossen.
+Während der Amtszeit steigt die passende Bürgerfähigkeit monatlich um einen Punkt.
+
+Jedes Amt startet ausdrücklich im Modus **Nur beraten**. Auf Wunsch lässt sich
+**Begrenzt automatisch** aktivieren. Der Kämmerer kauft bei knappen Vorräten
+höchstens 100 Nahrung pro Monat und nur bei ausreichender Goldreserve; die Hofgelehrte
+darf bei freier Forschung ein bezahlbares Forschungsprojekt beginnen, wobei höchstens
+20 % des vorhandenen Goldes eingesetzt werden. Der Marschall übernimmt keine
+Angriffe oder eigenmächtigen militärischen Ausgaben. Eine externe generative KI
+(Ollama o. Ä.) wird hierfür **nicht benötigt**; eine beratende LLM-Erweiterung
+ist nur eine spätere Option. Entlassung und Umschaltung sind jederzeit möglich.
+
+Ernennungen, Automatikmodi und Dienstmonate werden pro Spieler gespeichert.
+Die Bürgerwerte stammen weiterhin aus dem existierenden Bürger- und Speichersystem;
+alte Spielstände ohne Hofverwaltung bleiben benutzbar.
+
+### Hanserouten und überprüfbare Voraussetzungen
+
+Für die Route **Hanserouten (Lübeck–Novgorod)** gelten im Spiel:
+- Forschung **Hochseesegeln** (`sailing`), Kosten 900 Gold und 120 Forschungspunkte;
+- mindestens **ein Hafen** (auch die Hanseroute wird jetzt als Seeroute erkannt);
+- **15.030 Gold** Aktivierungskosten, zusätzlich zu vorherigen Forschungs-/Baukosten.
+
+Die Route ist im Bereich Wirtschaft auswählbar, sobald die Technologie abgeschlossen
+wurde. Eine fehlende Voraussetzung verhindert die Aktivierung; die Oberflächenmeldung
+zeigt die fehlende Hafen- oder Goldbedingung. Der Test
+`src/core/GameEngine.test.ts` prüft die gesamte Freischaltung mit den Grenzfällen
+15.029 bzw. 15.030 Gold. Für einen vollständig manuell ausgeführten
+End-to-End-Test im Chromium-Browser bleibt eine eigene Abnahme erforderlich.
+
+### Ideen für mehr Spielspaß – geplant, nicht bereits implementiert
+
+**Ratsdilemmata mit Charakteren:** Ein fähiger Verwalter kann ehrgeizig,
+illoyal oder überfordert sein; Entscheidungen können Loyalität, Rivalität und
+persönliche Biografien verändern. **Karrieren und Dynastien:** Lehrlinge werden
+zu erfahrenen Amtsinhabern, die später wichtige Forderungen stellen oder
+konkurrierende Familien fördern. **Krisenaktionen:** Bei Hungersnot, Pest oder
+einem Überfall wählt der Spieler zwischen schnellen, teuren und langfristigen
+Lösungen. **Handel und Entdeckungen:** Seefahrt, Bündnisse und neue Technologien
+eröffnen tatsächlich unterschiedliche Wege zum Kampagnensieg.
+**Ereignisketten:** Politische Entscheidungen lösen über Jahre hinweg
+verschiedene Folgeereignisse und historische Wendepunkte aus.
+
+Die alte Funktions- und Roadmap-Dokumentation weiter unten wird bewusst **nicht
+gelöscht**: Bestehende Kernsysteme, historische Vorarbeiten und vollständige
+Integration in die Standardkampagne sind drei unterschiedliche Reifegrade.
+
 ## 🎮 Spielkonzept
 
 Kaiser von Deutschland ist eine komplexe Strategie- und Rollenspielsimulation, die es Spielern ermöglicht, verschiedene historische und moderne Rollen zu übernehmen - vom einfachen Arbeiter bis zum mächtigen Kaiser. Das Spiel deckt eine Zeitspanne von über 2000 Jahren ab und kombiniert historische Genauigkeit mit strategischer Tiefe.
