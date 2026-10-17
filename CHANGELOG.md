@@ -26,6 +26,7 @@
 - README, Status, Roadmap und operative TODO werden gegen den tatsächlichen aktiven Git-Stand abgegrenzt; sämtliche älteren Planungen bleiben archiviert.
 
 ### Fixed
+- Saisonale Produktionsmultiplikatoren beeinflussen nun die tatsächlich gespielten Monate und die identische Monatsprognose; vorher wirkten sie nur im ungenutzten Jahrespfad.
 
 - Kampagnen: Industrie und Wiederaufbau beginnen nicht mehr mit bereits erfüllten ersten Kapitelzielen; Siegmeldung verlangt tatsächlich alle drei abgeschlossenen Kapitel und Fortschrittsanzeige fokussiert das aktuelle Kapitel.
 
