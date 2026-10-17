@@ -846,7 +846,7 @@ export class KingdomGameUI {
       if (matching && matching.id !== this.jukebox.getCurrentId()) {
         this.eraMusicSwitching = true;
         void this.jukebox.play(matching.id)
-          .catch(error => { this.automaticEraMusic = false; this.notify(error instanceof Error ? error.message : 'Epoche-Musik nicht verfügbar.', true); })
+          .catch(error => {  this.notify(error instanceof Error ? error.message : 'Epoche-Musik nicht verfügbar.', true); })
           .finally(() => { this.eraMusicSwitching = false; this.updateJukeboxStatus(); });
       }
     }
