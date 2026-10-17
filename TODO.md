@@ -1,3 +1,9 @@
+## Browserinstallation – PWA-Bedienung (17.10.2026)
+- [x] Sichtbaren „Spiel installieren“-Button in der Spielleiste und den Einstellungen eingebaut.
+- [x] Browser-Installationsdialog bei entsprechender Browserfreigabe anbieten; iPad/Safari-Fallback mit „Zum Home-Bildschirm“ erläutern.
+- [ ] Nach GitHub-Pages-Freischaltung echte HTTPS-Installation auf iPad, Android und Windows kontrollieren.
+- [ ] PNG-App-Icons 192/512 px und vollständige Installability-Abnahme ergänzen.
+
 ## HTTPS-Installation (17.10.2026)
 - [x] GitHub-Pages-Build für Projekt-Unterpfad, PWA/Service-Worker-Scope und Medienpfade vorbereitet.
 - [x] GitHub Actions Deployment-Workflow ergänzt, Auslieferung nur nach erfolgreichem Build/Tests.
