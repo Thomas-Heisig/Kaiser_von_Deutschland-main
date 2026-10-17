@@ -1,3 +1,9 @@
+## Historisch passende Entscheidungen und KI im Browser (17.10.2026)
+
+Der Reichsrat enthält weitere Ereignisse zu Arbeitskonflikten, Eisenbahnen, Wiederaufbau, Energieversorgung und digitalen Vorfällen. Ereignisse werden nach Epoche gefiltert; die bisherige Ereignisbibliothek bleibt erhalten, soweit zeitlich passend. Im dringenden Ratsdialog können Entscheidungen an lebende Bürger delegiert werden: Der Regelberater wählt eine bezahlbare Option, die Entscheidung wird sofort ausgeführt und inklusive des Bürgernamens in der Chronik gespeichert.
+
+**KI-Status:** Bürger-NPCs besitzen bereits regelbasierte KI-Steuerung; `OllamaService` existiert, wird im Standardspiel aber nicht aktiviert. Neu ist eine **experimentelle**, ausdrücklich einschaltbare WebGPU-Beratung im Menü **Einstellungen**. Als Standard arbeitet ein lokaler deterministischer Regelberater. Der optionale Browser-Modus lädt die WebLLM-Laufzeit und das kleine Modell erst beim ersten Ratsvorschlag. Er setzt HTTPS, WebGPU-fähige Hardware, genügend Arbeitsspeicher und die Verfügbarkeit der Modellressourcen voraus. Es gibt keine Garantie, dass die Modellkennung auf jedem Gerät verfügbar ist; ein misslungener Download muss als Fehler angezeigt werden. Die KI darf keine Beschlüsse automatisch ausführen.
+
 ## Filmischer Einstieg, Epochenkampagnen und PixiJS (17.10.2026)
 
 Beim ersten Öffnen folgt nach einer kurzen Pause die Einblendung **„Eine Thomas Heisig Produktion“** mit synthetischem Whoosh-Effekt. Das längere Original-Intro unter `public/video/intro-original.mp4` wird danach mit Ton abgespielt, sofern der Browser dies erlaubt. Das bisherige kurze Intro ist als Outro über **Beenden** im Spiel eingebunden. Überblendeffekte verbinden Studioeinblendung, Film und Menü. Im Hauptmenü gibt es direkt neben dem Titel „Zeit vergeht“ Play/Pause.
