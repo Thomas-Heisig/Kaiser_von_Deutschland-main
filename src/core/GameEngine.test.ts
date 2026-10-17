@@ -109,6 +109,40 @@ describe('Playable campaign integration', (): void => {
     expect(restored.getFestivalOptions(ruler.id).find((entry) => entry.event.id === 'christmas')?.alreadyHeld).toBe(true);
   });
 
+  it('plays and saves an ongoing siege with real monthly supply costs', async (): Promise<void> => {
+    const engine = await campaign();
+    const ruler = engine.getPlayers()[0];
+    ruler.kingdom.resources.gold = 10000;
+    ruler.kingdom.resources.food = 10000;
+    const rival = engine.getRivals(ruler.id)[0];
+    const before = rival.fortification;
+    expect(engine.beginCampaignSiege(ruler.id, rival.id)).toContain('Belagerungsring');
+    expect(() => engine.beginCampaignSiege(ruler.id, rival.id)).toThrow('nur eine');
+    expect(ruler.kingdom.resources.gold).toBe(9500);
+    expect(ruler.kingdom.resources.food).toBe(9750);
+    await engine.saveGame('active-siege');
+    const restored = new GameEngine({ enableWiki: false });
+    engines.push(restored);
+    await restored.loadGame('active-siege');
+    expect(restored.getCampaignSiege(ruler.id)?.rivalId).toBe(rival.id);
+    expect(restored.getCampaignSiege(ruler.id)?.duration).toBe(0);
+    await restored.advanceMonth();
+    expect(restored.getCampaignSiege(ruler.id)?.duration).toBe(5);
+    expect(restored.getRivals(ruler.id)[0].fortification).toBe(before);
+    expect(restored.resupplyCampaignSiege(ruler.id)).toContain('Versorgungswagen');
+    expect(restored.withdrawCampaignSiege(ruler.id)).toContain('bricht');
+    expect(restored.getCampaignSiege(ruler.id)).toBeNull();
+  });
+
+  it('blocks siege targets protected by truce and refuses insufficient provisions', async (): Promise<void> => {
+    const engine = await campaign();
+    const ruler = engine.getPlayers()[0];
+    const rival = engine.getRivals(ruler.id)[0];
+    ruler.kingdom.resources.food = 0;
+    expect(() => engine.beginCampaignSiege(ruler.id, rival.id)).toThrow('250 Nahrung');
+    expect(engine.getCampaignSiege(ruler.id)).toBeNull();
+  });
+
   it('spends border watch supplies once and consumes the defense after one tick', async (): Promise<void> => {
     const engine = await campaign();
     const ruler = engine.getPlayers()[0];
