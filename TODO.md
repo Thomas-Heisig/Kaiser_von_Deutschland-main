@@ -1,3 +1,14 @@
+## Startfilm, Epochenkampagnen, Grafik und Web-Zugang (17.10.2026)
+- [x] Längere Filmversion als Intro nach Studiokarte „Eine Thomas Heisig Produktion“ mit Whoosh.
+- [x] Kurzes Intro als Outro beim Beenden in das Hauptmenü.
+- [x] Startmenü: Titel „Zeit vergeht“ mit Play/Pause.
+- [x] Kampagnen anhand der Startepoche auswählbar, zusätzliche Industrie-/Nachkriegs-/Digital-Kampagnen.
+- [x] Jahreszeitliche Atmosphäre und weitere PIXI-Grafikdetails ergänzt.
+- [x] Anleitung für sicheren öffentlichen HTTPS-Betrieb erstellt.
+- [ ] Hosting-Konto verbinden, `main` aus `dist` öffentlich bereitstellen und Live-URL prüfen.
+- [ ] Audio-/Videoübergänge und Spielgrafik auf tatsächlichen Geräten visuell und akustisch kontrollieren.
+- [ ] Nutzungsrechte/Impressum vor öffentlicher Freigabe finalisieren.
+
 ## Playlist, Bildschirm und Charaktere (17.10.2026)
 - [x] Playback: epochenabhängig, zufällig, sequenziell; wiederholen alle/ein Titel/aus, lokal gespeichert.
 - [x] Kompakte Playlist mit einklappbarer Titelcovergalerie.
