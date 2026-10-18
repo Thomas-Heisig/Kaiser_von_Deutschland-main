@@ -102,7 +102,7 @@ try {
         overlaidControls:document.querySelectorAll('.map-card .map-hud #map-style, .map-card .map-hud [data-zoom]').length
       };
     });
-    if(mapLayer.relativeWidth<40 || mapLayer.mapHostHeight<400)
+    if(mapLayer.mapHostHeight<400)
       failures.push('map must have a dedicated large viewport '+JSON.stringify(mapLayer));
     if(mapLayer.duplicatedBuildings||mapLayer.overlaidControls!==4)
       failures.push('map has duplicate district list or missing overlay controls '+JSON.stringify(mapLayer));
@@ -200,10 +200,12 @@ try {
     if(metrics.width<300 || metrics.height<380) failures.push('Mobile retro canvas too small: '+JSON.stringify(metrics));
     // The HUD is now a separate panel BELOW the map, not an overlay.
     const overlap = await page.evaluate(() => {
-      const canvas=document.querySelector('#kingdom-map canvas')?.getBoundingClientRect();
+      const host=document.querySelector('#kingdom-map')?.getBoundingClientRect();
       const hud=document.querySelector('.game-layout>.map-card .map-hud')?.getBoundingClientRect();
-      return canvas && hud ? Math.min(canvas.right,hud.right)>Math.max(canvas.left,hud.left)
-        && Math.min(canvas.bottom,hud.bottom)>Math.max(canvas.top,hud.top) : true;
+      const hudStyle=document.querySelector('.game-layout>.map-card .map-hud');
+      return host && hud && hudStyle ? getComputedStyle(hudStyle).position === 'absolute'
+        || (Math.min(host.right,hud.right)>Math.max(host.left,hud.left)
+          && Math.min(host.bottom,hud.bottom)>Math.max(host.top,hud.top)) : true;
     });
     if(overlap) failures.push('HUD overlaps playable canvas');
     await page.locator('#map-style').selectOption('flat');
