@@ -593,27 +593,48 @@ export class KingdomMap {
 
   /** Neighboring realms are geographic illustrations, not claims of historical borders. */
   private drawNeighbors(rivals: readonly RivalRealm[]): void {
-    for (const child of this.neighbors.removeChildren()) child.destroy({children:true});
+    for (const child of this.neighbors.removeChildren()) child.destroy({ children: true });
+    // Schematic territory layout, not historical geographic coordinates.
     const places = [
-      {x:-115,y:155},{x:1050,y:150},{x:1070,y:465},{x:-120,y:490},
-      {x:490,y:-125},{x:470,y:760}
+      { x: -115, y: 155 }, { x: 1050, y: 150 }, { x: 1070, y: 465 },
+      { x: -120, y: 490 }, { x: 490, y: -125 }, { x: 470, y: 760 }
     ];
-    rivals.slice(0,places.length).forEach((rival,index) => {
-      const {x,y}=places[index];
-      const region = new Container();region.position.set(x,y);
-      region.addChild(new Graphics().ellipse(0,0,155,100)
-        .fill({color:rival.subjugated?0x436c53:0x665044,alpha:0.7})
-        .stroke({color:0xd2b990,width:2,alpha:0.65}));
-      const name = new Text({text:rival.name.slice(0,25),style:{
-        fontFamily:'Georgia',fontSize:22,fill:0xf7e6bd,align:'center'
-      }});
-      name.anchor.set(0.5,0.5);name.position.set(0,-12);
-      region.addChild(name);
-      const status = new Text({text:rival.subjugated?'Verbündetes Vasallenreich':'Nachbarreich',
-        style:{fontFamily:'Segoe UI',fontSize:15,fill:0xe0d4ba,align:'center'}});
-      status.anchor.set(0.5,0.5);status.position.set(0,23);
-      region.addChild(status);this.neighbors.addChild(region);
+    rivals.slice(0, places.length).forEach((rival, index) => {
+      const { x, y } = places[index];
+      const region = new Container();
+      region.position.set(x, y);
+      const subdued = rival.subjugated;
+      const color = subdued ? 0x426b51 : [0x6b5542, 0x52596f, 0x6c544e, 0x536c62, 0x70624c, 0x5c5574][index];
+      const boundary: number[] = [];
+      for (let corner = 0; corner < 9; corner++) {
+        const angle = corner * Math.PI * 2 / 9;
+        const radius = 82 + ((index * 17 + corner * 13) % 21);
+        boundary.push(Math.cos(angle) * radius * 1.55, Math.sin(angle) * radius);
+      }
+      region.addChild(new Graphics().poly(boundary).fill({ color, alpha: 0.86 })
+        .stroke({ color: subdued ? 0xb5d7ad : 0xd2b990, width: 3, alpha: 0.9 }));
+      // Distinctive capital-like symbols are decorative only. No fake capitals or
+      // historical settlements are added to the RivalRealm game data.
+      for (let n = 0; n < 3; n++) {
+        const dx = -48 + n * 46, dy = n === 1 ? -46 : 43;
+        region.addChild(new Graphics().roundRect(dx - 10, dy - 7, 20, 15, 2)
+          .fill(0xb9ad87).stroke({ color: 0x3b342a, width: 1 }));
+        region.addChild(new Graphics().poly([dx - 13, dy - 7, dx, dy - 18, dx + 13, dy - 7])
+          .fill(0x76503c));
+      }
+      const label = new Text({ text: rival.name.slice(0, 25),
+        style: { fontFamily: 'Georgia', fontSize: 20, fill: 0xfff0c9, align: 'center' } });
+      label.anchor.set(0.5);
+      label.position.set(0, -8);
+      region.addChild(label);
+      const status = new Text({ text: subdued ? 'Vasallenreich' : 'Nachbarreich',
+        style: { fontFamily: 'Segoe UI', fontSize: 14, fill: 0xffecc9, align: 'center' } });
+      status.anchor.set(0.5);
+      status.position.set(0, 18);
+      region.addChild(status);
+      this.neighbors.addChild(region);
     });
+    this.app.canvas.dataset.neighborTerritories = String(Math.min(rivals.length, places.length));
   }
 
   private fit(): void {
