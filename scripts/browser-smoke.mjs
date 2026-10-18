@@ -109,6 +109,13 @@ try {
     await page.locator('#map-style').selectOption('isometric');
     if (await page.locator('#kingdom-map').getAttribute('data-projection') !== 'isometric') failures.push('map switch failed');
     if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-projection') !== 'isometric') failures.push('Pixi retro renderer did not receive isometric mode');
+    const scope = page.locator('#map-scope');
+    if (await scope.count()) {
+      await scope.selectOption('world');
+      if (await canvas.getAttribute('data-map-scope') !== 'world') failures.push('World selector did not activate world renderer on phone');
+      await scope.selectOption('home');
+      if (await canvas.getAttribute('data-map-scope') !== 'home') failures.push('Home selector did not restore home renderer on phone');
+    } else failures.push('Home/world map selector missing on phone');
     await page.locator('#map-style').selectOption('flat');
     if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-projection') !== 'flat') failures.push('Pixi renderer did not return to geometric mode');
     await page.locator('#map-style').selectOption('isometric');
