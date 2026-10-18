@@ -21,6 +21,12 @@ Eine Industriekampagne wird automatisiert mit echten Bauten, Forschung, Save/Loa
 ## Kartenoberfläche (18.10.2026)
 Vollflächige Siedlungskarte unter transparenten Panels, Kartenfilter, Bezirksausbau und Zoom als Grafik-Overlays implementiert. Die zuvor duplizierte Gebäudeliste entfällt; Nachbarreiche erscheinen schematisch am Kartenrand. Echte geopolitische Grenzen und Endgeräteabnahme bleiben offen.
 
+## Karte – genehmigte Grafikrichtung, Phase 2 (18.10.2026)
+
+**Freigegeben:** Variante A mit Kenney Sketch Town als Referenz, Jahr 1200, 16 feste Bezirke (keine freie Bebauung), vorhandenes PixiJS 8 und unveränderte GameEngine. Zwei Apple-Testgeräte (iPad/iPhone) stehen beim Nutzer für spätere manuelle Tests bereit. Ein Prototyp ist **noch nicht erstellt**, Performance auf Geräten **ungeprüft**. [Renderer- und Prototyp-Plan](../05-technical-architecture/RENDERER.md) · [Asset-Lizenzmanifest](../05-technical-architecture/ASSETS.md).
+
+**Reihenfolge:** konkretes Pack inventarisieren und Rechte nachweisen → isolierte 144-Kachel-Werkstattszene → CI/Browserbuild → echte iPad-/iPhone-Messung → bei Bestehen genau einen bestehenden Bezirk optisch umstellen. Rendering bleibt ein separates Vorhaben, das P1-Kampagnenqualität nicht als abgeschlossen ersetzt.
+
 ## Gameplay-Freigabereihenfolge (verbindlich)
 
 1. **Kampagnenabschluss als End-to-End-Ablauf:** Start, Bau, Handel, Forschung, Reichsrat, Monatswechsel, Save/Load, Sieg und Niederlage.
