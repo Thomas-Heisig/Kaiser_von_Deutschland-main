@@ -89,6 +89,7 @@ export class KingdomGameUI {
   private player?: Player;
   private map?: KingdomMap;
   private view: View = 'overview';
+  private focusedRivalId?: string;
   private selected: keyof KingdomInfrastructure = 'farms';
   private districtFilter: DistrictFilter = 'alle';
   private busy: boolean = false;
@@ -922,7 +923,8 @@ export class KingdomGameUI {
         await this.map.initialize(host, (type: keyof KingdomInfrastructure): void => {
           this.selected = type;
           this.navigate('build');
-        }, (_rivalId: string): void => {
+        }, (rivalId: string): void => {
+          this.focusedRivalId = rivalId;
           this.navigate('diplomacy');
         });
         this.map.setMotion(this.motionEnabled);
@@ -1536,8 +1538,18 @@ export class KingdomGameUI {
       const missions = this.engine.getRivalMissions(this.player.id);
       const treaties = this.engine.getRivalTreaties(this.player.id);
       const rivals = this.engine.getRivals(this.player.id);
+      const selectedRival = rivals.find((rival) => rival.id === this.focusedRivalId);
+      // Selection is view-only; do not change diplomatic state automatically.
+      const focusedCard = selectedRival ? `<article class="build-card" role="status"
+        style="border:2px solid #cfaa66;background:rgba(117,87,43,.18)">
+        <h3>Ausgewähltes Nachbarreich: ${escape(selectedRival.name)}</h3>
+        <p>${escape(selectedRival.description)}</p>
+        <p>Status: ${selectedRival.subjugated ? 'Vasallenreich' : 'Unabhängiges Nachbarreich'}</p>
+        <p>Beziehung: ${format(relations.find((r) => r.kingdomId === selectedRival.id)?.relationshipValue ?? 0)}
+        · Vertrauen: ${format(relations.find((r) => r.kingdomId === selectedRival.id)?.trust ?? 50)} / 100</p>
+      </article>` : '';
       panel.innerHTML = heading('GESANDTSCHAFT & NACHBARN', 'Der diplomatische Hof',
-        'Verhandle mit benachbarten Reichen. Gesandtschaften kosten 350 Gold und bringen im Folgejahr eine Chance auf bessere Beziehungen.') +
+        'Verhandle mit benachbarten Reichen. Gesandtschaften kosten 350 Gold und bringen im Folgejahr eine Chance auf bessere Beziehungen.') + focusedCard +
         `<div class="build-grid">${rivals.map((rival) => {
           const relation = relations.find((entry) => entry.kingdomId === rival.id);
           const underway = missions.some((mission) => mission.targetKingdomId === rival.id);
