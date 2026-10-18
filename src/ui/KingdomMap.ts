@@ -235,46 +235,54 @@ export class KingdomMap {
   /** All 16 infrastructure districts receive a coherent Retro representation. */
   private drawRetroDistrict(group: Container, type: keyof KingdomInfrastructure, count: number, epoch: string): boolean {
     if (!this.retroEnabled || !this.retroAtlas || this.projection === 'flat') return false;
+    // Asset indices of the verified Kenney CC0 preview atlas:
+    // floor=0, door=1, window=2, roof=3, tree=4, barrel=5, tower=6, grass=7.
+    // The same historic fixed district can show distinct silhouettes across epochs.
+    const later = epoch === 'modern' || epoch === 'industrial';
+    const opacity = count > 0 ? 1 : 0.4;
+    const tile = (index: number, x: number, y: number, size: number): void => {
+      const sprite = this.retroTile(index, x, y, size);
+      sprite.alpha = opacity;
+      group.addChild(sprite);
+    };
     if (type === 'roads') {
-      for (let i = 0; i < 3; i++) group.addChild(this.retroTile(0, -31 + i * 30, 14 + (i % 2) * 4, 48));
-      return true;
-    }
-    if (type === 'farms') {
-      for (let i = 0; i < 5; i++) group.addChild(this.retroTile(0, -41 + i * 19, 17 + (i % 2) * 13, 34));
-      return true;
-    }
-    if (type === 'ports') {
-      for (let i = 0; i < 3; i++) group.addChild(this.retroTile(0, -29 + i * 27, 14, 45));
-      group.addChild(this.retroTile(4, 35, 9, 34));
-      return true;
-    }
-    if (type === 'walls') {
-      for (let i = 0; i < 4; i++) group.addChild(this.retroTile(6, -37 + i * 24, 8, 43));
-      return true;
-    }
-    if (type === 'mines') {
+      for (let i = 0; i < 3; i++) tile(later ? 0 : 7, -30 + i * 30, 15 + (i % 2) * 3, 46);
+    } else if (type === 'farms') {
+      for (let i = 0; i < 5; i++) tile(i % 3 === 0 ? 4 : 7, -42 + i * 20, 15 + i % 2 * 11, i % 3 === 0 ? 31 : 36);
+    } else if (type === 'ports') {
+      for (let i = 0; i < 3; i++) tile(i % 2 === 0 ? 0 : 5, -29 + i * 27, 12, 43);
+      tile(4, 37, 10, 36);
+    } else if (type === 'walls') {
+      for (let i = 0; i < 4; i++) tile(6, -37 + i * 24, 7, later ? 49 : 42);
+    } else if (type === 'mines') {
       group.addChild(new Graphics().poly([-34, 15, 0, -26, 39, 15]).fill(0x807d69));
-      group.addChild(this.retroTile(1, 0, 15, 56));
-      return true;
-    }
-    if (type === 'castles' || type === 'barracks' || type === 'churches' || type === 'universities') {
-      group.addChild(this.retroTile(6, -18, 7, 90));
-      group.addChild(this.retroTile(type === 'churches' ? 3 : 2, 27, 9, 72));
-      return true;
-    }
-    const buildings = Math.max(1, Math.min(count, 3));
-    for (let i = 0; i < buildings; i++) {
-      const x = (i - (buildings - 1) / 2) * 32, y = i % 2 ? 10 : 5;
-      if (this.retroHouse && epoch !== 'modern' && epoch !== 'industrial') {
-        const building = new Sprite(this.retroHouse);
-        building.anchor.set(0.5, 1);
-        building.position.set(x, y + 9);
-        building.width = 47;
-        building.height = 74;
-        group.addChild(building);
-      } else {
-        group.addChild(this.retroTile(i % 2 ? 2 : 1, x, y + 9, 66));
-        group.addChild(this.retroTile(3, x, y - 38, 51));
+      tile(1, 0, 15, 60);
+      tile(5, 27, 18, 29);
+    } else if (type === 'castles' || type === 'barracks') {
+      tile(6, -23, 7, 91);
+      tile(6, 23, 7, 84);
+      tile(later ? 2 : 1, 0, 15, 62);
+    } else if (type === 'churches' || type === 'universities') {
+      tile(6, -18, 6, 87);
+      tile(type === 'churches' ? 3 : 2, 24, 9, 73);
+    } else {
+      const buildings = Math.max(1, Math.min(count, 3));
+      for (let i = 0; i < buildings; i++) {
+        const x = (i - (buildings - 1) / 2) * 34, y = i % 2 ? 11 : 5;
+        if (this.retroHouse && !later && (type === 'workshops' || type === 'taverns' || type === 'warehouses' || type === 'markets')) {
+          const house = new Sprite(this.retroHouse);
+          house.anchor.set(0.5, 1);
+          house.position.set(x, y + 9);
+          house.width = 47;
+          house.height = 74;
+          house.alpha = opacity;
+          group.addChild(house);
+        } else {
+          tile(later ? 2 : i % 2 ? 2 : 1, x, y + 9, later ? 69 : 63);
+          tile(later ? 0 : 3, x, y - 38, later ? 53 : 49);
+        }
+        if (type === 'workshops' || type === 'guildhalls') tile(5, x + 24, y + 11, 24);
+        if (type === 'hospitals' || type === 'schools') tile(4, x + 24, y + 8, 25);
       }
     }
     return true;
