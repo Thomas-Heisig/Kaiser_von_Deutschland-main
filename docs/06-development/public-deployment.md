@@ -13,11 +13,14 @@ Der Quellcode liegt in einem **privaten** GitHub-Repository. Das Spiel läuft al
 Die Live-URL lautet:  
 **https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/**
 
-### Technische Einrichtung
+### Einmalige Einrichtung (Repository-Eigentümer)
 
-1. Repository-Eigentümer muss einmalig **Settings → Pages → Build and deployment → Source: GitHub Actions** auswählen.
-2. Der Workflow `.github/workflows/deploy-pages.yml` deployt automatisch bei jedem Push auf `main`.
-3. Manuelles Auslösen: **Actions → Publish HTTPS PWA (GitHub Pages) → Run workflow**.
+1. **GitHub → Repository → Settings** (oben rechts)
+2. Links **Pages** auswählen
+3. Bei **Source** → **GitHub Actions** auswählen (nicht "Deploy from a branch")
+4. **Speichern**
+
+Nach der Aktivierung: Einfach einen Push auf `main` machen oder unter **Actions → Publish HTTPS PWA (GitHub Pages) → Run workflow** manuell auslösen. Der Workflow deployt dann automatisch.
 
 ### Was bereitgestellt wird
 
