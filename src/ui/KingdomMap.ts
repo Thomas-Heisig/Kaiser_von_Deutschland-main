@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text } from 'pixi.js';
+import { Application, Assets, Container, Graphics, Text, Sprite, Texture, Rectangle } from 'pixi.js';
 import { Kingdom, KingdomInfrastructure } from '../core/Kingdom';
 import type { RivalRealm } from '../core/CampaignWarfareSystem';
 import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature } from './SettlementSceneModel';
@@ -29,6 +29,12 @@ export class KingdomMap {
   private readonly animatedMarkers: Container[] = [];
   private readonly citizens: Container[] = [];
   private readonly chimneys: Graphics[] = [];
+  private retroAtlas?: Texture;
+  private retroHouse?: Texture;
+  private retroEnabled = false;
+  private retroLoading = false;
+  private retroContext?: { kingdom: Kingdom; selected: keyof KingdomInfrastructure; completed: readonly string[]; year: number; rivals: readonly RivalRealm[] };
+
   private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
     if (this.destroyed || document.hidden) return;
     if (this.actionVisual) this.animateAction();
@@ -149,6 +155,93 @@ export class KingdomMap {
     canvas.addEventListener('pointercancel', (): void => { drag = undefined; });
     this.fit();
     this.app.ticker.stop();
+    void this.loadRetroAssets();
+  }
+
+  /** Lightweight, license-checked Kenney visual assets; leaves simulation unchanged. */
+  private async loadRetroAssets(): Promise<void> {
+    if (this.retroLoading || this.destroyed) return;
+    this.retroLoading = true;
+    try {
+      const base = import.meta.env.BASE_URL;
+      this.retroAtlas = await Assets.load<Texture>(base + 'assets/kenney/retro-workshop-atlas.png');
+      this.retroHouse = await Assets.load<Texture>(base + 'assets/kenney/retro-house-1200.png');
+      if (this.destroyed) return;
+      this.retroEnabled = true;
+      this.app.canvas.dataset.retroLoaded = 'true';
+      this.lastSignature = '';
+      if (this.retroContext) {
+        const { kingdom, selected, completed, year, rivals } = this.retroContext;
+        this.update(kingdom, selected, completed, year, rivals);
+      }
+    } catch (error) {
+      console.warn('Retro-Kartenassets nicht geladen; geometrische Karte bleibt erhalten', error);
+      this.app.canvas.dataset.retroLoaded = 'fallback';
+    } finally {
+      this.retroLoading = false;
+    }
+  }
+
+  private retroTile(index: number, x: number, y: number, size = 44): Sprite {
+    const atlas = this.retroAtlas!;
+    const texture = new Texture({
+      source: atlas.source,
+      frame: new Rectangle(index % 4 * 64, Math.floor(index / 4) * 64, 64, 64)
+    });
+    const sprite = new Sprite(texture);
+    sprite.anchor.set(0.5, 1);
+    sprite.position.set(x, y);
+    sprite.width = size;
+    sprite.height = size;
+    return sprite;
+  }
+
+  /** All 16 infrastructure districts receive a coherent Retro representation. */
+  private drawRetroDistrict(group: Container, type: keyof KingdomInfrastructure, count: number, epoch: string): boolean {
+    if (!this.retroEnabled || !this.retroAtlas) return false;
+    if (type === 'roads') {
+      for (let i = 0; i < 3; i++) group.addChild(this.retroTile(0, -31 + i * 30, 14 + (i % 2) * 4, 48));
+      return true;
+    }
+    if (type === 'farms') {
+      for (let i = 0; i < 5; i++) group.addChild(this.retroTile(0, -41 + i * 19, 17 + (i % 2) * 13, 34));
+      return true;
+    }
+    if (type === 'ports') {
+      for (let i = 0; i < 3; i++) group.addChild(this.retroTile(0, -29 + i * 27, 14, 45));
+      group.addChild(this.retroTile(4, 35, 9, 34));
+      return true;
+    }
+    if (type === 'walls') {
+      for (let i = 0; i < 4; i++) group.addChild(this.retroTile(6, -37 + i * 24, 8, 43));
+      return true;
+    }
+    if (type === 'mines') {
+      group.addChild(new Graphics().poly([-34, 15, 0, -26, 39, 15]).fill(0x807d69));
+      group.addChild(this.retroTile(1, 0, 15, 56));
+      return true;
+    }
+    if (type === 'castles' || type === 'barracks' || type === 'churches' || type === 'universities') {
+      group.addChild(this.retroTile(6, -18, 7, 90));
+      group.addChild(this.retroTile(type === 'churches' ? 3 : 2, 27, 9, 72));
+      return true;
+    }
+    const buildings = Math.max(1, Math.min(count, 3));
+    for (let i = 0; i < buildings; i++) {
+      const x = (i - (buildings - 1) / 2) * 32, y = i % 2 ? 10 : 5;
+      if (this.retroHouse && epoch !== 'modern' && epoch !== 'industrial') {
+        const building = new Sprite(this.retroHouse);
+        building.anchor.set(0.5, 1);
+        building.position.set(x, y + 9);
+        building.width = 47;
+        building.height = 74;
+        group.addChild(building);
+      } else {
+        group.addChild(this.retroTile(i % 2 ? 2 : 1, x, y + 9, 66));
+        group.addChild(this.retroTile(3, x, y - 38, 51));
+      }
+    }
+    return true;
   }
 
   private animateAction(): void {
@@ -239,6 +332,7 @@ export class KingdomMap {
 
   public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure, completed: readonly string[] = [], year = 1200, rivals: readonly RivalRealm[] = []): void {
     if (!this.initialized || this.destroyed) return;
+    this.retroContext = { kingdom, selected, completed, year, rivals };
     const signature = districtSceneSignature(kingdom.infrastructure, selected,
       this.districtFilter, kingdom.currentSeason, completed) + JSON.stringify(rivals.map(r => [r.id,r.name,r.subjugated]));
     const epochStyle = year >= 1945 ? 'modern' : year >= 1800 ? 'industrial' : year >= 1500 ? 'renaissance' : 'medieval';
@@ -261,7 +355,9 @@ export class KingdomMap {
           width: selected === location.type ? 2 : 1, alpha: selected === location.type ? 1 : 0.35
         });
       group.addChild(ground);
-      if ((modernization || epochStyle === 'modern' || epochStyle === 'industrial') && count > 0 && location.type !== 'farms' && location.type !== 'roads' && location.type !== 'ports' && location.type !== 'walls') {
+      if (this.drawRetroDistrict(group, location.type, count, epochStyle)) {
+        // Visual-only retro representation. Interaction still uses fixed coordinates.
+      } else if ((modernization || epochStyle === 'modern' || epochStyle === 'industrial') && count > 0 && location.type !== 'farms' && location.type !== 'roads' && location.type !== 'ports' && location.type !== 'walls') {
         group.addChild(new Graphics().roundRect(-29, -62, 58, 42, 5)
           .fill({ color: 0x587f84, alpha: 0.95 }).roundRect(-24, -56, 48, 6, 2)
           .fill(0xc2d4ce).rect(-16, -42, 11, 16).rect(5, -42, 11, 16).fill(0xecdcb0));

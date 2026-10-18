@@ -29,6 +29,14 @@ try {
     await page.locator('#start-era-summary').getByText('1820 · Industriezeitalter').waitFor();
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.locator('#kingdom-map').waitFor({ timeout: 30000 });
+    await page.waitForFunction(() => {
+      const canvas = document.querySelector('#kingdom-map canvas');
+      return canvas?.getAttribute('data-retro-loaded') === 'true' ||
+        canvas?.getAttribute('data-retro-loaded') === 'fallback';
+    }, null, { timeout: 15000 });
+    if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-loaded') !== 'true') {
+      failures.push('The live main map failed to load retro sprites');
+    }
     await page.locator('#map-style').waitFor({ state:'visible' });
     if (!(await page.locator('#date').textContent())?.includes('1820')) failures.push('selected start year did not enter the simulation');
     if (await page.locator('.kingdom-app').getAttribute('data-era') !== 'industrial') failures.push('industrial epoch style not applied');
