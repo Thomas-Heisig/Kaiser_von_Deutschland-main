@@ -1,6 +1,6 @@
 # TODO — Kaiser von Deutschland
 
-## Verbindliche operative Aufgabenliste · Stand 17.10.2026 · Referenz main: 28e35c82
+## Verbindliche operative Aufgabenliste · Stand 18.10.2026 · Grafikentscheidung nach PR #67
 
 Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und den Meilensteinen der [Roadmap](docs/00-meta/roadmap.md). `[x]` bedeutet im Hauptspiel **implementiert und mindestens automatisiert geprüft**, `[~]` teilweise, `[ ]` offen. Ein in alten Unterlagen als „fertig“ bezeichnetes Modul ist ohne Benutzeroberfläche **nicht** abgeschlossen. Frühere Einträge gingen nicht verloren: [TODO-Archiv](docs/outdated/TODO-snapshot-2026-10-17.md), [README-Ideenbestand](docs/00-meta/backlog-from-readme.md), [historische Roadmap](docs/outdated/roadmap-snapshot-2026-10-17.md).
 
@@ -55,14 +55,15 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [x] Einstellungen als fünf Tabs bereits im Startmenü und laufenden Spiel zugänglich; Bürgeraufträge nur in Navigation, Animation/Installation ausschließlich in Einstellungen.
 - [ ] Einstellungen auf echtem iPad/Android mit Tastatur und Touch abnehmen.
 
-## Grafikkarte – Kenney Retro (Phase 3: isolierter Prototyp)
+## Grafikkarte – aktive Entscheidung: Kenney Retro (18.10.2026)
 
-- [x] Grafikrichtung auf Kenney Retro Fantasy / Retro Textures Fantasy (Mittelalter) und Retro Urban (spätere Epochen) umgestellt; 16 feste Bezirke, PixiJS 8 und Savegame unverändert.
-- [x] Phase-2-Detailplanung samt Renderer-Datenadapter, Messplan, Asset-Provenienz und iPad-/iPhone-Testgates dokumentiert ([Renderer](docs/05-technical-architecture/RENDERER.md), [Assets](docs/05-technical-architecture/ASSETS.md)).
-- [x] Drei vom Nutzer bereitgestellte Kenney-Retro-Archive inventarisiert; CC0-Lizenztexte kontrolliert; ein minimaler Preview-Atlas mit dokumentierten Quelldateien und SHA-256 erstellt. GLB-Modelle sind noch nicht zu 2D-Sprites vorgerendert.
-- [~] Isolierte PixiJS-8-Werkstattszene (12×12 Kacheln, Retro-Vorschauatlas aus Kenney-Originaldateien, modular zusammengesetztes Gebäude, eine Lichtfläche, 24 Rauchpartikel) mit geometrischem Ladefallback. **Weitere Arbeit:** echte GLB-Isometrie und glaubwürdiges Gebäudecompositing, Browser-Smoke und iOS-Messungen. URL: `/workshop-prototype.html`. Keine Engine-/Savegame-Änderung.
-- [ ] Auf tatsächlichem iPhone/iPad unter Safari testen: Modell/Version, 30 s Warmup, 3×120 s, 10 Minuten; P95-Frame-Abstand und Speicher dokumentieren; kein Performance-Ergebnis erfinden.
-- [ ] Erst nach bestandenen Messgates einen festen Bezirk in `KingdomMap` optional umstellen; geometrischen Fallback und bestehende 2D/3D-Auswahl erhalten.
+- [x] **Retro Fantasy + Retro Textures Fantasy** für das Mittelalter, **Retro Urban** für spätere Epochen verbindlich; Sketch Town ist nur Reserve, nicht zweite parallele Richtung ([Renderer](docs/05-technical-architecture/RENDERER.md)).
+- [x] PR #67: geprüfte Kenney-CC0-Vorschaugrafiken in kompaktem Atlas, isolierter PixiJS-Prototyp und Browser-Smoke mit realem Atlasladecheck in `main` integriert.
+- [x] Prototyp-Baseline bewusst eingefroren: 144 Kacheln, 1 modular angedeutetes Gebäude, 1 Licht, 24 Rauchpartikel, 30-FPS-Limit. **Preview-Sprites ≠ fertig vorgerendertes GLB-Gebäude.**
+- [ ] **Nächster konkreter Erfolg:** aus **einem** Retro-Fantasy-GLB bzw. einer modularen Gebäudekomposition ein orthografisches transparentes PNG rendern; Blender-Version/Kamera/Licht/Datei-Hash dokumentieren und im isolierten Prototyp statt Platzhalter verwenden.
+- [ ] Erst Desktop-Chromium visuell/technisch abnehmen; danach Safari auf echten iPad-/iPhone-Geräten nach Messplan prüfen. **Gerätemodelle/OS unbekannt – beim Test erfassen.**
+- [ ] Nach bestandenen Messgates genau einen festen Bezirk optional auf Retro-Sprite umstellen; geometrische Fallbacks und vorhandene Kartenauswahl erhalten.
+
 
 ## P2 — Spielerlebnis und Module
 

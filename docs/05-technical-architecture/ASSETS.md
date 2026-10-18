@@ -35,3 +35,10 @@ PNG-Atlas-SHA256: `d8487bf6a8b082ec6cf49e927b9dc536888d08e054a3378e1ff46c9cba58b
 2. Über das Original-GLB/OBJ-Set ein oder mehrere saubere Gebäude in identischem isometrischen Kamerawinkel **wirklich** vorgerendert.
 3. Gesonderte Performance-Messungen auf iPad/iPhone Safari; keine ungeprüften FPS-/Speicherangaben.
 4. Erst danach einen festen Bezirk in der produktiven Karte optional auf Retro umstellen, immer mit geometrischem Fallback.
+
+## Reserve (nicht aktiv)
+
+- **Kenney Sketch Town:** frühere Phase-2-Richtung, **verworfen als Primärstil**; nur als mögliche grafische Reserve. Die alte Planung ist im Git-Verlauf und in historischen Einträgen nachvollziehbar, sie ist keine aktuelle Anweisung.
+- Das vorliegende `Retro Textures Fantasy`-Paket ist für das Mittelalter vorgesehen, aber noch **nicht** in der Werkstattszene verwendet.
+
+**Freigabestatus:** CC0-Dateien für den Protoyp inventarisiert; eine echte GLB→PNG-Pipeline, vollständige Gebäude und Endgerätetests sind ausstehend.
