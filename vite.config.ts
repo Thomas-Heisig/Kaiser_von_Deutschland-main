@@ -55,6 +55,7 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     rollupOptions: {
+      input: { spiel: path.resolve(__dirname, 'index.html'), werkstatt: path.resolve(__dirname, 'workshop-prototype.html') },
       output: {
         manualChunks(id: string): string | undefined {
           if (id.includes('node_modules') && (id.includes('pixi.js') || id.includes('@pixi'))) {
