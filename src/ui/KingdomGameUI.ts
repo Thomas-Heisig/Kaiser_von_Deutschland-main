@@ -647,6 +647,34 @@ export class KingdomGameUI {
               <small id="delta-${key}"></small></div>`).join('')}
         </section>
         <div class="game-layout">
+            <section class="map-card" aria-label="Interaktive Siedlungsübersicht mit angrenzenden Reichen">
+              <div id="kingdom-map" class="map-host" role="group" aria-label="Zentrierte Siedlungskarte – Gebäude auf der Karte auswählen"></div>
+              <div class="map-hud" aria-label="Kartenwerkzeuge">
+                <div class="map-hud-top">
+                  <div class="map-heading"><span class="eyebrow">DEIN LEHEN</span><h2>Land & Leute</h2>
+                    <span id="settlement-season"></span></div>
+                  <div class="settlement-controls" aria-label="Kartendarstellung und Bezirksfilter">
+                    <label>Kartenansicht <select id="map-style" aria-label="Kartenansicht wählen">
+                      <option value="flat">2D · Draufsicht</option>
+                      <option value="isometric">3D-Look · isometrisch</option>
+                    </select></label>
+                    <label>Bezirke <select id="settlement-filter" aria-label="Bezirke filtern">
+                      <option value="alle">Alle 16 Bezirke</option>
+                      <option value="versorgung">Versorgung</option><option value="stadt">Stadt</option>
+                      <option value="bildung">Bildung</option><option value="wehr">Verteidigung</option>
+                    </select></label>
+                  </div>
+                </div>
+                <div class="map-hud-bottom">
+                  <div id="settlement-details" class="settlement-details" role="status" aria-live="polite"></div>
+                  <div class="map-tools" role="group" aria-label="Karte bewegen und zentrieren">
+                    <button type="button" data-zoom="-0.2" aria-label="Karte verkleinern">−</button>
+                    <button type="button" data-zoom="0" aria-label="Karte zentrieren">⌖ Zentrieren</button>
+                    <button type="button" data-zoom="0.2" aria-label="Karte vergrößern">+</button>
+                  </div>
+                </div>
+              </div>
+            </section>
           <aside class="sidebar">
             <p class="eyebrow nav-label">DEINE HERRSCHAFT</p>
             <nav aria-label="Spielbereiche">
@@ -686,27 +714,6 @@ export class KingdomGameUI {
             <div id="notice" class="notice" role="status" aria-live="polite"></div>
             <div id="game-action-banner" role="status" aria-live="polite" hidden></div>
             <button id="council-prompt" data-view="council" class="council-alert" hidden></button>
-            <section class="map-card" aria-label="Interaktive Siedlungsübersicht">
-              <div class="map-heading"><div><span class="eyebrow">DEIN LEHEN</span>
-                <h2>Land & Leute</h2></div><span class="map-tag">Siedlungsübersicht</span></div>
-              <div class="settlement-controls" aria-label="Siedlungsfilter">
-                <label>Kartenansicht <select id="map-style" aria-label="Darstellung auswählen">
-                  <option value="flat">2D · Draufsicht</option>
-                  <option value="isometric">3D-Look · isometrische Projektion</option>
-                </select></label>
-                <label>Bezirke <select id="settlement-filter">
-                <option value="alle">Alle 16 Bezirke</option>
-                <option value="versorgung">Versorgung</option><option value="stadt">Stadt</option>
-                <option value="bildung">Bildung</option><option value="wehr">Verteidigung</option>
-                </select></label><span id="settlement-season"></span></div>
-              <div id="kingdom-map" class="map-host"></div>
-              <div id="settlement-districts" class="settlement-districts" aria-label="Bezirke auswählen"></div>
-              <div id="settlement-details" class="settlement-details" role="status" aria-live="polite"></div>
-              <div class="map-footer"><span>Bezirk anklicken · Ziehen zum Verschieben</span>
-                <div class="map-tools"><button data-zoom="-0.2" aria-label="Karte verkleinern">−</button>
-                  <button data-zoom="0" aria-label="Karte zentrieren">Zentrieren</button>
-                  <button data-zoom="0.2" aria-label="Karte vergrößern">+</button></div></div>
-            </section>
             <section id="panel" class="content-panel" aria-label="Verwaltung"></section>
           </main>
           <aside class="council">
@@ -746,13 +753,6 @@ export class KingdomGameUI {
       const target = event.currentTarget as HTMLSelectElement;
       this.districtFilter = target.value as DistrictFilter;
       this.map?.setDistrictFilter(this.districtFilter);
-      this.refresh();
-    });
-    this.root.querySelector('#settlement-districts')?.addEventListener('click', (event) => {
-      const target = event.target as HTMLElement;
-      const button = target.closest<HTMLButtonElement>('[data-district]');
-      if (!button) return;
-      this.selected = button.dataset.district as keyof KingdomInfrastructure;
       this.refresh();
     });
     this.root.querySelector('#settlement-details')?.addEventListener('click', (event) => {
@@ -1222,12 +1222,6 @@ export class KingdomGameUI {
     this.root.querySelectorAll<HTMLButtonElement>('nav [data-view]').forEach((button: HTMLButtonElement): void => {
       button.setAttribute('aria-current', button.dataset.view === this.view ? 'page' : 'false');
     });
-    const districts = SETTLEMENT_DISTRICTS.filter(d =>
-      this.districtFilter === 'alle' || d.category === this.districtFilter);
-    const list = this.root.querySelector('#settlement-districts');
-    if (list) list.innerHTML = districts.map(d => `<button data-district="${d.type}"
-      aria-pressed="${this.selected === d.type}" title="${escape(d.name)}">
-      ${escape(d.name)} <strong>${format(kingdom.infrastructure[d.type])}</strong></button>`).join('');
     const details = this.root.querySelector('#settlement-details');
     const district = SETTLEMENT_DISTRICTS.find(d => d.type === this.selected);
     if (details && district) details.innerHTML = `<strong>${escape(district.name)}</strong> ·
@@ -1236,7 +1230,8 @@ export class KingdomGameUI {
     setText('settlement-season', SEASON_LABELS[kingdom.currentSeason] + ' · ' + this.engine.getCurrentEpoch());
     this.renderMapFallback();
     this.map?.update(kingdom, this.selected, this.engine.getModernizationOptions(this.player.id)
-      .filter(option => option.completed).map(option => option.project.id), this.engine.getCurrentYear());
+      .filter(option => option.completed).map(option => option.project.id), this.engine.getCurrentYear(),
+      this.engine.getRivals(this.player.id));
     const scene: Soundscape = this.view === 'war' ? 'battle' :
       this.view === 'culture' ? 'culture' :
       this.view === 'economy' ? 'market' :
