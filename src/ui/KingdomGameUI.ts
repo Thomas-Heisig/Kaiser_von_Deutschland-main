@@ -109,7 +109,7 @@ export class KingdomGameUI {
   private readonly ambience = new GameAmbience();
   private readonly helpSystem = new HelpSystem();
   private motionEnabled = false;
-  private mapStyle: 'flat' | 'isometric' = 'flat';
+  private mapStyle: 'flat' | 'isometric' = 'isometric';
   private councilDialog?: HTMLDialogElement;
   private councilSelectionTimer?: number;
   private actionBannerTimer?: number;
