@@ -36,6 +36,7 @@ export class KingdomMap {
   private readonly retroEpochTextures = new Map<string, Texture>();
   private retroEnabled = false;
   private projection: 'flat' | 'isometric' = 'isometric';
+  private mapScope: 'home' | 'world' = 'home';
   private retroLoading = false;
   private retroContext?: { kingdom: Kingdom; selected: keyof KingdomInfrastructure; completed: readonly string[]; year: number; rivals: readonly RivalRealm[] };
 
@@ -168,7 +169,7 @@ export class KingdomMap {
   /** Switch between the classic geometric map and Kenney Retro sprites. */
   public setProjection(mode: 'flat' | 'isometric'): void {
     this.projection = mode;
-    this.retroScenery.visible = mode === 'isometric';
+    this.retroScenery.visible = this.mapScope === 'home' && mode === 'isometric';
     this.app.canvas.dataset.retroProjection = mode;
     this.app.canvas.dataset.retroVisible = String(this.retroEnabled && mode === 'isometric');
     this.lastSignature = '';
@@ -255,7 +256,7 @@ export class KingdomMap {
   private drawRetroScenery(): void {
     for (const child of this.retroScenery.removeChildren()) child.destroy({ children: true });
     if (!this.retroAtlas || this.destroyed) return;
-    this.retroScenery.visible = this.projection === 'isometric';
+    this.retroScenery.visible = this.mapScope === 'home' && this.projection === 'isometric';
     for (let i = 0; i < 65; i++) {
       const x = 87 + (i * 199) % 832;
       const y = 80 + (i * 127) % 472;
@@ -643,14 +644,27 @@ export class KingdomMap {
     this.app.canvas.dataset.neighborTerritories = String(Math.min(rivals.length, places.length));
   }
 
+  public setMapScope(scope: 'home' | 'world'): void {
+    this.mapScope = scope;
+    this.app.canvas.dataset.mapScope = scope;
+    this.settlements.visible = scope === 'home';
+    this.retroScenery.visible = scope === 'home' && this.projection === 'isometric';
+    this.neighbors.visible = true;
+    this.zoom = 1;
+    this.offset = { x: 0, y: 0 };
+    this.fit();
+  }
+
   private fit(): void {
     if (!this.initialized || this.destroyed) return;
     // On phones the old 1350px reference shrank the entire settlement to a blur.
     // Fit to a narrower, usable map window; retain normal desktop framing.
     const mobile = this.app.screen.width < 760;
-    const scale = (mobile
-      ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
-      : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850)) * this.zoom;
+    const scale = (this.mapScope === 'world'
+      ? Math.min(this.app.screen.width / 1500, this.app.screen.height / 1150)
+      : mobile
+        ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
+        : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850)) * this.zoom;
     this.world.scale.set(scale);
     this.world.position.set(
       this.app.screen.width / 2 - 500 * scale + this.offset.x,
