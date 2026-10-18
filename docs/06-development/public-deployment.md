@@ -1,8 +1,6 @@
-> **Ist-Zustand 18.10.2026:** GitHub Pages ist aktiv. Das Spiel ist live unter:  
+> **Live seit 18.10.2026:** GitHub Pages ist aktiv. Das Spiel ist online unter:  
 > [https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/](https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/)  
-> PWA-Installation, Offline-Modus und alle Medien sind über diesen Weg verfügbar.  
-> Media-Dateien und eine fertige Website sind als GitHub-Actions-Artefakt vorhanden.  
-> Vor einer Freigabe Rechte, Impressum und Datenschutz prüfen.
+> PWA-Installation, Offline-Modus und alle Medien sind verfügbar.
 
 # Öffentliches Deployment – Kaiser von Deutschland
 
