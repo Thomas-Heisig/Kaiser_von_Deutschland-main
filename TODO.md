@@ -55,12 +55,12 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [x] Einstellungen als fünf Tabs bereits im Startmenü und laufenden Spiel zugänglich; Bürgeraufträge nur in Navigation, Animation/Installation ausschließlich in Einstellungen.
 - [ ] Einstellungen auf echtem iPad/Android mit Tastatur und Touch abnehmen.
 
-## Grafikkarte – Variante A (Phase 2 genehmigt, Implementierung noch offen)
+## Grafikkarte – Kenney Retro (Phase 3: isolierter Prototyp)
 
-- [x] Konzeptentscheidung: Kenney Sketch Town, mittelalterliche Referenz um 1200, bestehende feste 16 Bezirke, PixiJS 8 und kein neues Kartenformat/Paket vor Prototyp-Messung.
+- [x] Grafikrichtung auf Kenney Retro Fantasy / Retro Textures Fantasy (Mittelalter) und Retro Urban (spätere Epochen) umgestellt; 16 feste Bezirke, PixiJS 8 und Savegame unverändert.
 - [x] Phase-2-Detailplanung samt Renderer-Datenadapter, Messplan, Asset-Provenienz und iPad-/iPhone-Testgates dokumentiert ([Renderer](docs/05-technical-architecture/RENDERER.md), [Assets](docs/05-technical-architecture/ASSETS.md)).
-- [ ] Original-Archiv des konkreten Sketch-Town-Pakets inspizieren und benötigte Sprites, Abmessungen, Lizenzen und SHA-256 nachweisen; keine ungeprüften Medien committen.
-- [~] Isolierte Werkstattszene als **PixiJS-8-Messgerüst** angelegt (12×12 Kacheln, ein schematisches Gebäude, eine einfache Lichtfläche, 24 Rauchpartikel); **Kenney-Originalassets fehlen weiterhin**. Keine Änderungen an Engine, Spielstand oder Hauptspieloberfläche. URLs: `/workshop-prototype.html` (Entwicklung/Build).
+- [x] Drei vom Nutzer bereitgestellte Kenney-Retro-Archive inventarisiert; CC0-Lizenztexte kontrolliert; ein minimaler Preview-Atlas mit dokumentierten Quelldateien und SHA-256 erstellt. GLB-Modelle sind noch nicht zu 2D-Sprites vorgerendert.
+- [~] Isolierte PixiJS-8-Werkstattszene (12×12 Kacheln, Retro-Vorschauatlas aus Kenney-Originaldateien, modular zusammengesetztes Gebäude, eine Lichtfläche, 24 Rauchpartikel) mit geometrischem Ladefallback. **Weitere Arbeit:** echte GLB-Isometrie und glaubwürdiges Gebäudecompositing, Browser-Smoke und iOS-Messungen. URL: `/workshop-prototype.html`. Keine Engine-/Savegame-Änderung.
 - [ ] Auf tatsächlichem iPhone/iPad unter Safari testen: Modell/Version, 30 s Warmup, 3×120 s, 10 Minuten; P95-Frame-Abstand und Speicher dokumentieren; kein Performance-Ergebnis erfinden.
 - [ ] Erst nach bestandenen Messgates einen festen Bezirk in `KingdomMap` optional umstellen; geometrischen Fallback und bestehende 2D/3D-Auswahl erhalten.
 

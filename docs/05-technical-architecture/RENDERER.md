@@ -1,3 +1,5 @@
+> **Aktualisierung 18.10.2026:** Variante A ist durch Nutzerentscheidung abgelöst: **Kenney Retro Fantasy** und **Retro Textures Fantasy** für die mittelalterliche Szene, **Retro Urban** für spätere Epochen. Der isolierte Prototyp ist unter `/workshop-prototype.html` mit einem kompakten PNG-Atlas aus originalen Kenney-Preview-PNGs bestückt, **noch nicht** mit eigenen GLB-Renderings. Die darunterstehenden Sketch-Town-Bezüge dokumentieren den früheren Plan und sind nicht mehr maßgeblich. Vor einer Integration in die Hauptkarte sind Browser-/Gerätetests und bessere Modellkomposition nötig. 16 feste Bezirke und Engine bleiben unverändert.
+
 # RENDERER – Variante A / Phase 2 (Planung)
 
 **Stand: 18.10.2026 · Status: geplant, kein implementierter Prototyp.** Dieses Dokument hält die durch den Nutzer freigegebene Richtung fest. **Keine Änderungen an der GameEngine, Simulationsregeln oder dem vorhandenen UI-Flow.** Phase 3 (Code/Assets) beginnt erst nach Assetprüfung.
