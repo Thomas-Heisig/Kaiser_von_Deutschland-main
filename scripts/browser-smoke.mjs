@@ -148,6 +148,32 @@ try {
     await page.close();
   }
 
+  // Regression for mobile: the HUD must not paint an opaque veil over the canvas.
+  {
+    const page = await browser.newPage({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+    await page.locator('#intro-skip').click();
+    await page.getByRole('heading', { name: /Kaiser von/i }).waitFor();
+    const start = page.locator('[data-start-game]').first();
+    if (await start.count()) await start.click();
+    const scene = page.locator('#kingdom-map canvas');
+    if (await scene.count()) {
+      const status = await page.evaluate(() => {
+        const hud = document.querySelector('.game-layout > .map-card .map-hud');
+        const canvas = document.querySelector('#kingdom-map canvas');
+        return {
+          hudBackground: hud ? getComputedStyle(hud).backgroundColor : '',
+          width: canvas?.getBoundingClientRect().width ?? 0,
+          height: canvas?.getBoundingClientRect().height ?? 0
+        };
+      });
+      if (status.hudBackground !== 'rgba(0, 0, 0, 0)' && status.hudBackground !== 'transparent')
+        failures.push('Mobile map HUD covers Pixi canvas: ' + status.hudBackground);
+      if (status.width < 250 || status.height < 400)
+        failures.push('Mobile map canvas is too small: ' + JSON.stringify(status));
+    }
+    await page.close();
+  }
   // Isolated renderer prototype must load independently of the game engine.
   {
     const page = await browser.newPage({ viewport:{width:820,height:740} });
