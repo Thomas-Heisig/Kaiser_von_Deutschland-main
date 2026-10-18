@@ -4,8 +4,8 @@ import { SZENE, werkstattKacheln } from './WorkshopSceneModel';
 /** Atlas derived from the uploaded Kenney CC0 preview images (see ASSETS.md).
  * The individual tiles are 64x64; this is a visual-only, opt-in renderer harness.
  */
-const ATLAS = '/assets/kenney/retro-workshop-atlas.png';
-const HOUSE = '/assets/kenney/retro-house-1200.png';
+const ATLAS = import.meta.env.BASE_URL + 'assets/kenney/retro-workshop-atlas.png';
+const HOUSE = import.meta.env.BASE_URL + 'assets/kenney/retro-house-1200.png';
 const IDS = {
   floor: 0, door: 1, window: 2, roof: 3,
   tree: 4, barrel: 5, tower: 6, grass: 7
