@@ -248,6 +248,7 @@ export class KingdomGameUI {
         if (gameControl) gameControl.value = this.mapStyle;
         const mapHost = this.root.querySelector<HTMLElement>('#kingdom-map');
         if (mapHost) mapHost.dataset.projection = this.mapStyle;
+        this.map?.setProjection(this.mapStyle);
         this.saveDisplayPreferences();
       });
     }
@@ -768,6 +769,7 @@ export class KingdomGameUI {
         this.mapStyle = mapStyleSelect.value === 'isometric' ? 'isometric' : 'flat';
         const mapHost = this.root.querySelector<HTMLElement>('#kingdom-map');
         if (mapHost) mapHost.dataset.projection = this.mapStyle;
+        this.map?.setProjection(this.mapStyle);
         const setting = this.root.querySelector<HTMLSelectElement>('#setting-map-style');
         if (setting) setting.value = this.mapStyle;
         this.saveDisplayPreferences();
@@ -922,6 +924,7 @@ export class KingdomGameUI {
           this.navigate('build');
         });
         this.map.setMotion(this.motionEnabled);
+        this.map.setProjection(this.mapStyle);
         this.refresh();
       } catch (error) {
         console.error('Karte konnte nicht gestartet werden:', error);
