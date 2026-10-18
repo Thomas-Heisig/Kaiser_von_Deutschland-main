@@ -169,7 +169,7 @@ export class KingdomMap {
   /** Switch between the classic geometric map and Kenney Retro sprites. */
   public setProjection(mode: 'flat' | 'isometric'): void {
     this.projection = mode;
-    this.retroScenery.visible = mode === 'isometric';
+    this.retroScenery.visible = this.mapScope === 'home' && mode === 'isometric';
     this.app.canvas.dataset.retroProjection = mode;
     this.app.canvas.dataset.retroVisible = String(this.retroEnabled && mode === 'isometric');
     this.lastSignature = '';
@@ -256,7 +256,7 @@ export class KingdomMap {
   private drawRetroScenery(): void {
     for (const child of this.retroScenery.removeChildren()) child.destroy({ children: true });
     if (!this.retroAtlas || this.destroyed) return;
-    this.retroScenery.visible = this.projection === 'isometric';
+    this.retroScenery.visible = this.mapScope === 'home' && this.projection === 'isometric';
     for (let i = 0; i < 65; i++) {
       const x = 87 + (i * 199) % 832;
       const y = 80 + (i * 127) % 472;
