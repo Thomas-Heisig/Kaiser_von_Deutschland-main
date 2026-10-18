@@ -312,6 +312,30 @@ export class KingdomMap {
     return sprite;
   }
 
+  /** Compose readable 2.5D building details from verified 64px Kenney pieces.
+   * One decorative cluster per building; no new building positions in GameEngine.
+   */
+  private addRetroBuildingDetail(group: Container, type: keyof KingdomInfrastructure,
+    x: number, y: number, opacity: number): void {
+    const add = (index: number, dx: number, dy: number, size: number): void => {
+      const part = this.retroTile(index, x + dx, y + dy, size);
+      part.alpha = opacity;
+      group.addChild(part);
+    };
+    if (type === 'markets' || type === 'taverns') {
+      add(5, 24, 9, 20); // barrels and market goods
+      add(4, -25, 8, 26);
+    } else if (type === 'workshops' || type === 'guildhalls') {
+      add(5, 23, 9, 26); // working materials
+      add(1, -22, 5, 28);
+    } else if (type === 'warehouses') {
+      add(5, -21, 10, 25);
+      add(5, 22, 10, 25);
+    } else if (type === 'hospitals' || type === 'schools') {
+      add(4, 26, 8, 27);
+    }
+  }
+
   /** All 16 infrastructure districts receive a coherent Retro representation. */
   private drawRetroDistrict(group: Container, type: keyof KingdomInfrastructure, count: number, epoch: string): boolean {
     if (!this.retroEnabled || !this.retroAtlas || this.projection === 'flat') return false;
@@ -361,8 +385,7 @@ export class KingdomMap {
           tile(later ? 2 : i % 2 ? 2 : 1, x, y + 9, later ? 69 : 63);
           tile(later ? 0 : 3, x, y - 38, later ? 53 : 49);
         }
-        if (type === 'workshops' || type === 'guildhalls') tile(5, x + 24, y + 11, 24);
-        if (type === 'hospitals' || type === 'schools') tile(4, x + 24, y + 8, 25);
+        this.addRetroBuildingDetail(group, type, x, y, opacity);
       }
     }
     return true;
