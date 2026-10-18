@@ -35,3 +35,7 @@ Die lokal erzeugte PNG-Datei ist ein **Vorzeigeergebnis außerhalb des GitHub-Bu
 ## Schritt abgeschlossen: echtes GLB-Haus im isolierten Spielprototyp
 
 Das aus Kenney-GLB-Modellen gerenderte, optimierte `retro-house-1200.png` ist jetzt als primäre Gebäudegrafik in `WorkshopScene` integriert. Bei fehlender Datei folgt der bisherige Preview-Atlas, bei dessen Ausfall die geometrische Ersatzdarstellung. Die 144 Kacheln, genau ein Haus, eine Lichtfläche und 24 Rauchpartikel bleiben erhalten. Browser-Smoke prüft die reale PNG-Ladung. **Keine** Aussage über die endgültige grafische Qualität oder iOS-FPS.
+
+## Retro-Landschaft und öffentliche Pfade
+
+Die Hauptkarte verwendet den CC0-Kenney-Atlas für eine begrenzte, deterministische Landschafts-Dekoration zusätzlich zu ihren 16 Retro-Bezirken (bis zu 65 mögliche Objekte, Bezirke werden freigehalten). Im flachen 2D-Modus wird diese Schicht ausgeblendet. Es handelt sich weiterhin um Kenney-Preview-Sprites, nicht um eine vollständige GLB-3D-Stadt. Die Werkstatt lädt ihre Grafiken nun relativ zur von Vite vorgegebenen BASE_URL und ist damit unter dem GitHub-Pages-Unterpfad erreichbar. Weitere vorbereitete Atlanten der drei Pakete sind noch nicht im Repository enthalten.
