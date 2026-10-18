@@ -145,6 +145,11 @@ try {
     if(response?.status()!==200) failures.push('workshop prototype HTML missing in production build');
     await page.locator('#scene canvas').waitFor({timeout:30000});
     await page.waitForTimeout(2500);
+    const atlas = await page.locator('#measure').getAttribute('data-asset-status');
+    if (atlas !== 'loaded') failures.push('Kenney Retro atlas failed to load: '+atlas);
+    const asset = await page.request.get('http://127.0.0.1:4173/assets/kenney/retro-workshop-atlas.png');
+    if (asset.status() !== 200 || !(asset.headers()['content-type'] || '').includes('image/png'))
+      failures.push('Kenney Retro PNG missing or invalid content type');
     const result=await page.locator('#measure').innerText();
     if(!result.includes('P95:')||!result.includes('Frames:'))
       failures.push('prototype frame-time measurement not available: '+result);
