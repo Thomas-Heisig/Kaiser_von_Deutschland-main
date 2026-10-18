@@ -696,6 +696,39 @@ export class KingdomMap {
       terrain.poly([x - 12, y + 3, x, y - 24, x + 12, y + 3]).fill(i % 2 ? 0x47634b : 0x38573f);
       terrain.poly([x - 9, y - 6, x, y - 30, x + 9, y - 6]).fill(0x4a654d);
     }
+    // Continuous environment details share the established map coordinate system.
+    // Avoid scattering arbitrary thumbnail sprites or painting over district controls.
+    const scenery = new Graphics();
+    const groveCenters = [[785, 100], [830, 480], [150, 475], [690, 95], [890, 335]];
+    for (const [cx, cy] of groveCenters) {
+      scenery.ellipse(cx, cy + 5, 68, 32).fill({ color: 0x284a32, alpha: 0.55 });
+      for (let i = 0; i < 9; i++) {
+        const x = cx + Math.cos(i * 2.4) * (15 + (i % 3) * 13);
+        const y = cy + Math.sin(i * 2.4) * (11 + (i % 4) * 8);
+        if (SETTLEMENT_DISTRICTS.some(d => Math.hypot(d.x - x, d.y - y) < 58)) continue;
+        scenery.ellipse(x + 4, y + 5, 14, 7).fill({color:0x13291e,alpha:0.32});
+        scenery.rect(x - 2, y - 5, 4, 14).fill(0x685442);
+        scenery.poly([x - 13,y - 3,x,y - 37,x + 13,y - 3]).fill(i % 2 ? 0x456d46 : 0x527b4e);
+        scenery.poly([x - 10,y - 14,x,y - 42,x + 10,y - 14]).fill(0x659160);
+      }
+    }
+    // Built stone connections and a bridge aligned to the existing paths.
+    const roads = new Graphics();
+    roads.moveTo(260, 420).lineTo(385, 275).lineTo(510, 205).lineTo(670, 255).lineTo(760, 145)
+      .moveTo(385, 275).lineTo(530, 360).lineTo(720, 415)
+      .moveTo(530, 360).lineTo(525, 490)
+      .stroke({width:11,color:0x665e4b,alpha:0.65});
+    roads.moveTo(260, 420).lineTo(385, 275).lineTo(510, 205).lineTo(670, 255).lineTo(760, 145)
+      .moveTo(385, 275).lineTo(530, 360).lineTo(720, 415)
+      .moveTo(530, 360).lineTo(525, 490)
+      .stroke({width:7,color:0xc1ae83,alpha:0.9});
+    const bridge = new Graphics();
+    bridge.poly([217,325,266,320,290,345,241,350]).fill(0x78634a)
+      .poly([217,323,266,318,289,341,240,346]).fill(0xbca77c)
+      .moveTo(222,319).lineTo(246,341).moveTo(235,319).lineTo(258,343)
+      .moveTo(250,319).lineTo(273,342).stroke({width:2,color:0x796444,alpha:0.75});
+    terrain.addChild(scenery, roads, bridge);
+    this.app.canvas.dataset.landscapeVersion = 'connected-1';
     this.world.addChild(terrain);
     const compass = new Text({
       text: 'N\n↑',
