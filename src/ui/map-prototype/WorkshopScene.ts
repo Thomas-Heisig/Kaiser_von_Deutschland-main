@@ -80,7 +80,13 @@ export class WorkshopScene {
       // The first house is an actual orthographic render of source GLB geometry.
       // If its PNG is unavailable, retain the old, fully functional Kenney preview.
       try {
-        const texture = await Assets.load<Texture>(HOUSE);
+        // Browser-native image decoding supports indexed PNG and avoids Pixi asset-loader format assumptions.
+        const texture = await new Promise<Texture>((resolve, reject) => {
+          const image = new Image();
+          image.onload = (): void => resolve(Texture.from(image));
+          image.onerror = (): void => reject(new Error('GLB-Haus-PNG konnte nicht dekodiert werden'));
+          image.src = HOUSE;
+        });
         if (this.disposed) return;
         const sprite = new Sprite(texture);
         sprite.anchor.set(0.5, 1);
