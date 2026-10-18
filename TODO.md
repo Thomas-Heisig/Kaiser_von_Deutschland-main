@@ -60,7 +60,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [x] **Retro Fantasy + Retro Textures Fantasy** für das Mittelalter, **Retro Urban** für spätere Epochen verbindlich; Sketch Town ist nur Reserve, nicht zweite parallele Richtung ([Renderer](docs/05-technical-architecture/RENDERER.md)).
 - [x] PR #67: geprüfte Kenney-CC0-Vorschaugrafiken in kompaktem Atlas, isolierter PixiJS-Prototyp und Browser-Smoke mit realem Atlasladecheck in `main` integriert.
 - [x] Prototyp-Baseline bewusst eingefroren: 144 Kacheln, 1 modular angedeutetes Gebäude, 1 Licht, 24 Rauchpartikel, 30-FPS-Limit. **Preview-Sprites ≠ fertig vorgerendertes GLB-Gebäude.**
-- [ ] **Nächster konkreter Erfolg:** aus **einem** Retro-Fantasy-GLB bzw. einer modularen Gebäudekomposition ein orthografisches transparentes PNG rendern; Blender-Version/Kamera/Licht/Datei-Hash dokumentieren und im isolierten Prototyp statt Platzhalter verwenden.
+- [x] **Erster GLB→2D-Durchlauf:** modulares Kenney-Retro-Fantasy-Haus mit VTK/EGL orthografisch gerendert, transparentes mobiles PNG samt Hash dokumentiert und in den isolierten PixiJS-Prototyp eingebaut; Blender wurde dabei nicht verwendet.
 - [ ] Erst Desktop-Chromium visuell/technisch abnehmen; danach Safari auf echten iPad-/iPhone-Geräten nach Messplan prüfen. **Gerätemodelle/OS unbekannt – beim Test erfassen.**
 - [ ] Nach bestandenen Messgates genau einen festen Bezirk optional auf Retro-Sprite umstellen; geometrische Fallbacks und vorhandene Kartenauswahl erhalten.
 

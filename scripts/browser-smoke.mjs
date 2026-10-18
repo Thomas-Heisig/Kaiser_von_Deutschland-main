@@ -144,12 +144,20 @@ try {
     const response=await page.goto('http://127.0.0.1:4173/workshop-prototype.html', {waitUntil:'domcontentloaded'});
     if(response?.status()!==200) failures.push('workshop prototype HTML missing in production build');
     await page.locator('#scene canvas').waitFor({timeout:30000});
-    await page.waitForTimeout(2500);
+    // Pixi may load textures asynchronously after canvas insertion.
+    await page.waitForFunction(() => {
+      const el = document.querySelector('#measure');
+      return el?.getAttribute('data-house-status') !== null;
+    }, { timeout: 15000 });
+    await page.waitForFunction(() => (document.querySelector('#measure')?.textContent || '').includes('P95:'), { timeout: 12000 });
     const atlas = await page.locator('#measure').getAttribute('data-asset-status');
     if (atlas !== 'loaded') failures.push('Kenney Retro atlas failed to load: '+atlas);
+    if (await page.locator('#measure').getAttribute('data-house-status') !== 'rendered') failures.push('Real GLB house PNG did not load: '+await page.locator('#measure').evaluate(el => JSON.stringify(el.dataset)));
     const asset = await page.request.get('http://127.0.0.1:4173/assets/kenney/retro-workshop-atlas.png');
     if (asset.status() !== 200 || !(asset.headers()['content-type'] || '').includes('image/png'))
       failures.push('Kenney Retro PNG missing or invalid content type');
+    const house = await page.request.get('http://127.0.0.1:4173/assets/kenney/retro-house-1200.png');
+    if (house.status() !== 200 || !(house.headers()['content-type'] || '').includes('image/png')) failures.push('GLB house PNG missing');
     const result=await page.locator('#measure').innerText();
     if(!result.includes('P95:')||!result.includes('Frames:'))
       failures.push('prototype frame-time measurement not available: '+result);

@@ -5,6 +5,7 @@ import { SZENE, werkstattKacheln } from './WorkshopSceneModel';
  * The individual tiles are 64x64; this is a visual-only, opt-in renderer harness.
  */
 const ATLAS = '/assets/kenney/retro-workshop-atlas.png';
+const HOUSE = '/assets/kenney/retro-house-1200.png';
 const IDS = {
   floor: 0, door: 1, window: 2, roof: 3,
   tree: 4, barrel: 5, tower: 6, grass: 7
@@ -76,15 +77,37 @@ export class WorkshopScene {
       house.position.set(0, 195);
       house.addChild(new Graphics().ellipse(0, 8, 66, 25)
         .fill({ color: 0x263a24, alpha: 0.27 }));
-      // Wall modules plus a roof: 2.5D proof of concept, not a GLB render.
-      house.addChild(this.sprite('window', -21, 5, 1.5));
-      house.addChild(this.sprite('door', 24, 5, 1.5));
-      house.addChild(this.sprite('roof', 0, -37, 1.75));
+      // The first house is an actual orthographic render of source GLB geometry.
+      // If its PNG is unavailable, retain the old, fully functional Kenney preview.
+      try {
+        // Browser-native image decoding supports indexed PNG and avoids Pixi asset-loader format assumptions.
+        const texture = await new Promise<Texture>((resolve, reject) => {
+          const image = new Image();
+          image.onload = (): void => resolve(Texture.from(image));
+          image.onerror = (): void => reject(new Error('GLB-Haus-PNG konnte nicht dekodiert werden'));
+          image.src = HOUSE;
+        });
+        if (this.disposed) return;
+        const sprite = new Sprite(texture);
+        sprite.anchor.set(0.5, 1);
+        sprite.position.set(0, 8);
+        sprite.width = 110;
+        sprite.height = 169;
+        house.addChild(sprite);
+        report.dataset.houseStatus = 'rendered';
+      } catch (error) {
+        report.dataset.houseError = String(error);
+        house.addChild(this.sprite('window', -21, 5, 1.5));
+        house.addChild(this.sprite('door', 24, 5, 1.5));
+        house.addChild(this.sprite('roof', 0, -37, 1.75));
+        report.dataset.houseStatus = 'preview-fallback';
+      }
       house.addChild(this.sprite('barrel', 70, 4, 0.72));
       world.addChild(house);
       report.dataset.assetStatus = 'loaded';
     } catch (error) {
       report.dataset.assetStatus = 'fallback';
+      report.dataset.houseStatus = 'geometry-fallback';
       world.addChild(new Graphics().roundRect(-37, 108, 74, 70, 5).fill(0xa58a69)
         .poly([-46, 108, 0, 70, 46, 108]).fill(0x774d37));
       report.textContent = 'Retro-Atlas nicht geladen; geometrischer Fallback: ' + String(error);
@@ -119,6 +142,7 @@ export class WorkshopScene {
       const mean = sorted.reduce((a, b) => a + b, 0) / (sorted.length || 1);
       const p95 = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))] ?? 0;
       report.textContent = 'Atlas: ' + report.dataset.assetStatus +
+        ' · GLB-Haus: ' + report.dataset.houseStatus +
         ' · Frames: ' + sorted.length + ' · Mittel: ' + mean.toFixed(1) +
         ' ms · P95: ' + p95.toFixed(1) + ' ms · >50 ms: ' +
         sorted.filter(value => value > 50).length + ' · Gerät: ' + navigator.userAgent;
