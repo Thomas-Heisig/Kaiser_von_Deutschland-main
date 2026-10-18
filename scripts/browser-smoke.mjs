@@ -136,6 +136,21 @@ try {
     await page.close();
   }
 
+  // Isolated renderer prototype must load independently of the game engine.
+  {
+    const page = await browser.newPage({ viewport:{width:820,height:740} });
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    const response=await page.goto('http://127.0.0.1:4173/workshop-prototype.html', {waitUntil:'domcontentloaded'});
+    if(response?.status()!==200) failures.push('workshop prototype HTML missing in production build');
+    await page.locator('#scene canvas').waitFor({timeout:30000});
+    await page.waitForTimeout(2500);
+    const result=await page.locator('#measure').innerText();
+    if(!result.includes('P95:')||!result.includes('Frames:'))
+      failures.push('prototype frame-time measurement not available: '+result);
+    if(errors.length) failures.push('workshop prototype: '+errors.join('; '));
+    await page.close();
+  }
   // Verify all four scenario selectors launch and show the correct opening story.
   const campaignNames = {
     aufbau: 'Das hungernde Lehen',
