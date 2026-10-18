@@ -666,7 +666,7 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
 .kingdom-app .game-layout>.map-card .map-hud-top{display:flex;justify-content:center;align-items:start;flex-wrap:wrap;gap:10px;padding:2px clamp(130px,18vw,240px);}
 .kingdom-app .game-layout>.map-card .map-heading,.kingdom-app .game-layout>.map-card .settlement-controls{pointer-events:auto;border:1px solid #8d95747d;border-radius:8px;padding:8px 12px;background:#162c25ed;box-shadow:0 5px 22px #07110fa6;gap:8px;}
 .kingdom-app .game-layout>.map-card .map-heading{display:flex;flex-direction:column;align-items:start;justify-content:center;}
-.kingdom-app .game-layout>.map-card .map-heading strong{font:1rem Georgia,serif;color:#f2deaf;}
+.kingdom-app .game-layout>.map-card .map-heading h2{font:1rem Georgia,serif;color:#f2deaf;margin:0;}
 .kingdom-app .game-layout>.map-card .map-hud-bottom{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;}
 .kingdom-app .game-layout>.map-card .settlement-details{pointer-events:auto;display:flex;border:1px solid #788d6d;border-radius:8px;background:#172e27ef;min-height:44px;max-width:min(600px,73%);box-shadow:0 5px 22px #06100b99;padding:8px 12px;}
 .kingdom-app .game-layout>.map-card .map-tools{pointer-events:auto;display:flex;gap:6px;background:#162c25ed;padding:7px;border:1px solid #788d6d;border-radius:9px;box-shadow:0 5px 22px #06100b99;}
