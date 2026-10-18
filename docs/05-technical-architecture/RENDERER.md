@@ -47,3 +47,7 @@ Die 16 festen Bezirke sind jetzt im Retro-Modus nach Kategorien differenziert (F
 ## Fehlertoleranz der Asset-Pipeline (18.10.2026)
 
 Der Kartenrenderer lädt den verpflichtenden Kenney-Atlas und das optionale vorgerenderte GLB-Haus **unabhängig**. Fehlt nur das Haus, bleibt die Retro-Karte aktiv und nutzt Kenney-Bauteile. Fehlt der Atlas, bleibt die geometrische Karte sichtbar. Diagnosedaten auf dem Canvas: `data-retro-loaded`, `data-retro-house`, `data-retro-visible`. Dieser Schritt ist eine technische Zuverlässigkeitsverbesserung und **keine** Freigabe der drei erweiterten Retro-Pakete.
+
+## Epochengrafik – Asset-Routing
+
+Das Kartenmodul kann jetzt drei **optionale** 128×16 PNG-Thumbnailstreifen unter `public/assets/kenney/retro-{fantasy,urban,textures}-atlas.png` laden. Die acht Felder pro Streifen sind je 16×16 px. Die Fantasy-Grafiken werden für frühere Epochen, Urban für Industrialisierung und Moderne gewählt. Fehlen die Dateien, bleibt der vorherige Kenney-Atlas als visueller Fallback aktiv. **Wichtig:** Die drei neuen Binärdateien wurden noch nicht in GitHub eingecheckt; das Routing allein ist keine vollständige Asset-Integration.
