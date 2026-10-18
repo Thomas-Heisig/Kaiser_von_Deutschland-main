@@ -18,6 +18,7 @@
 - Release-Gate in CI für 15 MP3s, fünf MP4-Dateien, Filmdatenbank, ZIP und PWA-Pfade.
 
 ### Changed
+- Interaktive Karte deckt den Spielbereich ab. Kartenansicht, Bezirke, Zentrieren/Zoom und Bezirksausbau liegen als schwebende Bedienelemente direkt über der Grafik; doppelte Gebäudeliste entfernt; Nachbarreiche werden schematisch am Rand dargestellt.
 
 - Frühere README-Featureversprechen (Rollen, Gebäude, Technologie, Geschichte, Politik, Religion, Militär, Marine, Umwelt, Kultur, Wirtschaft und Mehrspieler) mit konkreten Nachweis- und Integrationsaufgaben in Roadmap/TODO zurückgeführt.
 - Dokumente TODO und CHANGELOG nach einem früheren fehlerhaften Austausch wieder ihren korrekten Inhalten zugeordnet.

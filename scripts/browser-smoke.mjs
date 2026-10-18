@@ -28,7 +28,8 @@ try {
     await page.locator('#start-year').selectOption('1820');
     await page.locator('#start-era-summary').getByText('1820 · Industriezeitalter').waitFor();
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
-    await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
+    await page.locator('#kingdom-map').waitFor({ timeout: 30000 });
+    await page.locator('#map-style').waitFor({ state:'visible' });
     if (!(await page.locator('#date').textContent())?.includes('1820')) failures.push('selected start year did not enter the simulation');
     if (await page.locator('.kingdom-app').getAttribute('data-era') !== 'industrial') failures.push('industrial epoch style not applied');
     await page.locator('#game-music-settings').waitFor();
@@ -81,18 +82,33 @@ try {
     await page.locator('#legal-open').click();
     await page.locator('#legal-dialog').getByText(/Thomas Heisig/).first().waitFor();
     await page.locator('[data-close-dialog="legal-dialog"]').click();
+    const mapLayer = await page.evaluate(() => {
+      const layout=document.querySelector('.game-layout')?.getBoundingClientRect();
+      const map=document.querySelector('.map-card')?.getBoundingClientRect();
+      const host=document.querySelector('#kingdom-map')?.getBoundingClientRect();
+      return {
+        relativeWidth:layout && map ? Math.abs(layout.width-map.width) : Infinity,
+        relativeHeight:layout && map ? Math.abs(layout.height-map.height) : Infinity,
+        mapHostHeight:host?.height ?? 0,
+        duplicatedBuildings:document.querySelectorAll('#settlement-districts').length,
+        overlaidControls:document.querySelectorAll('.map-card .map-hud #map-style, .map-card .map-hud [data-zoom]').length
+      };
+    });
+    if(mapLayer.relativeWidth>3||mapLayer.relativeHeight>3||mapLayer.mapHostHeight<400)
+      failures.push('map fails to fill full game layout '+JSON.stringify(mapLayer));
+    if(mapLayer.duplicatedBuildings||mapLayer.overlaidControls!==4)
+      failures.push('map has duplicate district list or missing overlay controls '+JSON.stringify(mapLayer));
     await page.locator('#map-style').selectOption('isometric');
     if (await page.locator('#kingdom-map').getAttribute('data-projection') !== 'isometric') failures.push('map switch failed');
     if (await page.locator('#objectives .objective').count() !== 0) failures.push('sandbox should have zero mandatory goals');
-    const districtButtons = page.locator('#settlement-districts button');
-    if (await districtButtons.count() !== 16)
-      failures.push(`viewport ${width}: expected 16 settlement districts`);
     await page.locator('#settlement-filter').selectOption('versorgung');
-    if (await districtButtons.count() !== 4)
-      failures.push(`viewport ${width}: expected 4 supply districts`);
+    if(await page.locator('#settlement-filter').inputValue()!=='versorgung')
+      failures.push('district category filter is not reachable in map HUD');
     await page.locator('#settlement-filter').selectOption('alle');
-    await page.locator('[data-district="ports"]').click();
-    await page.locator('#settlement-details').getByText('Hafen').waitFor();
+    await page.locator('[data-zoom="0.2"]').click();
+    await page.locator('[data-zoom="0"]').click();
+    if(!(await page.locator('#settlement-details [data-open-district]').count()))
+      failures.push('map-selected district upgrade shortcut missing');
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
     await page.locator('nav [data-view="help"]').click();
     await page.locator('#section-dialog[open]').waitFor();

@@ -657,3 +657,59 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
   .settings-tabs {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
   .settings-tab-panel select,.settings-tab-panel input:not([type="checkbox"]) {max-width:100%;width:100%;min-height:44px;}
 }
+
+/* Map-first stage: the scene fills the entire game layout, HUD floats above it. */
+.kingdom-app .game-layout{position:relative;isolation:isolate;min-height:clamp(620px,calc(100dvh - 145px),1300px);grid-template-columns:clamp(140px,15vw,205px) minmax(0,1fr) clamp(165px,19vw,250px);align-items:start;}
+.kingdom-app .game-layout>.map-card{position:absolute;inset:0;z-index:0;border:0;border-radius:0;overflow:hidden;background:#182d2a;pointer-events:none;}
+.kingdom-app .game-layout>.map-card .map-host{position:absolute;inset:0;width:100%;height:100%;pointer-events:auto;}
+.kingdom-app .game-layout>.map-card .map-hud{position:absolute;inset:0;z-index:2;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:12px;}
+.kingdom-app .game-layout>.map-card .map-hud-top{display:flex;justify-content:center;align-items:start;flex-wrap:wrap;gap:10px;padding:2px clamp(130px,18vw,240px);}
+.kingdom-app .game-layout>.map-card .map-heading,.kingdom-app .game-layout>.map-card .settlement-controls{pointer-events:auto;border:1px solid #8d95747d;border-radius:8px;padding:8px 12px;background:#162c25ed;box-shadow:0 5px 22px #07110fa6;gap:8px;}
+.kingdom-app .game-layout>.map-card .map-heading{display:flex;flex-direction:column;align-items:start;justify-content:center;}
+.kingdom-app .game-layout>.map-card .map-heading h2{font:1rem Georgia,serif;color:#f2deaf;margin:0;}
+.kingdom-app .game-layout>.map-card .map-hud-bottom{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;}
+.kingdom-app .game-layout>.map-card .settlement-details{pointer-events:auto;display:flex;border:1px solid #788d6d;border-radius:8px;background:#172e27ef;min-height:44px;max-width:min(600px,73%);box-shadow:0 5px 22px #06100b99;padding:8px 12px;}
+.kingdom-app .game-layout>.map-card .map-tools{pointer-events:auto;display:flex;gap:6px;background:#162c25ed;padding:7px;border:1px solid #788d6d;border-radius:9px;box-shadow:0 5px 22px #06100b99;}
+.kingdom-app .game-layout>.map-card .map-tools button{min-width:44px;min-height:44px;font-size:.86rem;}
+.kingdom-app .game-layout>.sidebar,.kingdom-app .game-layout>.workspace,.kingdom-app .game-layout>.council{position:relative;z-index:1;min-width:0;}
+.kingdom-app .game-layout>.sidebar{background:#15251fda;backdrop-filter:blur(5px);border-right:1px solid #8b93635c;align-self:stretch;}
+.kingdom-app .game-layout>.workspace{background:transparent;pointer-events:none;min-height:620px;}
+.kingdom-app .game-layout>.workspace :is(button,select,input,a,[role="button"]){pointer-events:auto;}
+.kingdom-app .game-layout>.workspace .timebar,.kingdom-app .game-layout>.workspace .content-panel,.kingdom-app .game-layout>.workspace #notice,.kingdom-app .game-layout>.workspace #game-action-banner,.kingdom-app .game-layout>.workspace #council-prompt{pointer-events:auto;background:#172c25e5;backdrop-filter:blur(5px);border:1px solid #61745688;border-radius:9px;padding:10px;box-shadow:0 4px 22px #05100b88;}
+.kingdom-app .game-layout>.workspace .content-panel{margin-top:clamp(250px,48dvh,680px);max-width:min(650px,100%);margin-left:auto;margin-right:auto;}
+.kingdom-app .game-layout>.workspace .content-panel:empty{display:none;}
+.kingdom-app .game-layout>.council{background:#13251fd6;backdrop-filter:blur(5px);padding:10px;gap:10px;align-self:start;}
+.kingdom-app .game-layout>.council .council-card{background:#203128e9;}
+@media(max-width:1180px){
+ .kingdom-app .game-layout{display:grid;grid-template-columns:clamp(126px,15vw,170px) minmax(0,1fr);}
+ .kingdom-app .game-layout>.sidebar{grid-column:1;grid-row:1;}
+ .kingdom-app .game-layout>.workspace{grid-column:2;grid-row:1;min-height:630px;}
+ .kingdom-app .game-layout>.council{display:none;}
+ .kingdom-app .game-layout>.map-card .map-hud-top{padding:0 4px 0 clamp(135px,17vw,185px);}
+}
+@media(max-width:760px){
+ .kingdom-app .game-layout{display:flex;flex-direction:column;min-height:max(710px,calc(100dvh - 115px));}
+ .kingdom-app .game-layout>.sidebar{align-self:stretch;background:#172e27e8;border-bottom:1px solid #788d6d70;}
+ .kingdom-app .game-layout>.workspace{width:100%;min-height:580px;padding:6px;}
+ .kingdom-app .game-layout>.map-card .map-hud{padding:6px;}
+ .kingdom-app .game-layout>.map-card .map-hud-top{padding:0;justify-content:center;flex-direction:column;align-items:center;gap:5px;}
+ .kingdom-app .game-layout>.map-card .settlement-controls{display:flex;gap:5px;padding:5px;max-width:100%;}
+ .kingdom-app .game-layout>.map-card .settlement-controls label{font-size:.65rem;flex:1 1 120px;}
+ .kingdom-app .game-layout>.map-card .settlement-controls select{max-width:100%;min-height:36px;}
+ .kingdom-app .game-layout>.map-card .map-heading{display:none;}
+ .kingdom-app .game-layout>.map-card .settlement-details{max-width:100%;padding:6px;font-size:.7rem;}
+ .kingdom-app .game-layout>.map-card .map-hud-bottom{flex-wrap:wrap;gap:5px;justify-content:flex-end;}
+ .kingdom-app .game-layout>.map-card .map-tools{padding:3px;gap:3px;}
+ .kingdom-app .game-layout>.map-card .map-tools button{min-height:38px;min-width:38px;padding:3px 5px;}
+ .kingdom-app .game-layout>.workspace .content-panel{margin-top:clamp(230px,39dvh,410px);}
+}
+@media(prefers-reduced-motion:reduce){.kingdom-app .game-layout>.map-card .map-host canvas{transition:none!important}}
+
+/* Keep map selectors below the floating date/time toolbar rather than behind it. */
+.kingdom-app .game-layout>.map-card .map-hud-top{padding-top:95px;}
+@media(max-width:760px){.kingdom-app .game-layout>.map-card .map-hud-top{padding-top:155px;}}
+
+/* Zoom never overlaps the floating overview card: keep it in the open scene. */
+.kingdom-app .game-layout>.map-card .map-tools{position:absolute;top:210px;right:clamp(270px,21vw,330px);}
+@media(max-width:1180px){.kingdom-app .game-layout>.map-card .map-tools{top:210px;right:14px;}}
+@media(max-width:760px){.kingdom-app .game-layout>.map-card .map-tools{top:265px;right:8px;}}

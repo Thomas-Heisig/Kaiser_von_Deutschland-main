@@ -1,5 +1,6 @@
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { Kingdom, KingdomInfrastructure } from '../core/Kingdom';
+import type { RivalRealm } from '../core/CampaignWarfareSystem';
 import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature } from './SettlementSceneModel';
 
 /**
@@ -9,6 +10,7 @@ export class KingdomMap {
   private readonly app = new Application();
   private readonly world = new Container();
   private readonly settlements = new Container();
+  private readonly neighbors = new Container();
   private districtFilter: DistrictFilter = 'alle';
   private lastSignature = '';
   private observer?: ResizeObserver;
@@ -86,6 +88,7 @@ export class KingdomMap {
     this.drawLandscape();
     this.drawAtmosphere();
     this.world.addChild(this.atmosphere);
+    this.world.addChild(this.neighbors);
     this.world.addChild(this.settlements);
     this.world.addChild(this.animation);
     for (let i = 0; i < 5; i++) {
@@ -234,14 +237,15 @@ export class KingdomMap {
     this.lastSignature = '';
   }
 
-  public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure, completed: readonly string[] = [], year = 1200): void {
+  public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure, completed: readonly string[] = [], year = 1200, rivals: readonly RivalRealm[] = []): void {
     if (!this.initialized || this.destroyed) return;
     const signature = districtSceneSignature(kingdom.infrastructure, selected,
-      this.districtFilter, kingdom.currentSeason, completed);
+      this.districtFilter, kingdom.currentSeason, completed) + JSON.stringify(rivals.map(r => [r.id,r.name,r.subjugated]));
     const epochStyle = year >= 1945 ? 'modern' : year >= 1800 ? 'industrial' : year >= 1500 ? 'renaissance' : 'medieval';
     if (signature + epochStyle === this.lastSignature) return;
     this.lastSignature = signature + epochStyle;
     this.chimneys.length = 0;
+    this.drawNeighbors(rivals);
     this.drawAtmosphere(kingdom.currentSeason, epochStyle);
     for (const child of this.settlements.removeChildren()) child.destroy({ children: true });
     for (const location of visibleDistricts(this.districtFilter)) {
@@ -344,13 +348,38 @@ export class KingdomMap {
     this.fit();
   }
 
+  /** Neighboring realms are geographic illustrations, not claims of historical borders. */
+  private drawNeighbors(rivals: readonly RivalRealm[]): void {
+    for (const child of this.neighbors.removeChildren()) child.destroy({children:true});
+    const places = [
+      {x:-115,y:155},{x:1050,y:150},{x:1070,y:465},{x:-120,y:490},
+      {x:490,y:-125},{x:470,y:760}
+    ];
+    rivals.slice(0,places.length).forEach((rival,index) => {
+      const {x,y}=places[index];
+      const region = new Container();region.position.set(x,y);
+      region.addChild(new Graphics().ellipse(0,0,155,100)
+        .fill({color:rival.subjugated?0x436c53:0x665044,alpha:0.7})
+        .stroke({color:0xd2b990,width:2,alpha:0.65}));
+      const name = new Text({text:rival.name.slice(0,25),style:{
+        fontFamily:'Georgia',fontSize:22,fill:0xf7e6bd,align:'center'
+      }});
+      name.anchor.set(0.5,0.5);name.position.set(0,-12);
+      region.addChild(name);
+      const status = new Text({text:rival.subjugated?'Verbündetes Vasallenreich':'Nachbarreich',
+        style:{fontFamily:'Segoe UI',fontSize:15,fill:0xe0d4ba,align:'center'}});
+      status.anchor.set(0.5,0.5);status.position.set(0,23);
+      region.addChild(status);this.neighbors.addChild(region);
+    });
+  }
+
   private fit(): void {
     if (!this.initialized || this.destroyed) return;
-    const scale = Math.min(this.app.screen.width / 1000, this.app.screen.height / 620) * this.zoom;
+    const scale = Math.min(this.app.screen.width / 1350, this.app.screen.height / 850) * this.zoom;
     this.world.scale.set(scale);
     this.world.position.set(
-      (this.app.screen.width - 1000 * scale) / 2 + this.offset.x,
-      (this.app.screen.height - 620 * scale) / 2 + this.offset.y
+      this.app.screen.width / 2 - 500 * scale + this.offset.x,
+      this.app.screen.height / 2 - 310 * scale + this.offset.y
     );
     this.app.renderer.render(this.app.stage);
   }
