@@ -43,3 +43,7 @@ Die Hauptkarte verwendet den CC0-Kenney-Atlas für eine begrenzte, deterministis
 ## Differenzierte Bezirkssilhouetten
 
 Die 16 festen Bezirke sind jetzt im Retro-Modus nach Kategorien differenziert (Felder, Straßen, Hafen, Bergwerk, Befestigung, Bildung und städtische Gebäude). Kennzeichen nicht gebauter Bezirke werden transparent dargestellt; spätere Epochen erhalten vorläufig andere Kombinationen des vorhandenen Kenney-Atlas. Es sind noch **keine vollständigen Retro-Urban-Assets** eingebunden; die Unterscheidung ist eine Zwischenstufe. Dokumentiert für die nächste Ausbaustufe: Die extern vorbereiteten zusätzlichen Atlanten müssen erst als echte Binärdateien eingecheckt und unter GitHub Pages getestet werden.
+
+## Fehlertoleranz der Asset-Pipeline (18.10.2026)
+
+Der Kartenrenderer lädt den verpflichtenden Kenney-Atlas und das optionale vorgerenderte GLB-Haus **unabhängig**. Fehlt nur das Haus, bleibt die Retro-Karte aktiv und nutzt Kenney-Bauteile. Fehlt der Atlas, bleibt die geometrische Karte sichtbar. Diagnosedaten auf dem Canvas: `data-retro-loaded`, `data-retro-house`, `data-retro-visible`. Dieser Schritt ist eine technische Zuverlässigkeitsverbesserung und **keine** Freigabe der drei erweiterten Retro-Pakete.
