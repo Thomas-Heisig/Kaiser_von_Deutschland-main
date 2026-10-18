@@ -18,6 +18,9 @@ Eine Industriekampagne wird automatisiert mit echten Bauten, Forschung, Save/Loa
 - Die Zielanzeige verwendete bislang globale Ziel-Schwellen anstelle abgeschlossener Kapitel für die Siegmeldung. Siegstatus und Fortschrittsanzeige sind jetzt an Kapitelabschluss gebunden.
 - Noch offen: vollständiger automatisierter Spielabschluss, mehrjährige Wirtschaftsbalance und reale Niederlagebedingungen.
 
+## Kartenoberfläche (18.10.2026)
+Vollflächige Siedlungskarte unter transparenten Panels, Kartenfilter, Bezirksausbau und Zoom als Grafik-Overlays implementiert. Die zuvor duplizierte Gebäudeliste entfällt; Nachbarreiche erscheinen schematisch am Kartenrand. Echte geopolitische Grenzen und Endgeräteabnahme bleiben offen.
+
 ## Gameplay-Freigabereihenfolge (verbindlich)
 
 1. **Kampagnenabschluss als End-to-End-Ablauf:** Start, Bau, Handel, Forschung, Reichsrat, Monatswechsel, Save/Load, Sieg und Niederlage.
