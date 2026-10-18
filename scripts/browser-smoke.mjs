@@ -108,6 +108,10 @@ try {
       failures.push('map has duplicate district list or missing overlay controls '+JSON.stringify(mapLayer));
     await page.locator('#map-style').selectOption('isometric');
     if (await page.locator('#kingdom-map').getAttribute('data-projection') !== 'isometric') failures.push('map switch failed');
+    if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-projection') !== 'isometric') failures.push('Pixi retro renderer did not receive isometric mode');
+    await page.locator('#map-style').selectOption('flat');
+    if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-projection') !== 'flat') failures.push('Pixi renderer did not return to geometric mode');
+    await page.locator('#map-style').selectOption('isometric');
     if (await page.locator('#objectives .objective').count() !== 0) failures.push('sandbox should have zero mandatory goals');
     await page.locator('#settlement-filter').selectOption('versorgung');
     if(await page.locator('#settlement-filter').inputValue()!=='versorgung')
