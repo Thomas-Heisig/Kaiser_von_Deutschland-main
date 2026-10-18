@@ -1547,7 +1547,6 @@ export class KingdomGameUI {
         <p>Status: ${selectedRival.subjugated ? 'Vasallenreich' : 'Unabhängiges Nachbarreich'}</p>
         <p>Beziehung: ${format(relations.find((r) => r.kingdomId === selectedRival.id)?.relationshipValue ?? 0)}
         · Vertrauen: ${format(relations.find((r) => r.kingdomId === selectedRival.id)?.trust ?? 50)} / 100</p>
-        <button class="secondary" data-clear-rival-focus>Alle Nachbarreiche anzeigen</button>
       </article>` : '';
       panel.innerHTML = heading('GESANDTSCHAFT & NACHBARN', 'Der diplomatische Hof',
         'Verhandle mit benachbarten Reichen. Gesandtschaften kosten 350 Gold und bringen im Folgejahr eine Chance auf bessere Beziehungen.') + focusedCard +
