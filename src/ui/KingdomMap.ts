@@ -272,7 +272,7 @@ export class KingdomMap {
       if (material) this.retroScenery.addChild(material);
     }
     this.app.canvas.dataset.retroScenery = String(this.retroScenery.children.length);
-    this.app.canvas.dataset.retroMaterials = String(this.retroScenery.children.filter(x => x instanceof Sprite).length);
+    this.app.canvas.dataset.retroMaterials = String(this.retroEpochTextures.has('textures') ? this.retroScenery.children.length : 0);
   }
 
   private retroTile(index: number, x: number, y: number, size = 44): Sprite {
@@ -295,7 +295,11 @@ export class KingdomMap {
   private retroEpochTile(epoch: string, index: number, x: number, y: number, size: number): Sprite {
     const key = epoch === 'industrial' || epoch === 'modern' ? 'urban' : 'fantasy';
     const atlas = this.retroEpochTextures.get(key);
-    if (!atlas) return this.retroTile(index % 8, x, y, size);
+    // The new epoch previews contain only 16px thumbnails. Upscaling these to
+    // large district buildings makes the mobile map look smeared. Use the
+    // existing 64px Kenney originals for larger silhouettes until high-resolution
+    // epoch renders are available.
+    if (!atlas || size > 48) return this.retroTile(index % 8, x, y, size);
     const texture = new Texture({
       source: atlas.source,
       frame: new Rectangle((index % 8) * 16, 0, 16, 16)
