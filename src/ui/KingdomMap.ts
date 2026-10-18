@@ -32,6 +32,7 @@ export class KingdomMap {
   private retroAtlas?: Texture;
   private retroHouse?: Texture;
   private retroEnabled = false;
+  private projection: 'flat' | 'isometric' = 'isometric';
   private retroLoading = false;
   private retroContext?: { kingdom: Kingdom; selected: keyof KingdomInfrastructure; completed: readonly string[]; year: number; rivals: readonly RivalRealm[] };
 
@@ -159,6 +160,17 @@ export class KingdomMap {
   }
 
   /** Lightweight, license-checked Kenney visual assets; leaves simulation unchanged. */
+  /** Switch between the classic geometric map and Kenney Retro sprites. */
+  public setProjection(mode: 'flat' | 'isometric'): void {
+    this.projection = mode;
+    this.app.canvas.dataset.retroProjection = mode;
+    this.lastSignature = '';
+    if (this.retroContext && this.initialized && !this.destroyed) {
+      const { kingdom, selected, completed, year, rivals } = this.retroContext;
+      this.update(kingdom, selected, completed, year, rivals);
+    }
+  }
+
   private async loadRetroAssets(): Promise<void> {
     if (this.retroLoading || this.destroyed) return;
     this.retroLoading = true;
@@ -198,7 +210,7 @@ export class KingdomMap {
 
   /** All 16 infrastructure districts receive a coherent Retro representation. */
   private drawRetroDistrict(group: Container, type: keyof KingdomInfrastructure, count: number, epoch: string): boolean {
-    if (!this.retroEnabled || !this.retroAtlas) return false;
+    if (!this.retroEnabled || !this.retroAtlas || this.projection === 'flat') return false;
     if (type === 'roads') {
       for (let i = 0; i < 3; i++) group.addChild(this.retroTile(0, -31 + i * 30, 14 + (i % 2) * 4, 48));
       return true;
