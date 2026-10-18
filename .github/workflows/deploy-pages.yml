@@ -72,8 +72,25 @@ jobs:
             200) echo "enabled=true" >> "$GITHUB_OUTPUT" ;;
             404)
               echo "enabled=false" >> "$GITHUB_OUTPUT"
-              echo "::warning::GitHub Pages is not configured. Enable it in Settings > Pages with Source: GitHub Actions."
-              echo "Pages publishing skipped: enable GitHub Pages in Settings > Pages (Source: GitHub Actions). The kaiser-https-site artifact is available; no live site was deployed." >> "$GITHUB_STEP_SUMMARY"
+              echo "::warning::GitHub Pages is not configured. Attempting to enable via API..."
+              # Build-Infos für die Aktivierung sammeln
+              REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
+              REPO_NAME="${GITHUB_REPOSITORY#*/}"
+              # Pages via API aktivieren (Quelle: GitHub Actions)
+              ENABLE_RESPONSE=$(curl --silent --show-error --write-out '%{http_code}' --output /dev/null \
+                --request POST \
+                --header "Authorization: token $GITHUB_TOKEN" \
+                --header "Accept: application/vnd.github+json" \
+                "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages" \
+                --data '{"source":{"branch":"main","path":"/"},"build_type":"workflow"}')
+              if [ "$ENABLE_RESPONSE" = "201" ] || [ "$ENABLE_RESPONSE" = "204" ]; then
+                echo "enabled=true" >> "$GITHUB_OUTPUT"
+                echo "GitHub Pages wurde erfolgreich aktiviert!" >> "$GITHUB_STEP_SUMMARY"
+              else
+                echo "::warning::GitHub Pages konnte nicht automatisch aktiviert werden (HTTP $ENABLE_RESPONSE)."
+                echo "Bitte aktivieren Sie Pages manuell unter Settings > Pages > Source: GitHub Actions."
+                echo "Pages publishing skipped. Das kaiser-https-site-Artefakt ist verfügbar." >> "$GITHUB_STEP_SUMMARY"
+              fi
               ;;
             *)
               echo "::error::GitHub Pages availability check failed (HTTP $status)."
