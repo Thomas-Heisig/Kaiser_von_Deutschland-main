@@ -32,7 +32,6 @@ export class KingdomMap {
   private readonly citizens: Container[] = [];
   private readonly chimneys: Graphics[] = [];
   private retroAtlas?: Texture;
-  private retroHouse?: Texture;
   private readonly retroEpochTextures = new Map<string, Texture>();
   private retroEnabled = false;
   private projection: 'flat' | 'isometric' = 'isometric';
@@ -169,7 +168,7 @@ export class KingdomMap {
   /** Switch between the classic geometric map and Kenney Retro sprites. */
   public setProjection(mode: 'flat' | 'isometric'): void {
     this.projection = mode;
-    this.retroScenery.visible = this.mapScope === 'home' && mode === 'isometric';
+    this.retroScenery.visible = false;
     this.app.canvas.dataset.retroProjection = mode;
     this.app.canvas.dataset.retroVisible = String(this.retroEnabled && mode === 'isometric');
     this.lastSignature = '';
@@ -192,7 +191,6 @@ export class KingdomMap {
       if (this.destroyed) return;
       if (atlas.status === 'fulfilled') {
         this.retroAtlas = atlas.value;
-        this.retroHouse = house.status === 'fulfilled' ? house.value : undefined;
         // Future epoch art uses separate named atlases. Optional and non-blocking:
         // the existing retro scene remains playable if they are absent.
         void Promise.allSettled(['fantasy','urban','textures'].map(async name => {
@@ -256,7 +254,7 @@ export class KingdomMap {
   private drawRetroScenery(): void {
     for (const child of this.retroScenery.removeChildren()) child.destroy({ children: true });
     if (!this.retroAtlas || this.destroyed) return;
-    this.retroScenery.visible = this.mapScope === 'home' && this.projection === 'isometric';
+    this.retroScenery.visible = false;
     for (let i = 0; i < 65; i++) {
       const x = 87 + (i * 199) % 832;
       const y = 80 + (i * 127) % 472;
@@ -292,103 +290,75 @@ export class KingdomMap {
     return sprite;
   }
 
-  /** Use the epoch atlas when available, otherwise the established CC0 fallback.
-   * The new atlases consist of eight 16×16 thumbnails in a horizontal strip.
+  /** Coherent orthographic 2.5D graphics for all fixed infrastructure districts.
+   * Pixel preview thumbnails cannot be stretched into believable 3D buildings.
+   * All shapes share one roof direction, shadow direction and ground baseline.
    */
-  private retroEpochTile(epoch: string, index: number, x: number, y: number, size: number): Sprite {
-    const key = epoch === 'industrial' || epoch === 'modern' ? 'urban' : 'fantasy';
-    const atlas = this.retroEpochTextures.get(key);
-    // The new epoch previews contain only 16px thumbnails. Upscaling these to
-    // large district buildings makes the mobile map look smeared. Use the
-    // existing 64px Kenney originals for larger silhouettes until high-resolution
-    // epoch renders are available.
-    if (!atlas || size > 48) return this.retroTile(index % 8, x, y, size);
-    const texture = new Texture({
-      source: atlas.source,
-      frame: new Rectangle((index % 8) * 16, 0, 16, 16)
-    });
-    const sprite = new Sprite(texture);
-    sprite.anchor.set(0.5, 1);
-    sprite.position.set(x, y);
-    sprite.width = size;
-    sprite.height = size;
-    return sprite;
-  }
-
-  /** Compose readable 2.5D building details from verified 64px Kenney pieces.
-   * One decorative cluster per building; no new building positions in GameEngine.
-   */
-  private addRetroBuildingDetail(group: Container, type: keyof KingdomInfrastructure,
-    x: number, y: number, opacity: number): void {
-    const add = (index: number, dx: number, dy: number, size: number): void => {
-      const part = this.retroTile(index, x + dx, y + dy, size);
-      part.alpha = opacity;
-      group.addChild(part);
-    };
-    if (type === 'markets' || type === 'taverns') {
-      add(5, 24, 9, 20); // barrels and market goods
-      add(4, -25, 8, 26);
-    } else if (type === 'workshops' || type === 'guildhalls') {
-      add(5, 23, 9, 26); // working materials
-      add(1, -22, 5, 28);
-    } else if (type === 'warehouses') {
-      add(5, -21, 10, 25);
-      add(5, 22, 10, 25);
-    } else if (type === 'hospitals' || type === 'schools') {
-      add(4, 26, 8, 27);
-    }
-  }
-
-  /** All 16 infrastructure districts receive a coherent Retro representation. */
   private drawRetroDistrict(group: Container, type: keyof KingdomInfrastructure, count: number, epoch: string): boolean {
-    if (!this.retroEnabled || !this.retroAtlas || this.projection === 'flat') return false;
-    // Asset indices of the verified Kenney CC0 preview atlas:
-    // floor=0, door=1, window=2, roof=3, tree=4, barrel=5, tower=6, grass=7.
-    // The same historic fixed district can show distinct silhouettes across epochs.
+    if (this.projection === 'flat') return false;
     const later = epoch === 'modern' || epoch === 'industrial';
-    const opacity = count > 0 ? 1 : 0.4;
-    const tile = (index: number, x: number, y: number, size: number): void => {
-      const sprite = this.retroEpochTile(epoch, index, x, y, size);
-      sprite.alpha = opacity;
-      group.addChild(sprite);
+    const alpha = count > 0 ? 1 : 0.37;
+    const palette = later
+      ? { wall: 0xb6b7aa, side: 0x777f78, roof: 0x626f75, trim: 0x48585e }
+      : { wall: 0xd1b992, side: 0x998463, roof: 0x815247, trim: 0x5b4236 };
+    const structure = (x: number, y: number, w: number, h: number, tall = false): void => {
+      const wallHeight = tall ? h * 1.3 : h;
+      const g = new Graphics();
+      g.ellipse(x + 6, y + 8, w * 0.85, 13).fill({ color: 0x111d17, alpha: 0.32 });
+      g.poly([x - w / 2, y - wallHeight, x + w / 2, y - wallHeight,
+        x + w / 2, y, x - w / 2, y]).fill(palette.wall);
+      g.poly([x + w / 2, y - wallHeight, x + w / 2 + 13, y - wallHeight - 9,
+        x + w / 2 + 13, y - 9, x + w / 2, y]).fill(palette.side);
+      g.poly([x - w / 2 - 6, y - wallHeight, x, y - wallHeight - 30,
+        x + w / 2 + 7, y - wallHeight, x + w / 2 + 17, y - wallHeight - 9,
+        x + 11, y - wallHeight - 39]).fill(palette.roof);
+      g.rect(x - 7, y - 20, 13, 20).fill(palette.trim);
+      g.rect(x - w * 0.32, y - wallHeight + 10, 10, 11)
+        .rect(x + w * 0.2, y - wallHeight + 10, 10, 11).fill(0xead8a6);
+      g.rect(x - w * 0.32 + 4, y - wallHeight + 10, 2, 11)
+        .rect(x + w * 0.2 + 4, y - wallHeight + 10, 2, 11).fill(palette.trim);
+      g.alpha = alpha;
+      group.addChild(g);
+    };
+    const block = (x: number, y: number, w: number, h: number, color: number): void => {
+      group.addChild(new Graphics().roundRect(x - w / 2, y - h, w, h, 2)
+        .fill({ color, alpha }).rect(x - w / 2 + 4, y - h + 4, w - 8, 5)
+        .fill({ color: 0xe0d4b9, alpha: 0.45 * alpha }));
     };
     if (type === 'roads') {
-      for (let i = 0; i < 3; i++) tile(later ? 0 : 7, -30 + i * 30, 15 + (i % 2) * 3, 46);
+      const road = new Graphics().poly([-55, 17, -29, -17, 18, -21, 60, 13, 33, 34, -15, 20])
+        .fill({ color: later ? 0x858c8d : 0xb9a078, alpha });
+      group.addChild(road);
     } else if (type === 'farms') {
-      for (let i = 0; i < 5; i++) tile(i % 3 === 0 ? 4 : 7, -42 + i * 20, 15 + i % 2 * 11, i % 3 === 0 ? 31 : 36);
-    } else if (type === 'ports') {
-      for (let i = 0; i < 3; i++) tile(i % 2 === 0 ? 0 : 5, -29 + i * 27, 12, 43);
-      tile(4, 37, 10, 36);
+      const farms = new Graphics();
+      for (let i = 0; i < 5; i++) farms.poly([-51 + 21 * i, -8, -30 + 21 * i, -19,
+        -10 + 21 * i, 6, -32 + 21 * i, 19]).fill({color: i % 2 ? 0xb2a35c : 0x7f9b52,alpha});
+      group.addChild(farms);
+      structure(0,-1,33,21);
     } else if (type === 'walls') {
-      for (let i = 0; i < 4; i++) tile(6, -37 + i * 24, 7, later ? 49 : 42);
+      for(let i=0;i<4;i++) block(-37+i*24,17,25,i%3===0?44:25,0xa6a79a);
+    } else if (type === 'ports') {
+      group.addChild(new Graphics().poly([-57,13,-31,-5,57,8,36,26]).fill({color:0x846449,alpha}));
+      structure(-12,0,43,33);
     } else if (type === 'mines') {
-      group.addChild(new Graphics().poly([-34, 15, 0, -26, 39, 15]).fill(0x807d69));
-      tile(1, 0, 15, 60);
-      tile(5, 27, 18, 29);
+      group.addChild(new Graphics().poly([-50,17,-12,-38,36,15]).fill({color:0x7b8075,alpha})
+        .poly([-12,-38,50,17,36,15]).fill({color:0x555b54,alpha}));
+      block(8,21,20,28,0x3e3930);
     } else if (type === 'castles' || type === 'barracks') {
-      tile(6, -23, 7, 91);
-      tile(6, 23, 7, 84);
-      tile(later ? 2 : 1, 0, 15, 62);
+      structure(0,10,65,50,true);
+      block(-43,9,25,70,0xa8a59a);
+      block(45,9,25,70,0xa8a59a);
     } else if (type === 'churches' || type === 'universities') {
-      tile(6, -18, 6, 87);
-      tile(type === 'churches' ? 3 : 2, 24, 9, 73);
+      structure(0,13,65,44,true);
+      block(-30,7,22,75,later?0x909e9c:0xc0b093);
     } else {
-      const buildings = Math.max(1, Math.min(count, 3));
-      for (let i = 0; i < buildings; i++) {
-        const x = (i - (buildings - 1) / 2) * 34, y = i % 2 ? 11 : 5;
-        if (this.retroHouse && !later && (type === 'workshops' || type === 'taverns' || type === 'warehouses' || type === 'markets')) {
-          const house = new Sprite(this.retroHouse);
-          house.anchor.set(0.5, 1);
-          house.position.set(x, y + 9);
-          house.width = 47;
-          house.height = 74;
-          house.alpha = opacity;
-          group.addChild(house);
-        } else {
-          tile(later ? 2 : i % 2 ? 2 : 1, x, y + 9, later ? 69 : 63);
-          tile(later ? 0 : 3, x, y - 38, later ? 53 : 49);
-        }
-        this.addRetroBuildingDetail(group, type, x, y, opacity);
+      const buildings = Math.max(1,Math.min(count,3));
+      for(let i=0;i<buildings;i++){
+        const x=(i-(buildings-1)/2)*43;
+        structure(x,i%2?13:7,38+(i%2)*7,34+(i%2)*6);
+      }
+      if(type==='workshops'||type==='guildhalls'||type==='warehouses'||type==='markets'){
+        for(let i=0;i<2;i++) block(-30+i*58,22,17,18,0x96724c);
       }
     }
     return true;
