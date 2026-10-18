@@ -39,3 +39,7 @@ Das aus Kenney-GLB-Modellen gerenderte, optimierte `retro-house-1200.png` ist je
 ## Retro-Landschaft und öffentliche Pfade
 
 Die Hauptkarte verwendet den CC0-Kenney-Atlas für eine begrenzte, deterministische Landschafts-Dekoration zusätzlich zu ihren 16 Retro-Bezirken (bis zu 65 mögliche Objekte, Bezirke werden freigehalten). Im flachen 2D-Modus wird diese Schicht ausgeblendet. Es handelt sich weiterhin um Kenney-Preview-Sprites, nicht um eine vollständige GLB-3D-Stadt. Die Werkstatt lädt ihre Grafiken nun relativ zur von Vite vorgegebenen BASE_URL und ist damit unter dem GitHub-Pages-Unterpfad erreichbar. Weitere vorbereitete Atlanten der drei Pakete sind noch nicht im Repository enthalten.
+
+## Differenzierte Bezirkssilhouetten
+
+Die 16 festen Bezirke sind jetzt im Retro-Modus nach Kategorien differenziert (Felder, Straßen, Hafen, Bergwerk, Befestigung, Bildung und städtische Gebäude). Kennzeichen nicht gebauter Bezirke werden transparent dargestellt; spätere Epochen erhalten vorläufig andere Kombinationen des vorhandenen Kenney-Atlas. Es sind noch **keine vollständigen Retro-Urban-Assets** eingebunden; die Unterscheidung ist eine Zwischenstufe. Dokumentiert für die nächste Ausbaustufe: Die extern vorbereiteten zusätzlichen Atlanten müssen erst als echte Binärdateien eingecheckt und unter GitHub Pages getestet werden.
