@@ -208,6 +208,21 @@ try {
     await page.screenshot({path:'smoke-mobile-retro-375.png',fullPage:true});
     await page.close();
   }
+  // Ensure all three epoch PNG files are actually present and valid in the built site.
+  {
+    const page = await browser.newPage();
+    for (const name of ['fantasy', 'urban', 'textures']) {
+      const response = await page.request.get('http://127.0.0.1:4173/assets/kenney/retro-' + name + '-atlas.png');
+      if (response.status() !== 200 || !(response.headers()['content-type'] || '').includes('image/png')) {
+        failures.push('Missing Kenney epoch PNG: ' + name);
+      } else {
+        const bytes = await response.body();
+        if (bytes.length < 100 || bytes.subarray(0,8).toString('hex') !== '89504e470d0a1a0a')
+          failures.push('Invalid Kenney epoch PNG: ' + name);
+      }
+    }
+    await page.close();
+  }
   // Isolated renderer prototype must load independently of the game engine.
   {
     const page = await browser.newPage({ viewport:{width:820,height:740} });
