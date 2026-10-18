@@ -59,14 +59,36 @@ jobs:
           name: kaiser-https-site
           path: dist
           retention-days: 7
-      - name: Configure or enable GitHub Pages
+      - name: Check GitHub Pages availability
+        id: pages
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --header "Authorization: token $GITHUB_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages")
+          case "$status" in
+            200) echo "enabled=true" >> "$GITHUB_OUTPUT" ;;
+            404)
+              echo "enabled=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::GitHub Pages is not configured. Enable it in Settings > Pages with Source: GitHub Actions."
+              echo "Pages publishing skipped: enable GitHub Pages in Settings > Pages (Source: GitHub Actions). The kaiser-https-site artifact is available; no live site was deployed." >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            *)
+              echo "::error::GitHub Pages availability check failed (HTTP $status)."
+              exit 1
+              ;;
+          esac
+      - name: Configure GitHub Pages
+        if: steps.pages.outputs.enabled == 'true'
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - name: Upload built static site
+        if: steps.pages.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
       - id: deployment
         name: Deploy to HTTPS GitHub Pages
+        if: steps.pages.outputs.enabled == 'true'
         uses: actions/deploy-pages@v4
