@@ -147,9 +147,12 @@ try {
     await page.waitForTimeout(2500);
     const atlas = await page.locator('#measure').getAttribute('data-asset-status');
     if (atlas !== 'loaded') failures.push('Kenney Retro atlas failed to load: '+atlas);
+    if (await page.locator('#measure').getAttribute('data-house-status') !== 'rendered') failures.push('Real GLB house PNG did not load');
     const asset = await page.request.get('http://127.0.0.1:4173/assets/kenney/retro-workshop-atlas.png');
     if (asset.status() !== 200 || !(asset.headers()['content-type'] || '').includes('image/png'))
       failures.push('Kenney Retro PNG missing or invalid content type');
+    const house = await page.request.get('http://127.0.0.1:4173/assets/kenney/retro-house-1200.png');
+    if (house.status() !== 200 || !(house.headers()['content-type'] || '').includes('image/png')) failures.push('GLB house PNG missing');
     const result=await page.locator('#measure').innerText();
     if(!result.includes('P95:')||!result.includes('Frames:'))
       failures.push('prototype frame-time measurement not available: '+result);

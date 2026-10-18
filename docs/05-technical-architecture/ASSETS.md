@@ -42,3 +42,10 @@ PNG-Atlas-SHA256: `d8487bf6a8b082ec6cf49e927b9dc536888d08e054a3378e1ff46c9cba58b
 - Das vorliegende `Retro Textures Fantasy`-Paket ist für das Mittelalter vorgesehen, aber noch **nicht** in der Werkstattszene verwendet.
 
 **Freigabestatus:** CC0-Dateien für den Protoyp inventarisiert; eine echte GLB→PNG-Pipeline, vollständige Gebäude und Endgerätetests sind ausstehend.
+
+## Erstes tatsächlich integriertes GLB-Gebäude – 18.10.2026
+
+- `public/assets/kenney/retro-house-1200.png`: transparentes optimiertes PNG, 126 × 192 px, 2192 Bytes, SHA-256 `93eaf1b304377fb262942ae4d208eba9b4ba3fd28b96309df49f34dd4072c54b`.
+- Erstellt aus dem transparenten 384×384-VTK/EGL-GLB-Render (Ursprungs-SHA-256 `e44a861683af870efabecfc083ca80e4488642a467350a63dbd7ba993ad65709`), zugeschnitten und für mobile Darstellung indiziert. Kein generiertes Fantasiegebäude, sondern aus tatsächlichen Kenney-GLB-Geometrien zusammengesetzt.
+- Quell-GLBs: `roof.glb`, `wall-pane-wood.glb`, `wall-pane-wood-door.glb`, `wall-pane-wood-window.glb`, Kenney Retro Fantasy Kit CC0; Manifest und reproduzierbarer Renderer stehen im bisherigen Renderpaket bzw. `scripts/render_kenney_house.py`.
+- Eingebaut **nur** in `/workshop-prototype.html`; Preview- und Geometrie-Fallback bleiben vorhanden. `KingdomMap` unverändert. Noch kein iOS-Gerätetest.

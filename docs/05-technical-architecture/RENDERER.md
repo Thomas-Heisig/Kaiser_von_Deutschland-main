@@ -31,3 +31,7 @@
 Das erste vollständige Gebäude wurde lokal aus **fünf Positionen mit vier unterschiedlichen Original-GLBs** gerendert. Das Ergebnis ist ein echtes transparentes 384 × 384 PNG aus 3D-Geometrie (keine Kenney-Vorschau). Der unmittelbar reproduzierbare Code steht in `scripts/render_kenney_house.py` und liest das originale Nutzerarchiv `kenney_retro-fantasy-kit.zip`. Abhängigkeiten für diesen getrennten Offline-Build: Python, trimesh, VTK/EGL, numpy und Pillow. Blender ist **nicht installiert**; das Tool behauptet keinen Blender-Render. Die GLB-Materialtexturen werden zurzeit durch eine dokumentierte deterministische Mittelalter-Palette ersetzt.
 
 Die lokal erzeugte PNG-Datei ist ein **Vorzeigeergebnis außerhalb des GitHub-Builds**. Ein Transfer der binären PNG-Datei nach `public/assets/kenney/` und der anschließende Einbau in `WorkshopScene.ts` stehen noch aus. Bis dahin zeigt die produktive Prototypseite weiterhin den 8-Grafiken-Preview-Atlas. iPad-/iPhone-Messungen weiterhin offen.
+
+## Schritt abgeschlossen: echtes GLB-Haus im isolierten Spielprototyp
+
+Das aus Kenney-GLB-Modellen gerenderte, optimierte `retro-house-1200.png` ist jetzt als primäre Gebäudegrafik in `WorkshopScene` integriert. Bei fehlender Datei folgt der bisherige Preview-Atlas, bei dessen Ausfall die geometrische Ersatzdarstellung. Die 144 Kacheln, genau ein Haus, eine Lichtfläche und 24 Rauchpartikel bleiben erhalten. Browser-Smoke prüft die reale PNG-Ladung. **Keine** Aussage über die endgültige grafische Qualität oder iOS-FPS.
