@@ -63,8 +63,67 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [x] **Erster GLB→2D-Durchlauf:** modulares Kenney-Retro-Fantasy-Haus mit VTK/EGL orthografisch gerendert, transparentes mobiles PNG samt Hash dokumentiert und in den isolierten PixiJS-Prototyp eingebaut; Blender wurde dabei nicht verwendet.
 - [ ] Erst Desktop-Chromium visuell/technisch abnehmen; danach Safari auf echten iPad-/iPhone-Geräten nach Messplan prüfen. **Gerätemodelle/OS unbekannt – beim Test erfassen.**
 - [x] Die 16 festen Bezirke besitzen im Hauptspiel Kenney-Retro-Darstellungen (PR #72), Umschalter zwischen 2D und Retro steuert den Pixi-Renderer (PR #73); deterministische Retro-Landschaft eingefügt. GameEngine und Savegames unverändert.
-- [~] Die 16 Bezirke besitzen nun differenzierte Retro-Silhouetten und Bauzustands-Deckkraft. Für **vollständige** Epoche-Grafik fehlen weiterhin als Git-Assets eingecheckte Fantasy-/Urban-/Textures-Atlanten, echte unterschiedliche Gebäuderenderings, Endgerätetests und Performance-Baseline.
+- [~] Die 16 Bezirke besitzen nun differenzierte Retro-Silhouetten und Bauzustands-Deckkraft. Für **vollständige** Epochen-Grafik fehlen weiterhin umfangreiche Originalmodelle und hochauflösende Gebäuderenderings, Endgerätetests und Performance-Baseline. Die drei kleinen Vorschaustreifen sind seit PR #80 eingecheckt.
 
+
+## P0/P1 – Vollständige Welt- und Retro-Grafikintegration (verbindlicher Abnahmeplan, 18.10.2026)
+
+**Definition „vollständig“:** Sichtbar und interaktiv in der echten Produktionskette `src/main.ts → KingdomGameUI → KingdomMap`, auf Desktop und Mobilgeräten getestet, mit Produktionsbuild und öffentlichem HTTPS-Deployment belegt. Grafiken in der ZIP oder reine Platzhalter/Entwürfe zählen **nicht** als fertig. Derzeitige 16 Bezirke und die Retro-Asset-Ladepipeline sind ein nutzbarer Anfang, **keine** fertige Open World.
+
+### G0 – Bestandsaudit und sichere Grundlage (P0)
+
+- [x] Grafikwahl verbindlich: Kenney Retro Fantasy / Retro Textures Fantasy (frühe Epochen), Retro Urban (späte Epochen); Sketch Town nur Reserve.
+- [x] 16 Bezirke, Basis-Retro-Atlanten, aus GLB gerendertes erstes Haus, Umschalter 2D/Retro, Texturakzente und mobile Chromium-Regression im Hauptspiel vorhanden (PR #67–#83); alte GameEngine-Spielstände bleiben unverändert.
+- [ ] Nach PR #83 GitHub-`main`, Browser-Smoke-Screenshots und aktuellen Asset-Bestand gemeinsam auf Desktop, 375px und Tablet visuell prüfen. Nicht nur DOM-/Ladeindikatoren; sichtbare Karte, Schärfe, Lesbarkeit und Klicktreffer tatsächlich abnehmen.
+- [ ] `RENDERER.md`, `ASSETS.md`, README, Roadmap und alte P0-Pages-Hinweise abgleichen: bereits gemergte Teile nicht doppelt als offen aufführen; tatsächlich ausstehende Teile nicht als fertig markieren.
+- [ ] GitHub-Pages-Deployment von `main` per HTTP/HTTPS, Manifest, SW-Version, Cache-Busting und Test der Assets unter dem Repo-Unterpfad prüfen; Fehlveröffentlichung und veraltete Offline-Caches abfangen.
+- [ ] Explizite Abnahmematrix pflegen: Asset-Quelle/Lizenz/Hash, Ziel-Epoche, Bezirk, Grafikzustände, Tests und Geräteergebnis pro Eintrag.
+
+### G1 – Nachbarreiche als erkennbare, bedienbare Welt (P0)
+
+**Ist:** `KingdomMap.drawNeighbors()` zeichnet maximal sechs schematische Ellipsen außerhalb der zentralen Siedlung, mit Namen und Vasallenstatus. Das ist **noch keine Weltkarte**. Nachbarpositionen sind keine historischen Geodaten.
+
+- [ ] Nachbarn vollständig aus den vorhandenen `RivalRealm`-Daten inventarisieren (Name, Diplomatie, Wirtschaft, Stärke, Unterwerfung, Veränderungen); fehlende Daten ausdrücklich unbekannt anzeigen, nichts erfinden.
+- [ ] Je Nachbar eine unterscheidbare **territoriale Retro-Darstellung**: Länderfläche/Grenze, Wappen- oder Fraktionssymbol, Siedlungen, Straßen-/Handelsverbindungen, Hauptstadt nur falls tatsächlich im Modell vorhanden; Vasallen und Kriegsgegner klar unterscheiden.
+- [ ] Außenwelt-Ebene unabhängig von den 16 Bezirken erstellen; echte Weltkoordinaten/Regionenmodell einführen, statt nur sechs Offscreen-Ellipsen.
+- [ ] Auf Nachbar tippen/klicken → erreichbare Detailansicht zu Diplomatie/Handel/Krieg und bekannten Kennzahlen; Tastatur und Touch berücksichtigen. Änderungen nur über bestehende validierte Spielaktionen.
+- [ ] Überlagerungen/Pan/Zoom/Minikarte so gestalten, dass Nachbarn auf 375px **auffindbar** bleiben (Fit-to-World, Zentrieren, Marker für außerhalb des Bildschirms liegende Reiche); bisherige 16-Bezirke-Karte als Heimatansicht erhalten.
+- [ ] Rivalenanzahl > sechs, neue/entfernte Rivalen, historische Epochengrafik, Vasall/Feind/neutral und Save-/Load-Verhalten automatisiert testen.
+
+### G2 – Open World als gesonderter, phasenweiser Umfang (P1; **nicht als bereits vorhanden kennzeichnen**)
+
+**Ist:** Die aktuelle Karte ist eine feste Siedlungsübersicht mit 16 Bezirksankern und schematischen Nachbarn. Es gibt weder eine frei begehbare Welt noch ein persistentes Platzierungsraster. „Open World“ ist eine Produktvision und benötigt bewusst eine eigene technische Entscheidung.
+
+- [ ] **OW-0 Konzept/Scope verbindlich beschließen:** zuerst eine frei erkundbare, zoombare **Strategie-Weltkarte** mit Regionen, Wegen und dynamischen Nachbarn; keine Behauptung einer frei begehbaren 3D-RPG-Welt. Letztere ist nur langfristige Option.
+- [ ] **OW-1 WorldModel:** stabile Regions-IDs, Koordinaten/Kamera, Gelände, Grenzen, Verbindungen, Herkunft von Weltpositionen, Fog-of-War/Entdeckung und Ereignisorte; deterministische Generierung mit Seed und reproduzierbaren Tests.
+- [ ] **OW-2 Persistenz:** versioniertes Welt-/Regionsschema und Migration für Alt-Spielstände; keine Änderung an der aktuellen GameEngine ohne spezifizierte Schnittstellen und Tests.
+- [ ] **OW-3 Kamera/Navigation:** freie Bewegung per Touch/Maus/Tastatur, Zoom, Zentrieren, Minikarte, „Zur Heimat“, Region finden, begrenztes Culling und Performancebudgets.
+- [ ] **OW-4 Interaktion:** Regionen erkunden, Nachbarn besuchen/auswählen, Handel/Diplomatie/Reisen als klar geregelte Aktionen; passende epochen- und ressourcenabhängige Aufgaben statt generischer Platzhalter.
+- [ ] **OW-5 Ausbau (separat, später):** freie Bebauung nur nach eigener Raster-/Bauplatz-/Kollisions-/Pfadfindungs-Spezifikation; die 16 Bezirke bis dahin beibehalten.
+- [ ] **OW-6 Abnahme:** End-to-End vom Start über Erkundung, Ortswechsel, Diplomatie/Handel, Speichern/Laden bis zum Fortsetzen auf iPhone/Tablet/Desktop.
+
+### G3 – Vollständige Retro-Grafikproduktion (P0/P1)
+
+- [~] Drei **kleine** Retro-Atlanten (Fantasy, Urban, Textures) als PNG-Binärdateien in `main` integriert; Epochen-Routing und Materialakzente vorhanden. Sie sind 16px-Vorschaumotive, **nicht** die vollständigen 105/124 GLB-Modelle bzw. 119 Texturdateien.
+- [ ] Komplettes Originalasset-Inventar mit Dateinamen, CC0-Nachweis, SHA-256, Modellrolle, Epoche, Materialzuweisung und Prüfvorschau erstellen; Duplikate/ungeeignete Assets ausschließen.
+- [ ] Reproduzierbare Batch-Pipeline **GLB → 2D** für die notwendigen Gebäudetypen aufbauen (fester orthografischer Kamerawinkel 45°/30°, Scale, Licht, transparente PNG/WebP, Schatten, Metadaten, deterministischer Atlas-Packprozess).
+- [ ] **16 Bezirke vollständig gestalten:** je Kategorie eindeutige hochauflösende Gebäude/Szenen statt derselben Fenster-/Tür-Vorschau; Bauzustände 0/1/mehrere, Upgrade-Stufen, Industrie-/Moderne-Wechsel und Auswahlmarkierung.
+- [ ] Mauern, Stadttore, Straßen, Brücken, Wasser/Hafen, Grünflächen, Felder, Bergwerke, Marktstände und Wege als konsistente, zusammenhängende Landschaft mit sauberen Übergängen darstellen; keine unverbundenen Streukacheln.
+- [ ] Retro Urban für spätere Epochen mit tatsächlichen passenden Gebäuden/Verkehr/Industrieanlagen verwenden; Retro Textures Fantasy für Oberflächen nach Material/Region statt zufälliger Bodensprenkler.
+- [ ] Nachbarn (G1), Weltregionen (G2) und Hauptstadt/Siedlungen mit derselben Bildsprache vereinheitlichen; Zeichentiefen/Y-Sortierung und Pixel-/Skalierungsqualität kontrollieren.
+- [ ] PixiJS-Sprite-Atlas/Texture-Caching und gestaffeltes Laden, Frustum-Culling, Gerätespeicher-Grenzen und degradierbaren Fallback für schwächere Geräte ergänzen.
+- [ ] Originalität/Urheberrechte und vollständige Mediencredits getrennt vom MIT-Code dokumentieren; Benutzervorgaben (hellere natürliche Farben, warmes Licht, nicht Sketch Town) visuell abnehmen.
+
+### G4 – Qualität, Mobile und Release (P0-Abnahme)
+
+- [ ] Auf echten iPhone- und iPad-Geräten Modell/iOS/Safari-Version, Portrait/Landscape, Karten-Sichtbarkeit, Touch-Pan/Pinch, HUD-/Modal-Überlagerungen, Schärfe, Karten-Nachbarn, Zoom und Orientierung prüfen.
+- [ ] Leistungsbudget auf echten Geräten: 30-FPS-Ziel, P95 Frame-Abstand ≤ 50 ms, 3 × 120 s plus 10 Minuten Stabilität, kein wiederholter WebGL-Kontextverlust, keine dauerhafte Speicherzunahme > 40 MB; Messdaten inklusive Build-SHA ablegen.
+- [ ] Funktionale E2E-Gates für jede Epoche und alle 16 Bezirke: Assets HTTP 200, visuell sichtbare Grafik statt bloß erfolgreichem Promise, Auswahl/Bedienung, Nachbar-Detailansicht, Weltnavigation, Save-/Load.
+- [ ] Screenshot-Golden-Tests auf 375px, 768px, 1024px, 1440px und echte Safari-Stichproben; Asset-/Bundlegrößen gegen dokumentierte Baseline prüfen.
+- [ ] GitHub Pages/PWA öffentlich ausliefern, Version/Cache im UI anzeigen, Update-Pfad und Offline-Installation demonstrieren, echte Freigabe-URL prüfen.
+- [ ] **Finale Abnahme:** ein kompletter Kampagnendurchlauf und eine Open-World-/Nachbarreise auf Desktop und Mobil mit nachvollziehbarem Prüfprotokoll. Erst dann „vollständige Grafik-Integration“/„Open World fertig“ behaupten.
+
+**Empfohlene Reihenfolge für sichtbare Erfolge:** G1 Nachbarn **anklickbar und auffindbar** → G3 erste 3 hochwertige Bezirksszenen → G3 alle 16 → G2 OW-0/OW-1 Weltkarte → G2 Reisen/Interaktionen → G4 echte Geräte + Deployment + Release. Diese Schritte als kleine, einzeln testbare PRs durchführen.
 
 ## P2 — Spielerlebnis und Module
 
