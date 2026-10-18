@@ -60,7 +60,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [x] Konzeptentscheidung: Kenney Sketch Town, mittelalterliche Referenz um 1200, bestehende feste 16 Bezirke, PixiJS 8 und kein neues Kartenformat/Paket vor Prototyp-Messung.
 - [x] Phase-2-Detailplanung samt Renderer-Datenadapter, Messplan, Asset-Provenienz und iPad-/iPhone-Testgates dokumentiert ([Renderer](docs/05-technical-architecture/RENDERER.md), [Assets](docs/05-technical-architecture/ASSETS.md)).
 - [ ] Original-Archiv des konkreten Sketch-Town-Pakets inspizieren und benötigte Sprites, Abmessungen, Lizenzen und SHA-256 nachweisen; keine ungeprüften Medien committen.
-- [ ] Isolierte Werkstattszene (12×12 Kacheln, ein Gebäude, eine Lichtmaske, 24 Rauchpartikel) mit PixiJS 8 umsetzen, **ohne** Änderung von GameEngine/Savegame oder Hauptspielflow.
+- [~] Isolierte Werkstattszene als **PixiJS-8-Messgerüst** angelegt (12×12 Kacheln, ein schematisches Gebäude, eine einfache Lichtfläche, 24 Rauchpartikel); **Kenney-Originalassets fehlen weiterhin**. Keine Änderungen an Engine, Spielstand oder Hauptspieloberfläche. URLs: `/workshop-prototype.html` (Entwicklung/Build).
 - [ ] Auf tatsächlichem iPhone/iPad unter Safari testen: Modell/Version, 30 s Warmup, 3×120 s, 10 Minuten; P95-Frame-Abstand und Speicher dokumentieren; kein Performance-Ergebnis erfinden.
 - [ ] Erst nach bestandenen Messgates einen festen Bezirk in `KingdomMap` optional umstellen; geometrischen Fallback und bestehende 2D/3D-Auswahl erhalten.
 
