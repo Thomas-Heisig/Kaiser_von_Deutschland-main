@@ -44,9 +44,9 @@ export class WorkshopScene {
     this.app.ticker.maxFPS = SZENE.zielFps;
     const world = new Container();
     this.app.stage.addChild(world);
-    const centerWorld = (): void => world.position.set(
-      host.clientWidth / 2, Math.max(95, host.clientHeight / 2 - 190)
-    );
+    const centerWorld = (): void => {
+      world.position.set(host.clientWidth / 2, Math.max(95, host.clientHeight / 2 - 190));
+    };
     centerWorld();
     this.resize = new ResizeObserver(centerWorld);
     this.resize.observe(host);
