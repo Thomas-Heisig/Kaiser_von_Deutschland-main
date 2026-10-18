@@ -149,7 +149,7 @@ try {
       const el = document.querySelector('#measure');
       return el?.getAttribute('data-house-status') !== null;
     }, { timeout: 15000 });
-    await page.waitForTimeout(500);
+    await page.waitForFunction(() => (document.querySelector('#measure')?.textContent || '').includes('P95:'), { timeout: 12000 });
     const atlas = await page.locator('#measure').getAttribute('data-asset-status');
     if (atlas !== 'loaded') failures.push('Kenney Retro atlas failed to load: '+atlas);
     if (await page.locator('#measure').getAttribute('data-house-status') !== 'rendered') failures.push('Real GLB house PNG did not load: '+await page.locator('#measure').evaluate(el => JSON.stringify(el.dataset)));
