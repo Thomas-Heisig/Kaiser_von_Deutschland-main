@@ -515,11 +515,16 @@ export class KingdomMap {
 
   private fit(): void {
     if (!this.initialized || this.destroyed) return;
-    const scale = Math.min(this.app.screen.width / 1350, this.app.screen.height / 850) * this.zoom;
+    // On phones the old 1350px reference shrank the entire settlement to a blur.
+    // Fit to a narrower, usable map window; retain normal desktop framing.
+    const mobile = this.app.screen.width < 760;
+    const scale = (mobile
+      ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
+      : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850)) * this.zoom;
     this.world.scale.set(scale);
     this.world.position.set(
       this.app.screen.width / 2 - 500 * scale + this.offset.x,
-      this.app.screen.height / 2 - 310 * scale + this.offset.y
+      (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2) - 310 * scale + this.offset.y
     );
     this.app.renderer.render(this.app.stage);
   }
