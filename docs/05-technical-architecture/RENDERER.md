@@ -25,3 +25,9 @@
 - Vorläufiges Performance-Testgate: auf iPhone/iPad nach 30 s Warmlauf drei Läufe à 120 s plus 10 min Stabilität; P95-Frame-Abstand ≤ 50 ms bei 30-FPS-Deckel; keine wiederholten WebGL-Kontextverluste; keine >40 MB dauerhafte Speicherzunahme.
 - Prototyp-Asset-Budget: < 2 MB zusätzliche komprimierte Grafikassets; JS-Gzip-Differenz < 50 KB.
 - Keine behaupteten iOS-Benchmarks ohne reale Messdaten.
+
+## Reproduzierbare GLB→2D-Erstpipeline (18.10.2026)
+
+Das erste vollständige Gebäude wurde lokal aus **fünf Positionen mit vier unterschiedlichen Original-GLBs** gerendert. Das Ergebnis ist ein echtes transparentes 384 × 384 PNG aus 3D-Geometrie (keine Kenney-Vorschau). Der unmittelbar reproduzierbare Code steht in `scripts/render_kenney_house.py` und liest das originale Nutzerarchiv `kenney_retro-fantasy-kit.zip`. Abhängigkeiten für diesen getrennten Offline-Build: Python, trimesh, VTK/EGL, numpy und Pillow. Blender ist **nicht installiert**; das Tool behauptet keinen Blender-Render. Die GLB-Materialtexturen werden zurzeit durch eine dokumentierte deterministische Mittelalter-Palette ersetzt.
+
+Die lokal erzeugte PNG-Datei ist ein **Vorzeigeergebnis außerhalb des GitHub-Builds**. Ein Transfer der binären PNG-Datei nach `public/assets/kenney/` und der anschließende Einbau in `WorkshopScene.ts` stehen noch aus. Bis dahin zeigt die produktive Prototypseite weiterhin den 8-Grafiken-Preview-Atlas. iPad-/iPhone-Messungen weiterhin offen.
