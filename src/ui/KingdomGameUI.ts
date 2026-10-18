@@ -508,6 +508,10 @@ export class KingdomGameUI {
         ${this.settingsDialogMarkup()}
         ${this.filmDialogMarkup()}
       </main>`;
+    const mapScopeSelect = this.root.querySelector<HTMLSelectElement>('#map-scope');
+    mapScopeSelect?.addEventListener('change', () => {
+      this.map?.setMapScope(mapScopeSelect.value === 'world' ? 'world' : 'home');
+    });
     this.bindSettingsControls();
     this.bindIntro();
     void this.refreshCinematicClips();
@@ -658,6 +662,10 @@ export class KingdomGameUI {
                   <div class="map-heading"><span class="eyebrow">DEIN LEHEN</span><h2>Land & Leute</h2>
                     <span id="settlement-season"></span></div>
                   <div class="settlement-controls" aria-label="Kartendarstellung und Bezirksfilter">
+                    <label>Weltkarte <select id="map-scope" aria-label="Heimat oder Weltkarte wählen">
+                      <option value="home">Heimat · 16 Bezirke</option>
+                      <option value="world">Welt · Nachbarreiche</option>
+                    </select></label>
                     <label>Kartenansicht <select id="map-style" aria-label="Kartenansicht wählen">
                       <option value="flat">2D · Draufsicht</option>
                       <option value="isometric">3D-Look · isometrisch</option>
