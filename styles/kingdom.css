@@ -902,3 +902,16 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
   .kingdom-app .game-layout>.workspace .content-panel{margin:8px 0 0}
   .kingdom-app .game-layout>.council{display:none}
 }
+
+/* Pixi canvas must never spill past its independent map viewport. */
+.kingdom-app .game-layout>.map-card .map-host canvas {
+  display:block;
+  width:100% !important;
+  height:100% !important;
+  position:relative;
+  inset:auto;
+}
+.kingdom-app .game-layout>.map-card .map-hud {
+  flex:none;
+  clear:both;
+}
