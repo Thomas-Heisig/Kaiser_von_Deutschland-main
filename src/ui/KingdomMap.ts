@@ -180,21 +180,35 @@ export class KingdomMap {
     this.retroLoading = true;
     try {
       const base = import.meta.env.BASE_URL;
-      this.retroAtlas = await Assets.load<Texture>(base + 'assets/kenney/retro-workshop-atlas.png');
-      this.retroHouse = await Assets.load<Texture>(base + 'assets/kenney/retro-house-1200.png');
+      // Load independently: a missing optional house must never hide the whole map.
+      const [atlas, house] = await Promise.allSettled([
+        Assets.load<Texture>(base + 'assets/kenney/retro-workshop-atlas.png'),
+        Assets.load<Texture>(base + 'assets/kenney/retro-house-1200.png')
+      ]);
       if (this.destroyed) return;
-      this.retroEnabled = true;
-      this.app.canvas.dataset.retroLoaded = 'true';
-      this.app.canvas.dataset.retroVisible = String(this.projection === 'isometric');
-      this.drawRetroScenery();
-      this.lastSignature = '';
-      if (this.retroContext) {
-        const { kingdom, selected, completed, year, rivals } = this.retroContext;
-        this.update(kingdom, selected, completed, year, rivals);
+      if (atlas.status === 'fulfilled') {
+        this.retroAtlas = atlas.value;
+        this.retroHouse = house.status === 'fulfilled' ? house.value : undefined;
+        this.retroEnabled = true;
+        this.app.canvas.dataset.retroLoaded = 'true';
+        this.app.canvas.dataset.retroHouse = house.status === 'fulfilled' ? 'loaded' : 'fallback';
+        this.app.canvas.dataset.retroVisible = String(this.projection === 'isometric');
+        this.drawRetroScenery();
+        this.lastSignature = '';
+        if (this.retroContext) {
+          const { kingdom, selected, completed, year, rivals } = this.retroContext;
+          this.update(kingdom, selected, completed, year, rivals);
+        }
+      } else {
+        this.retroEnabled = false;
+        this.app.canvas.dataset.retroLoaded = 'fallback';
+        this.app.canvas.dataset.retroVisible = 'false';
+        console.warn('Kenney-Atlas nicht geladen; geometrische Karte bleibt nutzbar', atlas.reason);
       }
     } catch (error) {
-      console.warn('Retro-Kartenassets nicht geladen; geometrische Karte bleibt erhalten', error);
       this.app.canvas.dataset.retroLoaded = 'fallback';
+      this.app.canvas.dataset.retroVisible = 'false';
+      console.warn('Retro-Renderer nicht initialisiert; geometrische Karte bleibt nutzbar', error);
     } finally {
       this.retroLoading = false;
     }
