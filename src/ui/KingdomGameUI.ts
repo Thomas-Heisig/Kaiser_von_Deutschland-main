@@ -651,7 +651,7 @@ export class KingdomGameUI {
               <div id="kingdom-map" class="map-host" role="group" aria-label="Zentrierte Siedlungskarte – Gebäude auf der Karte auswählen"></div>
               <div class="map-hud" aria-label="Kartenwerkzeuge">
                 <div class="map-hud-top">
-                  <div class="map-heading"><span class="eyebrow">DEIN LEHEN</span><strong>Land & Leute</strong>
+                  <div class="map-heading"><span class="eyebrow">DEIN LEHEN</span><h2>Land & Leute</h2>
                     <span id="settlement-season"></span></div>
                   <div class="settlement-controls" aria-label="Kartendarstellung und Bezirksfilter">
                     <label>Kartenansicht <select id="map-style" aria-label="Kartenansicht wählen">
