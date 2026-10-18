@@ -1,35 +1,37 @@
-# ASSETS – Karten-Prototyp Variante A
+# Kenney Retro – geprüfte Pakete und erster Prototyp
 
-**Stand 18.10.2026 | Arbeitsmanifest, kein Nachweis bereits eingebauter Assets.**
+**Stand: 18.10.2026.** Die Originalarchive wurden vom Nutzer bereitgestellt und lokal geöffnet.
 
-## Regeln für Asset-Aufnahme
+| Paket | Version aus `License.txt` | Lizenz | Inhalt | Einsatz |
+|---|---|---|---|---|
+| Retro Fantasy Kit | 2.0 (19.02.2025) | CC0 | 105 GLB, 105 OBJ/FBX, 105 Previews | Mittelalter |
+| Retro Textures Fantasy | 1.0 (15.01.2026) | CC0 | 119 PNGs (inkl. Sample/Preview) | spätere Oberflächen/Materialien |
+| Retro Urban Kit | 2.0 (29.01.2025) | CC0 | 124 GLB, 124 OBJ/FBX, 124 Previews | Industrialisierung / Moderne |
 
-1. Originalquelle und **konkretes Paket** erfassen, nicht nur den Marktplatz.
-2. Lizenzdatei/Pack-Infoseite mit Lizenzversion, Datum und Link sichern.
-3. Dateien, Dateigröße, Bildabmessungen und SHA-256 nach Download prüfen.
-4. Zulässigkeit von **kommerzieller Nutzung, Bearbeitung und Weitergabe im Offline-ZIP** dokumentieren.
-5. Nur wirklich verwendete Dateien unter `public/assets/` übernehmen, keine unbekannt lizenzierten Assets.
-6. Ohne belegte Lizenz bleibt `status = ungeprüft`; keine Verwendung im öffentlichen Spiel.
+Die Licence-Dateien der drei ZIPs nennen ausdrücklich **Creative Commons Zero** mit kommerzieller und bearbeitender Nutzung. Kein zusätzliches npm-Paket nötig.
 
-## Paketauswahl
+## Erster eingebauter Atlas
 
-| Quelle / konkreter Pack | Lizenz-Status | Bearbeitung/Weitergabe | Inhalt und Einsatz | Einbau |
-| --- | --- | --- | --- | --- |
-| [Kenney Sketch Town](https://kenney.nl/assets/sketch-town) | Herausgeber gibt CC0 an; **Archiv-/Dateiinhalt noch nicht verifiziert** | CC0 gestattet grundsätzlich beides | Bevorzugte abgestimmte Quelle für 1 Werkstatt, Bodenkacheln und Umgebung | **Noch nicht eingebaut** |
-| [Kenney Isometric Tiles Landscape](https://kenney.nl/assets/isometric-tiles-landscape) | Herausgeber gibt CC0 an; Archiv ungeprüft | Grundsätzlich erlaubt | Ausweichquelle für Terrain, falls Sketch Town kein geeignetes Gelände enthält | Nicht eingebaut |
-| [Kenney Light Masks](https://kenney.nl/assets/light-masks) | Herausgeber gibt CC0 an; Archiv ungeprüft | Grundsätzlich erlaubt | Einfache vorgelagerte Lichtmaske ohne Lighting-Paket | Nicht eingebaut |
-| [Kenney Smoke Particles](https://kenney.nl/assets/smoke-particles) | Herausgeber gibt CC0 an; Archiv ungeprüft | Grundsätzlich erlaubt | Optional Rauchtexturen; alternativ kleine Sprites mit vorhandenem PixiJS | Nicht eingebaut |
-| [Quaternius Medieval Village Pack](https://quaternius.com/packs/medievalvillage.html) | Für Variante B gesondert erneut prüfen | Noch nicht für unser Build inventarisiert | Spätere vorgerenderte 3D-Alternative | **Nicht Bestandteil von A** |
+`public/assets/kenney/retro-workshop-atlas.png` (256 × 128 PNG, ca. 5,6 KB), aus **acht echten Kenney Preview-PNGs** mit 64 × 64 Bildpunkten erstellt (zeilenweise vier Spalten):
 
-**CC0 ist eine Aussage zur Lizenz**, kein Beleg, dass eine bestimmte Datei im aktuell angebotenen Archiv existiert. Dieses Manifest ist zunächst eine Planungsquelle, keine Freigabe eines fertigen Asset-Bundles.
+| Index | ZIP | Pfad im Archiv |
+|---|---|---|
+| 0 | Retro Fantasy Kit | `Previews/floor-flat.png` |
+| 1 | Retro Fantasy Kit | `Previews/wall-pane-wood-door.png` |
+| 2 | Retro Fantasy Kit | `Previews/wall-pane-wood-window.png` |
+| 3 | Retro Fantasy Kit | `Previews/roof.png` |
+| 4 | Retro Fantasy Kit | `Previews/tree-large.png` |
+| 5 | Retro Fantasy Kit | `Previews/detail-barrel.png` |
+| 6 | Retro Fantasy Kit | `Previews/tower-top.png` |
+| 7 | Retro Urban Kit | `Previews/grass.png` |
 
-## Datei-Metadaten vor dem ersten Commit vervollständigen
+PNG-Atlas-SHA256: `d8487bf6a8b082ec6cf49e927b9dc536888d08e054a3378e1ff46c9cba58b452`.
 
-| Asset-ID | Quelle/Pack | Dateiname | SHA-256 | Abmessungen | Lizenzdatei | Freigabe |
-| --- | --- | --- | --- | --- | --- | --- |
-| `tile-wiese` | Kenney Sketch Town | ungeprüft | ungeprüft | ungeprüft | aus Archiv sichern | ausstehend |
-| `gebäude-werkstatt` | Kenney Sketch Town | ungeprüft | ungeprüft | ungeprüft | aus Archiv sichern | ausstehend |
-| `lichtmaske-01` | Kenney Light Masks oder Sketch Town | ungeprüft | ungeprüft | ungeprüft | aus Archiv sichern | ausstehend |
-| `rauch-01` | Kenney Smoke Particles oder vorhandene PixiJS-Grafik | ungeprüft | ungeprüft | ungeprüft | aus Archiv sichern | ausstehend |
+**Wichtige Einordnung:** Die Grafiken sind Kenney-Vorschaurenderings der jeweiligen einzelnen GLB-Bauteile, **keine vollständigen Häuser oder vorgerenderten 3D-Kartenmodelle**. Das Werkstattgebäude kombiniert einfache Bauteile in einer PixiJS-Containeransicht. Der erste Prototyp belegt die Asset-Pipeline, nicht die fertige Ästhetik. Die Hauptkarte bleibt unverändert. Textures Fantasy ist inventarisiert, aber für den kleinen Prototyp bewusst noch nicht verwendet.
 
-Keine KI-generierten Bilder oder fremde Medien ohne individuellen Rechtenachweis als Ersatz verwenden. Für technische Schnittstellen und Messgrößen siehe [RENDERER.md](RENDERER.md).
+## Abnahmekriterien vor Produktivintegration
+
+1. Browser-Smoke belegt, dass `data-asset-status=loaded` und der Atlas über HTTP erreichbar ist, Fallback wird eigens getestet.
+2. Über das Original-GLB/OBJ-Set ein oder mehrere saubere Gebäude in identischem isometrischen Kamerawinkel **wirklich** vorgerendert.
+3. Gesonderte Performance-Messungen auf iPad/iPhone Safari; keine ungeprüften FPS-/Speicherangaben.
+4. Erst danach einen festen Bezirk in der produktiven Karte optional auf Retro umstellen, immer mit geometrischem Fallback.
