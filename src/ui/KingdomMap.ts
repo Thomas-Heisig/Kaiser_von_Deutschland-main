@@ -32,6 +32,7 @@ export class KingdomMap {
   private readonly chimneys: Graphics[] = [];
   private retroAtlas?: Texture;
   private retroHouse?: Texture;
+  private readonly retroEpochTextures = new Map<string, Texture>();
   private retroEnabled = false;
   private projection: 'flat' | 'isometric' = 'isometric';
   private retroLoading = false;
@@ -189,6 +190,21 @@ export class KingdomMap {
       if (atlas.status === 'fulfilled') {
         this.retroAtlas = atlas.value;
         this.retroHouse = house.status === 'fulfilled' ? house.value : undefined;
+        // Future epoch art uses separate named atlases. Optional and non-blocking:
+        // the existing retro scene remains playable if they are absent.
+        void Promise.allSettled(['fantasy','urban','textures'].map(async name => {
+          const texture = await Assets.load<Texture>(base + 'assets/kenney/retro-' + name + '-atlas.png');
+          if (!this.destroyed) {
+            this.retroEpochTextures.set(name, texture);
+            this.lastSignature = '';
+            if (this.retroContext) {
+              const { kingdom, selected, completed, year, rivals } = this.retroContext;
+              this.update(kingdom, selected, completed, year, rivals);
+            }
+          }
+        })).then(() => {
+          if (!this.destroyed) this.app.canvas.dataset.retroEpochAtlases = String(this.retroEpochTextures.size);
+        });
         this.retroEnabled = true;
         this.app.canvas.dataset.retroLoaded = 'true';
         this.app.canvas.dataset.retroHouse = house.status === 'fulfilled' ? 'loaded' : 'fallback';
@@ -248,6 +264,25 @@ export class KingdomMap {
     return sprite;
   }
 
+  /** Use the epoch atlas when available, otherwise the established CC0 fallback.
+   * The new atlases consist of eight 16×16 thumbnails in a horizontal strip.
+   */
+  private retroEpochTile(epoch: string, index: number, x: number, y: number, size: number): Sprite {
+    const key = epoch === 'industrial' || epoch === 'modern' ? 'urban' : 'fantasy';
+    const atlas = this.retroEpochTextures.get(key);
+    if (!atlas) return this.retroTile(index % 8, x, y, size);
+    const texture = new Texture({
+      source: atlas.source,
+      frame: new Rectangle((index % 8) * 16, 0, 16, 16)
+    });
+    const sprite = new Sprite(texture);
+    sprite.anchor.set(0.5, 1);
+    sprite.position.set(x, y);
+    sprite.width = size;
+    sprite.height = size;
+    return sprite;
+  }
+
   /** All 16 infrastructure districts receive a coherent Retro representation. */
   private drawRetroDistrict(group: Container, type: keyof KingdomInfrastructure, count: number, epoch: string): boolean {
     if (!this.retroEnabled || !this.retroAtlas || this.projection === 'flat') return false;
@@ -257,7 +292,7 @@ export class KingdomMap {
     const later = epoch === 'modern' || epoch === 'industrial';
     const opacity = count > 0 ? 1 : 0.4;
     const tile = (index: number, x: number, y: number, size: number): void => {
-      const sprite = this.retroTile(index, x, y, size);
+      const sprite = this.retroEpochTile(epoch, index, x, y, size);
       sprite.alpha = opacity;
       group.addChild(sprite);
     };
