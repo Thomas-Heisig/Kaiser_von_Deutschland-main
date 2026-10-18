@@ -63,7 +63,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [x] **Erster GLB→2D-Durchlauf:** modulares Kenney-Retro-Fantasy-Haus mit VTK/EGL orthografisch gerendert, transparentes mobiles PNG samt Hash dokumentiert und in den isolierten PixiJS-Prototyp eingebaut; Blender wurde dabei nicht verwendet.
 - [ ] Erst Desktop-Chromium visuell/technisch abnehmen; danach Safari auf echten iPad-/iPhone-Geräten nach Messplan prüfen. **Gerätemodelle/OS unbekannt – beim Test erfassen.**
 - [x] Die 16 festen Bezirke besitzen im Hauptspiel Kenney-Retro-Darstellungen (PR #72), Umschalter zwischen 2D und Retro steuert den Pixi-Renderer (PR #73); deterministische Retro-Landschaft eingefügt. GameEngine und Savegames unverändert.
-- [ ] Die vollständigen Fantasy-/Urban-/Textures-Atlanten als binäre Assets ins Repository übernehmen, verschiedene Gebäudetypen und epochenspezifische Grafiken zuordnen und Browser-/Geräte-Performance messen.
+- [~] Die 16 Bezirke besitzen nun differenzierte Retro-Silhouetten und Bauzustands-Deckkraft. Für **vollständige** Epoche-Grafik fehlen weiterhin als Git-Assets eingecheckte Fantasy-/Urban-/Textures-Atlanten, echte unterschiedliche Gebäuderenderings, Endgerätetests und Performance-Baseline.
 
 
 ## P2 — Spielerlebnis und Module
