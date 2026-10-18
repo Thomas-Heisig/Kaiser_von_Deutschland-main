@@ -32,7 +32,6 @@ export class KingdomMap {
   private readonly citizens: Container[] = [];
   private readonly chimneys: Graphics[] = [];
   private retroAtlas?: Texture;
-  private retroHouse?: Texture;
   private readonly retroEpochTextures = new Map<string, Texture>();
   private retroEnabled = false;
   private projection: 'flat' | 'isometric' = 'isometric';
@@ -192,7 +191,6 @@ export class KingdomMap {
       if (this.destroyed) return;
       if (atlas.status === 'fulfilled') {
         this.retroAtlas = atlas.value;
-        this.retroHouse = house.status === 'fulfilled' ? house.value : undefined;
         // Future epoch art uses separate named atlases. Optional and non-blocking:
         // the existing retro scene remains playable if they are absent.
         void Promise.allSettled(['fantasy','urban','textures'].map(async name => {
@@ -290,53 +288,6 @@ export class KingdomMap {
     sprite.width = size;
     sprite.height = size;
     return sprite;
-  }
-
-  /** Use the epoch atlas when available, otherwise the established CC0 fallback.
-   * The new atlases consist of eight 16×16 thumbnails in a horizontal strip.
-   */
-  private retroEpochTile(epoch: string, index: number, x: number, y: number, size: number): Sprite {
-    const key = epoch === 'industrial' || epoch === 'modern' ? 'urban' : 'fantasy';
-    const atlas = this.retroEpochTextures.get(key);
-    // The new epoch previews contain only 16px thumbnails. Upscaling these to
-    // large district buildings makes the mobile map look smeared. Use the
-    // existing 64px Kenney originals for larger silhouettes until high-resolution
-    // epoch renders are available.
-    if (!atlas || size > 48) return this.retroTile(index % 8, x, y, size);
-    const texture = new Texture({
-      source: atlas.source,
-      frame: new Rectangle((index % 8) * 16, 0, 16, 16)
-    });
-    const sprite = new Sprite(texture);
-    sprite.anchor.set(0.5, 1);
-    sprite.position.set(x, y);
-    sprite.width = size;
-    sprite.height = size;
-    return sprite;
-  }
-
-  /** Compose readable 2.5D building details from verified 64px Kenney pieces.
-   * One decorative cluster per building; no new building positions in GameEngine.
-   */
-  private addRetroBuildingDetail(group: Container, type: keyof KingdomInfrastructure,
-    x: number, y: number, opacity: number): void {
-    const add = (index: number, dx: number, dy: number, size: number): void => {
-      const part = this.retroTile(index, x + dx, y + dy, size);
-      part.alpha = opacity;
-      group.addChild(part);
-    };
-    if (type === 'markets' || type === 'taverns') {
-      add(5, 24, 9, 20); // barrels and market goods
-      add(4, -25, 8, 26);
-    } else if (type === 'workshops' || type === 'guildhalls') {
-      add(5, 23, 9, 26); // working materials
-      add(1, -22, 5, 28);
-    } else if (type === 'warehouses') {
-      add(5, -21, 10, 25);
-      add(5, 22, 10, 25);
-    } else if (type === 'hospitals' || type === 'schools') {
-      add(4, 26, 8, 27);
-    }
   }
 
   /** Coherent orthographic 2.5D graphics for all fixed infrastructure districts.
