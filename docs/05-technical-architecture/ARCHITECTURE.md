@@ -946,10 +946,10 @@ demographicSystem.startEpidemicControl(diseaseId, [player1, player2]);
 ## 📚 Weitere Ressourcen
 
 - **[API-Referenz](API_REFERENCE.md)** - Detaillierte API-Dokumentation
-- **[Bevölkerungs-API](POPULATION_API.md)** - Population Dynamics API (NEU)
-- **[Benutzerhandbuch](USER_GUIDE.md)** - Spielanleitung
-- **[Roadmap](ROADMAP.md)** - Geplante Features
-- **[Contributing](../CONTRIBUTING.md)** - Beitrags-Richtlinien
+- **[Bevölkerungs-API](../04-domains/population/api.md)** - Population Dynamics API
+- **[Dokumentations-Index](../INDEX.md)** - Übersicht
+- **[Roadmap](../00-meta/roadmap.md)** - Geplante Features
+- **[Contributing](../../CONTRIBUTING.md)** - Beitrags-Richtlinien
 
 ---
 

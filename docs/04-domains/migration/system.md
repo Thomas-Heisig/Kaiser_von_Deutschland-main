@@ -304,9 +304,9 @@ Planned features (from roadmap):
 ## References
 
 - [Population Dynamics Roadmap](../ROADMAP.md#version-215---bevölkerungsdynamik)
-- [Scalability Guide](./SCALABLE_FEATURES_IMPLEMENTATION.md)
-- [CitizenSystem API](./POPULATION_API.md)
-- [GameEngine Architecture](./ARCHITECTURE.md)
+- [Scalability Guide](../../reports/SCALABLE_FEATURES_IMPLEMENTATION.md)
+- [CitizenSystem API](../population/api.md)
+- [GameEngine Architecture](../../05-technical-architecture/ARCHITECTURE.md)
 
 ---
 

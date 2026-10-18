@@ -397,10 +397,10 @@ socialSystem.createMessage(
 
 ## 📚 Weitere Ressourcen
 
-- **[Population Dynamics API](POPULATION_API.md)** - Entwickler-Dokumentation
-- **[Architecture Guide](ARCHITECTURE.md)** - Technische Details
-- **[Roadmap](ROADMAP.md)** - Geplante Features
-- **[Main User Guide](USER_GUIDE.md)** - Allgemeine Spielanleitung
+- **[Population Dynamics API](api.md)** - Entwickler-Dokumentation
+- **[Architecture Guide](../../05-technical-architecture/ARCHITECTURE.md)** - Technische Details
+- **[Roadmap](../../00-meta/roadmap.md)** - Geplante Features
+- **[Dokumentations-Index](../../INDEX.md)** - Übersicht
 
 ---
 
