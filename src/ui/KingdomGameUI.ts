@@ -508,10 +508,6 @@ export class KingdomGameUI {
         ${this.settingsDialogMarkup()}
         ${this.filmDialogMarkup()}
       </main>`;
-    const mapScopeSelect = this.root.querySelector<HTMLSelectElement>('#map-scope');
-    mapScopeSelect?.addEventListener('change', () => {
-      this.map?.setMapScope(mapScopeSelect.value === 'world' ? 'world' : 'home');
-    });
     this.bindSettingsControls();
     this.bindIntro();
     void this.refreshCinematicClips();
@@ -770,6 +766,10 @@ export class KingdomGameUI {
     this.root.querySelector('#settlement-details')?.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
       if (target.closest('[data-open-district]')) this.navigate('build');
+    });
+    const mapScopeSelect = this.root.querySelector<HTMLSelectElement>('#map-scope');
+    mapScopeSelect?.addEventListener('change', () => {
+      this.map?.setMapScope(mapScopeSelect.value === 'world' ? 'world' : 'home');
     });
     const mapStyleSelect = this.root.querySelector<HTMLSelectElement>('#map-style');
     if (mapStyleSelect) {

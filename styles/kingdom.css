@@ -915,3 +915,57 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
   flex:none;
   clear:both;
 }
+
+/* Retro interface refinement: lighter, compact controls entirely outside canvas. */
+.kingdom-app .game-layout>.map-card .map-hud {
+  background:#29483a;
+  color:#f6ebce;
+}
+.kingdom-app .game-layout>.map-card .settlement-controls {
+  border:0;
+  border-radius:0;
+  background:transparent;
+  padding:4px;
+  box-shadow:none;
+  gap:8px;
+}
+.kingdom-app .game-layout>.map-card .map-tools {
+  border:0;
+  background:transparent;
+  padding:2px;
+}
+.kingdom-app .game-layout>.map-card .map-tools button {
+  background:#37634a;
+  border:1px solid #94ac80;
+  color:#fff6d7;
+}
+.kingdom-app .game-layout>.map-card .map-tools button:focus-visible,
+.kingdom-app .game-layout>.map-card .settlement-controls select:focus-visible {
+  outline:3px solid #f5d084;
+  outline-offset:2px;
+}
+@media(max-width:760px){
+  .kingdom-app .game-layout>.map-card .map-hud-top,
+  .kingdom-app .game-layout>.map-card .map-hud-bottom {
+    display:flex;
+    gap:6px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .kingdom-app .game-layout>.map-card .settlement-controls label {
+    flex:1 1 145px;
+    font-size:.75rem;
+  }
+  .kingdom-app .game-layout>.map-card .settlement-controls select {
+    font-size:16px;
+    min-height:44px;
+  }
+  .kingdom-app .game-layout>.map-card .map-tools button {
+    min-width:44px;
+    min-height:44px;
+  }
+  .kingdom-app .game-layout>.map-card .settlement-details {
+    flex:1 1 100%;
+    max-width:100%;
+  }
+}
