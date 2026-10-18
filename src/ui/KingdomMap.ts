@@ -196,6 +196,7 @@ export class KingdomMap {
           const texture = await Assets.load<Texture>(base + 'assets/kenney/retro-' + name + '-atlas.png');
           if (!this.destroyed) {
             this.retroEpochTextures.set(name, texture);
+            if (name === 'textures') this.drawRetroScenery();
             this.lastSignature = '';
             if (this.retroContext) {
               const { kingdom, selected, completed, year, rivals } = this.retroContext;
@@ -230,6 +231,22 @@ export class KingdomMap {
     }
   }
 
+  /** Eight material swatches (16px each) from Kenney Retro Textures Fantasy. */
+  private retroMaterial(index: number, x: number, y: number, size: number): Sprite | undefined {
+    const atlas = this.retroEpochTextures.get('textures');
+    if (!atlas) return undefined;
+    const texture = new Texture({
+      source: atlas.source, frame: new Rectangle((index % 8) * 16, 0, 16, 16)
+    });
+    const sprite = new Sprite(texture);
+    sprite.anchor.set(0.5, 0.5);
+    sprite.position.set(x, y);
+    sprite.width = size;
+    sprite.height = Math.max(12, size * 0.55);
+    sprite.alpha = 0.64;
+    return sprite;
+  }
+
   /** Deterministic CC0 Kenney landscape details, visually separate from game state.
    * Never place art over a district hit area or use an unbounded number of sprites.
    */
@@ -247,7 +264,15 @@ export class KingdomMap {
       tile.alpha = 0.75 + (i % 3) * 0.09;
       this.retroScenery.addChild(tile);
     }
+    // Material swatches are small ground accents and never capture input.
+    for (let i = 0; i < 18; i++) {
+      const x = 105 + i * 137 % 805, y = 85 + i * 89 % 480;
+      if (SETTLEMENT_DISTRICTS.some(d => Math.hypot(d.x - x, d.y - y) < 72)) continue;
+      const material = this.retroMaterial(i, x, y, 24 + i % 3 * 5);
+      if (material) this.retroScenery.addChild(material);
+    }
     this.app.canvas.dataset.retroScenery = String(this.retroScenery.children.length);
+    this.app.canvas.dataset.retroMaterials = String(this.retroScenery.children.filter(x => x instanceof Sprite).length);
   }
 
   private retroTile(index: number, x: number, y: number, size = 44): Sprite {
