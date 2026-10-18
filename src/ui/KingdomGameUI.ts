@@ -922,6 +922,8 @@ export class KingdomGameUI {
         await this.map.initialize(host, (type: keyof KingdomInfrastructure): void => {
           this.selected = type;
           this.navigate('build');
+        }, (_rivalId: string): void => {
+          this.navigate('diplomacy');
         });
         this.map.setMotion(this.motionEnabled);
         this.map.setProjection(this.mapStyle);

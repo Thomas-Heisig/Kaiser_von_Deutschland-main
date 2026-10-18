@@ -12,6 +12,7 @@ export class KingdomMap {
   private readonly settlements = new Container();
   private readonly retroScenery = new Container();
   private readonly neighbors = new Container();
+  private onNeighborSelect?: (id: string) => void;
   private districtFilter: DistrictFilter = 'alle';
   private lastSignature = '';
   private observer?: ResizeObserver;
@@ -80,7 +81,8 @@ export class KingdomMap {
    * @returns Resolves when the map can be rendered.
    * @throws Error when no graphics renderer is available.
    */
-  public async initialize(host: HTMLElement, onSelect: (type: keyof KingdomInfrastructure) => void): Promise<void> {
+  public async initialize(host: HTMLElement, onSelect: (type: keyof KingdomInfrastructure) => void, onNeighborSelect?: (id: string) => void): Promise<void> {
+    this.onNeighborSelect = onNeighborSelect;
     await this.app.init({
       background: 0x182d2a, antialias: true, autoDensity: true,
       resolution: Math.min(window.devicePixelRatio || 1, 2),
@@ -603,6 +605,10 @@ export class KingdomMap {
       const { x, y } = places[index];
       const region = new Container();
       region.position.set(x, y);
+      region.eventMode = 'static';
+      region.cursor = 'pointer';
+      region.hitArea = new Rectangle(-155, -105, 310, 210);
+      region.on('pointertap', () => this.onNeighborSelect?.(rival.id));
       const subdued = rival.subjugated;
       const color = subdued ? 0x426b51 : [0x6b5542, 0x52596f, 0x6c544e, 0x536c62, 0x70624c, 0x5c5574][index];
       const boundary: number[] = [];
