@@ -10,6 +10,7 @@ export class KingdomMap {
   private readonly app = new Application();
   private readonly world = new Container();
   private readonly settlements = new Container();
+  private readonly retroScenery = new Container();
   private readonly neighbors = new Container();
   private districtFilter: DistrictFilter = 'alle';
   private lastSignature = '';
@@ -95,6 +96,7 @@ export class KingdomMap {
     this.drawLandscape();
     this.drawAtmosphere();
     this.world.addChild(this.atmosphere);
+    this.world.addChild(this.retroScenery);
     this.world.addChild(this.neighbors);
     this.world.addChild(this.settlements);
     this.world.addChild(this.animation);
@@ -163,6 +165,7 @@ export class KingdomMap {
   /** Switch between the classic geometric map and Kenney Retro sprites. */
   public setProjection(mode: 'flat' | 'isometric'): void {
     this.projection = mode;
+    this.retroScenery.visible = mode === 'isometric';
     this.app.canvas.dataset.retroProjection = mode;
     this.lastSignature = '';
     if (this.retroContext && this.initialized && !this.destroyed) {
@@ -181,6 +184,7 @@ export class KingdomMap {
       if (this.destroyed) return;
       this.retroEnabled = true;
       this.app.canvas.dataset.retroLoaded = 'true';
+      this.drawRetroScenery();
       this.lastSignature = '';
       if (this.retroContext) {
         const { kingdom, selected, completed, year, rivals } = this.retroContext;
@@ -192,6 +196,26 @@ export class KingdomMap {
     } finally {
       this.retroLoading = false;
     }
+  }
+
+  /** Deterministic CC0 Kenney landscape details, visually separate from game state.
+   * Never place art over a district hit area or use an unbounded number of sprites.
+   */
+  private drawRetroScenery(): void {
+    for (const child of this.retroScenery.removeChildren()) child.destroy({ children: true });
+    if (!this.retroAtlas || this.destroyed) return;
+    this.retroScenery.visible = this.projection === 'isometric';
+    for (let i = 0; i < 65; i++) {
+      const x = 87 + (i * 199) % 832;
+      const y = 80 + (i * 127) % 472;
+      if (SETTLEMENT_DISTRICTS.some(d => Math.hypot(d.x - x, d.y - y) < 66)) continue;
+      const nearWater = x < 305 && y > 160 && y < 440;
+      const tile = this.retroTile(nearWater ? 7 : (i % 5 === 0 ? 4 : 7),
+        x, y, nearWater ? 28 : i % 5 === 0 ? 52 : 24);
+      tile.alpha = 0.75 + (i % 3) * 0.09;
+      this.retroScenery.addChild(tile);
+    }
+    this.app.canvas.dataset.retroScenery = String(this.retroScenery.children.length);
   }
 
   private retroTile(index: number, x: number, y: number, size = 44): Sprite {

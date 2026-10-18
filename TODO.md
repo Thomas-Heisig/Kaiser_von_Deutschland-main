@@ -62,7 +62,8 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [x] Prototyp-Baseline bewusst eingefroren: 144 Kacheln, 1 modular angedeutetes Gebäude, 1 Licht, 24 Rauchpartikel, 30-FPS-Limit. **Preview-Sprites ≠ fertig vorgerendertes GLB-Gebäude.**
 - [x] **Erster GLB→2D-Durchlauf:** modulares Kenney-Retro-Fantasy-Haus mit VTK/EGL orthografisch gerendert, transparentes mobiles PNG samt Hash dokumentiert und in den isolierten PixiJS-Prototyp eingebaut; Blender wurde dabei nicht verwendet.
 - [ ] Erst Desktop-Chromium visuell/technisch abnehmen; danach Safari auf echten iPad-/iPhone-Geräten nach Messplan prüfen. **Gerätemodelle/OS unbekannt – beim Test erfassen.**
-- [ ] Nach bestandenen Messgates genau einen festen Bezirk optional auf Retro-Sprite umstellen; geometrische Fallbacks und vorhandene Kartenauswahl erhalten.
+- [x] Die 16 festen Bezirke besitzen im Hauptspiel Kenney-Retro-Darstellungen (PR #72), Umschalter zwischen 2D und Retro steuert den Pixi-Renderer (PR #73); deterministische Retro-Landschaft eingefügt. GameEngine und Savegames unverändert.
+- [ ] Die vollständigen Fantasy-/Urban-/Textures-Atlanten als binäre Assets ins Repository übernehmen, verschiedene Gebäudetypen und epochenspezifische Grafiken zuordnen und Browser-/Geräte-Performance messen.
 
 
 ## P2 — Spielerlebnis und Module
