@@ -112,9 +112,9 @@ try {
     const scope = page.locator('#map-scope');
     if (await scope.count()) {
       await scope.selectOption('world');
-      if (await canvas.getAttribute('data-map-scope') !== 'world') failures.push('World selector did not activate world renderer on phone');
+      if (await page.locator('#kingdom-map canvas').getAttribute('data-map-scope') !== 'world') failures.push('World selector did not activate world renderer on phone');
       await scope.selectOption('home');
-      if (await canvas.getAttribute('data-map-scope') !== 'home') failures.push('Home selector did not restore home renderer on phone');
+      if (await page.locator('#kingdom-map canvas').getAttribute('data-map-scope') !== 'home') failures.push('Home selector did not restore home renderer on phone');
     } else failures.push('Home/world map selector missing on phone');
     await page.locator('#map-style').selectOption('flat');
     if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-projection') !== 'flat') failures.push('Pixi renderer did not return to geometric mode');
