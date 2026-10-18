@@ -102,8 +102,8 @@ try {
         overlaidControls:document.querySelectorAll('.map-card .map-hud #map-style, .map-card .map-hud [data-zoom]').length
       };
     });
-    if(mapLayer.relativeWidth>3||mapLayer.relativeHeight>3||mapLayer.mapHostHeight<400)
-      failures.push('map fails to fill full game layout '+JSON.stringify(mapLayer));
+    if(mapLayer.relativeWidth<40 || mapLayer.mapHostHeight<400)
+      failures.push('map must have a dedicated large viewport '+JSON.stringify(mapLayer));
     if(mapLayer.duplicatedBuildings||mapLayer.overlaidControls!==4)
       failures.push('map has duplicate district list or missing overlay controls '+JSON.stringify(mapLayer));
     await page.locator('#map-style').selectOption('isometric');
@@ -197,9 +197,15 @@ try {
         hudBackground:hud?getComputedStyle(hud).backgroundColor:'',
         loaded:canvas?.dataset.retroLoaded,visible:canvas?.dataset.retroVisible};
     });
-    if(metrics.width<300 || metrics.height<500) failures.push('Mobile retro canvas too small: '+JSON.stringify(metrics));
-    if(metrics.hudBackground!=='rgba(0, 0, 0, 0)' && metrics.hudBackground!=='transparent')
-      failures.push('Mobile canvas occluded by map HUD: '+JSON.stringify(metrics));
+    if(metrics.width<300 || metrics.height<380) failures.push('Mobile retro canvas too small: '+JSON.stringify(metrics));
+    // The HUD is now a separate panel BELOW the map, not an overlay.
+    const overlap = await page.evaluate(() => {
+      const canvas=document.querySelector('#kingdom-map canvas')?.getBoundingClientRect();
+      const hud=document.querySelector('.game-layout>.map-card .map-hud')?.getBoundingClientRect();
+      return canvas && hud ? Math.min(canvas.right,hud.right)>Math.max(canvas.left,hud.left)
+        && Math.min(canvas.bottom,hud.bottom)>Math.max(canvas.top,hud.top) : true;
+    });
+    if(overlap) failures.push('HUD overlaps playable canvas');
     await page.locator('#map-style').selectOption('flat');
     if(await canvas.getAttribute('data-retro-visible')!=='false') failures.push('2D option did not disable retro canvas');
     await page.locator('#map-style').selectOption('isometric');
