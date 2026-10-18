@@ -708,3 +708,8 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
 /* Keep map selectors below the floating date/time toolbar rather than behind it. */
 .kingdom-app .game-layout>.map-card .map-hud-top{padding-top:95px;}
 @media(max-width:760px){.kingdom-app .game-layout>.map-card .map-hud-top{padding-top:155px;}}
+
+/* Zoom never overlaps the floating overview card: keep it in the open scene. */
+.kingdom-app .game-layout>.map-card .map-tools{position:absolute;top:210px;right:clamp(270px,21vw,330px);}
+@media(max-width:1180px){.kingdom-app .game-layout>.map-card .map-tools{top:210px;right:14px;}}
+@media(max-width:760px){.kingdom-app .game-layout>.map-card .map-tools{top:265px;right:8px;}}
