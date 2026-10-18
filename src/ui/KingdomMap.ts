@@ -36,6 +36,7 @@ export class KingdomMap {
   private readonly retroEpochTextures = new Map<string, Texture>();
   private retroEnabled = false;
   private projection: 'flat' | 'isometric' = 'isometric';
+  private mapScope: 'home' | 'world' = 'home';
   private retroLoading = false;
   private retroContext?: { kingdom: Kingdom; selected: keyof KingdomInfrastructure; completed: readonly string[]; year: number; rivals: readonly RivalRealm[] };
 
@@ -643,14 +644,27 @@ export class KingdomMap {
     this.app.canvas.dataset.neighborTerritories = String(Math.min(rivals.length, places.length));
   }
 
+  public setMapScope(scope: 'home' | 'world'): void {
+    this.mapScope = scope;
+    this.app.canvas.dataset.mapScope = scope;
+    this.settlements.visible = scope === 'home';
+    this.retroScenery.visible = scope === 'home' && this.projection === 'isometric';
+    this.neighbors.visible = true;
+    this.zoom = 1;
+    this.offset = { x: 0, y: 0 };
+    this.fit();
+  }
+
   private fit(): void {
     if (!this.initialized || this.destroyed) return;
     // On phones the old 1350px reference shrank the entire settlement to a blur.
     // Fit to a narrower, usable map window; retain normal desktop framing.
     const mobile = this.app.screen.width < 760;
-    const scale = (mobile
-      ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
-      : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850)) * this.zoom;
+    const scale = (this.mapScope === 'world'
+      ? Math.min(this.app.screen.width / 1500, this.app.screen.height / 1150)
+      : mobile
+        ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
+        : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850)) * this.zoom;
     this.world.scale.set(scale);
     this.world.position.set(
       this.app.screen.width / 2 - 500 * scale + this.offset.x,
