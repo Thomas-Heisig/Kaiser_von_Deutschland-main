@@ -167,6 +167,7 @@ export class KingdomMap {
     this.projection = mode;
     this.retroScenery.visible = mode === 'isometric';
     this.app.canvas.dataset.retroProjection = mode;
+    this.app.canvas.dataset.retroVisible = String(this.retroEnabled && mode === 'isometric');
     this.lastSignature = '';
     if (this.retroContext && this.initialized && !this.destroyed) {
       const { kingdom, selected, completed, year, rivals } = this.retroContext;
@@ -184,6 +185,7 @@ export class KingdomMap {
       if (this.destroyed) return;
       this.retroEnabled = true;
       this.app.canvas.dataset.retroLoaded = 'true';
+      this.app.canvas.dataset.retroVisible = String(this.projection === 'isometric');
       this.drawRetroScenery();
       this.lastSignature = '';
       if (this.retroContext) {

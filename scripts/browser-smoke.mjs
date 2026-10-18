@@ -174,6 +174,40 @@ try {
     }
     await page.close();
   }
+  // Mobile retro regression: assert a real game canvas, loaded assets and a visible
+  // retro render, not merely an unobstructed but empty HUD.
+  {
+    const page = await browser.newPage({ viewport:{width:375,height:812}, deviceScaleFactor:2, isMobile:true, hasTouch:true });
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto('http://127.0.0.1:4173/', {waitUntil:'domcontentloaded'});
+    await page.locator('#intro-skip').click();
+    await page.getByRole('button',{name:/Herrschaft beginnen/i}).click();
+    const canvas=page.locator('#kingdom-map canvas');
+    await canvas.waitFor({timeout:30000});
+    await page.waitForFunction(() => {
+      const canvas=document.querySelector('#kingdom-map canvas');
+      return canvas?.dataset.retroLoaded === 'true' && canvas?.dataset.retroVisible === 'true';
+    }, {timeout:20000});
+    const metrics=await page.evaluate(() => {
+      const canvas=document.querySelector('#kingdom-map canvas');
+      const hud=document.querySelector('.game-layout>.map-card .map-hud');
+      const rect=canvas?.getBoundingClientRect();
+      return {width:rect?.width??0,height:rect?.height??0,
+        hudBackground:hud?getComputedStyle(hud).backgroundColor:'',
+        loaded:canvas?.dataset.retroLoaded,visible:canvas?.dataset.retroVisible};
+    });
+    if(metrics.width<300 || metrics.height<500) failures.push('Mobile retro canvas too small: '+JSON.stringify(metrics));
+    if(metrics.hudBackground!=='rgba(0, 0, 0, 0)' && metrics.hudBackground!=='transparent')
+      failures.push('Mobile canvas occluded by map HUD: '+JSON.stringify(metrics));
+    await page.locator('#map-style').selectOption('flat');
+    if(await canvas.getAttribute('data-retro-visible')!=='false') failures.push('2D option did not disable retro canvas');
+    await page.locator('#map-style').selectOption('isometric');
+    if(await canvas.getAttribute('data-retro-visible')!=='true') failures.push('Retro option did not reenable retro canvas');
+    if(errors.length) failures.push('Mobile retro runtime errors: '+errors.join('; '));
+    await page.screenshot({path:'smoke-mobile-retro-375.png',fullPage:true});
+    await page.close();
+  }
   // Isolated renderer prototype must load independently of the game engine.
   {
     const page = await browser.newPage({ viewport:{width:820,height:740} });

@@ -126,3 +126,5 @@ Die historische README enthält detailliertere Funktionsumfänge als der bisheri
 - [x] Verbindliche Ist-/Plan-Trennung, historische README-, TODO- und Roadmap-Snapshots, aktive Dokumentationsnavigation und Changelog-Reihenfolge angelegt.
 
 **Vollständige historische Ideen:** [README-Ideenbestand](docs/00-meta/backlog-from-readme.md). Ausführliche technische Einträge, frühere PR-Notizen und alle Legacy-TODOs bleiben lesbar im [unveränderten TODO-Snapshot](docs/outdated/TODO-snapshot-2026-10-17.md); ein Archiv-Eintrag ist nicht stillschweigend erledigt.
+
+- [~] Mobiler Retro-Regressionstest (375×812): Pixi-Canvas, Asset-Ladezustand, Overlay-Transparenz, 2D/Retro-Wechsel und Screenshot in Chromium CI; echtes iPhone/iPad Safari weiterhin ungeprüft.
