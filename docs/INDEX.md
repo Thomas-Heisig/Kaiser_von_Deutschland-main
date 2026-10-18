@@ -11,6 +11,7 @@
 - [README-Ideenbestand](00-meta/backlog-from-readme.md) — erhaltene ursprüngliche Ideen und Featureentwürfe
 - [Spielanleitung](USER_GUIDE.md), [Tests](../GAMEPLAY_TESTING_GUIDE.md)
 - [Architektur](05-technical-architecture/ARCHITECTURE.md), [API](05-technical-architecture/API_REFERENCE.md)
+- [Kartenrenderer / Phase-2-Plan](05-technical-architecture/RENDERER.md), [Asset- und Lizenzmanifest](05-technical-architecture/ASSETS.md)
 - [Betrieb](06-development/operations-guide.md), [Deployment](06-development/public-deployment.md)
 - [CONTRIBUTING](../CONTRIBUTING.md), [SECURITY](../SECURITY.md)
 
