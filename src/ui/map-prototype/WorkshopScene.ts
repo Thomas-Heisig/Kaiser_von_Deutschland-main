@@ -95,7 +95,8 @@ export class WorkshopScene {
         sprite.height = 169;
         house.addChild(sprite);
         report.dataset.houseStatus = 'rendered';
-      } catch {
+      } catch (error) {
+        report.dataset.houseError = String(error);
         house.addChild(this.sprite('window', -21, 5, 1.5));
         house.addChild(this.sprite('door', 24, 5, 1.5));
         house.addChild(this.sprite('roof', 0, -37, 1.75));
