@@ -51,3 +51,7 @@ Der Kartenrenderer lädt den verpflichtenden Kenney-Atlas und das optionale vorg
 ## Epochengrafik – Asset-Routing
 
 Das Kartenmodul kann jetzt drei **optionale** 128×16 PNG-Thumbnailstreifen unter `public/assets/kenney/retro-{fantasy,urban,textures}-atlas.png` laden. Die acht Felder pro Streifen sind je 16×16 px. Die Fantasy-Grafiken werden für frühere Epochen, Urban für Industrialisierung und Moderne gewählt. Fehlen die Dateien, bleibt der vorherige Kenney-Atlas als visueller Fallback aktiv. **Wichtig:** Die drei neuen Binärdateien wurden noch nicht in GitHub eingecheckt; das Routing allein ist keine vollständige Asset-Integration.
+
+## Vollständiger Abschlussplan
+
+Die verbindliche, überprüfbare Aufgabenmatrix für **Darstellung der Nachbarn, Strategiekarten-Open-World, 16 Bezirke, vollständige Kenney-Grafikproduktion, Mobile und Veröffentlichung** steht in [TODO.md](../../TODO.md) unter **G0–G4**. Die Open World ist ausdrücklich ein künftig zu bauendes Regions-/Weltmodell, keine bereits existierende frei begehbare Spielwelt. Die bisherige `drawNeighbors()`-Ansicht umfasst maximal sechs schematische Ellipsen ohne vollständig modellierte regionale Interaktion. PR #80 brachte nur kompakte 16px-Vorschaustreifen; die eigentliche Komplettproduktion und echte iOS-Abnahme sind ausstehend.
