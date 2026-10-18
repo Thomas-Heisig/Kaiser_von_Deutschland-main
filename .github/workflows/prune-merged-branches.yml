@@ -1,0 +1,68 @@
+name: Prune merged and redundant branches
+
+# One-time cleanup on landing this workflow in main. Any future run must be
+# triggered explicitly by an owner. This job never deletes unmerged work.
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/prune-merged-branches.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove only verifiably integrated refs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            const all = await github.paginate(github.rest.repos.listBranches,{owner,repo,per_page:100});
+            const prs = await github.paginate(github.rest.pulls.list,{owner,repo,state:'closed',per_page:100});
+            const merged = new Map();
+            for (const p of prs) {
+              if (p.merged_at && p.head.repo?.full_name === `${owner}/${repo}`) {
+                const matches = merged.get(p.head.ref) || new Set();
+                matches.add(p.head.sha);
+                merged.set(p.head.ref,matches);
+              }
+            }
+            const protectedNames = new Set(['main','master','develop','development','staging']);
+            let deleted = 0;
+            const preserved = [];
+            const failures = [];
+            for (const branch of all) {
+              const name = branch.name;
+              if (protectedNames.has(name) || branch.protected) continue;
+              // GitHub tracks the exact source HEAD in the merged PR. No changed
+              // commits after that HEAD may be deleted via this criterion.
+              let safe = merged.get(name)?.has(branch.commit.sha) === true;
+              if (!safe) {
+                // Even with no merged PR, an ancestor of main has no unique
+                // commits. Never delete a diverged branch without a merged PR.
+                try {
+                  const {data} = await github.rest.repos.compareCommits({owner,repo,base:'main',head:name});
+                  safe = data.ahead_by === 0;
+                } catch (error) {
+                  core.warning(`Cannot compare ${name}: ${error.message}`);
+                }
+              }
+              if (!safe) {preserved.push(name);continue;}
+              try {
+                await github.rest.git.deleteRef({owner,repo,ref:`heads/${name}`});
+                deleted++;
+                core.info(`Deleted integrated branch: ${name}`);
+              } catch(error) {
+                failures.push(`${name}: ${error.message}`);
+                core.warning(`Could not delete ${name}: ${error.message}`);
+              }
+            }
+            await core.summary.addHeading('Branch cleanup')
+              .addRaw(`Integrated refs deleted: **${deleted}**. Diverged/unmerged branches preserved: **${preserved.length}**. Failures: **${failures.length}**.\n\n`)
+              .addRaw('Preserved (manual review needed): '+(preserved.join(', ') || 'none'))
+              .write();
+            if (failures.length) core.setFailed('Some confirmed integrated branches could not be deleted. Review action permissions/protection.');
