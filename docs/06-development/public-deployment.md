@@ -4,6 +4,18 @@
 
 Der Quellcode liegt in einem **privaten** GitHub-Repository. Das Spiel läuft als Vite/TypeScript-Browseranwendung mit statischen MP3-/MP4-Dateien und speichert Spielstände lokal im jeweiligen Browser. Ein öffentliches Deployment ist noch **nicht** bestätigt.
 
+## GitHub-Pages-Workflow und Artefakt-Fallback
+
+Der Workflow prüft nach dem Build lesend, ob eine Pages-Site existiert. Bei HTTP 404 überspringt er die
+Veröffentlichung mit einer Warnung und einem Hinweis in der Run-Zusammenfassung. Das Artefakt
+`kaiser-https-site` bleibt im Workflow-Run herunterladbar; ein grüner Run mit übersprungener Veröffentlichung
+ist **kein Live-Deployment**. Andere API-Fehler sowie Build- und Deploymentfehler lassen den Run weiterhin scheitern.
+
+Der Repository-Eigentümer muss einmalig **Settings → Pages → Build and deployment → Source: GitHub Actions**
+auswählen und gegebenenfalls die Pages-Verfügbarkeit im Tarif für private Repositories prüfen. Danach
+`Publish HTTPS PWA (GitHub Pages)` über **Run workflow** erneut ausführen. Die automatische Pages-Aktivierung
+wird nicht mehr versucht; zusätzliche Administrator-Tokens werden nicht benötigt.
+
 ## Empfohlener Weg: Cloudflare Pages oder ähnliches Static Hosting
 1. Im Hosting-Dienst das GitHub-Konto autorisieren und das Repository `Thomas-Heisig/Kaiser_von_Deutschland-main` auswählen. Bei einem privaten Repo muss die Installation explizit Zugriff erhalten.
 2. Als Produktionsbranch `main`, Buildbefehl `npm ci && npm run build` und Ausgabeverzeichnis `dist` konfigurieren.
