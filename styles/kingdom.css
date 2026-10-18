@@ -721,3 +721,25 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
 .map-card .settlement-controls select { background: #2e3d31; border: 1px solid #c2a66e; color: #fff3d2; min-height: 40px; }
 #kingdom-map canvas { touch-action: none; image-rendering: auto; }
 @media(max-width:720px) { .map-card .settlement-controls select { min-height:44px; } }
+
+/* Mobile map visibility: never paint an opaque HUD over the Pixi canvas.
+   Keep controls opaque individually but the map-stage overlay transparent. */
+.kingdom-app .game-layout>.map-card .map-hud{
+  background:transparent;
+  border-bottom:0;
+  box-shadow:none;
+}
+@media(max-width:760px){
+  .kingdom-app .game-layout{min-height:max(850px,calc(100dvh - 100px));}
+  .kingdom-app .game-layout>.map-card .map-host{min-height:850px;}
+  .kingdom-app .game-layout>.map-card .map-hud-top{padding-top:108px;}
+  .kingdom-app .game-layout>.map-card .map-tools{top:212px;right:8px;}
+  .kingdom-app .game-layout>.workspace .content-panel{margin-top:clamp(280px,45dvh,500px);}
+  .kingdom-app .game-layout>.map-card .settlement-controls{
+    background:#162c25e8;max-width:calc(100vw - 20px);
+  }
+}
+@media(max-width:390px){
+  .kingdom-app .game-layout>.map-card .map-hud-top{padding-top:90px;}
+  .kingdom-app .game-layout>.map-card .map-tools{top:195px;}
+}
