@@ -704,3 +704,7 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
  .kingdom-app .game-layout>.workspace .content-panel{margin-top:clamp(230px,39dvh,410px);}
 }
 @media(prefers-reduced-motion:reduce){.kingdom-app .game-layout>.map-card .map-host canvas{transition:none!important}}
+
+/* Keep map selectors below the floating date/time toolbar rather than behind it. */
+.kingdom-app .game-layout>.map-card .map-hud-top{padding-top:95px;}
+@media(max-width:760px){.kingdom-app .game-layout>.map-card .map-hud-top{padding-top:155px;}}
