@@ -264,18 +264,17 @@ Business Schools lehren:
 
 ### Game Design
 - [Mode Selection](../03-game-design/mode-selection.md) - Praktische Umsetzung
-- [Core Loop](../03-game-design/core-loop.md) - Spielmechaniken (geplant)
-- [Multiplayer Design](../03-game-design/multiplayer.md) - Mehrspieler-Aspekte (geplant)
+- [Gameplay System](../03-game-design/GAMEPLAY_SYSTEM.md) - Spielmechaniken
 
 ### Technische Details
-- [System Overview](../05-technical-architecture/system-overview.md) - Architektur (geplant)
-- [Database Schema](../05-technical-architecture/persistence.md) - Datenhaltung
+- [Architektur](../05-technical-architecture/ARCHITECTURE.md) - Systemarchitektur
+- [Persistenz](../05-technical-architecture/persistence.md) - Datenhaltung
+- [API-Referenz](../05-technical-architecture/API_REFERENCE.md) - Schnittstellen
 
 ---
 
-**Version**: 2.4.0  
-**Letzte Aktualisierung**: Dezember 2025  
-**Status**: In Entwicklung
+**Version**: 2.5.1  
+**Letzte Aktualisierung**: 17. Oktober 2026  
+**Status**: [Aktueller Projektstatus](../00-meta/status.md) · [TODO](../../TODO.md)
 
-**Hauptautor**: Basierend auf dem Konzept der perspektivenabhängigen Ökonomie  
 **Quellen**: Siehe [Referenzen](../99-appendix/references.md)

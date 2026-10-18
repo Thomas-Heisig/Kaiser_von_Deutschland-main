@@ -75,7 +75,7 @@ Kaiser von Deutschland ist eine komplexe Strategie- und Rollenspielsimulation, d
 > **Neu in 2.3.6:** 💰 **Kriegsfinanzierung & Kriegsanleihen** - Finanziere Kriege mit historischen Methoden!
 > **Neu in 2.5.0:** 🎮 **Lebensphasen-basiertes Gameplay-System** + **20 Roadmap Features**  
 > **MASSIV ERWEITERT in v2.4.0:** 🚀 **17 neue Kernsysteme** für Population, Krieg, Spionage, Städte, Kultur & Recht!  
-> Siehe [ROADMAP](docs/00-meta/roadmap.md) für geplante Features und [STATUS](docs/00-meta/status.md) für Details.
+> Siehe [ROADMAP](roadmap.md) für geplante Features und [STATUS](status.md) für Details.
 
 ## ✨ Hauptmerkmale
 
@@ -171,7 +171,7 @@ Wirtschaft, Militär, Soziales, Kultur und Politik - alles detailliert simuliert
 - **💡 Empfohlene Charaktere**: Basierend auf Familie und sozialen Beziehungen
 - **🎯 Rollenspezifische Ziele**: Jeder Beruf hat eigene AI-Verhaltensweisen
 
-**Siehe [LIFE_SIMULATION.md](docs/LIFE_SIMULATION.md) für Details**
+**Siehe [LIFE_SIMULATION.md](../LIFE_SIMULATION.md) für Details**
 
 ### 🎮 Lebensphasen-basiertes Gameplay (v2.5.0 - NEU!)
 - **🎬 Intro-Sequenz**: Historisches Cinematic + Philosophische Fragen für Persönlichkeitsprofil
@@ -185,7 +185,7 @@ Wirtschaft, Militär, Soziales, Kultur und Politik - alles detailliert simuliert
 - **🧠 Persönlichkeitssystem**: Charisma, Intellekt, Pragmatismus, Spiritualität beeinflussen Gameplay
 - **📜 Historische Szenarien**: Vordefinierte Startpunkte in verschiedenen Epochen
 
-**Siehe [GAMEPLAY_SYSTEM.md](docs/03-game-design/GAMEPLAY_SYSTEM.md) für Details**
+**Siehe [GAMEPLAY_SYSTEM.md](../03-game-design/GAMEPLAY_SYSTEM.md) für Details**
 
 ### ⛪ Religions- & Kultursystem (v2.3.0 - NEU!)
 - **7 Religionen**: Katholizismus, Protestantismus, Orthodoxie, Islam, Judentum, Heidentum, Atheismus

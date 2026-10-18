@@ -18,6 +18,7 @@ import { campaignsForYear, CAMPAIGNS, CampaignId } from '../core/CampaignCatalog
 import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../core/CourtAssistantRegistry';
 import { GameAmbience, Soundscape } from './GameAmbience';
 import type { HistoryKind } from '../core/WorldHistoryCatalog';
+import { HelpSystem } from './HelpSystem';
 
 type View = 'civic' | 'modernization' | 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
@@ -106,6 +107,7 @@ export class KingdomGameUI {
   private readonly councilAdvisor = new CouncilAdvisor();
   private readonly retryOpening = (): void => { void this.tryOpeningTheme(); };
   private readonly ambience = new GameAmbience();
+  private readonly helpSystem = new HelpSystem();
   private motionEnabled = false;
   private mapStyle: 'flat' | 'isometric' = 'flat';
   private councilDialog?: HTMLDialogElement;
@@ -1678,7 +1680,12 @@ export class KingdomGameUI {
           <article><h3>7. Dein Vermächtnis</h3><p>Erfülle die Ziele rechts. Du kannst danach weiterspielen.
           Speichere manuell; beim Laden bleibt die Zeit immer pausiert. Nach jedem abgeschlossenen Monat wird automatisch gespeichert.</p></article></div>
         <p class="muted tip">Die Karte zeigt einen schematischen Siedlungsraum, keine Grenzen des historischen
-          Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>`;
+          Deutschlands. Mehrspieler bedeutet hier: mehrere Herrscher abwechselnd an einem Gerät (Hotseat).</p>
+        <div style="margin-top:1.5rem;text-align:center">
+          <button class="primary" id="help-open-docs" style="font-size:1.1em;padding:0.75em 2em">
+            📚 Vollständige Dokumentation öffnen
+          </button>
+        </div>`;
     }
     panel.querySelectorAll<HTMLButtonElement>('[data-civic-assign]').forEach(button => {
       button.addEventListener('click',()=>void this.run(()=>{
@@ -1800,6 +1807,10 @@ export class KingdomGameUI {
     panel.querySelectorAll<HTMLButtonElement>('[data-open]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => this.navigate(button.dataset.open as View));
     });
+    const helpDocsBtn = panel.querySelector<HTMLButtonElement>('#help-open-docs');
+    if (helpDocsBtn) {
+      helpDocsBtn.addEventListener('click', (): void => { this.helpSystem.toggle(); });
+    }
     panel.querySelectorAll<HTMLButtonElement>('[data-research]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => {
         void this.run((): void => {

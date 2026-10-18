@@ -1,8 +1,11 @@
 # Life Simulation Integration - Developer Quick Reference
 
+> **Hinweis:** Dieses Dokument beschreibt die Life-Simulation als **zukünftiges Feature (v2.6.0)**.  
+> Der aktuelle Spielstand ist **v2.5.1**. Siehe [Status](00-meta/status.md) und [TODO](../TODO.md).
+
 ## 🔧 Integration Summary
 
-The life simulation system (v2.6.0) has been fully integrated into the game. This document provides a quick reference for developers.
+The life simulation system (planned for v2.6.0) provides a reference for future development. This document describes the intended integration.
 
 ## Key Components
 

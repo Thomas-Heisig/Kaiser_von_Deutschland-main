@@ -26,37 +26,63 @@ export class HelpSystem {
   // @ts-expect-error - Unused until file tracking features are implemented
   private currentFile: string | null = null;
 
-  // Documentation structure
+  // Documentation structure – alle Pfade relativ zum Projektstamm
   private sections: DocumentationSection[] = [
     {
       id: 'quickstart',
       title: 'Schnelleinstieg',
       icon: '🚀',
       files: [
-        { id: 'readme', title: 'Projekt-Übersicht', path: '../README.md', description: 'Hauptübersicht des Projekts' },
-        { id: 'user-guide', title: 'Benutzerhandbuch', path: 'docs/USER_GUIDE.md', description: 'Vollständige Spielanleitung' },
-        { id: 'gameplay', title: 'Gameplay-System', path: 'docs/GAMEPLAY_SYSTEM.md', description: 'Lebensphasen und Spielmechaniken' }
+        { id: 'readme', title: 'Projekt-Übersicht', path: 'README.md', description: 'Hauptübersicht des Projekts' },
+        { id: 'user-guide', title: 'Benutzerhandbuch', path: 'docs/USER_GUIDE.md', description: 'Spielanleitung (v2.0.0 – historisch)' },
+        { id: 'gameplay', title: 'Gameplay-System', path: 'docs/03-game-design/GAMEPLAY_SYSTEM.md', description: 'Lebensphasen und Spielmechaniken' },
+        { id: 'mode-selection', title: 'Modus-Auswahl', path: 'docs/03-game-design/mode-selection.md', description: 'Spielmodi und Rollenauswahl' }
       ]
     },
     {
-      id: 'features',
-      title: 'Features & Systeme',
+      id: 'simulation',
+      title: 'Simulation & Wirtschaft',
       icon: '⚙️',
       files: [
-        { id: 'population', title: 'Bevölkerungssystem', path: 'docs/POPULATION_GUIDE.md', description: 'Bevölkerungsdynamik und -verwaltung' },
-        { id: 'ecology', title: 'Ökologisches System', path: 'docs/ECOLOGY_COMPLETION_REPORT.md', description: 'Klima und Umwelt' },
-        { id: 'integrated-systems', title: 'Integrierte Systeme', path: 'docs/INTEGRATED_SYSTEMS_GUIDE.md', description: 'Alle integrierten Spielsysteme' },
-        { id: 'new-features', title: 'Neue Features', path: 'docs/NEW_FEATURES.md', description: 'Neueste hinzugefügte Features' }
+        { id: 'sim-readme', title: 'Simulationsmodell-Übersicht', path: 'docs/02-simulation-model/README.md', description: 'Perspektivenabhängige Ökonomie' },
+        { id: 'economic-model', title: 'Wirtschaftsmodell', path: 'docs/02-simulation-model/economic-model.md', description: '6 Gameplay-Varianten' },
+        { id: 'intensity-scaling', title: 'Intensitätsskalierung', path: 'docs/02-simulation-model/intensity-scaling.md', description: '4 Intensitäts-Achsen' },
+        { id: 'role-perspectives', title: 'Rollen-Perspektiven', path: 'docs/02-simulation-model/role-perspectives.md', description: '5 Haupt-Perspektiven auf die Wirtschaft' }
+      ]
+    },
+    {
+      id: 'domains',
+      title: 'Fachbereiche',
+      icon: '🏛️',
+      files: [
+        { id: 'population', title: 'Bevölkerungssystem', path: 'docs/04-domains/population/README.md', description: 'Bevölkerungsdynamik und -verwaltung' },
+        { id: 'population-guide', title: 'Bevölkerungs-Guide', path: 'docs/04-domains/population/guide.md', description: 'Detaillierte Bevölkerungsführung' },
+        { id: 'population-api', title: 'Bevölkerungs-API', path: 'docs/04-domains/population/api.md', description: 'Bevölkerungs-Schnittstellen' },
+        { id: 'social-mobility', title: 'Soziale Mobilität', path: 'docs/04-domains/population/social-mobility.md', description: 'Soziale Schichten und Aufstieg' },
+        { id: 'ecology', title: 'Ökologie', path: 'docs/04-domains/ecology/README.md', description: 'Klima- und Umweltsystem' },
+        { id: 'ecology-api', title: 'Ökologie-API', path: 'docs/04-domains/ecology/api.md', description: 'Ökologie-Schnittstellen' },
+        { id: 'migration', title: 'Migration', path: 'docs/04-domains/migration/README.md', description: 'Migrationssystem' },
+        { id: 'migration-system', title: 'Migrations-System', path: 'docs/04-domains/migration/system.md', description: 'Detailliertes Migrationssystem' },
+        { id: 'naval', title: 'Marine', path: 'docs/04-domains/naval/README.md', description: 'Marine-Technologie und Einheiten' },
+        { id: 'naval-system', title: 'Marine-System', path: 'docs/04-domains/naval/system.md', description: 'Detailliertes Marine-System' },
+        { id: 'war-financing', title: 'Kriegsfinanzierung', path: 'docs/04-domains/war-financing/README.md', description: 'Kriegsfinanzierungs-Mechaniken' }
       ]
     },
     {
       id: 'development',
-      title: 'Entwicklung',
+      title: 'Entwicklung & Technik',
       icon: '👨‍💻',
       files: [
-        { id: 'architecture', title: 'Architektur', path: 'docs/ARCHITECTURE.md', description: 'System-Architektur und Design' },
-        { id: 'api', title: 'API-Referenz', path: 'docs/API_REFERENCE.md', description: 'Code-Dokumentation' },
-        { id: 'contributing', title: 'Beitragen', path: '../CONTRIBUTING.md', description: 'Wie Sie zum Projekt beitragen' }
+        { id: 'architecture', title: 'Architektur', path: 'docs/05-technical-architecture/ARCHITECTURE.md', description: 'System-Architektur und Design' },
+        { id: 'api', title: 'API-Referenz', path: 'docs/05-technical-architecture/API_REFERENCE.md', description: 'Code-Dokumentation' },
+        { id: 'persistence', title: 'Persistenz', path: 'docs/05-technical-architecture/persistence.md', description: 'Datenhaltung und Speicherung' },
+        { id: 'pixijs-overhaul', title: 'PixiJS-Überarbeitung', path: 'docs/05-technical-architecture/PIXIJS_OVERHAUL.md', description: 'Grafik-Engine' },
+        { id: 'system-consolidation', title: 'System-Konsolidierung', path: 'docs/05-technical-architecture/system-consolidation.md', description: 'Adapter und Migration' },
+        { id: 'database-impl', title: 'Datenbank-Implementierung', path: 'docs/06-development/database-implementation.md', description: 'SQLite-Integration' },
+        { id: 'database-usage', title: 'Datenbank-Nutzung', path: 'docs/06-development/database-usage.md', description: 'SQLite-API-Nutzung' },
+        { id: 'operations', title: 'Betrieb', path: 'docs/06-development/operations-guide.md', description: 'Build, Test und Release' },
+        { id: 'deployment', title: 'Deployment', path: 'docs/06-development/public-deployment.md', description: 'Öffentliches Hosting' },
+        { id: 'contributing', title: 'Beitragen', path: 'CONTRIBUTING.md', description: 'Wie Sie zum Projekt beitragen' }
       ]
     },
     {
@@ -64,18 +90,35 @@ export class HelpSystem {
       title: 'Projekt-Information',
       icon: '📋',
       files: [
-        { id: 'roadmap', title: 'Roadmap', path: 'docs/ROADMAP.md', description: 'Geplante Features und Entwicklung' },
-        { id: 'changelog', title: 'Changelog', path: '../CHANGELOG.md', description: 'Versionshistorie' },
-        { id: 'status', title: 'Status', path: 'docs/00-meta/status.md', description: 'Aktueller Entwicklungsstand' }
+        { id: 'roadmap', title: 'Roadmap', path: 'docs/00-meta/roadmap.md', description: 'Geplante Features und Entwicklung' },
+        { id: 'status', title: 'Status', path: 'docs/00-meta/status.md', description: 'Aktueller Entwicklungsstand' },
+        { id: 'vision', title: 'Vision', path: 'docs/00-meta/vision.md', description: 'Projekt-Vision und Ziele' },
+        { id: 'changelog', title: 'Changelog', path: 'CHANGELOG.md', description: 'Versionshistorie' },
+        { id: 'todo', title: 'TODO', path: 'TODO.md', description: 'Aktuelle Aufgabenliste' }
+      ]
+    },
+    {
+      id: 'overview',
+      title: 'Überblick & Grundlagen',
+      icon: '📖',
+      files: [
+        { id: 'overview-index', title: 'Spielüberblick', path: 'docs/01-overview/index.md', description: 'Spielidee und Konzept' },
+        { id: 'glossary', title: 'Glossar', path: 'docs/01-overview/glossary.md', description: 'Fachbegriffe der Simulation' },
+        { id: 'assumptions', title: 'Annahmen', path: 'docs/01-overview/assumptions.md', description: 'Grundannahmen der Simulation' },
+        { id: 'target-groups', title: 'Zielgruppen', path: 'docs/01-overview/target-groups.md', description: 'Zielgruppen und Anwendungsfälle' }
       ]
     },
     {
       id: 'documentation',
-      title: 'Vollständige Dokumentation',
+      title: 'Dokumentation',
       icon: '📚',
       files: [
         { id: 'index', title: 'Dokumentations-Index', path: 'docs/INDEX.md', description: 'Vollständige Dokumentations-Übersicht' },
-        { id: 'doc-readme', title: 'Dokumentations-Struktur', path: 'docs/README.md', description: 'Dokumentations-Organisation' }
+        { id: 'doc-readme', title: 'Dokumentations-Struktur', path: 'docs/README.md', description: 'Dokumentations-Organisation' },
+        { id: 'ui-flow', title: 'UI-Flow', path: 'docs/UI_FLOW.md', description: 'Benutzeroberfläche und Abläufe' },
+        { id: 'life-simulation', title: 'Life-Simulation', path: 'docs/LIFE_SIMULATION.md', description: 'Lebenssimulation (Entwurf)' },
+        { id: 'adr-database', title: 'ADR: Datenbank', path: 'docs/08-decisions/adr-0001-database-technology.md', description: 'Architekturentscheidung Datenbank' },
+        { id: 'references', title: 'Referenzen', path: 'docs/99-appendix/references.md', description: 'Quellen und weiterführende Links' }
       ]
     }
   ];
@@ -118,10 +161,12 @@ export class HelpSystem {
                 
                 <div class="help-quick-links">
                   <h4>Schnellzugriff:</h4>
-                  <button class="quick-link-btn" data-file="user-guide">📘 Benutzerhandbuch</button>
+                  <button class="quick-link-btn" data-file="readme">📋 Projekt-Übersicht</button>
                   <button class="quick-link-btn" data-file="gameplay">🎮 Gameplay-System</button>
                   <button class="quick-link-btn" data-file="roadmap">🗺️ Roadmap</button>
+                  <button class="quick-link-btn" data-file="status">📊 Aktueller Status</button>
                   <button class="quick-link-btn" data-file="index">📚 Dokumentations-Index</button>
+                  <button class="quick-link-btn" data-file="todo">✅ TODO-Liste</button>
                 </div>
               </div>
             </main>

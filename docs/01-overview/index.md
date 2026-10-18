@@ -224,12 +224,13 @@ Es gibt **kein festes Spielziel** - stattdessen:
 
 Für detaillierte Informationen siehe:
 
-- [Simulation Model](../02-simulation-model/economic-model.md) - Wirtschaftliche Grundlagen
-- [Game Design](../03-game-design/core-loop.md) - Spielmechaniken
-- [Technical Architecture](../05-technical-architecture/system-overview.md) - Technische Details
-- [User Guide](../USER_GUIDE.md) - Spielanleitung
+- [Simulation Model](../02-simulation-model/README.md) – Simulationskonzepte
+- [Game Design](../03-game-design/GAMEPLAY_SYSTEM.md) – Spielmechaniken
+- [Architektur](../05-technical-architecture/ARCHITECTURE.md) – Technische Details
+- [Dokumentations-Index](../INDEX.md) – Vollständige Übersicht
 
 ---
 
-**Version**: 2.3.1  
-**Letzte Aktualisierung**: Dezember 2025
+**Version**: 2.5.1  
+**Letzte Aktualisierung**: 17. Oktober 2026  
+**Status**: [Aktueller Projektstatus](../00-meta/status.md) · [TODO](../../TODO.md)

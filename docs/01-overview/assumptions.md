@@ -260,7 +260,7 @@ Annahmen wurden justiert für:
 ## Änderungshistorie
 
 **v2.3.1** (Dez 2025): Erste vollständige Dokumentation  
-**v2.4.0** (geplant): Integration von Datenbank-Modell
+**v2.5.1** (Okt 2026): Version aktualisiert, DB-Integration abgeschlossen
 
 ---
 
@@ -270,5 +270,6 @@ Annahmen wurden justiert für:
 
 ---
 
-**Version**: 2.3.1  
-**Letzte Aktualisierung**: Dezember 2025
+**Version**: 2.5.1  
+**Letzte Aktualisierung**: 17. Oktober 2026  
+**Status**: [Aktueller Projektstatus](../00-meta/status.md) · [TODO](../../TODO.md)

@@ -294,10 +294,12 @@ Falls SQLite nicht funktioniert:
 
 **Änderungen**:
 - 2025-12-27: Initial ADR erstellt und akzeptiert
+- 2026-10-17: Review durchgeführt – SQLite-Integration abgeschlossen, siehe [Datenbank-Implementierung](../06-development/database-implementation.md)
 
 ---
 
 **ADR-Nummer**: ADR-0001  
 **Erstellt**: 2025-12-27  
-**Aktualisiert**: 2025-12-27  
-**Status**: Accepted
+**Aktualisiert**: 2026-10-17  
+**Nächste Überprüfung**: 2027-04-17  
+**Status**: Accepted (implementiert)

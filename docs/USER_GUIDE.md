@@ -1,18 +1,18 @@
 # 🎮 Kaiser von Deutschland - Benutzerhandbuch
 
-**Version**: 2.0.0  
+> **⚠️ Historisches Dokument (v2.0.0, Dezember 2025)**  
+> Dieses Handbuch beschreibt einen älteren Entwicklungsstand.  
+> **Aktuelle Version:** v2.5.1 (Oktober 2026)  
+> Für den aktuellen Stand siehe [Status](00-meta/status.md), [TODO](../TODO.md) und [Dokumentations-Index](INDEX.md).
+
+**Version**: 2.0.0 (historisch)  
 **Letzte Aktualisierung**: Dezember 2025
 
 Willkommen bei Kaiser von Deutschland! Dieses Handbuch führt Sie durch alle Aspekte des Spiels.
 
 ## 🚧 Entwicklungsstatus
 
-> **⚠️ Hinweis:** Das Spiel befindet sich im **ersten Entwicklungsstadium**.  
-> 
-> - Die beschriebenen Features sind größtenteils implementiert
-> - Einige Funktionen befinden sich noch in der Entwicklung
-> - Das Gameplay wird kontinuierlich verbessert und ausbalanciert
-> - Eine vollständig spielbare Version wird bald verfügbar sein
+> **⚠️ Hinweis:** Das Spiel befindet sich im **ersten Entwicklungsstadium** (Stand Dezember 2025).
 
 ---
 

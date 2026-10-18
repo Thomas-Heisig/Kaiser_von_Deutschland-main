@@ -130,5 +130,6 @@ const stats = warFinancingSystem.getStats();
 
 ---
 
-**Version:** 2.3.6  
-**Letzte Aktualisierung:** Dezember 2025
+**Version:** 2.5.1  
+**Letzte Aktualisierung:** 17. Oktober 2026  
+**Status:** [Aktueller Projektstatus](../../00-meta/status.md) · [TODO](../../../TODO.md)

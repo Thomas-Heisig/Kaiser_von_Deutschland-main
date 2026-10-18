@@ -144,6 +144,6 @@ Die zentrale Vision ist eine **lebendige Geschichtssimulation**, die sich in Ech
 
 ---
 
-**Letzte Aktualisierung**: Dezember 2025  
-**Version**: 2.3.1  
-**Status**: Aktive Entwicklung
+**Letzte Aktualisierung**: 17. Oktober 2026  
+**Version**: 2.5.1  
+**Status**: Aktive Entwicklung – [Aktueller Status](status.md) · [TODO](../../TODO.md) · [Roadmap](roadmap.md)

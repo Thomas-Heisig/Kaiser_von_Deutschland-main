@@ -302,5 +302,7 @@ https://www.ipcc.ch/data/
 
 ---
 
-**Letzte Aktualisierung**: Dezember 2025  
-**Vorschläge für weitere Quellen**: [GitHub Issues](https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/issues)
+**Letzte Aktualisierung**: 17. Oktober 2026  
+**Version**: 2.5.1  
+**Vorschläge für weitere Quellen**: [GitHub Issues](https://github.com/Thomas-Heisig/Kaiser_von_Deutschland/issues)  
+**Status**: [Aktueller Projektstatus](../00-meta/status.md) · [TODO](../../TODO.md)
