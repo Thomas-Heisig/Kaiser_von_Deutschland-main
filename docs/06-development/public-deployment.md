@@ -1,20 +1,31 @@
-> **Ist-Zustand 17.10.2026:** GitHub Pages kann für dieses private Repository trotz `enablement: true` mit `Resource not accessible by integration` nicht automatisch erstellt werden. Die Seite ist **nicht** als online verifiziert. Vorgehensweise: Repository-Eigentümer aktiviert Pages in Settings → Pages mit GitHub Actions oder bindet ein alternatives HTTPS-Hosting (z. B. Cloudflare Pages) an; danach Workflow ausführen, DNS/TLS und reale HTTP-Medienantworten sowie PWA/Offline auf Geräten prüfen. Media-Dateien und eine fertige Website sind als GitHub-Actions-Artefakt vorhanden, aber keine öffentlich abrufbare Website. Vor einer Freigabe Rechte, Impressum und Datenschutz prüfen.
+> **Ist-Zustand 18.10.2026:** GitHub Pages ist aktiv. Das Spiel ist live unter:  
+> [https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/](https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/)  
+> PWA-Installation, Offline-Modus und alle Medien sind über diesen Weg verfügbar.  
+> Media-Dateien und eine fertige Website sind als GitHub-Actions-Artefakt vorhanden.  
+> Vor einer Freigabe Rechte, Impressum und Datenschutz prüfen.
 
 # Öffentliches Deployment – Kaiser von Deutschland
 
-Der Quellcode liegt in einem **privaten** GitHub-Repository. Das Spiel läuft als Vite/TypeScript-Browseranwendung mit statischen MP3-/MP4-Dateien und speichert Spielstände lokal im jeweiligen Browser. Ein öffentliches Deployment ist noch **nicht** bestätigt.
+Der Quellcode liegt in einem **privaten** GitHub-Repository. Das Spiel läuft als Vite/TypeScript-Browseranwendung mit statischen MP3-/MP4-Dateien und speichert Spielstände lokal im jeweiligen Browser.
 
-## GitHub-Pages-Workflow und Artefakt-Fallback
+## GitHub Pages
 
-Der Workflow prüft nach dem Build lesend, ob eine Pages-Site existiert. Bei HTTP 404 überspringt er die
-Veröffentlichung mit einer Warnung und einem Hinweis in der Run-Zusammenfassung. Das Artefakt
-`kaiser-https-site` bleibt im Workflow-Run herunterladbar; ein grüner Run mit übersprungener Veröffentlichung
-ist **kein Live-Deployment**. Andere API-Fehler sowie Build- und Deploymentfehler lassen den Run weiterhin scheitern.
+Die Live-URL lautet:  
+**https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/**
 
-Der Repository-Eigentümer muss einmalig **Settings → Pages → Build and deployment → Source: GitHub Actions**
-auswählen und gegebenenfalls die Pages-Verfügbarkeit im Tarif für private Repositories prüfen. Danach
-`Publish HTTPS PWA (GitHub Pages)` über **Run workflow** erneut ausführen. Die automatische Pages-Aktivierung
-wird nicht mehr versucht; zusätzliche Administrator-Tokens werden nicht benötigt.
+### Technische Einrichtung
+
+1. Repository-Eigentümer muss einmalig **Settings → Pages → Build and deployment → Source: GitHub Actions** auswählen.
+2. Der Workflow `.github/workflows/deploy-pages.yml` deployt automatisch bei jedem Push auf `main`.
+3. Manuelles Auslösen: **Actions → Publish HTTPS PWA (GitHub Pages) → Run workflow**.
+
+### Was bereitgestellt wird
+
+- Vollständige Vite-Produktions-Build mit TypeScript, CSS und Assets
+- 15 MP3-Titel, fünf MP4-Videos, Albumcover
+- PWA-Manifest, Service Worker, Icons (192px + 512px)
+- Offline-ZIP unter `/downloads/kaiser-von-deutschland-offline.zip`
+- `workshop-prototype.html` für Grafik-Experimente
 
 ## Empfohlener Weg: Cloudflare Pages oder ähnliches Static Hosting
 1. Im Hosting-Dienst das GitHub-Konto autorisieren und das Repository `Thomas-Heisig/Kaiser_von_Deutschland-main` auswählen. Bei einem privaten Repo muss die Installation explizit Zugriff erhalten.

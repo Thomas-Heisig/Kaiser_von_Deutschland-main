@@ -2,9 +2,21 @@
 
 Historische Strategiesimulation mit einer spielbaren, lokalen Aufbaukampagne, Gesellschafts- und Bürgerentwicklung sowie optionalen KI-Hilfen. **Aktueller Einstieg:** `src/main.ts` → `src/ui/KingdomGameUI.ts` → `src/core/GameEngine.ts`. Ältere Frameworks und Planungsstände sind nicht automatisch im Hauptspiel enthalten.
 
-> **Stand 17.10.2026:** Quellcode und Builds auf `main` geprüft. CI und Chromium-Smoke bestanden (Commit `28e35c82`). **Kein bestätigter öffentlicher HTTPS-Spielserver:** GitHub Pages scheitert bei privatem Repository an `Resource not accessible by integration`. PWA-Installation auf echten Geräten bleibt offen. Einzelne spielbare Module sind von großen Visionen zu unterscheiden.
+> **Stand 18.10.2026:** Quellcode und Builds auf `main` geprüft. CI und Chromium-Smoke bestanden.
 
-## Spielstart
+## Spielen
+
+### 🌐 Online (GitHub Pages)
+
+Das Spiel ist öffentlich spielbar unter:
+
+**https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/**
+
+> PWA-Installation, Offline-Modus und alle Medien sind auf diesem Weg verfügbar.  
+> Spielstände liegen lokal im Browser (IndexedDB) – kein Cloud-Backup.  
+> Bei Audio-Problemen: Einmal auf die Seite klicken, dann startet der Ton.
+
+### 💻 Lokal
 
 Node.js 20+ und npm erforderlich.
 
@@ -26,6 +38,8 @@ npm run preview
 
 ## Im aktiven Hauptspiel verfügbar
 
+## Im aktiven Hauptspiel verfügbar
+
 - Einzelspieler und lokaler Hotseat mit 2–4 Herrschern (kein Online-Mehrspieler).
 - Aufbauwirtschaft, Markt, Forschung, Handel/Schifffahrt, Diplomatie, Kultur und Hofverwaltung; Epoche und Startjahr wählbar.
 - Historisch begrenzte Bürgeraufträge mit Kosten, mehrmonatigem Fortschritt und Lebensläufen; im Spiel über **⚒ Bürgeraufträge** erreichbar.
@@ -42,7 +56,12 @@ Die historische README beschreibt zahlreiche Erweiterungen, die teils in Quellco
 
 ## Veröffentlichung und Sicherheit
 
-Ein erfolgreicher Build ist **kein** Nachweis für ein öffentliches Deployment. Der GitHub-Pages-Workflow ist vorhanden, aber die Pages-Aktivierung ist durch Repository-/Token-Berechtigungen blockiert. Details: [Deployment-Anleitung](docs/06-development/public-deployment.md) und [TODO](TODO.md). Für öffentliche Veröffentlichung müssen außerdem vollständiges Impressum, Datenschutz und Rechte an Medien geprüft werden.
+Das Spiel ist live unter **GitHub Pages**:  
+[https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/](https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/)
+
+Der Deployment-Workflow `.github/workflows/deploy-pages.yml` baut bei jedem Push auf `main` und veröffentlicht automatisch auf GitHub Pages. Voraussetzung: In **Settings → Pages → Source: GitHub Actions** muss diese Quelle ausgewählt sein.
+
+Für öffentliche Veröffentlichung müssen vollständiges Impressum, Datenschutz und Rechte an Medien geprüft werden. Details: [Deployment-Anleitung](docs/06-development/public-deployment.md).
 
 ## Dokumentation – verbindliche Orientierung
 
