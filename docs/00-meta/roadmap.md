@@ -7,9 +7,11 @@
 Die [TODO](../../TODO.md) ist die *einzige operative Aufgabenliste*. Diese Roadmap zeigt Abhängigkeiten und Entwicklungsziele, **kein selbst attestiertes Fertigstellungsprotokoll**. [Status](status.md) beschreibt ausschließlich nachprüfbare Ergebnisse. Frühere Visionen, Zeitpläne und alle Ideen der bisherigen Dokumentation wurden vollständig archiviert: [Original-Roadmap](../outdated/roadmap-snapshot-2026-10-17.md), [Original-TODO](../outdated/TODO-snapshot-2026-10-17.md), [README-Ideen](backlog-from-readme.md). Keine historischen Ideen wurden gestrichen.
 
 ## P1-Balancing-Befund (18.10.2026)
+
 Die monatliche Spielschleife verwendete bisher keine jahreszeitliche Ernte- und Holzproduktion, obwohl der alte Jahrespfad solche Faktoren vorsah. Die monatliche Prognose und die Buchung berücksichtigen nun übereinstimmend Winter und Sommer. Mehrjährige Balance-Kalibrierung bleibt offen.
 
 ## P1-Testabdeckung (17.10.2026)
+
 Eine Industriekampagne wird automatisiert mit echten Bauten, Forschung, Save/Load und Sieg getestet. Ein zusätzlicher 60-Monats-Lauf sichert endliche Werte und zentrale Grenzen. Andere Kampagnen, echte Niederlagebedingungen, freie Wirtschaftsbalance und Lasttests bleiben offen.
 
 ## Gameplay-P1-Befunde (17.10.2026)
@@ -19,6 +21,7 @@ Eine Industriekampagne wird automatisiert mit echten Bauten, Forschung, Save/Loa
 - Noch offen: vollständiger automatisierter Spielabschluss, mehrjährige Wirtschaftsbalance und reale Niederlagebedingungen.
 
 ## Kartenoberfläche (18.10.2026)
+
 Vollflächige Siedlungskarte unter transparenten Panels, Kartenfilter, Bezirksausbau und Zoom als Grafik-Overlays implementiert. Die zuvor duplizierte Gebäudeliste entfällt; Nachbarreiche erscheinen schematisch am Kartenrand. Echte geopolitische Grenzen und Endgeräteabnahme bleiben offen.
 
 ## Karte – genehmigte Grafikrichtung, Phase 2 (18.10.2026)

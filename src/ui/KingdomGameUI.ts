@@ -892,6 +892,10 @@ export class KingdomGameUI {
         this.record(message);
         this.showGameAction(detail.final ? '♛ Kampagne abgeschlossen!' : '♜ Neues Kapitel!', message, 'science');
         this.audio.playEffect('success');
+        if (detail.final) {
+          // Nach kurzer Verzögerung die Siegseite anzeigen
+          setTimeout(() => this.showCampaignComplete(true), 1500);
+        }
       }),
       engine.on('modernizationCompleted', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id !== detail.playerId) return;
@@ -1113,6 +1117,70 @@ export class KingdomGameUI {
     banner.hidden = false;
     this.map?.playAction(kind, playerWon);
     this.actionBannerTimer = window.setTimeout(() => { banner.hidden = true; }, 4500);
+  }
+
+  /** Zeigt eine Vollbild-Sieg- oder Niederlageseite mit Statistik und Optionen. */
+  private showCampaignComplete(won: boolean): void {
+    const player = this.requirePlayer();
+    const engine = this.requireEngine();
+    const kingdom = player.kingdom;
+    const goals = engine.getCampaignGoals(player.id);
+    const completedGoals = goals.filter((g: CampaignGoal) => g.done).length;
+    const year = engine.getCurrentYear();
+    const month = engine.getCurrentMonth();
+    const gold = kingdom.resources?.gold ?? 0;
+    const happiness = kingdom.happiness ?? 0;
+    const population = kingdom.getSummary().totalPopulation;
+    const infra = kingdom.infrastructure;
+    const buildings = (Object.keys(infra) as Array<keyof typeof infra>).reduce((a, k) => a + (typeof infra[k] === 'number' ? (infra[k] as number) : 0), 0);
+
+    const dialog = document.createElement('dialog');
+    dialog.className = 'campaign-result-dialog';
+    dialog.innerHTML = `
+      <div class="campaign-result ${won ? 'victory' : 'defeat'}">
+        <div class="result-icon">${won ? '♛' : '⚔'}</div>
+        <h2>${won ? 'Kampagne gewonnen!' : 'Kampagne verloren'}</h2>
+        <p class="result-subtitle">${won
+          ? 'Alle Kapitel wurden erfolgreich abgeschlossen. Dein Reich blüht!'
+          : 'Dein Reich konnte sich nicht behaupten. Versuche eine neue Strategie.'}</p>
+        <div class="result-stats">
+          <div class="stat"><span class="stat-label">Jahr</span><span class="stat-value">${year}</span></div>
+          <div class="stat"><span class="stat-label">Monat</span><span class="stat-value">${month}</span></div>
+          <div class="stat"><span class="stat-label">Gold</span><span class="stat-value">${format(gold)}</span></div>
+          <div class="stat"><span class="stat-label">Zufriedenheit</span><span class="stat-value">${format(happiness)}%</span></div>
+          <div class="stat"><span class="stat-label">Bevölkerung</span><span class="stat-value">${format(population)}</span></div>
+          <div class="stat"><span class="stat-label">Gebäude</span><span class="stat-value">${buildings}</span></div>
+          <div class="stat"><span class="stat-label">Ziele erfüllt</span><span class="stat-value">${completedGoals}/${goals.length}</span></div>
+        </div>
+        <div class="result-actions">
+          <button class="primary" data-result-continue>🌍 Weiterspielen (Sandbox)</button>
+          <button data-result-restart>🔄 Neu beginnen</button>
+          <button data-result-menu>🏠 Zum Hauptmenü</button>
+        </div>
+      </div>`;
+    document.body.appendChild(dialog);
+    dialog.showModal();
+
+    dialog.querySelector('[data-result-continue]')?.addEventListener('click', () => {
+      dialog.close();
+      dialog.remove();
+      this.notify('♛ Du spielst im Sandbox-Modus weiter – es gibt keine weiteren Kampagnenziele.');
+    });
+    dialog.querySelector('[data-result-restart]')?.addEventListener('click', () => {
+      dialog.close();
+      dialog.remove();
+      location.reload();
+    });
+    dialog.querySelector('[data-result-menu]')?.addEventListener('click', () => {
+      dialog.close();
+      dialog.remove();
+      // Engine zurücksetzen und zum Hauptmenü
+      this.engine = undefined;
+      this.player = undefined;
+      this.view = 'overview';
+      this.navigate('overview');
+    });
+    dialog.addEventListener('close', () => dialog.remove());
   }
 
   private navigate(view: View): void {

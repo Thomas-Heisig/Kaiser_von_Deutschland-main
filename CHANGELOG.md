@@ -5,6 +5,7 @@
 ## [Unreleased] — Stand 17.10.2026
 
 ### Added
+
 - P1-Integrationstest der Industrie-Kampagne mit Bauen, Forschung, drei Kapiteln, Save/Load und Sieg sowie 60-Monats-Wirtschaftsstabilität.
 
 - Drei historisch begrenzte Bürgeraufträge aus dem ursprünglichen Ideenbestand: Seuchenhilfe, Bewässerung und Kulturförderung.
@@ -18,6 +19,7 @@
 - Release-Gate in CI für 15 MP3s, fünf MP4-Dateien, Filmdatenbank, ZIP und PWA-Pfade.
 
 ### Changed
+
 - Interaktive Karte deckt den Spielbereich ab. Kartenansicht, Bezirke, Zentrieren/Zoom und Bezirksausbau liegen als schwebende Bedienelemente direkt über der Grafik; doppelte Gebäudeliste entfernt; Nachbarreiche werden schematisch am Rand dargestellt.
 
 - Frühere README-Featureversprechen (Rollen, Gebäude, Technologie, Geschichte, Politik, Religion, Militär, Marine, Umwelt, Kultur, Wirtschaft und Mehrspieler) mit konkreten Nachweis- und Integrationsaufgaben in Roadmap/TODO zurückgeführt.
@@ -27,6 +29,7 @@
 - README, Status, Roadmap und operative TODO werden gegen den tatsächlichen aktiven Git-Stand abgegrenzt; sämtliche älteren Planungen bleiben archiviert.
 
 ### Fixed
+
 - Saisonale Produktionsmultiplikatoren beeinflussen nun die tatsächlich gespielten Monate und die identische Monatsprognose; vorher wirkten sie nur im ungenutzten Jahrespfad.
 
 - Kampagnen: Industrie und Wiederaufbau beginnen nicht mehr mit bereits erfüllten ersten Kapitelzielen; Siegmeldung verlangt tatsächlich alle drei abgeschlossenen Kapitel und Fortschrittsanzeige fokussiert das aktuelle Kapitel.

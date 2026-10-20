@@ -370,6 +370,20 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 .council-modal>p{margin-bottom:20px}
 .council-modal-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:12px;margin-bottom:18px}
 .council-modal-choices button{text-align:left;white-space:normal;min-height:90px}
+.campaign-result-dialog {width:min(94vw,520px);border:2px solid #bca16c;border-radius:12px;background:#1a2d26;color:#eee5cf;padding:0;box-shadow:0 20px 90px #000c;overflow:visible}
+.campaign-result-dialog::backdrop {background:#030b0bcc;backdrop-filter:blur(4px)}
+.campaign-result {text-align:center;padding:clamp(20px,4vw,40px)}
+.campaign-result .result-icon {font-size:clamp(3rem,8vw,5rem);margin-bottom:10px}
+.campaign-result.victory .result-icon {color:#f0d99e}
+.campaign-result.defeat .result-icon {color:#e89173}
+.campaign-result h2 {font-size:clamp(1.6rem,4vw,2.4rem);color:var(--gold);margin:0 0 8px}
+.campaign-result .result-subtitle {color:#c5b998;margin:0 0 24px;font-size:0.95rem}
+.campaign-result .result-stats {display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:24px}
+.campaign-result .stat {background:#253b33;border:1px solid #5c644e;border-radius:8px;padding:10px 8px}
+.campaign-result .stat-label {display:block;font-size:0.72rem;color:#9aab8a;text-transform:uppercase;letter-spacing:0.5px}
+.campaign-result .stat-value {display:block;font-size:1.2rem;color:#f0d99e;margin-top:4px;font-weight:bold}
+.campaign-result .result-actions {display:flex;flex-direction:column;gap:8px}
+.campaign-result .result-actions button {font-size:1rem;padding:12px 20px}
 .settlement-controls{align-items:flex-end}
 .settlement-controls label{min-width:0;flex-wrap:wrap}
 @media(max-width:1100px){.game-layout{grid-template-columns:155px minmax(0,1fr)}.council{grid-template-columns:minmax(0,1fr)}.resource-bar{grid-template-columns:repeat(5,minmax(0,1fr))}.header-actions{flex-wrap:wrap}}
