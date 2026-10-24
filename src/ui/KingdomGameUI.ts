@@ -918,6 +918,13 @@ export class KingdomGameUI {
         // Nach kurzer Verzögerung die Niederlageseite anzeigen
         setTimeout(() => this.showCampaignComplete(false, detail.reason), 1500);
       }),
+      engine.on('yearAdvanced', (): void => this.refresh()),
+      engine.on('historicalEpochChanged', (detail: { epochName: string; year: number; evidence: string }): void => {
+        this.record(`Historische Epoche: ${detail.epochName} (ab ${detail.year}).`);
+        this.showGameAction('⌛ Neue historische Epoche', `${detail.epochName} – eingeordnet ab ${detail.year}${
+          detail.evidence === 'belegt' ? '' : detail.evidence === 'naeherung' ? ' (Grenzen genähert)' : ' (Grenzen ungeprüft)'}.`, 'science');
+        this.refresh();
+      }),
       engine.on('tutorialStarted', (detail: { playerId: string }): void => {
         if (this.player?.id !== detail.playerId) return;
         this.notify('📖 Tutorial gestartet: Führe die fünf Schritte aus, um deine Herrschaft kennenzulernen.');

@@ -826,8 +826,81 @@ describe('Playable campaign integration', (): void => {
     });
   });
 
-  describe('interactive tutorial campaign (build → trade → research → council → save)', (): void => {
-    const tutorialEngine = async (): Promise<{ engine: GameEngine; player: ReturnType<GameEngine['getPlayers']>[number] }> => {
+  describe('historical model integration', (): void => {
+    it('exposes the evidenced historical context for the current year', async (): Promise<void> => {
+      const engine = await campaign();
+      const player = engine.getPlayers()[0];
+      const context = engine.getHistoricalContext(player.id);
+      expect(context.year).toBe(1200);
+      expect(context.epoch?.id).toBe('hochmittelalter');
+      expect(context.epochEvidence).toBe('naeherung');
+      expect(context.system).not.toBeNull();
+      // Alternatives Geschichtsbild ist immer gekennzeichnet.
+      expect(context.alternateHistory).toBe(true);
+      expect(context.summary).toContain('Hochmittelalter');
+    });
+
+    it('never claims a dignity that the epoch does not evidence', async (): Promise<void> => {
+      const engine = new GameEngine({ startingYear: 1200, randomEvents: false, enableWiki: false });
+      engines.push(engine);
+      const player = engine.addPlayer({ name: 'Anna', kingdomName: 'Prüfreich', gender: 'other' });
+      await engine.startGame();
+      engine.pauseGame();
+      // Frischer Spieler startet mit niedrigem Rang – im Hochmittelalter ist eine
+      // frühe Herrschaftsform belegt, aber kein modernes Amt.
+      const dignity = engine.getRulerDignity(player.id);
+      if (dignity) {
+        expect(dignity.epochIds).toContain('hochmittelalter');
+        expect(dignity.systemIds.length).toBeGreaterThan(0);
+      }
+      expect(engine.getHistoricalContext(player.id).rulerDignity?.id ?? 'keine')
+        .not.toBe('bundeskanzler');
+    });
+
+    it('fires historicalEpochChanged only when the evidenced epoch actually changes', async (): Promise<void> => {
+      const engine = new GameEngine({ startingYear: 1908, randomEvents: false, enableWiki: false });
+      engines.push(engine);
+      engine.addPlayer({ name: 'Otto', kingdomName: 'Prüfreich', gender: 'other' });
+      await engine.startGame();
+      engine.pauseGame();
+      const changes: Array<{ epochName: string; year: number }> = [];
+      engine.on('historicalEpochChanged', (detail: { epochName: string; year: number }): void => {
+        changes.push({ epochName: detail.epochName, year: detail.year });
+      });
+      // 1908 → 1919: Kaiserreich → Weimarer Republik
+      for (let month = 0; month < 12 * 12 && changes.length === 0; month++) {
+        await engine.advanceMonth();
+      }
+      expect(changes.length).toBeGreaterThan(0);
+      expect(changes[0].epochName).toContain('Weimar');
+      expect(changes[0].year).toBe(1919);
+    });
+
+    it('records the epoch change in the chronicle', async (): Promise<void> => {
+      const engine = new GameEngine({ startingYear: 1918, randomEvents: false, enableWiki: false });
+      engines.push(engine);
+      engine.addPlayer({ name: 'Otto', kingdomName: 'Prüfreich', gender: 'other' });
+      await engine.startGame();
+      engine.pauseGame();
+      for (let month = 0; month < 24; month++) await engine.advanceMonth();
+      expect(engine.getChronicle().some((entry) => entry.message.includes('Neue Epoche'))).toBe(true);
+    });
+
+    it('returns no epoch for years with unverified boundaries', async (): Promise<void> => {
+      const engine = new GameEngine({ startingYear: 700, randomEvents: false, enableWiki: false });
+      engines.push(engine);
+      const player = engine.addPlayer({ name: 'Hilde', kingdomName: 'Frühreich', gender: 'other' });
+      await engine.startGame();
+      engine.pauseGame();
+      const context = engine.getHistoricalContext(player.id);
+      // Die Frühzeit ist bewusst ungeprüft: es wird keine Epoche behauptet.
+      expect(context.epoch).toBeNull();
+      expect(context.epochEvidence).toBe('nicht_verifiziert');
+      expect(context.rulerDignity).toBeNull();
+    });
+  });
+
+  describe('interactive tutorial campaign (build → trade → research → council → save)', (): void => {    const tutorialEngine = async (): Promise<{ engine: GameEngine; player: ReturnType<GameEngine['getPlayers']>[number] }> => {
       const engine = new GameEngine({ startingYear: 1200, randomEvents: false, enableWiki: false, enableTutorial: true });
       engines.push(engine);
       const player = engine.addPlayer({ name: 'Heinrich', kingdomName: 'Tutorialreich', gender: 'other' });

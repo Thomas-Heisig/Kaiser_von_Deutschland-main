@@ -27,28 +27,29 @@ import {
 import { EPOCHS, OFFICES, POLITICAL_SYSTEMS, REGIONS } from '../history/PolityData';
 
 /**
- * Abbildung der **Spiel**-Titelränge auf historische Ordnungsformen.
+ * Abbildung der **Spiel**-Titelränge auf historische Ämter – als geordnete
+ * Präferenzliste, nicht als Mengen-Zuordnung.
  *
- * Die Ränge stammen aus dem bestehenden Spielsystem (`TitleSystem`). Die
- * Zuordnung ist bewusst explizit und konservativ: Sie behauptet für jeden Rang
- * nur die Ordnungsform, die für diese Art von Herrschaft historisch belegt ist.
+ * Die Reihenfolge ist fachlich begründet und bewusst explizit:
+ * Der erste Eintrag, der für die Epoche belegt ist, gewinnt. Damit ist das
+ * Ergebnis deterministisch und nicht von alphabetischer Sortierung abhängig.
  *
- * `null` bedeutet ausdrücklich: Für diesen Rang gibt es **keine** belastbare
- * Entsprechung – dann wird nichts behauptet.
+ * `null` bzw. eine leere Liste bedeutet: Für diesen Rang gibt es **keine**
+ * belastbare Entsprechung – dann wird nichts behauptet.
  */
-const TITLE_SYSTEM_MAP: Readonly<Record<string, readonly string[]>> = {
-  // Frühformen regionaler Herrschaft (Rang 1–2 im Spielsystem)
-  '1': ['stammesverband', 'herzogtum'],
-  '2': ['herzogtum'],
+const RANK_DIGNITY_PREFERENCE: Readonly<Record<string, readonly string[]>> = {
+  // Regionale Frühformen
+  '1': ['stammesoberhaupt'],
+  '2': ['herzog'],
   // Hochadelige Herrschaft
-  '3': ['herzogtum', 'koenigreich'],
-  '4': ['koenigreich'],
-  // Königswürde und Kaisertum des Reiches
-  '5': ['koenigreich', 'kaisertum_hrr'],
-  '6': ['kaisertum_hrr'],
-  '7': ['kaisertum_hrr'],
+  '3': ['herzog', 'koenig'],
+  '4': ['koenig'],
+  // Königswürde und Kaisertum des Heiligen Römischen Reiches
+  '5': ['kaiser', 'koenig'],
+  '6': ['kaiser', 'deutscher_kaiser'],
+  '7': ['kaiser', 'deutscher_kaiser'],
   // Spätere Ordnungsformen: bewusst KEINE Fortschreibung des Kaisertums.
-  '8': ['parlamentarische_republik', 'konstitutionelle_monarchie']
+  '8': ['bundespraesident', 'bundeskanzler', 'reichspraesident', 'reichskanzler']
 };
 
 /**
@@ -98,47 +99,49 @@ export function historicalEpochFor(year: number): HistoricalEpoch | null {
  * Wählt für eine Epoche das passende Referenzsystem.
  *
  * Es werden nur Systeme berücksichtigt, die für die Epoche belegt sind.
- * Bei mehreren Kandidaten gewinnt das **spezifischste** (die meisten
- * Epochenbindungen wären unspezifisch, daher: zuerst das System mit der
- * geringsten Zahl eigener Epochen, danach alphabetisch) – deterministisch und
- * ohne Wertung als „höhere Entwicklungsstufe".
+ * Bei mehreren Kandidaten gewinnt das System, das die **meisten** Ämter
+ * abdeckt (also die reichhaltigste belegte Ordnungsform); bei Gleichstand
+ * entscheidet der deutsche Name. Das ist deterministisch und enthält keine
+ * Wertung als „höhere Entwicklungsstufe".
  *
  * @param epochId Epochen-ID.
  * @returns Referenzsystem oder `null`.
  */
 export function referenceSystemFor(epochId: string): PoliticalSystem | null {
-  const candidates = POLITICAL_SYSTEMS
-    .filter((system) => system.epochIds.includes(epochId))
-    .sort((a, b) => {
-      const spread = a.epochIds.length - b.epochIds.length;
-      return spread !== 0 ? spread : a.name.localeCompare(b.name, 'de');
-    });
-  return candidates[0] ?? null;
+  const candidates = POLITICAL_SYSTEMS.filter((system) => system.epochIds.includes(epochId));
+  if (candidates.length === 0) return null;
+  const coverage = (system: PoliticalSystem): number =>
+    OFFICES.filter((office) => office.systemIds.includes(system.id)).length;
+  return [...candidates].sort((a, b) => {
+    const diff = coverage(b) - coverage(a);
+    return diff !== 0 ? diff : a.name.localeCompare(b.name, 'de');
+  })[0];
 }
 
 /**
  * Ermittelt die historische Würde für einen Spielrang und eine Epoche.
  *
- * Es wird ausschließlich ein Amt zurückgegeben, das **sowohl** im Referenzsystem
- * **als auch** in der Epoche belegt ist. Andernfalls `null` – es wird keine
- * Würde erfunden.
+ * Auflösung: Präferenzliste des Rangs → erstes Amt, das in der Epoche belegt
+ * ist **und** einem für diese Epoche belegten System angehört. Andernfalls
+ * `null` – es wird keine Würde erfunden.
  *
  * @param rank Spielrang des Herrschers (`Player.title.rank`).
  * @param epochId Epochen-ID.
- * @param systemId System-ID.
  * @returns Amt oder `null`.
  */
-export function dignityFor(rank: number, epochId: string, systemId: string): Office | null {
-  const mappedSystems = TITLE_SYSTEM_MAP[String(rank)];
-  if (!mappedSystems || !mappedSystems.includes(systemId)) return null;
-  const candidates = OFFICES
-    .filter((office) =>
-      office.epochIds.includes(epochId) &&
-      office.systemIds.includes(systemId) &&
-      // Nur Ämter, die eine Herrschaftsposition bezeichnen – keine Verwaltungsämter.
-      /kaiser|koenig|herzog|oberhaupt|fuerst|kanzler|praesident/i.test(office.id))
-    .sort((a, b) => a.name.localeCompare(b.name, 'de'));
-  return candidates[0] ?? null;
+export function dignityFor(rank: number, epochId: string): Office | null {
+  const preference = RANK_DIGNITY_PREFERENCE[String(rank)];
+  if (!preference) return null;
+  for (const officeId of preference) {
+    const office = PolityCatalog.getOffice(officeId);
+    if (!office || !office.epochIds.includes(epochId)) continue;
+    const validSystem = office.systemIds.some((systemId) => {
+      const system = POLITICAL_SYSTEMS.find((candidate) => candidate.id === systemId);
+      return system !== undefined && system.epochIds.includes(epochId);
+    });
+    if (validSystem) return office;
+  }
+  return null;
 }
 
 /**
@@ -169,7 +172,7 @@ export function buildHistoricalContext(year: number, rank: number): HistoricalCo
     };
   }
   const system = referenceSystemFor(epoch.id);
-  const rulerDignity = system ? dignityFor(rank, epoch.id, system.id) : null;
+  const rulerDignity = dignityFor(rank, epoch.id);
   const parts: string[] = [epoch.name];
   if (system) parts.push(system.name);
   if (rulerDignity) parts.push(rulerDignity.name);

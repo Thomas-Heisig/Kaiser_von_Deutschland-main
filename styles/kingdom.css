@@ -81,6 +81,9 @@ h3 { font-size: 1.16rem; }
 .realm-heading { display: grid; text-align: center; }
 .realm-heading strong { font: 20px Georgia, serif; color: #ece7d2; }
 .realm-heading span { font-size: 0.72rem; color: var(--muted); }
+/* Historische Herrscherwürde: bewusst zurückhaltend, beschreibend statt wertend */
+.realm-heading .ruler-dignity { font-size: 0.66rem; letter-spacing: 0.02em; color: var(--gold); opacity: 0.8; }
+.realm-heading .ruler-dignity:empty { display: none; }
 .header-actions { display: flex; gap: 8px; }
 .header-actions button[data-audio-toggle] { min-height: 36px; padding: 6px 10px; font-size: 0.72rem; }
 .resource-bar { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--border); background: #1b2c25; padding: 0 20px; }

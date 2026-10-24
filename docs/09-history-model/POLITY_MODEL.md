@@ -1,25 +1,38 @@
 # Historisches Datenmodell — Epochen, Regionen, Systeme, Ämter
 
-**Stand:** 24.10.2026 · **Status:** Erster Schritt umgesetzt · **Version:** 0.1.0
+**Stand:** 24.10.2026 · **Status:** In die Engine integriert (Schritt 2) · **Version:** 0.2.0
 
-Dieses Dokument beschreibt das deklarative Datenmodell aus
-[`src/history/`](../../src/history/). Es ist **vom Spielcode getrennt** und in
-diesem Schritt bewusst **nicht** an `GameEngine`, Karte, UI oder Kampagnen
-angebunden.
+Dieses Dokument beschreibt das historische Datenmodell aus
+[`src/history/`](../../src/history/) **und seine Anbindung an das Spiel** über
+[`src/core/HistoricalContext.ts`](../../src/core/HistoricalContext.ts).
+
+---
+
+## 0. Integrationsstand
+
+| Ebene | Datei | Rolle |
+| --- | --- | --- |
+| Datenmodell | `src/history/PolityModel.ts`, `PolityData.ts` | Deklarative Daten + Validierung |
+| **Brücke** | `src/core/HistoricalContext.ts` | Jahre → Epoche/System/Würde, Evidenz, System-Mapping |
+| **Engine** | `GameEngine.getHistoricalContext()`, `getRulerDignity()` | Öffentliche API, Epochenwechsel-Event |
+| **UI** | `KingdomGameUI` (`#era-label`, `#ruler-dignity`) | Sichtbare Einordnung mit Evidenzgrad |
+| Tests | `PolityModel.test.ts` (31), `HistoricalContext.test.ts` (13), `GameEngine.test.ts` (+5) | 49 Tests gesamt |
+
+**Wichtig:** Das Modell ist **kein** isoliertes Modul mehr. Es ist über die
+Brücke fest in der Engine verankert. Die **Simulation** bleibt unverändert: Das
+Modell liefert ausschließlich einordnende Information, es greift nicht in
+Ressourcen, Kampagnen oder Spielstände ein.
 
 ---
 
 ## 1. Zweck und Abgrenzung
 
-| Gehört zu diesem Schritt | Gehört **nicht** zu diesem Schritt |
+| Gehört zu diesem Umfang | Gehört **nicht** dazu |
 | --- | --- |
-| Deklarative Daten (Epochen, Regionen, Systeme, Ämter) | GameEngine-Regeln oder Simulation |
-| Validierungsfunktionen mit deutschen Fehlermeldungen | Karten-, Renderer- oder Retro-Änderungen |
-| Unit-Tests für gültige/ungültige Kombinationen | UI, Menüs oder Tutorial-Anbindung |
-| Diese Dokumentation | PWA, Deployment oder Online-Multiplayer |
-
-Das Modul ist ein **Fundament**. Es behauptet keine Spielmechanik und keine
-historische Vollständigkeit.
+| Deklarative Daten (Epochen, Regionen, Systeme, Ämter) | Änderung von Spielregeln oder Balance |
+| Validierung mit deutschen Fehlermeldungen | Karten-, Renderer- oder Retro-Änderungen |
+| Engine-Anbindung (Kontext, Würde, Epochenwechsel) | Automodus / Menschheitssimulation (später) |
+| Sichtbare Einordnung mit Evidenzgrad | Online-Multiplayer, PWA |
 
 ---
 
@@ -35,239 +48,199 @@ interface HistoricalEpoch {
   yearEnd: number | null;      // null = offenes Ende
   evidence: EvidenceLevel;     // 'belegt' | 'naeherung' | 'nicht_verifiziert'
   description: string;
-  sourceNote: string;          // Begründung des Evidenzgrads
+  sourceNote: string;
 }
 ```
 
-**Begründung der Feldstruktur**
-
-- `yearStart`/`yearEnd` erlauben die rein informatorische Jahreszuordnung
-  (`epochForHistoricalYear`), ohne sie zur Validierungsgrundlage zu machen.
-- `evidence` ist ein Pflichtfeld. Damit ist jede Jahresgrenze gezwungen, ihren
-  Belastbarkeitsgrad offenzulegen – es gibt keinen „stillen" ungeprüften Wert.
-- `sourceNote` dokumentiert die Herkunft direkt am Datensatz, nicht nur in
-  externer Prosa.
-
-**Wichtig:** Epochen mit `evidence: 'nicht_verifiziert'` liefern bei
-`epochForHistoricalYear()` bewusst `null`. Es wird also **keine** Zuordnung
-behauptet, wo keine belastbare Grenze existiert.
+**Begründung:** `evidence` und `sourceNote` sind Pflichtfelder — keine
+Jahresgrenze kann „still" ungeprüft bleiben. Epochen mit
+`nicht_verifiziert` liefern bei `epochForHistoricalYear()` bewusst `null`.
 
 ### 2.2 Regionen (`HistoricalRegion`)
 
 ```ts
 interface HistoricalRegion {
-  id: string;
-  name: string;
-  description: string;
+  id: string; name: string; description: string;
   epochIds: string[];          // leer = epochenunabhängig nutzbar
-  evidence: EvidenceLevel;
-  sourceNote: string;
+  evidence: EvidenceLevel; sourceNote: string;
 }
 ```
 
-**Begründung der Feldstruktur**
-
-- **Keine** Felder für Polygone, Koordinaten, `bounds` oder `geometry`. Eine
-  belastbare historische Grenze lässt sich für die meisten Epochen nicht als
-  Fläche angeben; Grenzpolygone würden eine Präzision vortäuschen, die die
-  Quellen nicht hergeben. Ein Test erzwingt diese Abwesenheit.
-- `epochIds: []` kennzeichnet geografische Kulturräume, die als
-  Bezugsgröße in allen Epochen taugen (z. B. Rheinland).
-- `germanien` ist eine **neutrale Platzhalter-Region** mit
-  `evidence: 'nicht_verifiziert'`. Sie behauptet ausdrücklich keinen
-  Grenzverlauf und dient nur als Lückenfüller.
+**Begründung:** **Keine** Felder für Polygone, Koordinaten, `bounds` oder
+`geometry`. Ein Test erzwingt diese Abwesenheit. `germanien` ist eine neutrale
+Platzhalter-Region mit `nicht_verifiziert`.
 
 ### 2.3 Politische Systeme (`PoliticalSystem`)
 
 ```ts
 interface PoliticalSystem {
-  id: string;
-  name: string;
+  id: string; name: string;
   kind: 'verband' | 'monarchie' | 'republik' | 'bund' | 'diktatur';
-  epochIds: string[];          // maßgebliche zeitliche Bindung
-  regionIds: string[];
-  description: string;
-  evidence: EvidenceLevel;
-  sourceNote: string;
+  epochIds: string[];          // maßgebliche Bindung
+  regionIds: string[]; description: string;
+  evidence: EvidenceLevel; sourceNote: string;
 }
 ```
 
-**Begründung der Feldstruktur**
-
-- `epochIds` ist die **maßgebliche** Bindung. Jahreszahlen sind nur
-  beschreibend und werden für die Validierung nicht herangezogen.
-- `kind` ist eine **wertungsfreie Kategorie**, keine Hierarchie. Es gibt keine
-  Stufenfolge „Verband → Monarchie → Republik".
+`kind` ist eine **wertungsfreie Kategorie**, keine Hierarchie.
 
 ### 2.4 Ämter (`Office`)
 
 ```ts
 interface Office {
-  id: string;
-  name: string;
-  systemIds: string[];         // Bindung an das System
-  epochIds: string[];          // Bindung an die Epoche
-  description: string;
-  evidence: EvidenceLevel;
-  sourceNote: string;
+  id: string; name: string;
+  systemIds: string[];         // Bindung an System
+  epochIds: string[];          // UND an Epoche
+  description: string; evidence: EvidenceLevel; sourceNote: string;
 }
 ```
 
-**Begründung der Feldstruktur**
+Kein Amt trägt `year`/`yearStart`/`yearEnd` — das erzwingt ein Test.
 
-- Ein Amt ist **nie** an eine Jahreszahl gebunden. `systemIds` **und**
-  `epochIds` müssen beide erfüllt sein. Genau das verhindert „Bundeskanzler im
-  Jahr 1200" und „Kaiser in einer Republik".
-- Ein Test erzwingt, dass kein Amt Felder wie `year`, `yearStart` oder
-  `yearEnd` besitzt.
+### 2.5 Brücke (`HistoricalContext`)
+
+```ts
+interface HistoricalContext {
+  year: number;
+  epoch: HistoricalEpoch | null;
+  epochEvidence: EvidenceLevel;
+  system: PoliticalSystem | null;
+  rulerDignity: Office | null;
+  summary: string;
+  alternateHistory: boolean;   // im Spiel immer true
+}
+```
 
 ---
 
-## 3. Validierungsregeln
-
-Alle Funktionen liegen in [`PolityModel.ts`](../../src/history/PolityModel.ts)
-und geben `ValidationResult { valid, errors }` mit **deutschen**
-Fehlermeldungen zurück.
+## 3. Validierungs- und Auflösungsregeln
 
 | Regel | Funktion | Prüft |
 | --- | --- | --- |
-| **R1** Epoche ↔ System | `validateEpochSystem(epochId, systemId)` | Ist das System für diese Epoche belegt? |
-| **R2** System ↔ Amt | `validateOffice(officeId, systemId, epochId)` | Existiert das Amt in System **und** Epoche? |
-| **R3** Region ↔ Epoche | `validateRegionEpoch(regionId, epochId)` | Ist die Region für die Epoche sinnvoll (oder epochenunabhängig)? |
-| **R4** Gesamtkombination | `validateCombination({…})` | Sammelt alle Fehler aus R1–R3 |
+| **R1** Epoche ↔ System | `validateEpochSystem` | Ist das System für die Epoche belegt? |
+| **R2** System ↔ Amt | `validateOffice` | Existiert das Amt in System **und** Epoche? |
+| **R3** Region ↔ Epoche | `validateRegionEpoch` | Region für Epoche sinnvoll (oder epochenunabhängig)? |
+| **R4** Kombination | `validateCombination` | Sammelt alle Fehler aus R1–R3 |
+| **A1** Jahr → Epoche | `epochForHistoricalYear` | `null` bei `nicht_verifiziert` |
+| **A2** Epoche → System | `referenceSystemFor` | Reichhaltigstes belegtes System, deterministisch |
+| **A3** Rang → Würde | `dignityFor(rank, epochId)` | Präferenzliste, nur belegte Amts-Epochen-Paare |
 
-Zusätzlich:
+### Rang-zu-Würde-Mapping (explizit, nicht alphabetisch)
 
-- `epochForHistoricalYear(year)` → Epoche oder `null` (bei `nicht_verifiziert`).
-- `officesFor(epochId, systemId)` → alphabetisch sortierte, gültige Ämterliste.
+| Spielrang | Präferenzfolge | Ergebnis im Hochmittelalter |
+| --- | --- | --- |
+| 1 | Stammesoberhaupt | Stammesoberhaupt |
+| 2 | Herzog | Herzog |
+| 3 | Herzog → König | Herzog |
+| 4 | König | König |
+| 5 | Kaiser → König | König (Kaiser nicht im Hochmittelalter belegt) |
+| 6–7 | Römisch-deutscher Kaiser → Deutscher Kaiser | Kaiser / Deutscher Kaiser je Epoche |
+| 8 | Bundespräsident → Bundeskanzler → Reichspräsident → Reichskanzler | `null` im Mittelalter |
 
-### Beispiele für abgewiesene Kombinationen
+**Kein teleologisches Fortschreiben:** Rang 6 ergibt 1600 „Römisch-deutscher
+Kaiser", 1900 aber „Deutscher Kaiser" — zwei getrennte Ämter.
+
+### Abgewiesene Kombinationen
 
 | Eingabe | Ergebnis |
 | --- | --- |
-| `validateOffice('bundeskanzler', 'kaisertum_hrr', 'hochmittelalter')` | ❌ „Das Amt "Bundeskanzler" existiert nicht im System …" und „… ist in der Epoche … nicht belegt." |
-| `validateOffice('kaiser', 'parlamentarische_republik', 'bundesrepublik_vereint')` | ❌ „Das Amt "Römisch-deutscher Kaiser" existiert nicht im System …" |
-| `validateOffice('herzog', 'herzogtum', 'bundesrepublik_vereint')` | ❌ „… ist in der Epoche … nicht belegt." |
-| `validateEpochSystem('hochmittelalter', 'konstitutionelle_monarchie')` | ❌ „Das System "Konstitutionelle Monarchie" ist für die Epoche … nicht belegt." |
-| `validateRegionEpoch('hansestaedte', 'bundesrepublik_vereint')` | ❌ „Die Region "Hansestädte" ist für die Epoche … nicht belegt." |
+| `validateOffice('bundeskanzler', 'kaisertum_hrr', 'hochmittelalter')` | ❌ zwei Fehler (System + Epoche) |
+| `validateOffice('herzog','herzogtum','bundesrepublik_vereint')` | ❌ „nicht belegt" |
+| `dignityFor(8, 'hochmittelalter')` | `null` |
+| `epochForHistoricalYear(-500)` | `null` (Frühzeit ungeprüft) |
 
 ---
 
-## 4. Getroffene Annahmen
+## 4. Engine- und UI-Anbindung
 
-1. **„Deutschland" ist eine geografisch-kulturelle Region**, kein zu allen
-   Zeiten existierender Nationalstaat. Die Epochenliste führt deshalb
-   unterschiedliche politische Gebilde (Ostfrankenreich, Reich, Deutscher
-   Bund, Kaiserreich, Weimarer Republik, NS-Diktatur, Bundesrepublik, DDR)
-   nebeneinander bzw. nacheinander – ohne Kontinuitätsbehauptung.
-2. **Zwei getrennte Kaiserämter.** `kaiser` (römisch-deutsch, 962–1806) und
-   `deutscher_kaiser` (ab 1871) sind bewusst **verschiedene** Datensätze. Das
-   vermeidet das teleologische Narrativ einer durchgehenden Kaiserlinie.
-   Dieser Fehler wurde durch einen Test aufgedeckt und korrigiert.
-3. **Diktaturen werden als solche geführt** (`kind: 'diktatur'`), nicht als
-   Aufstiegsstufe. Es gibt keine Glorifizierung und keine Wertung im Modell.
-4. **NS-Zeit und DDR** erhalten eigene Epochen, damit Ämter und Systeme
-   sauber zugeordnet werden können, ohne sie mit Demokratien zu vermischen.
-5. **Keine Amtskontinuität über Systemgrenzen.** Ein Amt gilt nur in den
-   explizit gelisteten Systemen – auch wenn die Bezeichnung ähnlich klingt.
-6. **Regionen ohne Geometrie.** Wo Kulturräume nicht exakt abgrenzbar sind,
-   bleibt das Feld leer statt eine Grenze zu erfinden.
+| API | Verhalten |
+| --- | --- |
+| `engine.getHistoricalContext(playerId)` | Vollständiger Kontext mit Evidenz |
+| `engine.getRulerDignity(playerId)` | Nur die Würde (für häufige Anzeige) |
+| Event `historicalEpochChanged` | Wird beim Jahreswechsel gefeuert, **nur** wenn sich die belegte Epoche ändert; schreibt zusätzlich in die Chronik |
+| UI `#era-label` | Zeigt Kampagnen-Epoche; bei Abweichung zusätzlich die historische Epoche mit Evidenzzusatz („Grenzen genähert"/„Grenzen ungeprüft") |
+| UI `#ruler-dignity` | „Historische Würde: …" oder „nicht belegt" |
+
+Die UI behauptet **keine** Gleichsetzung von Kampagnen- und Modell-Epoche: Bei
+Abweichung werden beide genannt.
 
 ---
 
-## 5. Als „nicht verifiziert" markierte Punkte
+## 5. Getroffene Annahmen
 
-| Datensatz | Kennzeichnung | Grund |
+1. „Deutschland" ist eine geografisch-kulturelle Region, kein zeitloser Staat.
+2. **Zwei getrennte Kaiserämter** (`kaiser` bis 1806, `deutscher_kaiser` ab 1871) — ein Test deckte die ursprüngliche Vermischung auf.
+3. Diktaturen werden als `kind: 'diktatur'` geführt, ausdrücklich nicht als Aufstiegsstufe.
+4. Eigene Epochen für NS-Zeit und DDR, damit Ämter sauber zuordenbar bleiben.
+5. Keine Amtskontinuität über Systemgrenzen.
+6. Regionen ohne Geometrie.
+7. **Das Spiel bleibt Alternativgeschichte** (`alternateHistory: true`): Das Modell ist Referenzrahmen, keine Vorschrift für den Spielverlauf.
+
+---
+
+## 6. Als „nicht verifiziert" markierte Punkte
+
+| Datensatz | Grad | Grund |
 | --- | --- | --- |
-| Epoche `fruehzeit` | `nicht_verifiziert` | Vorgeschichte wird über archäologische Periodisierung, nicht über Jahreszahlen bestimmt. |
-| Region `germanien` | `nicht_verifiziert` | „Germanien" ist eine antike Fremdbezeichnung ohne deckungsgleiches politisches Gebiet. Bewusst Platzhalter. |
-| Alle Regionen | `naeherung` | Kulturräume haben keine exakt datierbare Grenze. |
-| Epochen `hochmittelalter`, `spaetmittelalter`, `fruehe_neuzeit` | `naeherung` | Start bzw. Ende sind Forschungskonvention, kein amtliches Datum. |
-| `praesidialrepublik` | `naeherung` | „Präsidialrepublik" ist eine Deutung der Forschung für die Endphase der Weimarer Republik, keine amtliche Bezeichnung. |
-| `staedtebund`, `stammesverband`, `herzogtum` | `naeherung` | Quellenlage zu konkreten Organisationsformen und Mitgliedschaften ist lückenhaft. |
-| `kurfuerst` | `naeherung` | Das Wahlkollegium verfestigte sich schrittweise; Verfahren erst 1356 (Goldene Bulle) geregelt. |
-| `bundesversammlungs_delegierter` | `naeherung` | Bezeichnung der Entsandten variierte; die Bundesversammlung war das einzige Bundesorgan. |
-| `buergermeister` | `naeherung` | Städtische Leitungsämter sind belegt, die Bezeichnung variierte regional stark. |
+| Epoche `fruehzeit` | `nicht_verifiziert` | Archäologische Periodisierung, keine Jahresgrenze |
+| Region `germanien` | `nicht_verifiziert` | Antike Fremdbezeichnung ohne deckungsgleiches Gebiet |
+| Alle Regionen | `naeherung` | Kulturräume ohne exakt datierbare Grenze |
+| `hochmittelalter`, `spaetmittelalter`, `fruehe_neuzeit` | `naeherung` | Start/Ende sind Konvention |
+| `praesidialrepublik` | `naeherung` | Forschungsdeutung, keine amtliche Bezeichnung |
+| `stammesverband`, `herzogtum`, `staedtebund` | `naeherung` | Lückenhafte Quellenlage |
+| `kurfuerst` | `naeherung` | Kollegium verfestigte sich schrittweise (Goldene Bulle 1356) |
+| `buergermeister`, `bundesversammlungs_delegierter` | `naeherung` | Bezeichnungen variierten regional |
 
-**Nicht** in diesem Schritt geprüft (ungeprüft, nicht behauptet):
-
-- Vollständigkeit der Epochenliste (z. B. fehlen eigenständige Einträge für
-  Kurfürstentümer, Rheinbund 1806–1813, Norddeutscher Bund 1867–1870).
-- Regionale Herrschaftsstrukturen innerhalb einzelner Epochen.
-- Ämter jenseits der exemplarisch aufgenommenen Beispiele.
-- Rechtsgrundlagen und Kompetenzabgrenzungen der Ämter im Detail.
+**Ungeprüft (nicht behauptet):** Vollständigkeit der Epochenliste (Rheinbund
+1806–1813, Norddeutscher Bund 1867–1870 fehlen), regionale Herrschaftsstrukturen,
+Ämter jenseits der Beispiele, Rechtsgrundlagen und Kompetenzabgrenzungen,
+Kontinuität der Rangfolge im Spielsystem.
 
 ---
 
-## 6. Verifizierte Jahresangaben
+## 7. Verifizierte Jahresangaben
 
-Recherchiert am 24.10.2026 gegen öffentlich zugängliche Fach- und
-Institutionsquellen:
+843 Verdun · 911 Ende der Karolinger · 962 Kaiserkrönung Ottos I. · 1806 Ende
+des Reiches · 1815/1866 Deutscher Bund · 1871/1918 Kaiserreich · 1919/1933
+Weimar · 1933/1945 NS-Diktatur · 1949 Grundgesetz & DDR · 1990 Wiedervereinigung.
 
-| Jahr | Ereignis | Verwendung |
+Quellen (Auswahl): Deutschlandmuseum (962), bpb (1871, Verfassungen ab 1806),
+Wikipedia/Heraldik-Wiki (843, 911). Je Datensatz in `sourceNote` begründet.
+
+---
+
+## 8. Tests
+
+| Datei | Anzahl | Inhalt |
 | --- | --- | --- |
-| 843 | Vertrag von Verdun (Ostfrankenreich) | Start `fruehmittelalter` |
-| 911 | Ende der ostfränkischen Karolinger | Ende `fruehmittelalter` |
-| 962 | Kaiserkrönung Ottos I. | Beleg für `kaisertum_hrr` |
-| 1806 | Ende des Heiligen Römischen Reiches | Ende `fruehe_neuzeit` |
-| 1815 | Wiener Kongress (Deutscher Bund) | Start `deutscher_bund` |
-| 1866 | Ende des Deutschen Bundes | Ende `deutscher_bund` |
-| 1871 | Kaiserproklamation (18.01.) | Start `kaiserreich` |
-| 1918 | Ende des Kaiserreichs | Ende `kaiserreich` |
-| 1919 | Weimarer Verfassung (11.08.) | Start `weimarer_republik` |
-| 1933 | Etablierung der NS-Diktatur | Start `nationalsozialismus` |
-| 1945 | Kapitulation | Ende `nationalsozialismus` |
-| 1949 | Grundgesetz (23.05.) / DDR-Gründung (07.10.) | Start beider Staaten |
-| 1990 | Wiedervereinigung (03.10.) | Ende `bundesrepublik`/`ddr` |
+| `PolityModel.test.ts` | 31 | Struktur, R1–R4, Jahreszuordnung, Amtsabfrage, Evidenzgrade, keine Polygone, keine Jahresbindung |
+| `HistoricalContext.test.ts` | 13 | Jahr→Epoche, `null` bei ungeprüft, Systemwahl deterministisch, Rang→Würde, Kaiser-Trennung, Alternativgeschichte |
+| `GameEngine.test.ts` | +5 | `getHistoricalContext`, `getRulerDignity`, `historicalEpochChanged` (1908→1919), Chronik-Eintrag, `null`-Epoche bei 700 |
 
-Quellen (Auswahl): Deutschlandmuseum (962), bpb (Kaiserreich 1871,
-Verfassungen ab 1806), Wikipedia/Heraldik-Wiki (Vertrag von Verdun 843,
-Ostfrankenreich 911). Die Jahreszahlen sind in `sourceNote` je Datensatz
-begründet.
+Ergebnis: `npm run check` ✅ · `npx vitest run` ✅ **234 Tests bestanden**
+(7 übersprungen: bash-abhängige CI-Deploy-Tests unter Windows) · Build ✅
 
 ---
 
-## 7. Tests
+## 9. Nächster sinnvoller Schritt
 
-[`PolityModel.test.ts`](../../src/history/PolityModel.test.ts) — **31 Tests**:
+1. **Automodus / Menschheitssimulation** (vom Nutzer angekündigt): Das Modell
+   liefert dafür bereits die zeitliche Struktur. Offen ist, ob der Automodus
+   die **belegte** Epoche als Startpunkt nutzt oder bewusst alternative
+   Verläufe erzeugt — Letzteres sollte sichtbar gekennzeichnet bleiben.
+2. **Epochenliste ergänzen:** Rheinbund (1806–1813), Norddeutscher Bund
+   (1867–1870) — beide belegt.
+3. **Karte mit Zoom und Klartendarstellung:** Das Modell liefert weiterhin
+   **keine** Geometrie. Nötig ist eine eigene Entscheidung: (a) grober, als
+   Annäherung gekennzeichneter Regionsumriss oder (b) rein schematisches,
+   nicht-geografisches Layout. Variante **(b)** hält „keine erfundenen Grenzen"
+   am saubersten ein.
+4. **Regionen erweitern** (Pommern, Posen, Elsass) nur mit belastbarer Quelle.
 
-- **Struktur:** Initialisierung, ID-Eindeutigkeit, keine hängenden Referenzen.
-- **R1 Epoche ↔ System:** gültige Kombination, ungültige Kombination,
-  unbekannte IDs mit deutschen Meldungen.
-- **R2 System ↔ Amt:** gültig; „Bundeskanzler im Jahr 1200"; „Kaiser in einer
-  Republik"; „Herzog in der Moderne"; richtiges System mit falscher Epoche;
-  Trennung römisch-deutscher Kaiser vs. Deutscher Kaiser.
-- **R3 Region ↔ Epoche:** epochenunabhängig, eigene Epoche, fremde Epoche,
-  unbekannte IDs.
-- **R4 Kombination:** vollständig konsistent; Sammlung mehrerer Fehler.
-- **Jahreszuordnung:** belegte Jahre, `null` bei `nicht_verifiziert`, `null`
-  außerhalb des Modells.
-- **Amtsabfrage:** Filterung, leere Liste, alphabetische Sortierung.
-- **Evidenzgrade:** Pflichtfeld, mindestens ein `nicht_verifiziert`,
-  **Abwesenheit von Grenzpolygonen**, **keine Jahresbindung an Ämtern**.
 
-Ergebnis: `npm run check` ✅ · `npx vitest run` ✅ (31/31 für dieses Modul).
+Dieses Dokument beschreibt das deklarative Datenmodell aus
+[`src/history/`](../../src/history/). Es ist **vom Spielcode getrennt** und in
+diesem Schritt bewusst **nicht** an `GameEngine`, Karte, UI oder Kampagnen
+angebunden.
 
 ---
-
-## 8. Nächster sinnvoller Schritt
-
-Vor dem zweiten Schritt zu klären:
-
-1. **Rheinbund (1806–1813) und Norddeutscher Bund (1867–1870)** ergänzen?
-   Beide sind belegt, aber im aktuellen Epochenraster nicht eigenständig
-   geführt.
-2. **Regionen-Liste erweitern** (z. B. Pommern, Posen, Elsass) – nur mit
-   belastbarer Quelle und ohne Grenzpolygone.
-3. **Amts-Vollständigkeit:** Sollen Reichsstände, Landtage, Ministerien
-   systematisch erfasst werden?
-4. **Anbindung an das Spiel** erst nach Freigabe: Das Modell ist bewusst noch
-   nicht mit `GameEngine`, `Kingdom` oder der Karte verbunden. Eine Anbindung
-   würde die bestehende Simulation berühren und braucht eine eigene
-   Entscheidung (Feature-Flag oder separater Branch).
-5. **Kartendarstellung und Zoom:** Das aktuelle Modell liefert *keine*
-   Geometrie. Für eine Karte mit Zoom wären zusätzlich entweder
-   (a) ein bewusst grober, klar als Annäherung gekennzeichneter
-   Regionsumriss oder (b) eine rein schematische, nicht-geografische
-   Anordnung nötig. Beides ist eine eigene Produktentscheidung und **nicht**
-   Teil dieses Schritts.
