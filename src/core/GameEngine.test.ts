@@ -707,6 +707,11 @@ describe('Playable campaign integration', (): void => {
     expect(result.monthAdvanced).toBe(true);
     expect(result.activePlayer.id).toBe(first.id);
     expect(engine.getCurrentMonth()).toBe(2);
+    const checkpoint = new GameEngine({ enableWiki: false });
+    engines.push(checkpoint);
+    await checkpoint.loadGame('autosave');
+    expect(checkpoint.getActivePlayer().id).toBe(first.id);
+    expect(checkpoint.getCurrentMonth()).toBe(2);
     await engine.endTurn();
     await engine.saveGame('hotseat');
     const restored = new GameEngine({ enableWiki: false });
@@ -717,6 +722,31 @@ describe('Playable campaign integration', (): void => {
   });
 
   describe('real defeat conditions (bankruptcy, famine, anarchy)', (): void => {
+    it('requires an explicit sandbox continuation and persists the free campaign', async () => {
+      const engine = await campaign();
+      const player = engine.getPlayers()[0];
+      expect(() => engine.continueAsSandbox()).toThrow('noch nicht abgeschlossen');
+      for (let month = 0; month < 3; month++) {
+        player.kingdom.resources.gold = 0;
+        player.kingdom.resources.food = 20000;
+        player.kingdom.happiness = 60;
+        await engine.advanceMonth();
+      }
+      expect(engine.isPlayerDefeated(player.id)).toBe(true);
+      engine.resumeGame();
+      expect(engine.getGameState()).toBe(GameState.PAUSED);
+      engine.continueAsSandbox();
+      engine.pauseGame();
+      expect(engine.getCampaignId()).toBe('frei');
+      expect(engine.getCampaignGoals(player.id)).toEqual([]);
+      expect(engine.isPlayerDefeated(player.id)).toBe(false);
+      await engine.saveGame('sandbox-continuation');
+      await engine.loadGame('sandbox-continuation');
+      expect(engine.getCampaignId()).toBe('frei');
+      expect(engine.isPlayerDefeated(player.id)).toBe(false);
+      await engine.advanceMonth();
+      expect(engine.getCurrentMonth()).toBe(5);
+    });
     it('does not defeat a healthy realm over a full year', async (): Promise<void> => {
       const engine = await campaign();
       const player = engine.getPlayers()[0];
@@ -974,6 +1004,9 @@ describe('Playable campaign integration', (): void => {
       expect(engine.getTutorialProgress()).toEqual({ done: 5, total: 5 });
       expect(steps).toEqual(['build', 'trade', 'research', 'council', 'save']);
       expect(completed).toBe(1);
+      await engine.loadGame('tutorial-save');
+      expect(engine.isTutorialActive()).toBe(false);
+      expect(engine.getTutorialProgress()).toEqual({ done: 5, total: 5 });
     });
 
     it('does not count an autosave as the save step', async (): Promise<void> => {

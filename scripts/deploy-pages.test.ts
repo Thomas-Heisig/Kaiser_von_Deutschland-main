@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -85,6 +85,12 @@ describe.skipIf(!isUnixLike)('GitHub Pages deployment availability', () => {
 });
 
 describe('deploy-pages workflow structure', () => {
+  it('has a single Pages publisher so a source-only site cannot overwrite the game', () => {
+    const directory = new URL('../.github/workflows/', import.meta.url);
+    const publishers = readdirSync(directory).filter(name => /\.ya?ml$/.test(name))
+      .filter(name => readFileSync(new URL(name, directory), 'utf8').includes('uses: actions/deploy-pages@'));
+    expect(publishers).toEqual(['deploy-pages.yml']);
+  });
   it('gates every publishing action, but not the fallback artifact, on Pages availability', () => {
     for (const action of ['configure-pages@v5', 'upload-pages-artifact@v3', 'deploy-pages@v4']) {
       expect(workflow).toContain(

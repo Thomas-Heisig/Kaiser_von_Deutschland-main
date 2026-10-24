@@ -657,6 +657,8 @@ export class GameEngine {
   }
 
   public resumeGame(): void {
+    if (this.getCampaignId() !== 'frei' && this.getPlayers().some(player =>
+      this.isPlayerDefeated(player.id) || this.getCampaignChapterStatus(player.id).finished)) return;
     if (this.gameState === GameState.PAUSED && !this.isHotseat()) {
       this.gameState = GameState.RUNNING;
       this.timeSystem.resume();
@@ -1209,6 +1211,11 @@ export class GameEngine {
   // Speicherfunktionen
   public async saveGame(slot: string = 'default', manual: boolean = false): Promise<void> {
     if (this.processingMonth) throw new Error('Bitte den laufenden Monat abwarten.');
+    // Persist the completed save step without completing the live tutorial
+    // until storage succeeds. Autosaves keep the current step unchanged.
+    const savedTutorial = new TutorialSystem();
+    savedTutorial.deserialize(this.tutorialSystem.serialize());
+    if (manual && this.players.size > 0) savedTutorial.markStep('save');
     const saveData = {
       version: 2,
       citizens: this.citizenSystem.getAllCitizens(),
@@ -1234,7 +1241,7 @@ export class GameEngine {
       warFinanceUsed: Array.from(this.warFinanceUsed),
       campaignChapters: Array.from(this.campaignChapters),
       defeat: this.defeatSystem.serialize(),
-      tutorial: this.tutorialSystem.serialize(),
+      tutorial: savedTutorial.serialize(),
       borderWatch: Array.from(this.borderWatch),
       siegeTargets: Array.from(this.siegeTargets),
       siegeWarfare: this.siegeWarfareSystem.serialize(),
@@ -1389,6 +1396,7 @@ export class GameEngine {
       this.campaignChapters = new Map(saveData.campaignChapters);
     }
     // Defeat state is optional for backward compatibility with pre-defeat saves.
+    this.defeatSystem.reset();
     if (saveData.defeat !== undefined) {
       this.defeatSystem.deserialize(saveData.defeat);
     }
@@ -1621,6 +1629,7 @@ export class GameEngine {
     const chapter = chapterStatus(this.getCampaignId(), completed, this.getCampaignGoals(player.id));
     if (!chapter.ready) return;
     this.campaignChapters.set(player.id, completed + 1);
+    if (completed + 1 === chapter.total && !this.isHotseat()) this.pauseGame();
     const reward = 250 * (completed + 1);
     player.kingdom.resources.gold += reward;
     player.updateStats({ prestige: 2 });
@@ -1637,6 +1646,19 @@ export class GameEngine {
   }
 
   public getCampaignId(): CampaignId { return this.config.campaignId ?? 'aufbau'; }
+
+  /** Continue the shared campaign as a sandbox, preserving realms and history. */
+  public continueAsSandbox(): void {
+    if (this.processingMonth) throw new Error('Bitte den laufenden Monat abwarten.');
+    if (!this.getPlayers().some(player => this.isPlayerDefeated(player.id) ||
+      this.getCampaignChapterStatus(player.id).finished)) {
+      throw new Error('Die Kampagne ist noch nicht abgeschlossen.');
+    }
+    this.config = { ...this.config, campaignId: 'frei' };
+    this.defeatSystem.reset();
+    this.recordChronicle('Die Herrschaft wird als freie Sandbox fortgesetzt.');
+    this.resumeGame();
+  }
   public getCampaignDefinition() { return CAMPAIGNS.find((item) => item.id === this.getCampaignId()) ?? CAMPAIGNS[0]; }
   public getCampaignGoals(playerId: string): CampaignGoal[] {
     const player = this.requirePlayer(playerId);
@@ -2331,6 +2353,7 @@ export class GameEngine {
    * @throws Error if no game is active.
    */
   public async endTurn(): Promise<TurnResult> {
+    if (this.processingMonth) throw new Error('Ein Monat wird bereits verarbeitet.');
     if (this.gameState !== GameState.RUNNING && this.gameState !== GameState.PAUSED) {
       throw new Error('Kein aktives Spiel vorhanden.');
     }
@@ -2340,11 +2363,18 @@ export class GameEngine {
     const count = this.players.size;
     const next = this.turnIndex + 1;
     let monthAdvanced = false;
+    const previous = this.turnIndex;
+    // The monthly autosave must already identify the next player.
+    this.turnIndex = next % count;
     if (next >= count) {
-      await this.advanceMonth();
+      try {
+        await this.advanceMonth();
+      } catch (error) {
+        this.turnIndex = previous;
+        throw error;
+      }
       monthAdvanced = true;
     }
-    this.turnIndex = next % count;
     const activePlayer = this.getActivePlayer();
     this.emit('turnChanged', { playerId: activePlayer.id, monthAdvanced });
     return { monthAdvanced, activePlayer };

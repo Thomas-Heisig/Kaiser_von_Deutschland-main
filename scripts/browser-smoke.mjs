@@ -110,11 +110,19 @@ try {
     if (await page.locator('#kingdom-map').getAttribute('data-projection') !== 'isometric') failures.push('map switch failed');
     if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-projection') !== 'isometric') failures.push('Pixi retro renderer did not receive isometric mode');
     const scope = page.locator('#map-scope');
+    await page.locator('#zoom-slider').fill('0');
+    await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.zoomLevel === 'zentraleuropa');
+    await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.reliefLoaded === 'true');
+    await page.locator('#kingdom-map').screenshot({ path: `smoke-relief-${width}.png` });
+    await page.locator('#kingdom-map canvas').click({ position: { x: 100, y: 100 } });
+    if (await page.locator('#section-dialog[open]').count()) failures.push('Region click opened an invisible village district');
     if (await scope.count()) {
       await scope.selectOption('world');
       if (await page.locator('#kingdom-map canvas').getAttribute('data-map-scope') !== 'world') failures.push('World selector did not activate world renderer on phone');
       await scope.selectOption('home');
       if (await page.locator('#kingdom-map canvas').getAttribute('data-map-scope') !== 'home') failures.push('Home selector did not restore home renderer on phone');
+      if (await page.locator('#zoom-slider').inputValue() !== '40') failures.push('Scope reset left slider out of sync');
+      if (await page.locator('#kingdom-map canvas').getAttribute('data-zoom-level') !== 'dorf') failures.push('Scope reset did not restore village level');
     } else failures.push('Home/world map selector missing on phone');
     await page.locator('#map-style').selectOption('flat');
     if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-projection') !== 'flat') failures.push('Pixi renderer did not return to geometric mode');
@@ -126,6 +134,7 @@ try {
     await page.locator('#settlement-filter').selectOption('alle');
     await page.locator('[data-zoom="0.2"]').click();
     await page.locator('[data-zoom="0"]').click();
+    if (await page.locator('#zoom-slider').inputValue() !== '40') failures.push('Center reset left slider out of sync');
     if(!(await page.locator('#settlement-details [data-open-district]').count()))
       failures.push('map-selected district upgrade shortcut missing');
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
@@ -152,6 +161,53 @@ try {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (overflow > 2) failures.push(`viewport ${width}: horizontal overflow ${overflow}px`);
     if (errors.length) failures.push(`viewport ${width}: ${errors.join('; ')}`);
+    await page.close();
+  }
+
+  // A finished save must expose working result actions, including after reload.
+  for (const resultAction of ['menu', 'continue']) {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+    await page.evaluate(async () => {
+      const { GameEngine } = await import('/src/core/GameEngine.ts');
+      const engine = new GameEngine({ startingYear: 1200, randomEvents: false, enableWiki: false });
+      const ruler = engine.addPlayer({ name: 'Ergebnisprüfung', kingdomName: 'Testreich', gender: 'other' });
+      try {
+        await engine.startGame();
+        engine.pauseGame();
+        for (let month = 0; month < 3; month++) {
+          ruler.kingdom.resources.gold = 0;
+          ruler.kingdom.resources.food = 20000;
+          ruler.kingdom.happiness = 60;
+          await engine.advanceMonth();
+        }
+        if (!engine.isPlayerDefeated(ruler.id)) throw new Error('Expected a completed defeat scenario');
+        await engine.saveGame('autosave');
+      } finally { engine.dispose(); }
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('#intro-skip').click();
+    await page.locator('#continue').click();
+    await page.locator('.campaign-result-dialog[open]').waitFor();
+    await page.locator(`[data-result-${resultAction}]`).click();
+    if (resultAction === 'menu') {
+      await page.locator('#intro-skip').click();
+      await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
+      await page.locator('#kingdom-map canvas').waitFor();
+      await page.waitForFunction(() => Number(document.querySelector('#kingdom-map canvas')?.dataset.regionCount) > 0);
+    } else {
+      await page.locator('.campaign-result-dialog').waitFor({ state: 'detached' });
+      await page.getByText('Du spielst im Sandbox-Modus weiter', { exact: false }).waitFor();
+      if (await page.locator('#objectives .objective').count()) failures.push('Sandbox still has mandatory objectives');
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.locator('#intro-skip').click();
+      await page.locator('#continue').click();
+      await page.locator('#kingdom-map canvas').waitFor();
+      if (await page.locator('.campaign-result-dialog[open]').count()) failures.push('Sandbox reload repeated the defeat result');
+    }
+    if (errors.length) failures.push(`Result ${resultAction}: ${errors.join('; ')}`);
     await page.close();
   }
 

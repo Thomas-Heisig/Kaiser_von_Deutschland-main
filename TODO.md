@@ -6,6 +6,14 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ## Priorisierung: spielbare Kampagnen zuerst (17.10.2026)
 
+### Stabilisierung und Integration · 24.10.2026
+
+- [x] Dorf/Welt/Relief-Wechsel, Zoom-Reset und Feature-Flag korrigiert; unsichtbare Bezirke nehmen keine Kartenklicks mehr entgegen. Regionsdaten werden bei neuen Partien erneut geladen.
+- [x] Ergebnisdialog: Hauptmenü und Neubeginn räumen die Partie auf; Sandbox-Fortsetzung stellt die Engine tatsächlich auf freie Herrschaft um und bleibt nach Save/Load erhalten. Geladene abgeschlossene Kampagnen zeigen ihre Ergebnisansicht.
+- [x] Hotseat-Monatsautosave speichert den nächsten aktiven Spieler. Abgeschlossene Einzelspieler-Kampagnen bleiben bis zur ausdrücklichen Sandbox-Fortsetzung pausiert.
+- [x] Konkurrierenden Jekyll-Publisher entfernt; nur der gebaute Vite-Spielstand wird auf Pages veröffentlicht. Offline-Cache-Version aktualisiert.
+- [x] Automatisierte Engine-, Karten- und Browserprüfungen ergänzt; Ergebnisdialog, Menü-Rückkehr, neue Partie und persistente Sandbox sind in Chromium geprüft. Echte Safari-/Mobilgeräteabnahme und die langfristigen Open-World-/Grafikaufgaben unten bleiben offen.
+
 ### P1a – durchgängiger Kampagnenablauf (vor neuen Großsystemen)
 
 - [x] **Karten-Zoom-Ebenen (Gerüst, Schritt 3):** Schieberegler 0–100 logarithmisch auf Kamera-Zoom 0.4–4.0 abgebildet, gleichwertige „+"/„−"-Buttons; Ebenenwechsel Dorf ↔ Zentraleuropa mit Hysterese (35/40). Ebene „Zentraleuropa" zeigt schematische Regionsnamen aus dem historischen Modell als Punkte mit Legende — bewusst ohne Polygone, Linien oder Einfärbungen. `nicht_verifiziert`-Regionen und ungeprüfte Jahre liefern einen definierten Hinweistext. Feature-Flag `VITE_MAP_ZOOM_LEVELS`. Logik in `src/ui/MapZoomLevels.ts` (22 Tests, ohne PixiJS testbar); GameEngine, Spielstände und die 16 Bezirke unverändert. Offen: echte Relief-Textur (Natural Earth, Public Domain), L2 Nahregion, L0 Tisch, Geräteabnahme. Doku: `docs/05-technical-architecture/MAP_ZOOM_LEVELS.md`.
