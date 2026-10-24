@@ -21,8 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '20.x'
           cache: npm
@@ -54,7 +54,7 @@ jobs:
           grep -q '/Kaiser_von_Deutschland-main/' dist/index.html
           grep -q '/Kaiser_von_Deutschland-main/video/' dist/video-catalog.json
       - name: Upload deployable site even if Pages is not enabled
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: kaiser-https-site
           path: dist
@@ -82,13 +82,13 @@ jobs:
           esac
       - name: Configure GitHub Pages
         if: steps.pages.outputs.enabled == 'true'
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Upload built static site
         if: steps.pages.outputs.enabled == 'true'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
       - id: deployment
         name: Deploy to HTTPS GitHub Pages
         if: steps.pages.outputs.enabled == 'true'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
