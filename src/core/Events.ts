@@ -686,7 +686,7 @@ export class EventSystem {
           const followUpEvent = this.events.get(choice.nextEvent);
           if (followUpEvent) {
             setTimeout(() => {
-              this.getRandomEvent(player, player.kingdom.currentYear || 1);
+              this.getRandomEvent(player, player.kingdom.currentYear ?? 1);
             }, 1000);
           }
         }

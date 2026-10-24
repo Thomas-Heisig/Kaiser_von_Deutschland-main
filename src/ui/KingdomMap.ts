@@ -2,7 +2,8 @@ import { Application, Assets, Container, Graphics, Text, Sprite, Texture, Rectan
 import { Kingdom, KingdomInfrastructure } from '../core/Kingdom';
 import type { RivalRealm } from '../core/CampaignWarfareSystem';
 import { StrategyWorld, type StrategyWorldSnapshot } from '../core/StrategyWorld';
-import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature } from './SettlementSceneModel';
+import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature, earlyBuildingName } from './SettlementSceneModel';
+import { formatYear } from '../core/HistoricalCalendar';
 import {
   CAMERA_ZOOM_MAX,
   CAMERA_ZOOM_MIN,
@@ -348,6 +349,32 @@ export class KingdomMap {
    * All shapes share one roof direction, shadow direction and ground baseline.
    */
   private drawRetroDistrict(group: Container, type: keyof KingdomInfrastructure, count: number, epoch: string): boolean {
+    // Early settlements use schematic low buildings rather than medieval towers.
+    if (epoch === 'bronze' || epoch === 'ancient') {
+      const alpha = count > 0 ? 1 : .35;
+      const wall = epoch === 'bronze' ? 0xb9956a : 0xd3c4a4;
+      const g = new Graphics();
+      if (type === 'farms') {
+        for (let i=0;i<5;i++) g.rect(-42+i*18,-12,12,30).fill({color:i%2 ? 0x9c9657 : 0x7f8c50,alpha});
+      } else if (type === 'roads') {
+        g.poly([-45,5,-30,-8,46,8,32,23]).fill({color:0xac956f,alpha});
+      } else if (type === 'walls') {
+        g.rect(-47,-18,94,30).fill({color:wall,alpha});
+        for (let i=0;i<7;i++) g.rect(-43+i*14,-25,6,8).fill({color:wall,alpha});
+      } else {
+        g.ellipse(3,17,49,13).fill({color:0x17211c,alpha:.3*alpha})
+          .rect(-34,-25,68,38).fill({color:wall,alpha})
+          .poly([34,-25,47,-34,47,5,34,13]).fill({color:0x998365,alpha})
+          .poly([-38,-25,-22,-37,49,-37,35,-25]).fill({color:epoch==='bronze'?0x8d714c:0x9b6e52,alpha})
+          .rect(-7,-10,14,23).fill({color:0x5b5140,alpha});
+        if (epoch === 'ancient' && (type === 'churches' || type === 'universities')) {
+          for (let i=0;i<4;i++) g.rect(-29+i*18,-25,6,38).fill({color:0xe8dcc1,alpha});
+          g.poly([-40,-27,0,-50,40,-27]).fill({color:0xcab899,alpha});
+        }
+      }
+      group.addChild(g);
+      return true;
+    }
     if (this.projection === 'flat') return false;
     const later = epoch === 'modern' || epoch === 'industrial';
     const alpha = count > 0 ? 1 : 0.37;
@@ -509,9 +536,9 @@ export class KingdomMap {
     this.retroContext = { kingdom, selected, completed, year, rivals };
     const signature = districtSceneSignature(kingdom.infrastructure, selected,
       this.districtFilter, kingdom.currentSeason, completed) + JSON.stringify(rivals.map(r => [r.id,r.name,r.subjugated])) + JSON.stringify([this.strategyWorld,this.neighborRelations]);
-    const epochStyle = year >= 1945 ? 'modern' : year >= 1800 ? 'industrial' : year >= 1500 ? 'renaissance' : 'medieval';
-    if (signature + epochStyle === this.lastSignature) return;
-    this.lastSignature = signature + epochStyle;
+    const epochStyle = year < -799 ? 'bronze' : year < 500 ? 'ancient' : year >= 1945 ? 'modern' : year >= 1800 ? 'industrial' : year >= 1500 ? 'renaissance' : 'medieval';
+    if (signature + epochStyle + year === this.lastSignature) return;
+    this.lastSignature = signature + epochStyle + year;
     this.chimneys.length = 0;
     this.drawNeighbors(rivals);
     this.drawAtmosphere(kingdom.currentSeason, epochStyle);
@@ -590,7 +617,7 @@ export class KingdomMap {
       if (winter) group.addChild(new Graphics().ellipse(0, 20, 51, 8)
         .fill({ color: 0xe1e9e6, alpha: 0.38 }));
       const label = new Text({
-        text: `${location.name} · ${count}${modernization ? ' ⚙' : ''}`,
+        text: `${earlyBuildingName(location.type,year,location.name)} · ${count}${modernization ? ' ⚙' : ''}`,
         style: { fontFamily: 'Segoe UI', fontSize: 14, fill: 0xede8d2, fontWeight: '500' }
       });
       label.anchor.set(0.5, 0);
@@ -599,8 +626,8 @@ export class KingdomMap {
       this.settlements.addChild(group);
     }
     const eraText = epochStyle === 'modern' ? 'Moderne' : epochStyle === 'industrial'
-      ? 'Industrialisierung' : epochStyle === 'renaissance' ? 'Neuzeit' : 'Mittelalter';
-    const badge = new Text({text: eraText + ' · ' + year, style: {fontFamily: 'Georgia',
+      ? 'Industrialisierung' : epochStyle === 'renaissance' ? 'Neuzeit' : epochStyle === 'bronze' ? 'Bronzezeit' : epochStyle === 'ancient' ? 'Antike' : 'Mittelalter';
+    const badge = new Text({text: eraText + ' · ' + formatYear(year), style: {fontFamily: 'Georgia',
       fontSize: 25, fill: 0xf4e6c5}});
     badge.position.set(38, 26);
     this.settlements.addChild(badge);

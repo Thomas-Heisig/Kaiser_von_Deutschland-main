@@ -1,5 +1,7 @@
 /* ATLAS — a single, viewport-bound workspace across historical periods. */
 :root { --surface:#252c28; --surface-2:#343c32; --ink:#efe7d0; --muted:#b6b29e; --gold:#d1b679; --line:#8b7b594d; --paper:#e9d9ae; --desk:#442c21; --desk-dark:#1c1713; --heading:Georgia,'Times New Roman',serif; }
+:root[data-era="bronze"] { --desk:#62412a; --desk-dark:#211a13; --surface:#34352b; --surface-2:#484638; --gold:#dfbf86; --paper:#ceac78; }
+:root[data-era="ancient"] { --desk:#664334; --desk-dark:#211b19; --surface:#333c38; --surface-2:#464d43; --gold:#e0c49a; --paper:#e4d8b8; }
 :root[data-era="early-modern"] { --desk:#382923; --desk-dark:#161818; --surface:#242e30; --surface-2:#344443; --gold:#d3b179; --paper:#e9d9b3; }
 :root[data-era="industrial"] { --desk:#342d29; --desk-dark:#141b1e; --surface:#263239; --surface-2:#35454c; --gold:#c8ac7c; --paper:#e3dece; --heading:Georgia,serif; }
 :root[data-era="modern"] { --desk:#48554e; --desk-dark:#1d2c2d; --surface:#263d3d; --surface-2:#3b5250; --gold:#d5c8a2; --paper:#eeeadb; --heading:'Segoe UI',sans-serif; }
@@ -339,3 +341,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
  .kingdom-app .game-layout { grid-template-rows:36px minmax(0,1fr) 160px 43px!important; }
  .report-card { padding:4px 8px; gap:1px; }
 }
+/* The historical reading filter stays within the paginated administration panel. */
+.history-filter { display: grid; gap: .3rem; margin: .75rem 0; }
+.history-filter select { width: 100%; min-width: 0; max-width: 100%; }
+[data-knowledge] a, [data-history-event] a { overflow-wrap: anywhere; color: var(--gold); text-underline-offset: .2em; }
+.paper-heading small { color: #55462f; letter-spacing: .03em; }

@@ -61,7 +61,8 @@ import { CampaignDefeatSystem, DEFEAT_TITLES, DefeatReason } from './CampaignDef
 import { TutorialSystem, TutorialStepId } from './TutorialSystem';
 import { CourtAssistantRegistry, COURT_OFFICES, CourtOffice, AssistantMode } from './CourtAssistantRegistry';
 import { MODERNIZATION_PROJECTS, applyModernization } from './ModernizationProjects';
-import { epochForYear, milestonesInYear, milestonesThrough } from './WorldHistoryCatalog';
+import { epochForYear, milestonesArrivingInMonth, milestonesThroughDate } from './WorldHistoryCatalog';
+import { formatYear } from './HistoricalCalendar';
 import { buildHistoricalContext, HistoricalContext, historicalEpochFor } from './HistoricalContext';
 import { applyScienceDiscovery, researchImpact, researchProductionBonus } from './ScienceImpact';
 import { KingdomInfrastructure } from './Kingdom';
@@ -225,7 +226,7 @@ export class GameEngine {
   public recordChronicle(message: string, playerId?: string): void {
     if (typeof message !== 'string' || !message.trim() || message.length > 900) return;
     if (playerId !== undefined && !this.players.has(playerId)) throw new Error('Unbekannter Chronikspieler.');
-    const date = String(this.currentMonth).padStart(2,'0') + '/' + this.currentYear;
+    const date = String(this.currentMonth).padStart(2,'0') + '/' + formatYear(this.currentYear);
     this.chronicle.unshift({ date, message, ...(playerId ? { playerId } : {}) });
     this.chronicle.length = Math.min(this.chronicle.length,100);
   }
@@ -424,12 +425,12 @@ export class GameEngine {
     return message;
   }
 
-  public getHistoricalTimeline() { return milestonesThrough(this.currentYear); }
+  public getHistoricalTimeline() { return milestonesThroughDate(this.currentYear, this.currentMonth); }
 
   /** Optional stateful museum action. Real-world history remains informational. */
   public getExhibitionOptions(playerId: string) {
     const player = this.requirePlayer(playerId);
-    return milestonesThrough(this.currentYear).filter((item) => !item.speculative &&
+    return this.getHistoricalTimeline().filter((item) => !item.speculative &&
       (item.kind === 'art' || item.kind === 'culture' || item.kind === 'science' || item.kind === 'invention'))
       .map((item) => ({
         milestone: item, cost: 350 + Math.max(0, this.currentYear - 1200) * 2,
@@ -503,7 +504,7 @@ export class GameEngine {
       evidence: current.evidence,
       previousEpochId: previous.id
     });
-    this.recordChronicle(`Neue Epoche: ${current.name} (ab ${this.currentYear}).`);
+    this.recordChronicle(`Neue Epoche: ${current.name} (ab ${formatYear(this.currentYear)}).`);
   }
 
   public getCurrentYear(): number {
@@ -598,14 +599,14 @@ export class GameEngine {
     
     for (let i = 0; i < citizenCount; i++) {
       const gender: 'male' | 'female' = Math.random() > 0.5 ? 'male' : 'female';
-      const firstName = gender === 'male' 
+      const firstName = this.currentYear < 500 ? `${gender === 'female' ? 'Bewohnerin' : 'Bewohner'} ${i + 1}` : gender === 'male'
         ? maleNames[Math.floor(Math.random() * maleNames.length)]
         : femaleNames[Math.floor(Math.random() * femaleNames.length)];
-      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const lastName = this.currentYear < 500 ? 'der Siedlung' : lastNames[Math.floor(Math.random() * lastNames.length)];
       const age = 18 + Math.floor(Math.random() * 50);
       const birthYear = this.currentYear - age;
       const profession = professions[Math.floor(Math.random() * professions.length)];
-      const regionId = regions[Math.floor(Math.random() * regions.length)];
+      const regionId = this.currentYear < 500 ? 'siedlung' : regions[Math.floor(Math.random() * regions.length)];
       
       // Determine social class based on profession
       let socialClass: 'peasant' | 'middle' | 'noble' | 'royal' = 'peasant';
@@ -786,15 +787,14 @@ export class GameEngine {
       // Yearly processes for ecological systems
       this.processEcologicalYear();
       
-      // Informative world-history milestones never mutate resources, technology,
-      // or politics: real-world developments are not automatically invented by this realm.
-      for (const milestone of milestonesInYear(this.currentYear)) {
-        this.emit('historyMilestone', { milestone });
-      }
       this.emit('yearAdvanced', { year: this.currentYear });
       this.emitEpochChange();
     }
 
+    // Informative history follows its recorded month and never mutates the realm.
+    for (const milestone of milestonesArrivingInMonth(this.currentYear, this.currentMonth)) {
+      this.emit('historyMilestone', { milestone });
+    }
     this.timeSystem.setDate(this.currentYear, this.currentMonth);
     if (this.config.randomEvents) {
       for (const player of this.players.values()) {
@@ -1391,7 +1391,7 @@ export class GameEngine {
           saveData.culturalExhibitions.some((pair: unknown) =>
             !Array.isArray(pair) || pair.length !== 2 || typeof pair[0] !== 'string' ||
             !restoredPlayers.some((p: Player) => pair[0].startsWith(p.id + ':')) ||
-            !Number.isSafeInteger(pair[1]) || pair[1] < 0 || pair[1] > saveData.currentYear)) {
+            !Number.isSafeInteger(pair[1]) || pair[1] < -1999 || pair[1] > saveData.currentYear)) {
         throw new Error('Beschädigtes kulturelles Gedächtnis im Spielstand.');
       }
       this.culturalExhibitions = new Map(saveData.culturalExhibitions);
@@ -1906,7 +1906,7 @@ export class GameEngine {
     diplomacy.proposeTreaty({type,parties:[playerId,rivalId],signedYear:this.currentYear,
       expiryYear:this.currentYear + 3,expiryMonth:this.currentMonth,active:true,
       terms:type === 'trade' ? {goldPerYear:960} : {militarySupport:true}});
-    const message = `${type === 'trade' ? 'Handelsvertrag' : 'Schutzbündnis'} mit ${rival.name}: ${cost} Gold, gültig bis ${this.currentMonth}/${this.currentYear + 3}. ` +
+    const message = `${type === 'trade' ? 'Handelsvertrag' : 'Schutzbündnis'} mit ${rival.name}: ${cost} Gold, gültig bis ${this.currentMonth}/${formatYear(this.currentYear + 3)}. ` +
       (type === 'trade' ? '80 Gold Vertragsertrag je Monat.' : 'Keine gegenseitigen Angriffe; +15 % Führung bei der Überfallabwehr (nicht stapelbar).');
     this.recordChronicle(message,playerId);
     this.emit('diplomacyEvent',{playerId,message,recorded:true});

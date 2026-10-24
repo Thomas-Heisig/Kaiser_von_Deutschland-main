@@ -11,13 +11,15 @@ import type { Citizen, CitizenSkills, Profession } from '../core/CitizenSystem';
 import { KingdomInfrastructure } from '../core/Kingdom';
 import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
-import { SETTLEMENT_DISTRICTS, DistrictFilter, SEASON_LABELS } from './SettlementSceneModel';
+import { SETTLEMENT_DISTRICTS, DistrictFilter, SEASON_LABELS, earlyBuildingName } from './SettlementSceneModel';
 import { GameAudio } from './GameAudio';
 import { MusicJukebox } from './MusicJukebox';
 import { campaignsForYear, CAMPAIGNS, CampaignId } from '../core/CampaignCatalog';
 import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../core/CourtAssistantRegistry';
 import { GameAmbience, Soundscape } from './GameAmbience';
-import { historicalYearReport, type HistoryKind } from '../core/WorldHistoryCatalog';
+import { historicalMonthReport, milestoneDate, milestoneEvidence, type HistoryKind, type WorldMilestone } from '../core/WorldHistoryCatalog';
+import { bce, formatYear, formatYearRange } from '../core/HistoricalCalendar';
+import { knowledgeForDate, knowledgeSpotlight, KNOWLEDGE_TOPICS, type KnowledgeTopic } from '../core/EraKnowledgeCatalog';
 import { HelpSystem } from './HelpSystem';
 import { isZoomLevelsEnabled, regionsForMap, stepSlider } from './MapZoomLevels';
 import { deskMarkup, eraPresentation } from './EraPresentation';
@@ -108,6 +110,7 @@ export class KingdomGameUI {
   private openingAttempt = false;
   private resumeAfterCouncil = false;
   private reportIndex = 0;
+  private historyTopic: 'all' | KnowledgeTopic | 'events' | 'periods' | 'archive' | 'exhibitions' = 'all';
   private readonly councilAdvisor = new CouncilAdvisor();
   private readonly retryOpening = (): void => { void this.tryOpeningTheme(); };
   private readonly ambience = new GameAmbience();
@@ -472,7 +475,9 @@ export class KingdomGameUI {
           <div class="opening-music" id="opening-music" aria-live="polite"><img src="${import.meta.env.BASE_URL}covers/zeit-vergeht.webp" alt="Cover Zeit vergeht"><span id="opening-music-label">♫ Zeit vergeht · Hauptthema nach dem Intro</span><button type="button" id="opening-toggle" class="opening-toggle" aria-label="Musik pausieren">Ⅱ Pause</button></div>
           <form id="new-game">
             <label>Startepoche<select name="startYear" id="start-year">
-              <option value="1200">1200 · Hochmittelalter</option>
+              ${[2000,1500,1200,800,753,490,480,447,431,371,338,336,333,331,323,216,202,44,31,27,15,1].map(year => `<option value="${bce(year)}">${year} v. Chr. · ${year > 800 ? 'Bronzezeit' : 'Antike'}</option>`).join('')}
+              ${[1,9,14,60,66,70,500,800,1000].map(year => `<option value="${year}">${formatYear(year)} · ${year < 500 ? 'Antike' : 'Frühes Mittelalter'}</option>`).join('')}
+              <option value="1200" selected>1200 · Hochmittelalter</option>
               <option value="1300">1300 · Spätmittelalter</option>
               <option value="1400">1400 · Frühe Renaissance</option>
               <option value="1500">1500 · Renaissance</option>
@@ -480,7 +485,7 @@ export class KingdomGameUI {
               <option value="1750">1750 · Aufklärung</option>
               <option value="1820">1820 · Industriezeitalter</option>
               <option value="1890">1890 · Späte Industrialisierung</option>
-              <option value="1945">1945 · Nachkriegszeit</option>
+              <option value="1945">1945 · Krieg und Nachkriegszeit</option>
               <option value="1970">1970 · Moderne</option>
               <option value="2000">2000 · Digitalzeitalter</option>
             </select></label>
@@ -787,7 +792,7 @@ export class KingdomGameUI {
             <div class="report-tabs" aria-label="Informationen auswählen">
               <button type="button" data-report-tab="news" aria-pressed="true">Meldungen</button>
               <button type="button" data-report-tab="tutorial" aria-pressed="false">Tutorial</button>
-              <button type="button" data-report-tab="history" aria-pressed="false">Jahresgeschichte</button>
+              <button type="button" data-report-tab="history" aria-pressed="false">Geschichte</button>
             </div>
             <section class="report-card" data-report-card="news" aria-label="Was ist passiert?">
               <h2>Was ist passiert?</h2><small id="report-news-date"></small>
@@ -1053,8 +1058,8 @@ export class KingdomGameUI {
       }),
       engine.on('yearAdvanced', (): void => this.refresh()),
       engine.on('historicalEpochChanged', (detail: { epochName: string; year: number; evidence: string }): void => {
-        this.record(`Historische Epoche: ${detail.epochName} (ab ${detail.year}).`);
-        this.showGameAction('⌛ Neue historische Epoche', `${detail.epochName} – eingeordnet ab ${detail.year}${
+        this.record(`Historische Epoche: ${detail.epochName} (ab ${formatYear(detail.year)}).`);
+        this.showGameAction('⌛ Neue historische Epoche', `${detail.epochName} – eingeordnet ab ${formatYear(detail.year)}${
           detail.evidence === 'belegt' ? '' : detail.evidence === 'naeherung' ? ' (Grenzen genähert)' : ' (Grenzen ungeprüft)'}.`, 'science');
         this.refresh();
       }),
@@ -1093,14 +1098,15 @@ export class KingdomGameUI {
         this.record(detail.message);
         this.showGameAction('♫ Kultur gefördert', detail.message, 'science');
       }),
-      engine.on('historyMilestone', (detail: { milestone: { year: number; title: string; description: string; speculative?: boolean } }): void => {
+      engine.on('historyMilestone', (detail: { milestone: WorldMilestone }): void => {
         const item = detail.milestone;
-        this.record('Weltgeschichte ' + item.year + ': ' + item.title);
+        const label = item.speculative ? 'Zukunftsszenario' : item.month ? 'Weltgeschichte' : 'Jahreskontext';
+        this.record(label + ' ' + milestoneDate(item) + ': ' + item.title);
         const prefs=filmPreferences();
         const clip=prefs.interludesEnabled?filmForRole(this.cinematicClips,'interlude',prefs):null;
-        if(clip)this.showInterlude(clip,item.year+' · '+item.title);
-        this.showGameAction(item.speculative ? '✧ Zukunftsszenario' : '📜 Historischer Meilenstein',
-          item.year + ': ' + item.title + ' – ' + item.description, 'science');
+        if(clip)this.showInterlude(clip,formatYear(item.year)+' · '+item.title);
+        this.showGameAction('📜 ' + milestoneEvidence(item),
+          milestoneDate(item) + ': ' + item.title + ' – ' + item.description, 'science');
       }),
       engine.on('technologyResearched', (detail: { playerId: string; technology: { name: string } }): void => {
         if (this.player?.id !== detail.playerId) return;
@@ -1166,7 +1172,7 @@ export class KingdomGameUI {
       <strong>${escape(this.engine?.getCurrentEpoch() ?? 'Siedlung')} · 2D-Stadtansicht</strong>
       <div class="fallback-city">${SETTLEMENT_DISTRICTS.map(d => `<button type="button"
         data-fallback-district="${d.type}" title="${escape(d.name)} ausbauen"><span aria-hidden="true">${STRUCTURES[d.type].symbol}</span>
-        <span>${escape(d.name)}</span><strong>${format(this.player!.kingdom.infrastructure[d.type])}</strong></button>`).join('')}</div>
+        <span>${escape(earlyBuildingName(d.type, this.engine!.getCurrentYear(), d.name))}</span><strong>${format(this.player!.kingdom.infrastructure[d.type])}</strong></button>`).join('')}</div>
       <p>Jedes Gebäude ist auswählbar und führt zur echten Bauverwaltung.</p></div>`;
   }
 
@@ -1211,11 +1217,20 @@ export class KingdomGameUI {
     text('report-tutorial-text', step?.description ?? 'Bauen → Handeln → Forschen → Entscheiden. Prüfe vor jedem Monatswechsel deine Vorräte. Die Spielhilfe erklärt alle Schritte.');
     text('report-tutorial-go', step ? `Zu „${step.title}“ →` : 'Anleitung öffnen →');
     const year = engine.getCurrentYear();
-    const history = historicalYearReport(year);
-    const item = history.entries[0];
-    text('report-history-year', `Wahre Geschichte · ${year}`);
-    text('report-history-context', history.exact ? 'Historischer Jahresüberblick · unabhängig vom Spielverlauf'
-      : `Kein belegter Jahreseintrag im Katalog.${item ? ` Rückblick auf ${item.year}:` : ''}`);
+    const month = engine.getCurrentMonth();
+    const history = historicalMonthReport(year, month);
+    const event = history.events[0];
+    const annual = month === 1 ? history.annual[0] : undefined;
+    const knowledge = knowledgeSpotlight(year, month);
+    const past = history.past.at(-1);
+    const period = history.periods.length ? history.periods[(month - 1) % history.periods.length] : undefined;
+    const item = event ?? annual ?? knowledge ?? period ?? past;
+    text('report-history-year', `Geschichte · ${MONTHS[month - 1]} ${formatYear(year)}`);
+    text('report-history-context', event ? `${milestoneEvidence(event)} · ${milestoneDate(event)}`
+      : annual ? `${milestoneEvidence(annual)} · ${milestoneDate(annual)}`
+      : knowledge ? `Zeitbild · ${KNOWLEDGE_TOPICS[knowledge.topic]} · kein Monatsereignis`
+      : period ? `Zeitraum · ${milestoneDate(period)}`
+      : past ? `Kein Monatseintrag. Rückblick: ${milestoneDate(past)}` : 'Kein belegter Monatseintrag im Katalog');
     text('report-history-text', item ? `${item.title}. ${item.description}` : 'Für diesen Zeitraum ist noch kein historischer Eintrag hinterlegt.');
     const source = this.root.querySelector<HTMLAnchorElement>('#report-history-source')!;
     source.hidden = !item;
@@ -1461,7 +1476,7 @@ export class KingdomGameUI {
           ? 'Alle Kapitel wurden erfolgreich abgeschlossen. Dein Reich blüht!'
           : defeatDetail}</p>
         <div class="result-stats">
-          <div class="stat"><span class="stat-label">Jahr</span><span class="stat-value">${year}</span></div>
+          <div class="stat"><span class="stat-label">Jahr</span><span class="stat-value">${formatYear(year)}</span></div>
           <div class="stat"><span class="stat-label">Monat</span><span class="stat-value">${month}</span></div>
           <div class="stat"><span class="stat-label">Gold</span><span class="stat-value">${format(gold)}</span></div>
           <div class="stat"><span class="stat-label">Zufriedenheit</span><span class="stat-value">${format(happiness)}%</span></div>
@@ -1622,10 +1637,11 @@ export class KingdomGameUI {
       : 'Historische Würde: nicht belegt');
     const currentEraYear = this.engine.getCurrentYear();
     const eras: readonly [number, string][] = [[1200, 'Hochmittelalter: Städte, Herrschaften und Handelswege wachsen.'], [1400, 'Spätmittelalter: Zünfte, Handel und gesellschaftlicher Wandel.'], [1500, 'Renaissance und Reformation.'], [1600, 'Konfessionelle Konflikte und territoriale Veränderungen.'], [1750, 'Aufklärung und wissenschaftliche Reformen.'], [1820, 'Industrialisierung und veränderte Verkehrswege.'], [1890, 'Großindustrie und Elektrifizierung.'], [1945, 'Nachkriegszeit und Wiederaufbau.'], [1970, 'Elektronik und moderne Gesellschaft.'], [2000, 'Digitalzeitalter und globale Vernetzung.']];
-    setText('epoch-title', this.engine.getCurrentEpoch() + ' · ' + currentEraYear);
-    setText('epoch-description', [...eras].reverse().find(([year]) => currentEraYear >= year)?.[1] ?? eras[0][1]);
+    setText('epoch-title', this.engine.getCurrentEpoch() + ' · ' + formatYear(currentEraYear));
+    setText('epoch-description', currentEraYear < 500 ? 'Frühe Herrschaft als freies Spielmodell. Historische Beispiele und ihre Regionen stehen im Zeitbild.'
+      : [...eras].reverse().find(([year]) => currentEraYear >= year)?.[1] ?? 'Frühes Mittelalter: regionale Herrschaften und vielfältige kulturelle Traditionen.');
     this.root.querySelector('.kingdom-app')?.setAttribute('data-era-year', String(this.engine.getCurrentYear()));
-    this.root.querySelector('.kingdom-app')?.setAttribute('data-era', this.engine.getCurrentYear() >= 1945 ? 'modern' : this.engine.getCurrentYear() >= 1800 ? 'industrial' : this.engine.getCurrentYear() >= 1500 ? 'early-modern' : 'medieval');
+    this.root.querySelector('.kingdom-app')?.setAttribute('data-era', eraPresentation(currentEraYear).id);
     const paused = this.engine.getGameState() !== GameState.RUNNING;
     setText('pause', paused ? '▶ Fortsetzen' : 'Ⅱ Pausieren');
     this.root.querySelector('#pause')?.setAttribute('aria-label', paused ? 'Zeit fortsetzen' : 'Zeit pausieren');
@@ -1677,7 +1693,7 @@ export class KingdomGameUI {
     });
     const details = this.root.querySelector('#settlement-details');
     const district = SETTLEMENT_DISTRICTS.find(d => d.type === this.selected);
-    if (details && district) details.innerHTML = `<strong>${escape(district.name)}</strong> ·
+    if (details && district) details.innerHTML = `<strong>${escape(earlyBuildingName(district.type, this.engine.getCurrentYear(), district.name))}</strong> ·
       ${format(kingdom.infrastructure[district.type])} Gebäude
       <button data-open-district class="secondary">Bezirk ausbauen →</button>`;
     setText('settlement-season', SEASON_LABELS[kingdom.currentSeason] + ' · ' + this.engine.getCurrentEpoch());
@@ -1714,7 +1730,7 @@ export class KingdomGameUI {
           .finally(() => { this.eraMusicSwitching = false; this.updateJukeboxStatus(); });
       }
     }
-    setText('music-era-label', this.engine.getCurrentEpoch() + ' · ' + musicContext.year);
+    setText('music-era-label', this.engine.getCurrentEpoch() + ' · ' + formatYear(musicContext.year));
     const panel = this.root.querySelector('#panel');
     if (!panel?.contains(document.activeElement)) this.renderPanel();
   }
@@ -1722,8 +1738,8 @@ export class KingdomGameUI {
   private applyEraPresentation(year: number): void {
     const era = eraPresentation(year);
     document.documentElement.dataset.era = era.id;
-    const values: Record<string, string> = { desk: era.desk, motto: era.title, tool: era.tool, object: era.object, material: era.material, year: String(year), realm: era.realm,
-      intro: year >= 1945 ? 'Gestalte dein Land zwischen Wiederaufbau, Gesellschaft und technologischem Wandel. Jede Entscheidung schreibt Geschichte.' : year >= 1800 ? 'Lenke dein Reich durch Industrialisierung und gesellschaftlichen Wandel. Baue Städte, Handel und neue Infrastruktur auf.' : year >= 1500 ? 'Neue Handelswege, Wissen und Macht verändern die Welt. Gestalte die Zukunft deiner Herrschaft.' : 'Aus einem kleinen Lehen wird ein blühendes Reich. Sorge für dein Volk, lenke den Handel und baue deine Herrschaft auf.' };
+    const values: Record<string, string> = { desk: era.desk, motto: era.title, tool: era.tool, object: era.object, material: era.material, year: formatYear(year), realm: era.realm,
+      intro: year < 500 ? 'Entwickle eine Siedlung zwischen Landwirtschaft, Handwerk und Handel. Das freie Spielmodell wird von belegten Einblicken in die Kulturen der Zeit begleitet.' : year >= 1945 ? 'Gestalte dein Land zwischen Wiederaufbau, Gesellschaft und technologischem Wandel. Jede Entscheidung schreibt Geschichte.' : year >= 1800 ? 'Lenke dein Reich durch Industrialisierung und gesellschaftlichen Wandel. Baue Städte, Handel und neue Infrastruktur auf.' : year >= 1500 ? 'Neue Handelswege, Wissen und Macht verändern die Welt. Gestalte die Zukunft deiner Herrschaft.' : 'Aus einem kleinen Lehen wird ein blühendes Reich. Sorge für dein Volk, lenke den Handel und baue deine Herrschaft auf.' };
     for (const [key, value] of Object.entries(values)) {
       this.root.querySelectorAll<HTMLElement>('[data-presentation-' + key + ']').forEach(el => { el.textContent = value; });
     }
@@ -1830,7 +1846,7 @@ export class KingdomGameUI {
         'Bauten werden sofort fertiggestellt. Kosten und Effekte stammen direkt aus der Simulation.') + `
         <div class="build-grid">${(Object.keys(STRUCTURES) as Array<keyof KingdomInfrastructure>).map(
           (type: keyof KingdomInfrastructure): string => {
-            const info = STRUCTURES[type];
+            const info = {...STRUCTURES[type], name:earlyBuildingName(type, this.engine!.getCurrentYear(), STRUCTURES[type].name)};
             const cost = kingdom.getBuildingData(type);
             if (!cost) throw new Error(`Baukosten fehlen: ${type}`);
             const missing = [
@@ -1907,7 +1923,7 @@ export class KingdomGameUI {
         <div class="build-grid">${this.engine.getTechnologyOptions(this.player.id).map((option): string => `
           <article class="build-card ${option.researched ? 'selected' : ''}">
             <div class="build-title"><span aria-hidden="true">✧</span><h3>${escape(option.technology.name)}</h3>
-              <small>${escape(option.technology.era)} · ${option.technology.year}</small></div>
+              <small>Spielverfügbarkeit ab ${formatYear(option.technology.year)}</small></div>
             <p>${escape(option.technology.description)}</p>
             <div class="cost">${format(option.technology.cost.gold)} Gold · ${
               format(option.technology.cost.research)} Forschungspunkte · ${format(option.technology.researchTime)} Tage</div>
@@ -2053,7 +2069,7 @@ export class KingdomGameUI {
             <p class="eyebrow">Strategie: ${escape(this.engine!.getRivalPersonality(this.player!.id, rival.id))}</p>
             <p>Beziehung: <strong>${format(relation?.relationshipValue ?? 0)}</strong> · Vertrauen:
               ${format(relation?.trust ?? 50)} / 100</p>
-            <p class="muted">${rival.subjugated ? 'Vasall' : truce ? `Friedenspakt bis ${truce.expiryYear}` : underway ? 'Gesandtschaft unterwegs' : 'Unabhängiger Nachbar'}</p>
+            <p class="muted">${rival.subjugated ? 'Vasall' : truce ? `Friedenspakt ${truce.expiryYear === undefined ? 'ohne Ablaufdatum' : 'bis ' + formatYear(truce.expiryYear)}` : underway ? 'Gesandtschaft unterwegs' : 'Unabhängiger Nachbar'}</p>
             <button data-send-envoy="${escape(rival.id)}" ${rival.subjugated || underway ||
               kingdom.resources.gold < 350 ? 'disabled' : ''}>Gesandtschaft entsenden · 350 Gold</button>
             <button data-negotiate-truce="${escape(rival.id)}" ${rival.subjugated || truce ||
@@ -2063,7 +2079,7 @@ export class KingdomGameUI {
             <p class="muted">3 Jahre, 80 Gold/Monat. Benötigt 10 Beziehung und 40 Vertrauen.</p>
             <button data-agreement="alliance" data-rival="${escape(rival.id)}" ${rival.subjugated || ownTreaties.some(t=>t.type==='alliance') || (relation?.relationshipValue??0)<30 || (relation?.trust??0)<40 || kingdom.resources.gold<1200 ? 'disabled' : ''}>Schutzbündnis · 1.200 Gold</button>
             <p class="muted">3 Jahre, gegenseitiger Angriffsschutz und +15 % Führung bei Überfällen; nicht stapelbar. Benötigt 30 Beziehung und 40 Vertrauen.</p>
-            ${ownTreaties.map(t=>`<p>${t.type==='trade' ? 'Handelsvertrag' : t.type==='alliance' ? 'Schutzbündnis' : 'Nichtangriffspakt'} bis ${t.expiryMonth??1}/${t.expiryYear}</p><button data-break-treaty="${escape(t.id)}">Verträge brechen · Beziehung −30, Vertrauen −40, Prestige −5</button>`).join('')}
+            ${ownTreaties.map(t=>`<p>${t.type==='trade' ? 'Handelsvertrag' : t.type==='alliance' ? 'Schutzbündnis' : 'Nichtangriffspakt'} ${t.expiryYear === undefined ? 'ohne Ablaufdatum' : 'bis ' + (t.expiryMonth ?? 1) + '/' + formatYear(t.expiryYear)}</p><button data-break-treaty="${escape(t.id)}">Verträge brechen · Beziehung −30, Vertrauen −40, Prestige −5</button>`).join('')}
           </article>`;
         }).join('')}</div>`;
     } else if (this.view === 'war') {
@@ -2135,33 +2151,58 @@ export class KingdomGameUI {
         'Du lenkst das Reich durch eine Person aus deinem Volk. Wechsle die Rolle, wann immer du willst.') +
         this.renderCharacter(this.player);
     } else if (this.view === 'history') {
+      const year = this.engine.getCurrentYear();
+      const month = this.engine.getCurrentMonth();
       const records = this.engine.getHistoricalTimeline();
       const exhibitions = this.engine.getExhibitionOptions(this.player.id);
+      const report = historicalMonthReport(year, month);
+      const topics: Record<typeof this.historyTopic, string> = {
+        all: 'Zeitbild: alle Themen', ...KNOWLEDGE_TOPICS,
+        events: 'Ereignisse dieses Monats', periods: 'Zeiträume & Jahrzehnte', archive: 'Chronologie bis heute', exhibitions: 'Ausstellungen fördern'
+      };
       const icons: Record<HistoryKind, string> = {
         invention: '⚙', science: '✧', art: '♫', culture: '◈', society: '⚖', future: '◇'
       };
-      panel.innerHTML = heading('WELTGESCHICHTE', 'Erfindungen, Kunst und Kultur',
-        'Historische Entwicklungen der jeweiligen Zeit. Diese Informationen schalten nicht automatisch Technologien für dein Reich frei.') +
-        `<p class="muted">Epoche: ${escape(this.engine.getCurrentEpoch())} · bis Jahr ${format(this.engine.getCurrentYear())}
-        · ${format(records.length)} Einträge. Die Zukunft ist ausdrücklich als Szenario gekennzeichnet.</p>
-        <p class="muted">Kulturförderung ist freiwillig. Eine Ausstellung kostet Gold und steigert
-        dauerhaft den kulturellen Einfluss deines Reiches um 2 Punkte; sie kann nur einmal finanziert werden.</p>
-        <div class="build-grid">${exhibitions.slice().reverse().map((entry) => `
+      const cards = (items: WorldMilestone[]): string => `<div class="build-grid">${items.map(item => `
+        <article class="build-card" data-history-event="${item.id}"><div class="build-title">
+          <span aria-hidden="true">${icons[item.kind]}</span><h3>${escape(item.title)}</h3></div>
+          <p class="muted">${escape(milestoneDate(item))} · ${escape(item.place)}</p>
+          <p>${escape(item.description)}</p><p class="muted">${milestoneEvidence(item)}</p>
+          ${item.dateNote ? `<p class="history-evidence">Datierung: ${escape(item.dateNote)}</p>` : ''}
+          <a href="${escape(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">Quelle: ${escape(item.sourceTitle)} ↗</a>
+        </article>`).join('')}</div>`;
+      let content: string;
+      if (this.historyTopic === 'exhibitions') {
+        content = `<p>Kulturförderung ist freiwillig: Jede Ausstellung kostet Gold und bringt einmalig +2 Kultur sowie +1 Prestige.</p>
+          <div class="build-grid">${exhibitions.slice().reverse().map((entry) => `
           <article class="build-card"><h3>${escape(entry.milestone.title)}</h3>
           <p>Historische Ausstellung · ${format(entry.cost)} Gold</p>
           <button data-sponsor-exhibition="${escape(entry.milestone.id)}"
           ${entry.held || !entry.affordable ? 'disabled' : ''}>
           ${entry.held ? 'Bereits gefördert' : entry.affordable ? 'Ausstellung fördern' : 'Zu wenig Gold'}</button>
-          </article>`).join('')}</div>
-        <h3>Historische Informationskarten</h3>
-        <div class="build-grid">${records.slice().reverse().map((item) => `
-          <article class="build-card"><div class="build-title"><span aria-hidden="true">${icons[item.kind]}</span>
-            <h3>${escape(item.title)}</h3><small>${format(item.year)}</small></div>
-            <p>${escape(item.description)}</p><p class="muted">${escape(item.place)} ·
-            ${item.speculative ? '⚠ Fiktives Zukunftsszenario' : 'Historischer Informationsbeitrag'}</p>
-            <p><a href="${escape(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">
-              Quelle: ${escape(item.sourceTitle)} ↗</a></p>
-          </article>`).join('') || '<p>In diesem Zeitraum liegen noch keine Einträge vor.</p>'}</div>`;
+          </article>`).join('') || '<p>Noch keine Ausstellungen verfügbar.</p>'}</div>`;
+      } else if (this.historyTopic === 'events') {
+        content = (report.events.length ? cards(report.events)
+          : '<p>Für diesen Monat ist kein genau datiertes Ereignis im Katalog hinterlegt. Das bedeutet nicht, dass historisch nichts geschah.</p>')
+          + (report.annual.length ? '<h3>Zusätzlicher Jahreskontext · Monat nicht hinterlegt</h3>' + cards(report.annual) : '');
+      } else if (this.historyTopic === 'periods') {
+        content = '<p class="muted">Entwicklungen und Datierungsspannen, keine Tagesereignisse. Die Grenzen sind nur so genau wie die jeweilige Quelle.</p>'
+          + (report.periods.length ? cards(report.periods) : '<p>Für diesen Zeitpunkt ist noch kein belegter Zeitraum hinterlegt. Weitere Einordnungen stehen unter Zeitbild.</p>');
+      } else if (this.historyTopic === 'archive') {
+        content = records.length ? cards(records.slice().reverse()) : '<p>Noch keine Einträge verfügbar.</p>';
+      } else {
+        const knowledge = knowledgeForDate(year, month, this.historyTopic === 'all' ? undefined : this.historyTopic);
+        content = `<p class="muted">Epochenwissen, keine Monatsereignisse. Die Zeitfenster sind redaktionelle Zuordnungen; Stile überlagern sich und unterscheiden sich nach Region und sozialem Milieu.</p>
+          <div class="build-grid">${knowledge.map(item => `<article class="build-card" data-knowledge="${item.id}" data-knowledge-topic="${item.topic}">
+            <p class="eyebrow">${KNOWLEDGE_TOPICS[item.topic]}</p><h3>${escape(item.title)}</h3>
+            <p>${escape(item.description)}</p><p class="muted">${escape(item.place)} · Einordnung ca. ${escape(formatYearRange(item.from, item.to))}</p>
+            <a href="${escape(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">Quelle: ${escape(item.sourceTitle)} ↗</a>
+          </article>`).join('') || '<p>Für dieses Thema und diesen Zeitpunkt ist noch kein Zeitbild hinterlegt. Die Chronologie enthält bereits vergangene Entwicklungen.</p>'}</div>`;
+      }
+      panel.innerHTML = heading('GESCHICHTE & ZEITBILD', `${MONTHS[month - 1]} ${formatYear(year)}: Kunst, Kultur und Leben`,
+        'Historische Quellen begleiten deine eigene Herrschaft. Das Spiel schreitet monatsweise voran; bekannte Tagesdaten werden im betreffenden Monat angezeigt. Lesen verändert keine Ressourcen.')
+        + `<label class="history-filter" for="history-topic">Thema<select id="history-topic">${Object.entries(topics).map(([value, label]) =>
+          `<option value="${value}" ${value === this.historyTopic ? 'selected' : ''}>${label}</option>`).join('')}</select></label>` + content;
     } else if (this.view === 'chronicle') {
       panel.innerHTML = heading('DIE GESCHICHTE DEINER HERRSCHAFT', 'Reichschronik',
         'Die letzten 100 wichtigen Meldungen deiner Herrschaft bleiben auch nach dem Laden erhalten.') + `
@@ -2198,6 +2239,13 @@ export class KingdomGameUI {
           </button>
         </div>`;
     }
+    panel.querySelector<HTMLSelectElement>('#history-topic')?.addEventListener('change', event => {
+      this.historyTopic = (event.target as HTMLSelectElement).value as typeof this.historyTopic;
+      const body = this.root.querySelector('#section-dialog-body');
+      if (body) body.scrollTop = 0;
+      this.renderPanel();
+      this.updatePanelPagination();
+    });
     panel.querySelectorAll<HTMLButtonElement>('[data-civic-assign]').forEach(button => {
       button.addEventListener('click',()=>void this.run(()=>{
         const missionId=button.dataset.civicAssign??'';
@@ -2388,8 +2436,9 @@ export class KingdomGameUI {
           }
           this.audio.playEffect('build');
           this.selected = type;
-          this.record(`${STRUCTURES[type].name} fertiggestellt.`);
-          this.notify(`${STRUCTURES[type].name} wurde gebaut. Kosten wurden abgezogen.`);
+          const name = earlyBuildingName(type, this.requireEngine().getCurrentYear(), STRUCTURES[type].name);
+          this.record(`${name} fertiggestellt.`);
+          this.notify(`${name} wurde gebaut. Kosten wurden abgezogen.`);
         });
       });
     });
@@ -2739,7 +2788,7 @@ export class KingdomGameUI {
       : '';
     const reports = engine.getBattleReports(player.id).slice(0, 10).map((report: BattleReport): string => {
       const won = this.wonBattle(report);
-      return `<li class="report ${won ? 'won' : 'lost'}"><time>${MONTHS[report.month - 1]} ${report.year}</time>
+      return `<li class="report ${won ? 'won' : 'lost'}"><time>${MONTHS[report.month - 1]} ${formatYear(report.year)}</time>
         <div><strong>${escape(report.attacker)} ⚔ ${escape(report.defender)} · ${won ? 'Sieg' : 'Niederlage'}</strong>
           <p>${escape(report.summary)}</p>
           <small>Kraft ${format(report.attackerPower)} : ${format(report.defenderPower)} · Siegchance ${
@@ -3155,7 +3204,7 @@ export class KingdomGameUI {
   }
 
   private date(): string {
-    return this.engine ? `${MONTHS[this.engine.getCurrentMonth() - 1]} ${this.engine.getCurrentYear()}` : '';
+    return this.engine ? `${MONTHS[this.engine.getCurrentMonth() - 1]} ${formatYear(this.engine.getCurrentYear())}` : '';
   }
 
   private requireEngine(): GameEngine {

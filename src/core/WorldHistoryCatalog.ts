@@ -1,9 +1,13 @@
+import { formatYear, formatYearRange } from './HistoricalCalendar';
+import { ANCIENT_MILESTONES } from './AncientHistoryCatalog';
 export type HistoryKind = 'invention' | 'science' | 'art' | 'culture' | 'society' | 'future';
 export interface WorldMilestone {
-  id: string; year: number; title: string; kind: HistoryKind; description: string;
+  id: string; year: number; month?: number; day?: number; approximate?: boolean;
+  endYear?: number; certainty?: 'disputed' | 'traditional'; dateNote?: string;
+  title: string; kind: HistoryKind; description: string;
   place: string; sourceTitle: string; sourceUrl: string; speculative?: boolean;
 }
-const milestoneEntries: WorldMilestone[] = [
+const milestoneEntries: WorldMilestone[] = [...ANCIENT_MILESTONES,
   {id:'durer-self-portrait',year:1500,title:'Dürers Selbstbildnis im Pelzrock',kind:'art',description:'Albrecht Dürer malt sein frontales Selbstbildnis im Pelzrock. Er bezeichnet sich in der Bildinschrift als 28-jährigen Künstler aus Nürnberg.',place:'Nürnberg',sourceTitle:'Bayerische Staatsgemäldesammlungen – Selbstbildnis im Pelzrock',sourceUrl:'https://www.sammlung.pinakothek.de/de/artwork/Qlx2QpQ4Xq'},
   {id:'east-india-charter',year:1600,title:'Gründung der englischen East India Company',kind:'society',description:'Am 31. Dezember erhält die englische East India Company ihre königliche Gründungsurkunde von Elisabeth I.',place:'England',sourceTitle:'Library of Congress – Guide to the records in the India Office',sourceUrl:'https://tile.loc.gov/storage-services/service/gdc/gdclccn/23/00/48/26/23004826/23004826.pdf'},
   {id:'oersted',year:1820,title:'Elektrizität und Magnetismus hängen zusammen',kind:'science',description:'Hans Christian Ørsted veröffentlicht seine Beobachtung, dass elektrischer Strom eine Kompassnadel ablenkt.',place:'Kopenhagen',sourceTitle:'DTU Physics – History',sourceUrl:'https://physics.dtu.dk/About/history/DTU-Physics-History'},
@@ -38,8 +42,33 @@ const milestoneEntries: WorldMilestone[] = [
   {id:'fusion-future',year:2050,title:'Fusionsenergie in Städten?',kind:'future',description:'Mögliches Zukunftsszenario des Spiels: kommerzielle Fusion ist nicht für dieses Jahr gesichert.',place:'Zukunftsszenario',sourceTitle:'ITER – Research',sourceUrl:'https://www.iter.org/',speculative:true},
   {id:'space-future',year:2150,title:'Dauerhafte Siedlungen außerhalb der Erde?',kind:'future',description:'Fiktive Entwicklung für die Zukunftskampagne, keine historische Tatsache oder verlässliche Prognose.',place:'Zukunftsszenario',sourceTitle:'NASA – Moon to Mars',sourceUrl:'https://www.nasa.gov/humans-in-space/',speculative:true}
 ]; 
-export const WORLD_MILESTONES: readonly WorldMilestone[] = milestoneEntries.sort((a,b)=>a.year-b.year);
+// Only dates supported by the linked source. Missing month means annual context,
+// not an event asserted to have happened in January.
+const preciseDates: Record<string, [number, number]> = {
+  'east-india-charter': [12, 31], 'bismarck-dismissal': [3, 20], 'bach-death': [7, 28],
+  'war-end-europe': [5, 8], 'warsaw-treaty': [12, 7], 'expo-hannover': [6, 1],
+  impressionism: [4, 15], moon: [7, 20], genome: [4, 14]
+};
+for (const item of milestoneEntries) {
+  const date = preciseDates[item.id];
+  if (date) [item.month, item.day] = date;
+  if (item.id === 'printing' || item.id === 'university-bologna') item.approximate = true;
+  if (item.id === 'impressionism') {
+    item.sourceTitle = 'Library of Congress – First Impressionist Art Exhibition';
+    item.sourceUrl = 'https://www.loc.gov/item/today-in-history/april-15/';
+  }
+  if (item.id === 'moon') item.sourceUrl = 'https://nasa.gov/wp-content/uploads/static/history/alsj/a11/a11ov.html';
+  if (item.id === 'genome') item.sourceUrl = 'https://www.genome.gov/human-genome-project/timeline';
+  if (item.id === 'web') item.sourceUrl = 'https://home.cern/science/computing/the-birth-of-the-web';
+}
+milestoneEntries.push(
+  {id:'reichstag-handover',year:1999,month:4,day:19,title:'Der umgebaute Reichstag wird übergeben',kind:'art',description:'Das nach Norman Fosters Entwurf umgebaute Reichstagsgebäude wird dem Deutschen Bundestag übergeben. Historische Spuren und zeitgenössische Gestaltung treffen aufeinander.',place:'Berlin',sourceTitle:'Deutscher Bundestag – Plenarbereich Reichstagsgebäude',sourceUrl:'https://www.bundestag.de/parlament/geschichte/schauplaetze/plenarbereich_reichstagsgebaeude'},
+  {id:'net-condition',year:1999,month:9,day:23,title:'Netzkunst in „net_condition“',kind:'art',description:'Am ZKM beginnt die Ausstellung „net_condition“. Sie untersucht künstlerische und gesellschaftliche Bedingungen des vernetzten Lebens und läuft bis Februar 2000.',place:'Karlsruhe',sourceTitle:'ZKM – net_condition',sourceUrl:'https://zkm.de/de/ausstellung/1999/09/netcondition'}
+);
+export const WORLD_MILESTONES: readonly WorldMilestone[] = milestoneEntries.sort((a,b)=>
+  a.year-b.year || (a.month ?? 0)-(b.month ?? 0) || (a.day ?? 0)-(b.day ?? 0));
 export function epochForYear(year:number): string {
+  if(year<-799) return 'Bronzezeit · regional unterschiedliche Entwicklung';
   if(year<500) return 'Antike';
   if(year<1500) return 'Mittelalter';
   if(year<1800) return 'Frühe Neuzeit';
@@ -56,9 +85,44 @@ export function milestonesInYear(year:number): WorldMilestone[] {
   return WORLD_MILESTONES.filter(m=>m.year===year);
 }
 
+export function milestonesThroughDate(year: number, month: number): WorldMilestone[] {
+  return WORLD_MILESTONES.filter(item => item.year < year
+    || (item.year === year && (item.month ?? 1) <= month));
+}
+
+/** The engine advances whole months; a known day is descriptive, not a daily tick. */
+export function milestonesArrivingInMonth(year: number, month: number): WorldMilestone[] {
+  return WORLD_MILESTONES.filter(item => item.endYear === undefined && item.year === year && (item.month ?? 1) === month);
+}
+
+export function historicalMonthReport(year: number, month: number) {
+  const available = milestonesThroughDate(year, month).filter(item => !item.speculative && item.kind !== 'future');
+  return {
+    events: available.filter(item => item.endYear === undefined && item.year === year && item.month === month),
+    annual: available.filter(item => item.endYear === undefined && item.year === year && item.month === undefined),
+    periods: available.filter(item => item.endYear !== undefined && item.endYear >= year),
+    past: available.filter(item => (item.endYear ?? item.year) < year || (item.month !== undefined && item.year === year && item.month < month))
+  };
+}
+
+export function milestoneDate(item: WorldMilestone): string {
+  if (item.endYear !== undefined) return `${item.approximate ? 'ca. ' : ''}${formatYearRange(item.year, item.endYear)}`;
+  return item.month ? `${item.day ? `${item.day}.` : ''}${item.month}.${formatYear(item.year)}`
+    : `${item.approximate ? 'um ' : ''}${formatYear(item.year)} · Monat nicht hinterlegt`;
+}
+
+export function milestoneEvidence(item: WorldMilestone): string {
+  if (item.speculative) return '⚠ Fiktives Zukunftsszenario';
+  if (item.certainty === 'traditional') return 'Überlieferung · kein gesichertes Ereignisdatum';
+  if (item.certainty === 'disputed') return 'Datierung teilweise umstritten';
+  if (item.approximate) return 'Ungefähre Datierung';
+  if (item.endYear !== undefined) return 'Zeitraum · kein einzelnes Tagesereignis';
+  return item.month ? 'Belegtes Ereignis' : 'Jahreskontext · Monat nicht hinterlegt';
+}
+
 /** No invented annual entries: older context stays explicitly dated, fiction is excluded. */
 export function historicalYearReport(year: number): { exact: boolean; entries: WorldMilestone[] } {
-  const known = WORLD_MILESTONES.filter(item => !item.speculative && item.kind !== 'future' && item.year <= year);
+  const known = WORLD_MILESTONES.filter(item => !item.speculative && item.kind !== 'future' && item.endYear === undefined && item.year <= year);
   const exact = known.filter(item => item.year === year);
   return { exact: exact.length > 0, entries: exact.length ? exact : known.slice(-1) };
 }

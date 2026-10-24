@@ -28,6 +28,9 @@ const PERIOD_NAMES: ReadonlyArray<{ since: number; names: Names }> = [
 
 /** Clamp the random selector to preserve valid names in deterministic test runs. */
 export function nameForBirth(year: number, gender: ChildGender, random: () => number = Math.random): string {
+  // Early Central European personal names are not reconstructable from this dataset.
+  // Keep an explicit fictional identifier instead of projecting medieval names backwards.
+  if (year < 500) return 'Kind ' + (1 + Math.floor(Math.max(0, Math.min(.999999, random() || 0)) * 9999));
   const historic = [...PERIOD_NAMES].reverse().find(group => year >= group.since) ?? PERIOD_NAMES[0];
   const options = gender === 'female' ? historic.names.female : historic.names.male;
   const roll = random();
