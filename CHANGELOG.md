@@ -2,10 +2,11 @@
 
 Änderungen im Git-Repository, nach [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Die Paketversion ist weiterhin `2.5.1`; nachstehende Änderungen sind bisher **unveröffentlicht**. Die vollständige historische Änderungsliste wurde vor der Neuordnung archiviert.
 
-## [Unreleased] — Stand 17.10.2026
+## [Unreleased] — Stand 24.10.2026
 
 ### Added
 
+- **Echte Niederlagebedingungen** (Bankrott, Hungersnot, Anarchie) über das neue `CampaignDefeatSystem`: monatliche Prüfung mit aufeinanderfolgenden Monaten, Erholungsrücksetzung und dauerhafter Festhaltung; Untergang pausiert das Spiel, schreibt die Chronik und öffnet die Vollbild-Niederlageseite. Schwellen liegen über Minimum-Werten gesunder Läufe und sind konfigurierbar; Save/Load-Migration und Fehlalarmfreiheit automatisiert geprüft.
 - P1-Integrationstest der Industrie-Kampagne mit Bauen, Forschung, drei Kapiteln, Save/Load und Sieg sowie 60-Monats-Wirtschaftsstabilität.
 
 - Drei historisch begrenzte Bürgeraufträge aus dem ursprünglichen Ideenbestand: Seuchenhilfe, Bewässerung und Kulturförderung.

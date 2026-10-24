@@ -10,6 +10,10 @@ Die [TODO](../../TODO.md) ist die *einzige operative Aufgabenliste*. Diese Roadm
 
 Die monatliche Spielschleife verwendete bisher keine jahreszeitliche Ernte- und Holzproduktion, obwohl der alte Jahrespfad solche Faktoren vorsah. Die monatliche Prognose und die Buchung berücksichtigen nun übereinstimmend Winter und Sommer. Mehrjährige Balance-Kalibrierung bleibt offen.
 
+## P1-Niederlagebedingungen (24.10.2026)
+
+Die Standardkampagne hatte bisher keine echten Niederlagebedingungen; die Niederlageseite wurde nie geöffnet. Das neue `CampaignDefeatSystem` prüft monatlich drei existenzbedrohende Zustände über aufeinanderfolgende Monate: **Bankrott** (drei Monate ohne Gold), **Hungersnot** (zwei Monate ohne Nahrung) und **Anarchie** (sechs Monate Zufriedenheit ≤ 5). Erholung setzt die Zähler zurück; ein eingetretener Untergang bleibt für die laufende Kampagne festgehalten. Der Untergang pausiert das Spiel, schreibt die Chronik und öffnet die Vollbild-Niederlageseite. Die Schwellen liegen bewusst über den Minimum-Werten gesunder Läufe (Gold ~4.700, Nahrung ~11.000, Zufriedenheit ~8) und sind konfigurierbar. Unit- und Engine-Integrationstests belegen Bankrott/Hungersnot/Anarchie, fehlendes Doppelabbruchen, Save/Load-Migration und das Fehlen von Fehlalarmen; Altstände ohne Defeat-Daten bleiben ladbar.
+
 ## P1-Testabdeckung (17.10.2026)
 
 Eine Industriekampagne wird automatisiert mit echten Bauten, Forschung, Save/Load und Sieg getestet. Ein zusätzlicher 60-Monats-Lauf sichert endliche Werte und zentrale Grenzen. Andere Kampagnen, echte Niederlagebedingungen, freie Wirtschaftsbalance und Lasttests bleiben offen.
@@ -18,7 +22,7 @@ Eine Industriekampagne wird automatisiert mit echten Bauten, Forschung, Save/Loa
 
 - Industrie und Wiederaufbau hatten Startinfrastruktur, die einen Großteil des ersten Kapitels ohne Spielerhandlung erfüllte; Anfangsziele verschärft.
 - Die Zielanzeige verwendete bislang globale Ziel-Schwellen anstelle abgeschlossener Kapitel für die Siegmeldung. Siegstatus und Fortschrittsanzeige sind jetzt an Kapitelabschluss gebunden.
-- Noch offen: vollständiger automatisierter Spielabschluss, mehrjährige Wirtschaftsbalance und reale Niederlagebedingungen.
+- Noch offen: vollständiger automatisierter Spielabschluss und mehrjährige Wirtschaftsbalance. Reale Niederlagebedingungen (Bankrott, Hungersnot, Anarchie) sind jetzt implementiert und automatisiert geprüft.
 
 ## Kartenoberfläche (18.10.2026)
 
