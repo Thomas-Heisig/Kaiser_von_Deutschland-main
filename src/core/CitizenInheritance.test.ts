@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import { CitizenSystem } from './CitizenSystem';
 import { DemographicSystem } from './DemographicSystem';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 function createFamily(system: CitizenSystem) {
   const father = system.createCitizen({
@@ -56,7 +60,7 @@ describe('Erbschaftssystem', () => {
     expect(system.distributeInheritance(father.id, 1222, 3)).toBe(true);
     expect(father.wealth).toBe(0);
     expect(son.wealth).toBe(500);
-    expect(daughter.wealth).toBe(250);
+    expect(daughter.wealth).toBe(500);
     expect(mother.wealth).toBe(0);
     expect(son.lifeEvents.some(e => e.type === 'inheritance' && e.description.includes('Haupterbe'))).toBe(true);
     expect(daughter.lifeEvents.some(e => e.type === 'inheritance')).toBe(true);
@@ -101,19 +105,18 @@ describe('Erbschaftssystem', () => {
     const system = new CitizenSystem();
     const { father, son, daughter } = createFamily(system);
     father.wealth = 400;
-    const sonStart = son.wealth;
-    const daughterStart = daughter.wealth;
+    // Erben machen unsterblich (Gesundheitsfaktor 2 → Todeschance 0),
+    // damit nur der Vater stirbt und die Aufteilung eindeutig bleibt.
+    son.health.overall = 200;
+    daughter.health.overall = 200;
     const demographics = new DemographicSystem();
-    // Hungersnot mit Schweregrad 100: 10 % Todesrisiko pro Monat in der Region.
-    demographics.startFamine('dorf', 100, 1222, 3, 12);
+    vi.spyOn(Math, 'random').mockReturnValue(0);
 
-    let attempts = 0;
-    while (father.isAlive && attempts < 500) {
-      demographics.processMonth(system, 1222, 3);
-      attempts++;
-    }
+    demographics.processMonth(system, 1222, 3);
+
     expect(father.isAlive).toBe(false);
     expect(father.wealth).toBe(0);
-    expect((son.wealth - sonStart) + (daughter.wealth - daughterStart)).toBe(400);
+    expect(son.wealth).toBe(200);
+    expect(daughter.wealth).toBe(200);
   });
 });

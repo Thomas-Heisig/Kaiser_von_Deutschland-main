@@ -507,6 +507,14 @@ thead th { color: #c9c19b; font-size: 0.65rem; }
 .info-dialog h2 {margin-bottom:12px;color:var(--gold)}
 .info-dialog p {margin:9px 0;font-size:.9rem}
 .info-dialog button {margin-top:12px}
+.status-group {margin:14px 0}
+.status-group h3 {margin:0 0 6px;font-size:.95rem;color:var(--gold)}
+.status-count {display:inline-block;min-width:1.5em;padding:0 6px;margin-left:6px;border:1px solid var(--gold);border-radius:10px;font-size:.75rem;text-align:center}
+.status-list {list-style:none;margin:0;padding:0}
+.status-list li {padding:5px 0;border-bottom:1px solid #ffffff14}
+.status-list li:last-child {border-bottom:0}
+.status-list strong {display:block;font-size:.85rem}
+.status-list .muted {display:block;font-size:.78rem}
 .legal-link {min-height:28px;padding:3px 5px;background:transparent;border:0;color:var(--gold);text-decoration:underline;font-size:.75rem}
 .intro-activation[hidden] {display:none!important}
 .intro-activation {position:absolute;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);padding:20px 30px;background:#162b24;border:2px solid var(--gold);color:#f9e6b9;font-size:1.1rem}

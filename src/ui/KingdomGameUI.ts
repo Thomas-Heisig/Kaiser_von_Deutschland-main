@@ -25,6 +25,7 @@ import { milestonesThroughDate, historicalMonthReport, milestoneDate, milestoneE
 import { bce, formatYear, formatYearRange } from '../core/HistoricalCalendar';
 import { knowledgeForDate, knowledgeSpotlight, KNOWLEDGE_TOPICS, type KnowledgeTopic } from '../core/EraKnowledgeCatalog';
 import { HelpSystem } from './HelpSystem';
+import { groupFeaturesByStatus } from './FeatureStatus';
 import { isZoomLevelsEnabled, regionsForMap, stepSlider } from './MapZoomLevels';
 import { deskMarkup, eraPresentation } from './EraPresentation';
 
@@ -232,6 +233,26 @@ export class KingdomGameUI {
            <button type="button" id="film-dialog-skip">Überspringen →</button></div>
          </dialog>
 `;
+  }
+
+  /** Projektstatus-Dialog: zeigt fertig/in Arbeit/geplant, damit Spieler realistische Erwartungen bekommen. */
+  private statusDialogMarkup(): string {
+    const groups = groupFeaturesByStatus();
+    const body = groups.map(group => `
+      <section class="status-group" aria-labelledby="status-heading-${group.status}">
+        <h3 id="status-heading-${group.status}">${group.label} <span class="status-count">${group.entries.length}</span></h3>
+        <ul class="status-list">
+          ${group.entries.map(entry => `<li><strong>${escape(entry.name)}</strong><span class="muted">${escape(entry.detail)}</span></li>`).join('')}
+        </ul>
+      </section>`).join('');
+    return `
+<dialog id="status-dialog" class="info-dialog" aria-labelledby="status-title">
+<h2 id="status-title">Projektstatus</h2>
+<p class="muted">Was im Spiel fertig ist, was in Arbeit ist und was noch geplant ist. „Fertig" bedeutet: im Hauptspiel verfügbar und automatisiert geprüft.</p>
+${body}
+<p class="muted">Vollständige Belege: Projektstatus, TODO und Roadmap im Repository.</p>
+<button type="button" data-close-dialog="status-dialog">Schließen</button>
+</dialog>`;
   }
 
   private bindSettingsControls(): void {
@@ -534,6 +555,7 @@ export class KingdomGameUI {
             <button type="submit" class="primary wide">Herrschaft beginnen <span>→</span></button>
           </form>
           <div class="continue-row"><button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen öffnen</button><span>Anzeige, Musik, Filme, KI und Installation</span></div>
+          <div class="continue-row"><button type="button" id="status-open" class="secondary" aria-haspopup="dialog">ℹ Projektstatus</button><span>Fertig · In Arbeit · Geplant</span></div>
           <div class="continue-row"><button id="continue" class="secondary">Spielstand fortsetzen</button>
             <span>Lokaler Spielstand im Browser</span></div>
           <p class="menu-note">ATLAS · Ausgabe 24.10.2026</p>
@@ -541,10 +563,12 @@ export class KingdomGameUI {
           <p id="notice" role="status" aria-live="polite"></p>
         </section>
         ${this.settingsDialogMarkup()}
+        ${this.statusDialogMarkup()}
         ${this.filmDialogMarkup()}
       </main>`;
     this.bindSettingsControls();
     this.bindIntro();
+    this.root.querySelector('#status-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#status-dialog')?.showModal());
     const form = this.root.querySelector<HTMLFormElement>('#new-game');
     if (form) {
       const pagination = document.createElement('div');
@@ -855,9 +879,10 @@ export class KingdomGameUI {
               <div id="latest"></div><button data-view="chronicle" class="text-button">Chronik öffnen →</button></section>
           </aside>
         </div>
-        <footer class="game-footer">© 2026 Thomas Heisig · Kaiser von Deutschland · <button type="button" id="legal-open" class="legal-link">Urheberrecht · KI · Datenschutz</button><span id="footer-keys"></span></footer>
+        <footer class="game-footer">© 2026 Thomas Heisig · Kaiser von Deutschland · <button type="button" id="legal-open" class="legal-link">Urheberrecht · KI · Datenschutz</button> · <button type="button" id="status-open" class="legal-link" aria-haspopup="dialog">Projektstatus</button><span id="footer-keys"></span></footer>
         <dialog id="briefing-dialog" class="section-dialog" aria-label="Auftrag und Reichszustand"><div class="section-dialog-head"><strong>Auftrag & Reichszustand</strong><button type="button" data-close-dialog="briefing-dialog" aria-label="Auftrag schließen">✕</button></div><div id="briefing-body" class="paged-body"></div><div class="panel-pagination"><button type="button" data-page-step="-1">← Zurück</button><span>Auftrag & Rat</span><button type="button" data-page-step="1">Weiter →</button></div></dialog><dialog id="section-dialog" class="section-dialog" aria-label="Spielbereich"><div class="section-dialog-head"><strong id="section-dialog-title">Verwaltung</strong><button type="button" id="section-dialog-close" aria-label="Bereich schließen">✕</button></div><div id="section-dialog-body"></div><div class="panel-pagination"><button type="button" id="panel-prev" aria-label="Vorherige Seite">← Zurück</button><span id="panel-page" role="status">Seite 1</span><button type="button" id="panel-next" aria-label="Nächste Seite">Weiter →</button></div></dialog>
         ${this.settingsDialogMarkup()}
+        ${this.statusDialogMarkup()}
         ${this.filmDialogMarkup()}
          <dialog id="epoch-dialog" class="info-dialog" aria-labelledby="epoch-title"><h2 id="epoch-title">Epoche</h2><p id="epoch-description"></p><p class="muted">Historische Einordnung; alternative Geschichte.</p><button type="button" data-close-dialog="epoch-dialog">Schließen</button></dialog>
         <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Kartografie:</strong> Natural Earth II und Natural Earth Rivers, Public Domain. Vereinfachte heutige Landschaft; historische Ortsbezüge ohne rekonstruierte Staatsgrenzen.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
@@ -962,6 +987,7 @@ export class KingdomGameUI {
     this.bindSettingsControls();
     this.root.querySelector('#epoch-info-toggle')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#epoch-dialog')?.showModal());
     this.root.querySelector('#legal-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#legal-dialog')?.showModal());
+    this.root.querySelector('#status-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#status-dialog')?.showModal());
     this.root.querySelectorAll<HTMLDialogElement>('.info-dialog:not(.settings-dialog)').forEach(dialog => this.paginateInfoDialog(dialog));
     this.root.querySelectorAll<HTMLButtonElement>('[data-close-dialog]').forEach(button => button.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#' + button.dataset.closeDialog)?.close()));
     this.root.querySelector('.brand')?.addEventListener('click', (event: Event): void => {
