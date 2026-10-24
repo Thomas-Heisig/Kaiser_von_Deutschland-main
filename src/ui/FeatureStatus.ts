@@ -45,7 +45,7 @@ export const FEATURE_STATUS_LIST: readonly FeatureEntry[] = [
  * Gruppiert die Funktionsliste nach Status für die Anzeige.
  * @returns Gruppen in der Reihenfolge fertig, in Arbeit, geplant.
  */
-export function groupFeaturesByStatus(): Array<{ status: FeatureStatus; label: string; entries: readonly FeatureEntry[] }>: Array<{ status: FeatureStatus; label: string; entries: readonly FeatureEntry[] }> {
+export function groupFeaturesByStatus(): Array<{ status: FeatureStatus; label: string; entries: readonly FeatureEntry[] }> {
   const order: readonly FeatureStatus[] = ['fertig', 'in_arbeit', 'geplant'];
   return order.map(status => ({
     status,
