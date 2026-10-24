@@ -61,10 +61,10 @@ try {
     await open('military');await page.locator('[data-garrison=training]').click();
     await page.locator('#section-dialog-close').click();
     await open('court');await page.locator('[data-administration-preset=watch]').click();
-    if(await page.locator('[data-administration-domain]:checked').count()!==6)throw Error('Spectator domains not enabled');
+    if(await page.locator('[data-administration-domain]:checked').count()!==7)throw Error('All seven spectator domains, including character, must be enabled');
     await page.locator('[data-administration-policy]').selectOption('normal');
     await page.locator('[data-administration-domain=research]').uncheck();
-    if(await page.locator('[data-administration-domain]:checked').count()!==5)throw Error('Chosen focus not retained');
+    if(await page.locator('[data-administration-domain]:checked').count()!==6)throw Error('Chosen focus not retained');
     await page.screenshot({path:`.temp/administration-${year}-${width}.png`});
     await page.locator('#section-dialog-close').click();
     await open('modernization');
