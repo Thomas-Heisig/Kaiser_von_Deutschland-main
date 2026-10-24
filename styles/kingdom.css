@@ -141,6 +141,13 @@ progress::-webkit-progress-value { background: #b7bd83; border-radius: 5px; }
 .tip { font-size: 0.76rem; margin-top: 22px; line-height: 1.7; }
 .council { padding: 25px 20px 25px 0; display: flex; flex-direction: column; gap: 20px; }
 .council-card { background: #203128; border: 1px solid #43533d; border-radius: 6px; padding: 21px 19px; }
+/* Interaktive Tutorial-Karte: goldgerahmt, damit sie als Hilfe erkennbar ist */
+.tutorial-card { border: 1px solid var(--gold, #c9a227); background: #24352b; }
+.tutorial-card h2 { font-size: 1.15rem; }
+.tutorial-card progress { width: 100%; height: 8px; margin: 12px 0 4px; accent-color: var(--gold, #c9a227); }
+.tutorial-help { font-size: 0.72rem; color: #d8cfa8; background: #1b2820; border-left: 3px solid var(--gold, #c9a227); padding: 8px 10px; margin: 10px 0 0; line-height: 1.5; }
+.tutorial-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.tutorial-actions button { font-size: 0.74rem; padding: 7px 12px; }
 .council-card h2 { font-size: 1.35rem; margin: 9px 0 16px; color: #e0d6b5; }
 .council-card p:not(.eyebrow) { font-size: 0.76rem; color: #bfc7b2; }
 .council-card .text-button { font-size: 0.72rem; margin-top: 10px; }
