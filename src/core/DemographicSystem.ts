@@ -238,7 +238,7 @@ export class DemographicSystem {
       
       // Zufälliger Tod
       if (Math.random() * 1000 < deathChance) {
-        this.killCitizen(citizen, year, month, 'natural');
+        this.killCitizen(citizenSystem, citizen, year, month, 'natural');
         this.deathsThisYear++;
       }
     }
@@ -280,9 +280,10 @@ export class DemographicSystem {
   }
   
   /**
-   * Tötet einen Bürger
+   * Tötet einen Bürger und verteilt sein Vermögen an die Erben
    */
   private killCitizen(
+    citizenSystem: CitizenSystem,
     citizen: Citizen,
     year: number,
     month: number,
@@ -298,6 +299,9 @@ export class DemographicSystem {
       type: 'death',
       description: `Gestorben an ${cause}`
     });
+    
+    // Vermögen geht an die Familie; ohne Erben bleibt es beim Verstorbenen.
+    citizenSystem.distributeInheritance(citizen.id, year, month);
   }
   
   /**
@@ -359,7 +363,7 @@ export class DemographicSystem {
             });
           } else if (Math.random() * 100 < disease.mortalityRate) {
             // Tod durch Krankheit
-            this.killCitizen(citizen, year, month, disease.name);
+            this.killCitizen(citizenSystem, citizen, year, month, disease.name);
             this.deathsThisYear++;
             disease.affectedCitizenIds.delete(citizen.id);
           }
@@ -445,7 +449,7 @@ export class DemographicSystem {
         if (citizen.needs.food < 10) {
           const deathChance = (famine.severity / 100) * 0.1; // 10% bei Schweregrad 100
           if (Math.random() < deathChance) {
-            this.killCitizen(citizen, year, month, 'hunger');
+            this.killCitizen(citizenSystem, citizen, year, month, 'hunger');
             this.deathsThisYear++;
           }
         }

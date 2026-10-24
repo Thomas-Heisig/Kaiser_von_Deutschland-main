@@ -177,7 +177,7 @@ export interface LifeEvent {
   month: number;
   type: 'birth' | 'death' | 'marriage' | 'divorce' | 'child_born' | 'profession_change' | 
         'migration' | 'illness' | 'recovery' | 'promotion' | 'demotion' | 'achievement' |
-        'crime' | 'war' | 'revolution' | 'education';
+        'crime' | 'war' | 'revolution' | 'education' | 'inheritance';
   description: string;
   relatedCitizenIds?: string[];
 }
@@ -508,6 +508,87 @@ export class CitizenSystem {
     
     Object.assign(citizen, updates);
     return true;
+  }
+  
+  /**
+   * Verteilt das Vermögen eines verstorbenen Bürgers auf seine Erben.
+   * Haupterbe ist der älteste lebende, erwachsene Sohn; bei keinem ist es die
+   * lebende Ehefrau; sonst der älteste lebende Erwachsene in der Familie.
+   * Haupterbe erhält 50 %, die übrigen 50 % werden zu gleichen Teilen geteilt.
+   * @param citizenId Id des Verstorbenen
+   * @param year Jahr des Todes
+   * @param month Monat des Todes
+   * @returns true, wenn Vermögen verteilt wurde
+   */
+  public distributeInheritance(citizenId: string, year: number, month: number): boolean {
+    const deceased = this.citizens.get(citizenId);
+    if (!deceased || deceased.isAlive || deceased.wealth <= 0) return false;
+    
+    const heirs = this.findHeirs(deceased);
+    if (heirs.length === 0) return false;
+    
+    const primary = heirs[0];
+    const primaryShare = Math.floor(deceased.wealth * 0.5);
+    const remainder = deceased.wealth - primaryShare;
+    const others = heirs.slice(1);
+    const otherShare = others.length > 0 ? Math.floor(remainder / others.length) : 0;
+    
+    primary.wealth += primaryShare;
+    primary.lifeEvents.push({
+      year, month, type: 'inheritance',
+      description: `Erbt als Haupterbe ${primaryShare} Gold von ${deceased.firstName} ${deceased.lastName}`,
+      relatedCitizenIds: [deceased.id]
+    });
+    
+    for (const other of others) {
+      other.wealth += otherShare;
+      other.lifeEvents.push({
+        year, month, type: 'inheritance',
+        description: `Erbt ${otherShare} Gold von ${deceased.firstName} ${deceased.lastName}`,
+        relatedCitizenIds: [deceased.id]
+      });
+    }
+    
+    deceased.wealth = 0;
+    return true;
+  }
+  
+  /**
+   * Ermittelt die Erben eines Bürgers nach der Reihenfolge Haupterbe zuerst.
+   */
+  private findHeirs(deceased: Citizen): Citizen[] {
+    const family = (deceased.familyId ? this.getFamilyMembers(deceased.familyId) : [])
+      .filter(member => member.id !== deceased.id && member.isAlive);
+    
+    const byRelation = (type: FamilyRelation['relationType']): Citizen[] =>
+      deceased.familyRelations
+        .filter(relation => relation.relationType === type)
+        .map(relation => this.citizens.get(relation.citizenId))
+        .filter((member): member is Citizen => member !== undefined && member.isAlive && member.id !== deceased.id);
+    
+    const adults = (members: Citizen[]): Citizen[] =>
+      members.filter(member => member.age >= 16);
+    
+    const eldestFirst = (members: Citizen[]): Citizen[] =>
+      [...members].sort((a, b) => a.birthYear - b.birthYear);
+    
+    // Dedupliziert und entfernt den Verstorbenen.
+    const dedupe = (members: Citizen[]): Citizen[] => {
+      const seen = new Set<string>([deceased.id]);
+      return members.filter(member => (seen.has(member.id) ? false : (seen.add(member.id), true)));
+    };
+    
+    const spouse = byRelation('spouse')[0];
+    const sons = adults(byRelation('child').filter(member => member.gender === 'male'));
+    const children = adults(byRelation('child'));
+    const siblings = adults(byRelation('sibling'));
+    const familyAdults = adults(family);
+    
+    if (sons.length > 0) return dedupe([sons[0], ...children]);
+    if (spouse) return dedupe([spouse, ...children, ...familyAdults]);
+    if (children.length > 0) return eldestFirst(children);
+    if (siblings.length > 0) return eldestFirst(siblings);
+    return eldestFirst(familyAdults);
   }
   
   /**
