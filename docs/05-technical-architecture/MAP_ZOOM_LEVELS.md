@@ -1,8 +1,8 @@
 # Karten-Zoom-Ebenen — Architektur
 
-**Stand:** 24.10.2026 · **Status:** Gerüst umgesetzt (Schritt 3) · **Version:** 0.1.0
+**Stand:** 24.10.2026 · **Status:** Schreibtisch, Relief/Flüsse und Siedlung im Hauptspiel
 
-Ein umschaltbares Zoom-Gerüst mit zwei Ebenen und drei Bedienelementen.
+Ein umschaltbares Zoom-System mit drei Ebenen und gleichwertigen Bedienelementen.
 Die Simulation bleibt unberührt: Die Karte **liest** nur.
 
 ---
@@ -11,10 +11,11 @@ Die Simulation bleibt unberührt: Die Karte **liest** nur.
 
 | Ebene | Inhalt | Quelle | Status |
 | --- | --- | --- | --- |
+| **L0 „Schreibtisch"** | Epochenabhängiger virtueller Schreibtisch, Einstieg bei Zoom 0 | `KingdomGameUI` | Implementiert |
 | **L1 „Dorf"** | Die 16 bestehenden Bezirke | `SettlementSceneModel.ts` (unverändert) | Vollständig |
-| **L3 „Zentraleuropa"** | Schematische Regionsnamen mit Legende | `REGIONS` + `HistoricalContext` | Gerüst, Platzhalter-Hintergrund |
+| **L3 „Zentraleuropa"** | Relief, sichtbare Flüsse, belegte Regionsnamen und Legende | Natural Earth, `REGIONS` + `HistoricalContext` | Implementiert; keine historischen Grenzpolygone |
 
-**Nicht enthalten** (bewusst): L0 Tisch, L2 Nahregion, echte Relief-Textur.
+**Noch offen:** separate Nahregion und reale Geräteabnahme. Die zusätzliche Nachbaransicht mit Reisen und Regionsfokus wird in [Strategiewelt](STRATEGY_WORLD.md) beschrieben.
 
 ---
 

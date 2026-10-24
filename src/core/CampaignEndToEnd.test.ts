@@ -81,6 +81,50 @@ describe('Campaign end-to-end and cross-system coupling', (): void => {
   };
 
   describe('complete campaign run', (): void => {
+    it.each(['hanse','wissenschaft','kultur','kaiserkrone'] as const)('finishes %s without conquest through paid actions and a mid-run save',async(campaignId)=>{
+      let engine=await createEngine({campaignId,year:1500,randomEvents:false});
+      let player=engine.getPlayers()[0];
+      const id=player.id;
+      // Funded integration fixture, not a claim about normal starting balance.
+      Object.assign(player.kingdom.resources,{gold:1000000,food:1000000,wood:100000,stone:100000,iron:100000});
+      engine.setTaxRate(id,10);
+      for(const [type,count] of Object.entries({farms:20,markets:8,schools:8,universities:1,churches:6,ports:2,castles:1})) {
+        for(let i=0;i<count;i++)expect(await engine.buildForPlayer(id,type)).toBe(true);
+      }
+      if(campaignId==='hanse') {
+        for(const route of engine.getAvailableTradeRoutes(player).slice(0,2))
+          expect(engine.activateTradeRoute(player,route.id).success).toBe(true);
+      }
+      if(campaignId==='kaiserkrone')for(const rival of ['ostmark','nordland'])engine.sendRivalEnvoy(id,rival);
+      for(let month=0;month<240 && !engine.getCampaignChapterStatus(id).finished;month++) {
+        const next=engine.getTechnologyOptions(id).find(t=>t.canStart);
+        if(next)engine.startResearch(id,next.technology.id);
+        for(const festival of engine.getFestivalOptions(id).filter(f=>f.affordable&&!f.alreadyHeld))engine.holdFestival(id,festival.event.id);
+        if(campaignId==='kultur')for(const exhibition of engine.getExhibitionOptions(id).filter(e=>e.affordable&&!e.held))
+          engine.sponsorExhibition(id,exhibition.milestone.id);
+        if(campaignId==='kaiserkrone')for(const rival of ['ostmark','nordland']) {
+          const relation=engine.getRivalRelations(id).find(r=>r.kingdomId===rival)!;
+          const treaties=()=>engine.getRivalTreaties(id).filter(t=>t.parties.includes(rival));
+          if(relation.relationshipValue>=10&&!treaties().some(t=>t.type==='trade'))engine.negotiateRivalAgreement(id,rival,'trade');
+          if(relation.relationshipValue>=20&&!engine.hasRivalTruce(id,rival))engine.negotiateRivalTruce(id,rival);
+          if(relation.relationshipValue>=30&&!treaties().some(t=>t.type==='alliance'))engine.negotiateRivalAgreement(id,rival,'alliance');
+        }
+        if(month===1) {
+          await engine.saveGame('peaceful-'+campaignId);
+          const loaded=new GameEngine({enableWiki:false});engines.push(loaded);
+          await loaded.loadGame('peaceful-'+campaignId);engine=loaded;player=loaded.getPlayers()[0];
+        }
+        await engine.advanceMonth();
+        expect(engine.isPlayerDefeated(id)).toBe(false);
+      }
+      expect(engine.getCampaignChapterStatus(id).finished,JSON.stringify(engine.getCampaignGoals(id))).toBe(true);
+      expect(engine.getRivals(id).every(r=>!r.subjugated)).toBe(true);
+      expect(engine.getBattleReports(id).filter(r=>r.kind==='campaign')).toHaveLength(0);
+      await engine.saveGame('peaceful-win-'+campaignId);
+      const loaded=new GameEngine({enableWiki:false});engines.push(loaded);await loaded.loadGame('peaceful-win-'+campaignId);
+      expect(loaded.getCampaignChapterStatus(id).finished).toBe(true);
+    });
+
     it('reaches victory through the real monthly loop with random events enabled', async (): Promise<void> => {
       const engine = await createEngine({ campaignId: 'aufbau', randomEvents: true });
       const player = engine.getPlayers()[0];

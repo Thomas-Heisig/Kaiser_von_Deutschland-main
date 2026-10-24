@@ -42,7 +42,9 @@ try {
       }
       const modal=page.locator('.council-modal[open]');
       await modal.waitFor();
-      await modal.locator('[data-council-auto]').check();
+      // Opting in resolves the event and removes this checkbox synchronously.
+      // Assert the persistent report control below instead of check()'s detached input.
+      await modal.locator('[data-council-auto]').click();
       await modal.waitFor({state:'detached'});
       assert.equal(await auto.isChecked(),true);
       assert.match(await page.locator('#report-news').textContent(),/Automatisch entschieden/);

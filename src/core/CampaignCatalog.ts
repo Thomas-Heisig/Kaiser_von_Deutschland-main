@@ -22,7 +22,7 @@ export function campaignsForYear(year: number): readonly CampaignDefinition[] {
 export function campaignIsAvailable(id: CampaignId, year: number): boolean {
   return campaignsForYear(year).some(campaign => campaign.id === id);
 }
-export function campaignGoals(id: CampaignId, kingdom: Kingdom, researched: number, subdued: number, tradeRoutes: number, truces: number = 0): CampaignObjective[] {
+export function campaignGoals(id: CampaignId, kingdom: Kingdom, researched: number, subdued: number, tradeRoutes: number, truces: number = 0, alliances: number = 0): CampaignObjective[] {
   const infra = kingdom.infrastructure;
   switch (id) {
     case 'frei': return [];
@@ -87,7 +87,7 @@ export function campaignGoals(id: CampaignId, kingdom: Kingdom, researched: numb
       { label: 'Mindestens 2 Marktplätze', done: infra.markets >= 2 },
       { label: 'Einen Nichtangriffspakt schließen', done: truces >= 1 },
       { label: 'Handelsmacht auf 45 steigern', done: kingdom.stats.tradePower >= 45 },
-      { label: 'Einen Rivalen unterwerfen', done: subdued >= 1 },
+      { label: 'Einen Rivalen unterwerfen oder zwei Schutzbündnisse schließen', done: subdued >= 1 || alliances >= 2 },
       { label: '20.000 Gold in der Schatzkammer', done: kingdom.resources.gold >= 20000 }
     ];
     default: {

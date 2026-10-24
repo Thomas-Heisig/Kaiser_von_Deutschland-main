@@ -1,6 +1,7 @@
 import { Application, Assets, Container, Graphics, Text, Sprite, Texture, Rectangle } from 'pixi.js';
 import { Kingdom, KingdomInfrastructure } from '../core/Kingdom';
 import type { RivalRealm } from '../core/CampaignWarfareSystem';
+import { StrategyWorld, type StrategyWorldSnapshot } from '../core/StrategyWorld';
 import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature } from './SettlementSceneModel';
 import {
   CAMERA_ZOOM_MAX,
@@ -22,6 +23,7 @@ export class KingdomMap {
   private readonly settlements = new Container();
   private readonly retroScenery = new Container();
   private readonly neighbors = new Container();
+  private readonly worldMarker = new Container();
   private onNeighborSelect?: (id: string) => void;
   private districtFilter: DistrictFilter = 'alle';
   private lastSignature = '';
@@ -46,6 +48,13 @@ export class KingdomMap {
   private retroEnabled = false;
   private projection: 'flat' | 'isometric' = 'isometric';
   private mapScope: 'home' | 'world' = 'home';
+  private strategyWorld?: StrategyWorldSnapshot;
+  private neighborRelations: Record<string,string> = {};
+
+  public setStrategyWorld(world: StrategyWorldSnapshot, relations: Record<string,string>): void {
+    this.strategyWorld = world;
+    this.neighborRelations = relations;
+  }
   private retroLoading = false;
   private retroContext?: { kingdom: Kingdom; selected: keyof KingdomInfrastructure; completed: readonly string[]; year: number; rivals: readonly RivalRealm[] };
   /**
@@ -116,13 +125,15 @@ export class KingdomMap {
       return;
     }
     host.append(this.app.canvas);
-    this.app.canvas.setAttribute('aria-label', 'Siedlungskarte. Bezirke auch über die Bauauswahl erreichbar.');
+    this.app.canvas.tabIndex = 0;
+    this.app.canvas.setAttribute('aria-label', 'Karte: Pfeiltasten bewegen, Pos1 zentriert. Bezirke über Bauen, Nachbarreiche über Lebendige Welt erreichbar.');
     this.app.stage.addChild(this.world);
     this.drawLandscape();
     this.drawAtmosphere();
     this.world.addChild(this.atmosphere);
     this.world.addChild(this.retroScenery);
     this.world.addChild(this.neighbors);
+    this.world.addChild(this.worldMarker);
     this.world.addChild(this.settlements);
     this.world.addChild(this.animation);
     // Additive Overlay-Ebene: niemals Teil der Simulation, nur Darstellung.
@@ -158,6 +169,19 @@ export class KingdomMap {
     this.observer.observe(host);
     let drag: { x: number; y: number; moved: boolean } | undefined;
     const canvas = this.app.canvas;
+    canvas.addEventListener('keydown', (event: KeyboardEvent): void => {
+      const directions: Record<string, [number, number]> = {ArrowLeft:[40,0],ArrowRight:[-40,0],ArrowUp:[0,40],ArrowDown:[0,-40]};
+      if (directions[event.key]) {
+        event.preventDefault();
+        this.offset.x += directions[event.key][0];
+        this.offset.y += directions[event.key][1];
+        this.fit();
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        this.offset = {x:0,y:0};
+        this.fit();
+      }
+    });
     canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
       drag = { x: event.clientX, y: event.clientY, moved: false };
       canvas.setPointerCapture(event.pointerId);
@@ -484,7 +508,7 @@ export class KingdomMap {
     if (!this.initialized || this.destroyed) return;
     this.retroContext = { kingdom, selected, completed, year, rivals };
     const signature = districtSceneSignature(kingdom.infrastructure, selected,
-      this.districtFilter, kingdom.currentSeason, completed) + JSON.stringify(rivals.map(r => [r.id,r.name,r.subjugated]));
+      this.districtFilter, kingdom.currentSeason, completed) + JSON.stringify(rivals.map(r => [r.id,r.name,r.subjugated])) + JSON.stringify([this.strategyWorld,this.neighborRelations]);
     const epochStyle = year >= 1945 ? 'modern' : year >= 1800 ? 'industrial' : year >= 1500 ? 'renaissance' : 'medieval';
     if (signature + epochStyle === this.lastSignature) return;
     this.lastSignature = signature + epochStyle;
@@ -668,6 +692,7 @@ export class KingdomMap {
     // Scope/zoom changes must not resurrect those opaque preview tiles.
     this.retroScenery.visible = false;
     this.neighbors.visible = village;
+    this.worldMarker.visible = village && this.mapScope === 'world';
     this.animation.visible = village && this.mapScope === 'home' && this.motionEnabled;
     this.atmosphere.visible = village;
     if (this.actionVisual) this.actionVisual.visible = village;
@@ -796,13 +821,31 @@ export class KingdomMap {
   /** Neighboring realms are geographic illustrations, not claims of historical borders. */
   private drawNeighbors(rivals: readonly RivalRealm[]): void {
     for (const child of this.neighbors.removeChildren()) child.destroy({ children: true });
-    // Schematic territory layout, not historical geographic coordinates.
-    const places = [
-      { x: -115, y: 155 }, { x: 1050, y: 150 }, { x: 1070, y: 465 },
-      { x: -120, y: 490 }, { x: 490, y: -125 }, { x: 470, y: 760 }
-    ];
-    rivals.slice(0, places.length).forEach((rival, index) => {
-      const { x, y } = places[index];
+    const fallback = new StrategyWorld(this.retroContext?.year ?? 1200);
+    fallback.sync(rivals.map(r=>r.id));
+    const world = this.strategyWorld ?? fallback.serialize();
+    const roads = new Graphics();
+    for (const region of world.regions.filter(r=>r.rivalId && rivals.some(rival=>rival.id===r.rivalId))) {
+      roads.moveTo(480,320).lineTo(region.x,region.y).stroke({color:0xc9b98b,width:5,alpha:0.45});
+    }
+    this.neighbors.addChild(roads);
+    for (const child of this.worldMarker.removeChildren()) child.destroy({children:true});
+    const home = new Text({text:'Heimat',style:{fontFamily:'Georgia',fontSize:24,fill:0xfff0c9}});
+    home.anchor.set(0.5);
+    home.position.set(480,320);
+    this.worldMarker.addChild(home);
+    const current = world.regions.find(r=>r.id===world.currentRegion);
+    if (current) {
+      this.worldMarker.addChild(new Graphics().circle(current.x,current.y-75,10).fill(0xf6d77c)
+        .stroke({color:0x302b22,width:3}));
+      const marker = new Text({text:world.journey ? 'Unterwegs' : 'Aufenthalt',style:{fontFamily:'Segoe UI',fontSize:14,fill:0xffedb6}});
+      marker.anchor.set(0.5);marker.position.set(current.x,current.y-100);
+      this.worldMarker.addChild(marker);
+    }
+    this.worldMarker.visible = this.zoomLevel==='dorf' && this.mapScope==='world';
+    rivals.forEach((rival, index) => {
+      const place = world.regions.find(r=>r.rivalId===rival.id) ?? fallback.serialize().regions.find(r=>r.rivalId===rival.id)!;
+      const { x, y } = place;
       const region = new Container();
       region.position.set(x, y);
       region.eventMode = 'static';
@@ -810,7 +853,8 @@ export class KingdomMap {
       region.hitArea = new Rectangle(-155, -105, 310, 210);
       region.on('pointertap', () => this.onNeighborSelect?.(rival.id));
       const subdued = rival.subjugated;
-      const color = subdued ? 0x426b51 : [0x6b5542, 0x52596f, 0x6c544e, 0x536c62, 0x70624c, 0x5c5574][index];
+      const color = subdued ? 0x426b51 : this.neighborRelations[rival.id] === 'Feindlich' ? 0x8c4840 :
+        place.discovered ? [0x6b5542, 0x52596f, 0x6c544e, 0x536c62, 0x70624c, 0x5c5574][index % 6] : 0x51594f;
       const boundary: number[] = [];
       for (let corner = 0; corner < 9; corner++) {
         const angle = corner * Math.PI * 2 / 9;
@@ -833,14 +877,14 @@ export class KingdomMap {
       label.anchor.set(0.5);
       label.position.set(0, -8);
       region.addChild(label);
-      const status = new Text({ text: subdued ? 'Vasallenreich' : 'Nachbarreich',
+      const status = new Text({ text: (subdued ? 'Vasall' : this.neighborRelations[rival.id] ?? 'Nachbarreich') + ' · ' + (place.discovered ? place.terrain : 'Unerkundet'),
         style: { fontFamily: 'Segoe UI', fontSize: 14, fill: 0xffecc9, align: 'center' } });
       status.anchor.set(0.5);
       status.position.set(0, 18);
       region.addChild(status);
       this.neighbors.addChild(region);
     });
-    this.app.canvas.dataset.neighborTerritories = String(Math.min(rivals.length, places.length));
+    this.app.canvas.dataset.neighborTerritories = String(rivals.length);
   }
 
   public setMapScope(scope: 'home' | 'world'): void {
@@ -851,6 +895,21 @@ export class KingdomMap {
     // Die Zoom-Ebene wird über das bestehende Verhalten gelegt, nicht ersetzt.
     this.applyLevel('dorf');
     this.fit();
+  }
+
+  public focusWorldRegion(id: string): void {
+    const region = this.strategyWorld?.regions.find(r=>r.id===id);
+    if (!region || !this.initialized || this.destroyed) return;
+    this.setMapScope('world');
+    this.zoom = 3;
+    this.fit();
+    this.offset = {
+      x:this.app.screen.width/2 - (this.world.x + region.x*this.world.scale.x),
+      y:this.app.screen.height/2 - (this.world.y + region.y*this.world.scale.y)
+    };
+    this.app.canvas.dataset.focusedRegion = id;
+    this.fit();
+    this.app.canvas.focus();
   }
 
   private fit(): void {
@@ -875,9 +934,18 @@ export class KingdomMap {
       this.app.renderer.render(this.app.stage);
       return;
     }
-    const scale = (this.mapScope === 'world'
-      ? Math.min(this.app.screen.width / 1500, this.app.screen.height / 1150)
-      : mobile
+    if (this.mapScope === 'world') {
+      const bounds = this.neighbors.getLocalBounds();
+      const minX = Math.min(bounds.x,300), minY = Math.min(bounds.y,220);
+      const maxX = Math.max(bounds.x+bounds.width,660), maxY = Math.max(bounds.y+bounds.height,420);
+      const scale = Math.max(0.01,Math.min((this.app.screen.width-32)/(maxX-minX), (this.app.screen.height-72)/(maxY-minY))) * this.zoom;
+      this.world.scale.set(scale);
+      this.world.position.set(this.app.screen.width/2-(minX+maxX)/2*scale+this.offset.x,
+        this.app.screen.height/2+16-(minY+maxY)/2*scale+this.offset.y);
+      this.app.renderer.render(this.app.stage);
+      return;
+    }
+    const scale = (mobile
         ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
         : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850)) * this.zoom;
     this.world.scale.set(scale);

@@ -1,10 +1,16 @@
 # Changelog
 
-Änderungen im Git-Repository, nach [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Die Paketversion ist weiterhin `2.5.1`; nachstehende Änderungen sind bisher **unveröffentlicht**. Die vollständige historische Änderungsliste wurde vor der Neuordnung archiviert.
+Änderungen im Git-Repository, nach [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Die Paketversion ist weiterhin `2.5.1`; GitHub Pages veröffentlicht den geprüften `main` unabhängig von einer Paketversion. Die historische Änderungsliste bleibt archiviert.
 
 ## [Unreleased] — Stand 24.10.2026
 
 ### Added
+
+- Persistente Strategie-Weltkarte: alle Nachbarn, Regionsfokus, Tastatur-Pan, bezahlte Reisen, Geländeentdeckung, Chronik und Altstandmigration. 20 Nachbarn bei 320/768/1024 px automatisiert geprüft.
+- Handelsverträge, Schutzbündnisse, monatsgenauer Ablauf, Vertragsbruch und Vertrauensaufbau; fremde Überfälle beenden Handel ohne Prestigeabzug für den Spieler. Jährliche Rivalen reagieren begrenzt auf Wirtschaft, Handel, Forschung und Heer.
+- Friedlicher Kaiserkrone-Abschluss durch zwei Bündnisse; Hanse/Wissenschaft/Kultur/Kaiserkrone mit bezahlten Aktionen und Save/Load bis zum Sieg geprüft (finanzierte Testpartien).
+- Reproduzierbare Bevölkerungsmessung bis 20.000 Bürgern. Speicherhülle `gzip-base64-v2` vermeidet Zahlenarrays; alte GZIP- und Klartext-Saves bleiben lesbar.
+- PR #96/#97: gemeinsame Epochenoberfläche, Schreibtischstart, Flüsse, paginierte Dialoge ohne Seitenscrollen; Lagebericht mit Tutorial, Quellen zur Jahresgeschichte und gespeicherter Ereignisautomatik.
 
 - **Karten-Zoom-Ebenen (Gerüst):** Schieberegler (0–100, logarithmisch auf Kamera-Zoom 0.4–4.0 abgebildet) plus gleichwertige „+"/„−"-Buttons; Ebenenwechsel Dorf ↔ Zentraleuropa mit Hysterese (35/40). Die Ebene „Zentraleuropa" zeigt schematische Regionsnamen aus dem historischen Modell als Punkte mit Legende — **ohne** Polygone, Linien oder Einfärbungen. `nicht_verifiziert`-Regionen und ungeprüfte Jahre liefern einen definierten Hinweistext statt eines Fehlers. Feature-Flag `VITE_MAP_ZOOM_LEVELS`. 22 neue Tests; GameEngine, Spielstände und die 16 Bezirke unverändert.
 - **Historisches Datenmodell, fest in die Engine integriert:** deklarative Epochen, Regionen, politische Systeme und Ämter (`src/history/`) mit Evidenzgrad und Quellenhinweis je Datensatz; Brücke `src/core/HistoricalContext.ts` mit `getHistoricalContext()`, `getRulerDignity()` und dem Event `historicalEpochChanged` (inkl. Chronikeintrag, nur bei echter Epochenänderung). UI zeigt Epoche mit Evidenzgrad und historische Herrscherwürde, bei Abweichung beide Epochen. Keine Grenzpolygone, keine Jahresbindung von Ämtern, getrennte Ämter für römisch-deutschen Kaiser (bis 1806) und Deutschen Kaiser (ab 1871). 49 neue Tests; Simulation und Spielstände unverändert.
@@ -44,7 +50,7 @@
 
 ### Known limitations (unreleased)
 
-- GitHub Pages **nicht öffentlich verfügbar**: Fehler `Resource not accessible by integration` bei automatischem Aktivierungsversuch.
+- GitHub Pages ist öffentlich verfügbar; reale Installation/Offline-Abnahme auf allen Zielgeräten bleibt offen.
 - Keine Endgeräteabnahme für PWA, Medienrechte/Impressum/Datenschutz vor Veröffentlichung offen.
 - Generations-Balance, Partnervermittlung, Erbschaften, Online-Mehrspieler und große Epochen-Simulation weiterhin Roadmap-Themen.
 
