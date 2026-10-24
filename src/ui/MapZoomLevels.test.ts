@@ -5,7 +5,9 @@ import {
   filterRegionsForEpoch,
   LEVEL_THRESHOLDS,
   levelForSlider,
+  geoToPercent,
   regionsForMap,
+  RELIEF_BOUNDS,
   SLIDER_MAX,
   SLIDER_MIN,
   SLIDER_STEP,
@@ -98,17 +100,54 @@ describe('Ebenenwechsel mit Hysterese', (): void => {
 });
 
 describe('Regionsabruf pro Jahr', (): void => {
-  it('returns schematically placed regions for a verified year', (): void => {
+  it('returns geographically placed regions for a verified year', (): void => {
     const result = regionsForMap(1200);
     expect(result.labels.length).toBeGreaterThan(0);
     expect(result.epochName).toContain('Hochmittelalter');
-    expect(result.message).toContain('schematisch');
+    expect(result.message).toContain('Natural Earth');
     for (const label of result.labels) {
       expect(label.name.length).toBeGreaterThan(0);
       expect(label.xPercent).toBeGreaterThanOrEqual(0);
       expect(label.xPercent).toBeLessThanOrEqual(100);
       expect(label.yPercent).toBeGreaterThanOrEqual(0);
       expect(label.yPercent).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it('derives positions from documented town centres inside the relief bounds', (): void => {
+    // Köln (Rheinland) liegt westlich von Leipzig (Sachsen) und nördlich von München.
+    const labels = regionsForMap(1200).labels;
+    const rheinland = labels.find((label) => label.id === 'rheinland');
+    const sachsen = labels.find((label) => label.id === 'sachsen');
+    const bayern = labels.find((label) => label.id === 'bayern');
+    expect(rheinland).toBeDefined();
+    expect(sachsen).toBeDefined();
+    expect(bayern).toBeDefined();
+    expect(rheinland!.xPercent).toBeLessThan(sachsen!.xPercent);
+    expect(bayern!.yPercent).toBeGreaterThan(rheinland!.yPercent);
+    // Lübeck (Hanse) liegt nördlicher als München.
+    const hanse = regionsForMap(1400).labels.find((label) => label.id === 'hansestaedte');
+    expect(hanse).toBeDefined();
+    expect(hanse!.yPercent).toBeLessThan(bayern!.yPercent);
+  });
+
+  it('converts coordinates into per-cent positions of the relief bounds', (): void => {
+    // Westgrenze → 0 %, Ostgrenze → 100 %
+    expect(geoToPercent(50, RELIEF_BOUNDS.west).xPercent).toBeCloseTo(0, 6);
+    expect(geoToPercent(50, RELIEF_BOUNDS.east).xPercent).toBeCloseTo(100, 6);
+    // Nordgrenze → 0 %, Südgrenze → 100 %
+    expect(geoToPercent(RELIEF_BOUNDS.north, 10).yPercent).toBeCloseTo(0, 6);
+    expect(geoToPercent(RELIEF_BOUNDS.south, 10).yPercent).toBeCloseTo(100, 6);
+  });
+
+  it('never places a label outside the relief area', (): void => {
+    for (const year of [900, 1200, 1400, 1600, 1900, 2000]) {
+      for (const label of regionsForMap(year).labels) {
+        expect(label.xPercent).toBeGreaterThanOrEqual(0);
+        expect(label.xPercent).toBeLessThanOrEqual(100);
+        expect(label.yPercent).toBeGreaterThanOrEqual(0);
+        expect(label.yPercent).toBeLessThanOrEqual(100);
+      }
     }
   });
 

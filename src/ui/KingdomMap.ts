@@ -653,6 +653,7 @@ export class KingdomMap {
   private applyLevel(level: MapZoomLevel): void {
     if (this.zoomLevel === level && this.regionLayer.children.length > 0) {
       this.regionLayer.visible = level === 'zentraleuropa';
+      this.reliefLayer.visible = level === 'zentraleuropa';
       return;
     }
     this.zoomLevel = level;
@@ -661,7 +662,11 @@ export class KingdomMap {
     this.retroScenery.visible = village && this.mapScope === 'home' && this.projection === 'isometric';
     this.neighbors.visible = true;
     this.regionLayer.visible = !village;
-    if (!village) this.drawRegionLayer();
+    this.reliefLayer.visible = !village;
+    if (!village) {
+      this.drawRegionLayer();
+      void this.loadReliefTexture();
+    }
     this.app.canvas.dataset.zoomLevel = level;
   }
 
@@ -954,5 +959,7 @@ export class KingdomMap {
     if (this.initialized) this.app.ticker.remove(this.animatedTicker);
     if (this.initialized) this.app.destroy(true, { children: true });
     for (const child of this.regionLayer.removeChildren()) child.destroy({ children: true });
+    for (const child of this.reliefLayer.removeChildren()) child.destroy({ children: true });
+    this.reliefTexture = undefined;
   }
 }
