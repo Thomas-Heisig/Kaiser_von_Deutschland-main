@@ -1,4 +1,5 @@
 import type { Player } from './Player';
+import { formatYear } from './HistoricalCalendar';
 
 export type CouncilResource = 'gold' | 'food' | 'wood' | 'stone' | 'iron';
 export type CouncilEffect = Partial<Record<CouncilResource | 'happiness' | 'stability' | 'prestige', number>>;
@@ -82,7 +83,7 @@ export const COUNCIL_DECISIONS: readonly CouncilDecision[] = [
     ]
   },
   {
-    id: 'guild_petition', maxYear: 1750, category: 'HANDEL', title: 'Die Gilden erheben Anspruch',
+    id: 'guild_petition', minYear: 1000, maxYear: 1750, category: 'HANDEL', title: 'Die Gilden erheben Anspruch',
     story: 'Kaufleute und Handwerker fordern Privilegien. Ihr Angebot könnte das Reich reich machen.',
     choices: [
       { id: 'charter', title: 'Handelsrechte verleihen', description: 'Hoher Ertrag, aber weniger Rückhalt beim Volk.',
@@ -380,7 +381,7 @@ export class CouncilDecisionSystem {
       playerId: player.id, decisionId: decision.id, choiceId: choice.id, success,
       ...(automatic ? { automatic: true } : {}),
       ...(delegate ? { delegatedCitizenId: delegate.id, delegatedCitizenName: delegate.name } : {}),
-      date: String(month).padStart(2, '0') + '/' + year,
+      date: String(month).padStart(2, '0') + '/' + formatYear(year),
       message: (automatic ? 'Automatisch entschieden: ' : '') + (delegate ? delegate.name + ' übernimmt: ' : '') + decision.title + ': ' + choice.title + (choice.probability === null ? '.' :
         success ? ' – der Plan gelingt.' : ' – der Plan scheitert.')
     };

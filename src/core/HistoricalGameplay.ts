@@ -12,7 +12,12 @@ export interface EraDoctrine {
   rivalPowerFactor: number;
 }
 const DOCTRINES: readonly EraDoctrine[] = [
-  { since: 0, label: 'Antike und frühe Reiche',
+  { since: -1999, label: 'Frühe Siedlungen · vereinfachtes Spielmodell',
+    context: 'Fußtruppen und Bogenschützen schützen Wege und Vorräte. Die drei Truppenslots sind eine Spielabstraktion, keine Rekonstruktion eines bronzezeitlichen Heeres.',
+    conflict: 'Grenzkonflikt', raid: 'Überfall',
+    units: { infantry: 'Fußtruppen', archers: 'Bogenschützen', cavalry: 'Begleitaufgebot' },
+    coefficients: { infantry: 1, archers: 1.1, cavalry: 1.2 }, fortificationFactor: 1, rivalPowerFactor: 0.9 },
+  { since: -799, label: 'Antike und frühe Reiche',
     context: 'Versorgung, Fußtruppen und befestigte Siedlungen bestimmen Feldzüge.',
     conflict: 'Grenzfeldzug', raid: 'Grenzüberfall',
     units: { infantry: 'Fußtruppen', archers: 'Fernkämpfer', cavalry: 'Reiterei' },
@@ -60,7 +65,7 @@ export function doctrineForYear(year: number): EraDoctrine {
 }
 type RivalIdentity = { name: string; description: string };
 const ENCOUNTERS: readonly { since: number; identities: Record<string, RivalIdentity> }[] = [
-  { since: 0, identities: {
+  { since: -1999, identities: {
     raubritter: { name: 'Grenzräuber am Wald', description: 'Lose bewaffnete Gruppen kontrollieren Wege und Übergänge.' },
     ostmark: { name: 'Ostgrenze', description: 'Ein benachbarter Machtbereich befestigt die Handelswege.' },
     nordland: { name: 'Nordland', description: 'Ein großer Nachbar erhebt Anspruch auf fruchtbare Gebiete.' }

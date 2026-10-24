@@ -1,4 +1,5 @@
 // src/core/TimeSystem.ts
+import { formatYear } from './HistoricalCalendar';
 
 /**
  * Zeit-Modi für unterschiedliche Spielgeschwindigkeiten
@@ -273,7 +274,7 @@ export class TimeSystem {
     const month = this.getCurrentMonth();
     const year = this.getCurrentYear();
     
-    return `${day}.${month}.${year}`;
+    return `${day}.${month}.${formatYear(year)}`;
   }
   
   /**

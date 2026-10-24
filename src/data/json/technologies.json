@@ -17,7 +17,7 @@
         "populationGrowth": 10
       },
       "unlocksBuildings": ["farm"],
-      "year": 0
+      "year": -1999
     },
     {
       "id": "writing",
@@ -36,7 +36,7 @@
         "culturalInfluence": 10
       },
       "unlocksBuildings": ["library"],
-      "year": 0
+      "year": -1999
     },
     {
       "id": "bronze_working",
@@ -54,7 +54,7 @@
         "militaryStrength": 15,
         "productionBonus": 10
       },
-      "year": 0
+      "year": -1999
     },
     {
       "id": "iron_working",
@@ -73,7 +73,7 @@
         "productionBonus": 20
       },
       "unlocksBuildings": ["mine", "workshop"],
-      "year": 500
+      "year": -799
     },
     {
       "id": "masonry",
@@ -92,7 +92,7 @@
         "defense": 15
       },
       "unlocksBuildings": ["walls", "church"],
-      "year": 200
+      "year": -1999
     },
     {
       "id": "feudalism",
@@ -129,7 +129,7 @@
         "tradeDistance": 20,
         "tradePower": 5
       },
-      "year": 900
+      "year": -1999
     },
     {
       "id": "guilds",

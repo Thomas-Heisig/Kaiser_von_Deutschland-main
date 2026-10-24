@@ -2,6 +2,7 @@
 **Stand 24.10.2026 · Codebasis: main · Live unter https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/**
 
 ## Belegt
+- [Frühstart ab 2000 v. Chr. und Geschichte & Zeitbild](../09-history-model/ZEITBILD.md): belegte Datierungen, Unsicherheitshinweise, regionale Kunst-/Kulturkarten, Monatsfilter und Save/Load vor der Zeitenwende. 20 historische Starts in Chromium geprüft; keine lückenlose Weltchronik und keine vollständige Regionalstil-Enzyklopädie.
 - Persistente Strategiewelt mit Reisen, Entdeckung und Regionsfokus; 20 Nachbarn und 320/768/1024-px-Oberfläche automatisiert geprüft. Handelsverträge, Bündnisse, nachvollziehbarer Vertragsbruch und jährliche Rivalenreaktionen. [Spezifikation](../05-technical-architecture/STRATEGY_WORLD.md).
 - Vier friedliche Kampagnenwege bis Sieg mit Save/Load getestet; Tests verwenden zusätzliche Startressourcen und ersetzen keine Balance-Abnahme.
 - [Lastmessung](../reports/strategy-population-2026-10-24.md) mit 1.000/5.000/20.000 Bürgern, kompakteres rückwärtskompatibles Speicherformat. 20.000 Bürger benötigen weiterhin etwa 380 ms pro Monat inklusive Autosave; Worker und Mobilmessungen bleiben offen.

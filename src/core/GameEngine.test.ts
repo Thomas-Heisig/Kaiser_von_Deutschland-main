@@ -50,6 +50,83 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('plays, researches, travels and reloads a Bronze Age realm with negative years', async () => {
+    const engine = new GameEngine({startingYear:-1999,campaignId:'frei',randomEvents:true,enableWiki:false});
+    engines.push(engine);
+    const player = engine.addPlayer({name:'Frühstart',kingdomName:'Siedlung',gender:'other'});
+    await engine.startGame(); engine.pauseGame();
+    player.kingdom.resources.gold=100000;player.kingdom.resources.food=100000;
+    expect(engine.getTechnologyOptions(player.id).map(item=>item.technology.id)).toContain('agriculture');
+    expect(engine.getTechnologyOptions(player.id).some(item=>item.technology.id==='iron_working')).toBe(false);
+    const farms = player.kingdom.infrastructure.farms;
+    await engine.buildForPlayer(player.id,'farms');
+    expect(player.kingdom.infrastructure.farms).toBe(farms+1);
+    player.kingdom.infrastructure.schools=5;
+    engine.travelWorld(player.id,'rival:ostmark');
+    for (let m=0;m<12;m++) {
+      const pending=engine.getPendingCouncilDecision(player.id);
+      if (pending) {
+        expect(pending.id).not.toBe('guild_petition');
+        const choice=engine.getCouncilChoices(player.id).find(c=>c.affordable)!;
+        engine.resolveCouncilDecision(player.id,choice.id);
+      }
+      await engine.advanceMonth();
+      if (m===2) engine.startResearch(player.id,'agriculture');
+    }
+    expect(engine.getCurrentYear()).toBe(-1998);
+    expect(engine.getTechnologyProgress(player.id).researched).toContain('agriculture');
+    expect(engine.getStrategyWorld(player.id).currentRegion).toBe('rival:ostmark');
+    engine.sponsorExhibition(player.id,'aegean-middle-bronze');
+    await engine.saveGame('bronze');
+    const loaded=new GameEngine({enableWiki:false}); engines.push(loaded); await loaded.loadGame('bronze');
+    expect(loaded.getCurrentYear()).toBe(-1998);
+    expect(loaded.getTimeSystem().getFormattedDate()).toBe('1.1.1999 v. Chr.');
+    expect(loaded.getPlayers()[0].kingdom.foundingYear).toBe(-1999);
+    expect(loaded.getExhibitionOptions(player.id).find(item=>item.milestone.id==='aegean-middle-bronze')?.held).toBe(true);
+    expect(()=>loaded.sponsorExhibition(player.id,'aegean-middle-bronze')).toThrow('bereits');
+    expect(Object.values(loaded.getPlayers()[0].kingdom.resources).every(Number.isFinite)).toBe(true);
+  });
+
+  it('crosses the civil era boundary with stable citizens and founding dates', async () => {
+    const engine=new GameEngine({startingYear:0,campaignId:'frei',randomEvents:false,enableWiki:false}); engines.push(engine);
+    const player=engine.addPlayer({name:'Zeitenwende',kingdomName:'Siedlung',gender:'other'});
+    await engine.startGame(); engine.pauseGame();
+    for(let m=0;m<12;m++) await engine.advanceMonth();
+    expect(engine.getCurrentYear()).toBe(1);
+    expect(engine.getTimeSystem().getFormattedDate()).toBe('1.1.1 n. Chr.');
+    await engine.saveGame('era-boundary');
+    const loaded=new GameEngine({enableWiki:false});engines.push(loaded);await loaded.loadGame('era-boundary');
+    expect(loaded.getCurrentYear()).toBe(1);
+    expect(loaded.getPlayers()[0].kingdom.foundingYear).toBe(0);
+    expect(loaded.getCurrentCharacter(player.id)?.age).toBeGreaterThan(0);
+  });
+
+  it('gates historical events and paid exhibitions by month across save/load', async () => {
+    const engine = new GameEngine({startingYear:2000,randomEvents:false,enableWiki:false});
+    engines.push(engine);
+    engine.addPlayer({name:'Ada',kingdomName:'Zeitreich',gender:'other',startingStats:{age:25}});
+    await engine.startGame(); engine.pauseGame();
+    const id = engine.getPlayers()[0].id;
+    const events: string[] = [];
+    engine.on('historyMilestone', ({milestone}: {milestone:{id:string}}) => events.push(milestone.id));
+    expect(() => engine.sponsorExhibition(id, 'expo-hannover')).toThrow('noch nicht');
+    for (let i=0;i<4;i++) await engine.advanceMonth();
+    expect(engine.getCurrentMonth()).toBe(5);
+    expect(events).toEqual([]);
+    await engine.saveGame('history-may');
+    const restored = new GameEngine({enableWiki:false}); engines.push(restored);
+    await restored.loadGame('history-may');
+    restored.on('historyMilestone', ({milestone}: {milestone:{id:string}}) => events.push(milestone.id));
+    expect(restored.getHistoricalTimeline().some(item => item.id === 'expo-hannover')).toBe(false);
+    await restored.advanceMonth();
+    expect(events).toEqual(['expo-hannover']);
+    expect(restored.getExhibitionOptions(id).some(item => item.milestone.id === 'expo-hannover')).toBe(true);
+    await restored.saveGame('history-june');
+    await restored.loadGame('history-june');
+    await restored.advanceMonth();
+    expect(events).toEqual(['expo-hannover']);
+  });
+
   it('persists paid travel, discovers the destination and migrates old saves', async()=>{
     const engine=await campaign(),player=engine.getPlayers()[0];
     const gold=player.kingdom.resources.gold,food=player.kingdom.resources.food;

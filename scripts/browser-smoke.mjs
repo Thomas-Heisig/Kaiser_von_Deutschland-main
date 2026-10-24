@@ -162,8 +162,10 @@ try {
     await page.getByRole('heading', { name: /Forschung im Reich/i }).waitFor();
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
     await openView(page, 'history');
-    await page.getByRole('heading', { name: /Erfindungen, Kunst und Kultur/i }).waitFor();
-    await page.getByRole('heading', { name: /Universität Bologna/i }).first().waitFor();
+    await page.getByRole('heading', { name: /Kunst, Kultur und Leben/i }).waitFor();
+    await page.locator('#history-topic').selectOption('archive');
+    if (await page.locator('[data-history-event="university-bologna"]').count() !== 1)
+      failures.push('Bologna is missing from the historical archive');
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
     await openView(page, 'war');
     await page.getByRole('heading', { name: /Nachbarn/i }).waitFor();

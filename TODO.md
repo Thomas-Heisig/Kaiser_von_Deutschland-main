@@ -8,6 +8,9 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### Stabilisierung und Integration · 24.10.2026
 
+- [x] [Frühstart und Zeitbilder](docs/09-history-model/ZEITBILD.md): auswählbar ab 2000 v. Chr., bürgerliche Datumsanzeige ohne Jahr null, frühe Darstellung und verfügbare Grundtechnologien. Bauen, Forschung, Reise und Kulturförderung mit Save/Load geprüft.
+- [x] Quellengeprüfte Antikenereignisse und kulturelle Lesekarten: Tag/Monat, Jahreskontext, Datierungsspannen und Epochenwissen getrennt. Themenfilter, Region, Quellen und Unsicherheiten sichtbar; Monatswechsel und 20 Startjahre in Chromium geprüft.
+- [ ] Weitere regionale Stilunterarten der eingereichten Liste und lückenlose Jahresabdeckung ergänzen; vorhandene Auswahl ersetzt keine vollständige Weltchronik. Jahrtausendelange Balance und echte Geräte bleiben gesonderte Abnahmen.
 - [x] Gemeinsames Epochenlayout, Schreibtischstart, sichtbare Flüsse, paginierte Menüs ohne Seitenscrollen; Lagebericht mit Tutorial, Quellen zur Jahresgeschichte und optionaler Ereignisautomatik (PR #96/#97).
 - [x] Erste [Strategiewelt-Ausbaustufe](docs/05-technical-architecture/STRATEGY_WORLD.md): Reisen, Entdeckung, alle Nachbarn, gezielter Kartenfokus, eigene Weltpersistenz und Altstandmigration. Chromium-Bedienabläufe mit 20 Nachbarn bei 320/768/1024 px geprüft.
 - [~] Gesamte Roadmap einschließlich Großsystemen beauftragt. Diese Ausbaustufe schließt nicht Online-Mehrspieler, freie Bebauung, vollständige GLB-Grafik, Rollen-/Generationenintegration oder VR ab. Die zugehörigen Aufgaben unten bleiben offen.
