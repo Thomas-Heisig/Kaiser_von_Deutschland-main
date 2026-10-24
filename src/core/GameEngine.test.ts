@@ -825,4 +825,161 @@ describe('Playable campaign integration', (): void => {
       expect(restored.getPlayerDefeatReason(player.id)).toBeNull();
     });
   });
+
+  describe('interactive tutorial campaign (build → trade → research → council → save)', (): void => {
+    const tutorialEngine = async (): Promise<{ engine: GameEngine; player: ReturnType<GameEngine['getPlayers']>[number] }> => {
+      const engine = new GameEngine({ startingYear: 1200, randomEvents: false, enableWiki: false, enableTutorial: true });
+      engines.push(engine);
+      const player = engine.addPlayer({ name: 'Heinrich', kingdomName: 'Tutorialreich', gender: 'other' });
+      await engine.startGame();
+      engine.pauseGame();
+      return { engine, player };
+    };
+
+    /**
+     * Bringt das Reich in den Zustand, in dem „Landwirtschaft" (100 Punkte,
+     * 500 Gold) sofort startbar ist: Schulen für den Punktezuwachs und
+     * genügend Gold. Der Monatswechsel ist deterministisch (Math.random = 0.5).
+     */
+    const readyForResearch = async (engine: GameEngine, player: ReturnType<GameEngine['getPlayers']>[number]): Promise<void> => {
+      player.kingdom.infrastructure.schools = 5; // 50 Punkte/Monat
+      player.kingdom.resources.gold += 1000;
+      for (let month = 0; month < 3 && !engine.getTechnologyOptions(player.id).find((o) => o.technology.id === 'agriculture')?.canStart; month++) {
+        await engine.advanceMonth();
+      }
+      expect(engine.getTechnologyOptions(player.id).find((o) => o.technology.id === 'agriculture')?.canStart).toBe(true);
+    };
+
+    it('activates on game start with the first step and start resources', async (): Promise<void> => {
+      const { engine, player } = await tutorialEngine();
+      expect(engine.isTutorialActive()).toBe(true);
+      expect(engine.getTutorialStep()?.id).toBe('build');
+      expect(engine.getTutorialProgress()).toEqual({ done: 0, total: 5 });
+      // Startguthaben für den ersten Schritt: Bauernhof (250 Gold, 500 Holz) bleibt finanzierbar.
+      expect(player.kingdom.resources.gold).toBeGreaterThanOrEqual(250);
+      expect(player.kingdom.resources.wood).toBeGreaterThanOrEqual(500);
+    });
+
+    it('does not activate without the enableTutorial flag', async (): Promise<void> => {
+      const engine = await campaign();
+      expect(engine.isTutorialActive()).toBe(false);
+      expect(engine.getTutorialStep()).toBeNull();
+    });
+
+    it('completes all five steps in order through real engine actions', async (): Promise<void> => {
+      const { engine, player } = await tutorialEngine();
+      const steps: string[] = [];
+      let completed = 0;
+      engine.on('tutorialStep', (detail: { step: string }): void => { steps.push(detail.step); });
+      engine.on('tutorialCompleted', (): void => { completed += 1; });
+
+      // 1. Bauen
+      expect(await engine.buildForPlayer(player.id, 'farms')).toBe(true);
+      expect(engine.getTutorialStep()?.id).toBe('trade');
+
+      // 2. Handeln (Kauf)
+      expect(engine.tradeForPlayer(player.id, 'food', 100, 'buy')).toBe(true);
+      expect(engine.getTutorialStep()?.id).toBe('research');
+
+      // 3. Forschen (Landwirtschaft: 100 Forschungspunkte, 500 Gold)
+      await readyForResearch(engine, player);
+      engine.startResearch(player.id, 'agriculture');
+      expect(engine.getTutorialStep()?.id).toBe('council');
+
+      // 4. Reichsrat (feste Tutorial-Entscheidung)
+      engine.ensureTutorialCouncil(player.id);
+      const pending = engine.getPendingCouncilDecision(player.id);
+      expect(pending?.id).toBe('village_fire');
+      const choice = engine.getCouncilChoices(player.id).find((offer) => offer.id === 'firefighters');
+      expect(choice?.affordable).toBe(true);
+      engine.resolveCouncilDecision(player.id, 'firefighters');
+      expect(engine.getTutorialStep()?.id).toBe('save');
+
+      // 5. Speichern (manuell – der Autosave zählt nicht)
+      await engine.saveGame('tutorial-save', true);
+      expect(engine.isTutorialActive()).toBe(false);
+      expect(engine.getTutorialProgress()).toEqual({ done: 5, total: 5 });
+      expect(steps).toEqual(['build', 'trade', 'research', 'council', 'save']);
+      expect(completed).toBe(1);
+    });
+
+    it('does not count an autosave as the save step', async (): Promise<void> => {
+      const { engine, player } = await tutorialEngine();
+      // Schneller zu Schritt 5 bringen.
+      expect(await engine.buildForPlayer(player.id, 'farms')).toBe(true);
+      expect(engine.tradeForPlayer(player.id, 'food', 100, 'buy')).toBe(true);
+      await readyForResearch(engine, player);
+      engine.startResearch(player.id, 'agriculture');
+      engine.ensureTutorialCouncil(player.id);
+      engine.resolveCouncilDecision(player.id, 'firefighters');
+      expect(engine.getTutorialStep()?.id).toBe('save');
+      await engine.saveGame('autosave'); // ohne manual-Flag
+      expect(engine.getTutorialStep()?.id).toBe('save');
+      expect(engine.isTutorialActive()).toBe(true);
+    });
+
+    it('ignores out-of-sequence actions', async (): Promise<void> => {
+      const { engine, player } = await tutorialEngine();
+      // Handeln vor dem Bauen wird nicht gezählt.
+      expect(engine.tradeForPlayer(player.id, 'food', 100, 'buy')).toBe(true);
+      expect(engine.getTutorialStep()?.id).toBe('build');
+      // Forschen vor dem Bauen wird nicht gezählt.
+      await readyForResearch(engine, player);
+      engine.startResearch(player.id, 'agriculture');
+      expect(engine.getTutorialStep()?.id).toBe('build');
+      expect(await engine.buildForPlayer(player.id, 'farms')).toBe(true);
+      expect(engine.getTutorialStep()?.id).toBe('trade');
+    });
+
+    it('issues the tutorial council decision deterministically and only once', async (): Promise<void> => {
+      const { engine, player } = await tutorialEngine();
+      // Ohne aktiven „Reichsrat“-Schritt passiert nichts.
+      engine.ensureTutorialCouncil(player.id);
+      expect(engine.getPendingCouncilDecision(player.id)).toBeNull();
+      // Zum Schritt wechseln.
+      expect(await engine.buildForPlayer(player.id, 'farms')).toBe(true);
+      expect(engine.tradeForPlayer(player.id, 'food', 100, 'buy')).toBe(true);
+      await readyForResearch(engine, player);
+      engine.startResearch(player.id, 'agriculture');
+      expect(engine.getTutorialStep()?.id).toBe('council');
+      engine.ensureTutorialCouncil(player.id);
+      expect(engine.getPendingCouncilDecision(player.id)?.id).toBe('village_fire');
+      // Zweiter Aufruf erzeugt keine Duplikate.
+      engine.ensureTutorialCouncil(player.id);
+      expect(engine.getCouncilChoices(player.id).length).toBeGreaterThan(0);
+    });
+
+    it('persists the tutorial progress across a save/load round-trip', async (): Promise<void> => {
+      const { engine, player } = await tutorialEngine();
+      expect(await engine.buildForPlayer(player.id, 'farms')).toBe(true);
+      expect(engine.tradeForPlayer(player.id, 'food', 100, 'buy')).toBe(true);
+      expect(engine.getTutorialStep()?.id).toBe('research');
+      await engine.saveGame('tutorial-progress');
+      const restored = new GameEngine({ enableWiki: false });
+      engines.push(restored);
+      await restored.loadGame('tutorial-progress');
+      expect(restored.isTutorialActive()).toBe(true);
+      expect(restored.getTutorialStep()?.id).toBe('research');
+      expect(restored.getTutorialProgress()).toEqual({ done: 2, total: 5 });
+    });
+
+    it('loads a pre-tutorial save without a tutorial state safely', async (): Promise<void> => {
+      const engine = await campaign();
+      await engine.advanceMonth();
+      await engine.saveGame('pre-tutorial');
+      const restored = new GameEngine({ enableWiki: false });
+      engines.push(restored);
+      await restored.loadGame('pre-tutorial');
+      expect(restored.isTutorialActive()).toBe(false);
+      expect(restored.getTutorialStep()).toBeNull();
+    });
+
+    it('skips the tutorial and stops counting steps', async (): Promise<void> => {
+      const { engine, player } = await tutorialEngine();
+      engine.skipTutorial();
+      expect(engine.isTutorialActive()).toBe(false);
+      expect(await engine.buildForPlayer(player.id, 'farms')).toBe(true);
+      expect(engine.getTutorialStep()).toBeNull();
+    });
+  });
 });

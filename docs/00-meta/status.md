@@ -8,6 +8,7 @@
 - 15 MP3- und fünf MP4-Dateien im Produktionsbuild, temporäre Cover, Browser-Download des ZIP; automatische Asset-Prüfung in CI.
 - Ratsdelegation und historisch begrenzte Bürgeraufträge; reale Geburten, einfache familiäre Schwangerschaftsbedingungen, historische Namenslisten. Langzeitdemografie nicht validiert.
 - **Echte Niederlagebedingungen** (Bankrott, Hungersnot, Anarchie) als monatliche Prüfung mit Erholungsrücksetzung und dauerhafter Festhaltung; Untergang pausiert das Spiel, schreibt die Chronik und öffnet die Niederlageseite. 12 Unit-Tests und 7 Engine-Integrationstests; Save/Load-Migration und Fehlalarmfreiheit belegt.
+- **Interaktive Tutorial-Kampagne** (Bauen → Handeln → Forschen → Reichsrat → Speichern) mit Fortschrittskarte, Navigation, Ressourcen-Hilfe, Überspringen und Save/Load-Persistenz; 11 Unit-Tests und 9 Engine-Integrationstests.
 - CI, Unit-Tests, Produktionsbuild und Chromium-Smoke bestanden für `main`.
 
 ## Wichtige Grenzen
