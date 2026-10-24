@@ -792,7 +792,8 @@ export class GameEngine {
     if (this.config.randomEvents) {
       for (const player of this.players.values()) {
         const event = this.council.tryGenerate(player, this.currentYear, this.currentMonth, this.config.startingYear);
-        if (event) this.emit('councilDecision', { playerId: player.id, title: event.title });
+        const automatic = this.resolveAutomaticCouncil(player);
+        if (event && !automatic) this.emit('councilDecision', { playerId: player.id, title: event.title });
       }
       if (!this.isHotseat() && this.getPendingCouncilDecision(this.getActivePlayer().id)) this.pauseGame();
     }
@@ -882,7 +883,7 @@ export class GameEngine {
     if (this.tutorialSystem.getCurrentStep()?.id !== 'council') return;
     if (this.council.getPending(playerId)) return;
     const decision = this.council.issueForTutorial(player);
-    if (decision) this.emit('councilDecision', { playerId, title: decision.title });
+    if (decision && !this.resolveAutomaticCouncil(player)) this.emit('councilDecision', { playerId, title: decision.title });
   }
 
   /** Überspringt das laufende Tutorial. */
@@ -2398,6 +2399,28 @@ export class GameEngine {
   public getCouncilHistory(playerId: string) {
     this.requirePlayer(playerId);
     return this.council.getHistory(playerId);
+  }
+
+  public isCouncilAutomatic(playerId: string): boolean {
+    this.requirePlayer(playerId);
+    return this.council.isAutomatic(playerId);
+  }
+
+  public setCouncilAutomatic(playerId: string, enabled: boolean) {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    this.council.setAutomatic(playerId, enabled);
+    return enabled ? this.resolveAutomaticCouncil(player) : null;
+  }
+
+  private resolveAutomaticCouncil(player: Player) {
+    const outcome = this.council.resolveAutomatic(player, this.currentYear, this.currentMonth);
+    if (outcome) {
+      this.recordChronicle(outcome.message, player.id);
+      this.emit('councilResolved', { playerId: player.id, outcome });
+      this.markTutorialStep(player.id, 'council');
+    }
+    return outcome;
   }
 
   /** Personal choice is based on the assigned person's abilities, not a generic advisor. */

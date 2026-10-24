@@ -290,3 +290,52 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 }
 .welcome-art p { bottom:5%; font:italic clamp(.8rem,1.7vw,1.2rem)/1.4 var(--heading); }
 @media(max-height:620px) { .welcome-art::after { bottom:25%; } }
+
+/* Information stays beside the map; compact screens switch between report cards. */
+.kingdom-app .game-layout { grid-template-columns:164px minmax(0,1fr) 292px!important; }
+.realm-report { grid-column:3; grid-row:1 / 3; align-self:stretch; height:100%; display:grid; grid-template-rows:auto repeat(3,minmax(0,1fr)) auto; min-width:0; min-height:0; padding:12px; gap:10px; border-left:1px solid var(--line); background:var(--surface); }
+.report-heading { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:.72rem; color:var(--gold); }
+.report-heading span { font-size:.6rem; color:var(--muted); }
+.report-tabs { display:none; }
+.report-card { display:flex; flex-direction:column; gap:6px; min-height:0; padding:10px; border:1px solid var(--line); border-radius:4px; background:var(--surface-2); overflow:hidden; }
+.report-card h2 { margin:0; font-size:.85rem; color:var(--gold); }
+.report-card small { font-size:.61rem; line-height:1.35; color:var(--muted); }
+.report-card p { margin:0; font-size:.74rem; line-height:1.5; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+.report-actions { display:flex; align-items:center; gap:5px; margin-top:auto; padding-top:3px; flex-shrink:0; }
+.report-actions button,.report-actions a { min-height:27px; padding:4px 6px; font-size:.62rem; color:var(--ink); }
+.report-actions a { color:var(--gold); }
+.report-actions span { font-size:.58rem; }
+.council-auto { display:flex; align-items:center; gap:8px; padding:6px 0; font-size:.72rem; line-height:1.4; cursor:pointer; }
+.council-auto input { flex:0 0 17px; width:17px; height:17px; min-height:17px; margin:0; padding:0; accent-color:var(--gold); }
+.council-modal .council-auto { padding:10px; border:1px solid var(--line); background:var(--surface-2); }
+@media (max-width:1100px) and (min-width:601px) {
+ .kingdom-app .game-layout { grid-template-columns:122px minmax(0,1fr) 244px!important; }
+ .realm-report { padding:8px; gap:7px; }
+ .report-card { padding:8px; }
+ .report-card p { font-size:.68rem; }
+}
+@media (max-height:650px),(max-width:600px) {
+ .realm-report { grid-template-rows:auto auto minmax(0,1fr) auto; gap:6px; }
+ .report-tabs { display:flex; gap:3px; }
+ .report-tabs button { flex:1; min-height:27px; padding:4px; font-size:.58rem; }
+ .report-tabs button[aria-pressed=true] { background:var(--gold); color:var(--desk-dark); }
+ .realm-report .report-card { display:none; }
+ .realm-report[data-report-tab=news] [data-report-card=news],.realm-report[data-report-tab=tutorial] [data-report-card=tutorial],.realm-report[data-report-tab=history] [data-report-card=history] { display:flex; }
+}
+@media (max-width:600px) {
+ .kingdom-app .game-layout { grid-template-columns:minmax(0,1fr)!important; grid-template-rows:36px minmax(0,1fr) 178px 43px!important; }
+ .kingdom-app .game-layout>.workspace { grid-row:4; }
+ .realm-report { grid-column:1; grid-row:3; grid-template-rows:27px minmax(0,1fr) 24px; padding:5px 8px; gap:4px; border-top:1px solid var(--line); border-left:0; }
+ .report-heading { display:none; }
+ .report-card { padding:6px 8px; gap:2px; }
+ .report-card h2 { font-size:.72rem; }
+ .report-card p { font-size:.65rem; line-height:1.3; -webkit-line-clamp:2; }
+ .report-card small { font-size:.52rem; }
+ .report-actions { padding:0; }
+ .report-actions button,.report-actions a { font-size:.55rem; min-height:23px; padding:3px 5px; }
+ .council-auto { font-size:.65rem; padding:0; }
+}
+@media (max-width:600px) and (min-height:700px) {
+ .kingdom-app .game-layout { grid-template-rows:36px minmax(0,1fr) 160px 43px!important; }
+ .report-card { padding:4px 8px; gap:1px; }
+}

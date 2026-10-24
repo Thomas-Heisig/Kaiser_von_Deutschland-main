@@ -14,6 +14,47 @@ const player = (id: string) => {
 };
 
 describe('Royal council', () => {
+  it('requires per-player opt-in, charges the chosen option and survives save/load', () => {
+    const council = new CouncilDecisionSystem(() => 0.5);
+    const ruler = player('one');
+    council.issueForTutorial(ruler);
+    expect(council.resolveAutomatic(ruler,1200,1)).toBeNull();
+    council.setAutomatic(ruler.id,true);
+    expect(council.isAutomatic('two')).toBe(false);
+    const offers = council.getChoices(ruler);
+    const gold = ruler.kingdom.resources.gold;
+    const result = council.resolveAutomatic(ruler,1200,1)!;
+    const choice = offers.find(offer => offer.id === result.choiceId)!;
+    expect(choice.affordable).toBe(true);
+    expect(choice.probability).toBeNull();
+    expect(ruler.kingdom.resources.gold).toBe(gold - (choice.cost.gold ?? 0) + (choice.effect.gold ?? 0));
+    expect(result.automatic).toBe(true);
+    expect(result.message).toContain('Automatisch entschieden');
+    expect(council.resolveAutomatic(ruler,1200,1)).toBeNull();
+    const restored = new CouncilDecisionSystem();
+    restored.load(council.serialize());
+    expect(restored.isAutomatic(ruler.id)).toBe(true);
+    expect(restored.getHistory(ruler.id)).toEqual([result]);
+    restored.setAutomatic(ruler.id,false);
+    restored.issueForTutorial(ruler);
+    expect(restored.resolveAutomatic(ruler,1200,2)).toBeNull();
+    const legacy = council.serialize();
+    delete legacy.automaticPlayers;
+    restored.load(legacy);
+    expect(restored.isAutomatic(ruler.id)).toBe(false);
+  });
+
+  it('leaves an unaffordable event pending for the player instead of inventing resources', () => {
+    const council = new CouncilDecisionSystem(() => 0.5);
+    const ruler = player('one');
+    const event = COUNCIL_DECISIONS.find(event => event.choices.every(choice => Object.values(choice.cost).some(cost => cost > 0)))!;
+    expect(event).toBeDefined();
+    council.load({pending:[[ruler.id,{decisionId:event.id,issuedAt:14401}]], lastTriggered:[],lastDecision:[],history:[],automaticPlayers:[ruler.id]});
+    for (const key of ['gold','food','wood','stone','iron'] as const) ruler.kingdom.resources[key] = 0;
+    expect(council.resolveAutomatic(ruler,1200,1)).toBeNull();
+    expect(council.getPending(ruler.id)?.id).toBe(event.id);
+    expect(council.getHistory(ruler.id)).toEqual([]);
+  });
   it('validates every risk, resource cost and player decision in the extended catalog', () => {
     expect(COUNCIL_DECISIONS.length).toBeGreaterThanOrEqual(12);
     const ids = new Set(COUNCIL_DECISIONS.map((event) => event.id));

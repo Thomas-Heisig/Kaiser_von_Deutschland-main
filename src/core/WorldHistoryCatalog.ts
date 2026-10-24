@@ -4,6 +4,17 @@ export interface WorldMilestone {
   place: string; sourceTitle: string; sourceUrl: string; speculative?: boolean;
 }
 const milestoneEntries: WorldMilestone[] = [
+  {id:'durer-self-portrait',year:1500,title:'Dürers Selbstbildnis im Pelzrock',kind:'art',description:'Albrecht Dürer malt sein frontales Selbstbildnis im Pelzrock. Er bezeichnet sich in der Bildinschrift als 28-jährigen Künstler aus Nürnberg.',place:'Nürnberg',sourceTitle:'Bayerische Staatsgemäldesammlungen – Selbstbildnis im Pelzrock',sourceUrl:'https://www.sammlung.pinakothek.de/de/artwork/Qlx2QpQ4Xq'},
+  {id:'east-india-charter',year:1600,title:'Gründung der englischen East India Company',kind:'society',description:'Am 31. Dezember erhält die englische East India Company ihre königliche Gründungsurkunde von Elisabeth I.',place:'England',sourceTitle:'Library of Congress – Guide to the records in the India Office',sourceUrl:'https://tile.loc.gov/storage-services/service/gdc/gdclccn/23/00/48/26/23004826/23004826.pdf'},
+  {id:'oersted',year:1820,title:'Elektrizität und Magnetismus hängen zusammen',kind:'science',description:'Hans Christian Ørsted veröffentlicht seine Beobachtung, dass elektrischer Strom eine Kompassnadel ablenkt.',place:'Kopenhagen',sourceTitle:'DTU Physics – History',sourceUrl:'https://physics.dtu.dk/About/history/DTU-Physics-History'},
+  {id:'bismarck-dismissal',year:1890,title:'Bismarck wird entlassen',kind:'society',description:'Am 20. März endet Otto von Bismarcks Amtszeit als Reichskanzler. Leo von Caprivi wird sein Nachfolger.',place:'Berlin',sourceTitle:'Deutsches Historisches Museum – Jahreschronik 1890',sourceUrl:'https://www.dhm.de/lemo/jahreschronik/1890'},
+  {id:'paris-charter',year:1200,title:'Königlicher Schutz für die Universität Paris',kind:'culture',description:'Philipp II. August bestätigt mit einem königlichen Privileg die Autonomie der Pariser Universitätsgemeinschaft.',place:'Paris',sourceTitle:'Sorbonne – Geschichte der Universität Paris',sourceUrl:'https://www.sorbonne.fr/wp-content/uploads/Livret_PDC-2015_BAT.pdf'},
+  {id:'first-jubilee',year:1300,title:'Das erste Heilige Jahr',kind:'society',description:'Papst Bonifatius VIII. ruft das erste Heilige Jahr aus. Zahlreiche Pilger reisen nach Rom.',place:'Rom',sourceTitle:'Vatican News – Origins of the Christian Jubilee',sourceUrl:'https://www.vaticannews.va/en/vatican-city/news/2024-04/origins-christian-jubilee-pope-saint-boniface.html'},
+  {id:'ruprecht-election',year:1400,title:'Ruprecht wird zum König gewählt',kind:'society',description:'Nach der Absetzung Wenzels wählen die rheinischen Kurfürsten Ruprecht von der Pfalz zum römischen König.',place:'Rheinland',sourceTitle:'Historisches Lexikon Bayerns – Königtum Ruprechts',sourceUrl:'https://www.historisches-lexikon-bayerns.de/Lexikon/Artikel_45754'},
+  {id:'bach-death',year:1750,title:'Johann Sebastian Bach stirbt',kind:'art',description:'Am 28. Juli stirbt Johann Sebastian Bach in Leipzig, wo er seit 1723 als Thomaskantor gewirkt hat.',place:'Leipzig',sourceTitle:'Leipzig Tourismus – Auf den Spuren von Bach',sourceUrl:'https://www.leipzig.travel/recherchetext/auf-den-spuren-von-bach-in-leipzig-1'},
+  {id:'war-end-europe',year:1945,title:'Ende des Zweiten Weltkriegs in Europa',kind:'society',description:'Die bedingungslose Kapitulation der deutschen Streitkräfte tritt am 8. Mai in Kraft. Der Krieg in Europa endet.',place:'Europa',sourceTitle:'US National Archives – Surrender of Germany',sourceUrl:'https://www.archives.gov/milestone-documents/surrender-of-germany'},
+  {id:'warsaw-treaty',year:1970,title:'Der Warschauer Vertrag',kind:'society',description:'Am 7. Dezember unterzeichnen die Bundesrepublik und Polen den Warschauer Vertrag zur Normalisierung ihrer Beziehungen.',place:'Warschau',sourceTitle:'Auswärtiges Amt – Warschauer Vertrag',sourceUrl:'https://archiv.diplo.de/arc-de/aktuelles/55-jahre-warschauer-vertrag-2747340'},
+  {id:'expo-hannover',year:2000,title:'Weltausstellung in Hannover',kind:'culture',description:'Vom 1. Juni bis 31. Oktober findet die Expo unter dem Motto „Mensch – Natur – Technik“ statt.',place:'Hannover',sourceTitle:'Bureau International des Expositions – Expo 2000',sourceUrl:'https://bie-expo.bie-paris.org/site/en/2000-hannover?layout=bieparis%3Aexpo&view=bieexpo'},
   {id:'university-bologna',year:1088,title:'Universität Bologna',kind:'culture',description:'Bologna wird traditionell als älteste Universität Europas bezeichnet und prägt die Entwicklung gelehrter Einrichtungen.',place:'Bologna',sourceTitle:'Università di Bologna – History',sourceUrl:'https://www.unibo.it/en/university/who-we-are/our-history'},
   {id:'gothic-notredame',year:1163,title:'Notre-Dame de Paris',kind:'art',description:'Mit dem Baubeginn der Kathedrale verbreiten sich monumentale gotische Bauformen.',place:'Paris',sourceTitle:'Notre-Dame de Paris – History',sourceUrl:'https://www.notredamedeparis.fr/en/understand/history/'},
   {id:'magna-carta',year:1215,title:'Magna Carta',kind:'society',description:'In England wird eine Urkunde besiegelt, die königliche Macht und Rechte neu verhandelt.',place:'England',sourceTitle:'UK Parliament – Magna Carta',sourceUrl:'https://www.parliament.uk/magnacarta/'},
@@ -43,4 +54,11 @@ export function milestonesThrough(year:number): WorldMilestone[] {
 }
 export function milestonesInYear(year:number): WorldMilestone[] {
   return WORLD_MILESTONES.filter(m=>m.year===year);
+}
+
+/** No invented annual entries: older context stays explicitly dated, fiction is excluded. */
+export function historicalYearReport(year: number): { exact: boolean; entries: WorldMilestone[] } {
+  const known = WORLD_MILESTONES.filter(item => !item.speculative && item.kind !== 'future' && item.year <= year);
+  const exact = known.filter(item => item.year === year);
+  return { exact: exact.length > 0, entries: exact.length ? exact : known.slice(-1) };
 }
