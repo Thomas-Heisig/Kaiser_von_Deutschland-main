@@ -1,12 +1,16 @@
 # TODO — Kaiser von Deutschland
 
-## Verbindliche operative Aufgabenliste · Stand 20.10.2026 · Grafikentscheidung nach PR #67 · GitHub Pages live
+## Verbindliche operative Aufgabenliste · Stand 24.10.2026 · Gesamte Roadmap beauftragt · GitHub Pages live
 
 Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und den Meilensteinen der [Roadmap](docs/00-meta/roadmap.md). `[x]` bedeutet im Hauptspiel **implementiert und mindestens automatisiert geprüft**, `[~]` teilweise, `[ ]` offen. Ein in alten Unterlagen als „fertig“ bezeichnetes Modul ist ohne Benutzeroberfläche **nicht** abgeschlossen. Frühere Einträge gingen nicht verloren: [TODO-Archiv](docs/outdated/TODO-snapshot-2026-10-17.md), [README-Ideenbestand](docs/00-meta/backlog-from-readme.md), [historische Roadmap](docs/outdated/roadmap-snapshot-2026-10-17.md).
 
 ## Priorisierung: spielbare Kampagnen zuerst (17.10.2026)
 
 ### Stabilisierung und Integration · 24.10.2026
+
+- [x] Gemeinsames Epochenlayout, Schreibtischstart, sichtbare Flüsse, paginierte Menüs ohne Seitenscrollen; Lagebericht mit Tutorial, Quellen zur Jahresgeschichte und optionaler Ereignisautomatik (PR #96/#97).
+- [x] Erste [Strategiewelt-Ausbaustufe](docs/05-technical-architecture/STRATEGY_WORLD.md): Reisen, Entdeckung, alle Nachbarn, gezielter Kartenfokus, eigene Weltpersistenz und Altstandmigration. Chromium-Bedienabläufe mit 20 Nachbarn bei 320/768/1024 px geprüft.
+- [~] Gesamte Roadmap einschließlich Großsystemen beauftragt. Diese Ausbaustufe schließt nicht Online-Mehrspieler, freie Bebauung, vollständige GLB-Grafik, Rollen-/Generationenintegration oder VR ab. Die zugehörigen Aufgaben unten bleiben offen.
 
 - [x] Dorf/Welt/Relief-Wechsel, Zoom-Reset und Feature-Flag korrigiert; unsichtbare Bezirke nehmen keine Kartenklicks mehr entgegen. Regionsdaten werden bei neuen Partien erneut geladen.
 - [x] Ergebnisdialog: Hauptmenü und Neubeginn räumen die Partie auf; Sandbox-Fortsetzung stellt die Engine tatsächlich auf freie Herrschaft um und bleibt nach Save/Load erhalten. Geladene abgeschlossene Kampagnen zeigen ihre Ergebnisansicht.
@@ -30,11 +34,11 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### P1b – danach Strategie und reaktive Gegner
 
-- [ ] Rivalen auf Wirtschafts-, Handels-, Forschungs- und Militärfortschritte dynamisch reagieren lassen; unterschiedliche Schwierigkeit mit nachvollziehbaren Regeln testen.
-- [ ] Diplomatie um Bündnisse, Handelsverträge, Vertragsbruch und konsequentes Reputations-/Rivalenverhalten im Hauptspiel ergänzen.
+- [x] Rivalen reagieren jährlich auf Wirtschafts-, Handels-, Forschungs- und Militärfortschritte; begrenzte Regeln je Persönlichkeit/Schwierigkeit und Chronikgründe getestet.
+- [x] Schutzbündnisse, Handelsverträge, Vertragsbruch, Vertrauensverlust/-aufbau und gegenseitige Angriffssperren im Hauptspiel. Fremde Überfälle beenden Handel ohne Prestigeabzug für den Spieler; monatsgenauer Ablauf und Save/Load getestet.
 - [ ] Regionale Hunger-, Wanderungs- und Versorgungslagen als Spielentscheidungen mit Kosten und dauerhaften Auswirkungen verknüpfen.
 - [ ] Logistik, Belagerungen und Kriegsgefangene nur nach vollständigem Hauptkampagnen-/Savegame-Test erweitern.
-- [ ] Alternative Gewinnstrategien für Handel, Wissenschaft, Kultur und Diplomatie unabhängig vom Krieg end-to-end prüfen.
+- [x] Hanse, Wissenschaft, Kultur und diplomatische Kaiserkrone bis zum Sieg ohne Eroberung inklusive Save/Load geprüft. Finanzierte Testpartien; normale Startbalance bleibt unter P1a offen.
 
 #- [x] Karte als großflächiger Spielhintergrund mit innenliegenden 2D/3D- und Bezirksfiltern, Zoom/Zentrieren und Bezirksausbau; doppelte Gebäudebutton-Leiste entfernt.
 - [ ] Karte und überlagerte Panels auf iPad/Smartphone samt Touch, Fokus, Performance und realen Geräten prüfen; Nachbarpositionen sind zunächst schematisch.
@@ -42,8 +46,8 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 ## P1c – Qualität und Zugänglichkeit
 
 - [ ] E2E für neue Partie, Bauen, Handelsgeschäft, Forschung, Ratsentscheidung, Hotseat, Speichern/Laden und Kampagnenziel hinzufügen.
-- [ ] Wesentliche Ansichten auf 320/768/1024 Pixel, mobilem Touch und Tastaturnavigation inklusive Fokus und Textskalierung abnehmen.
-- [ ] Bevölkerungs- und Simulationslast mit 1.000/5.000/20.000 Bürgern messen, Speicher/CPU-Grenzen dokumentieren und Engpässe beheben.
+- [~] Browserprüfungen bei 320/768/1024 px sowie weiteren Größen; Tastatur-Kartensteuerung, Menüpaginierung, Bericht und Weltreise geprüft. Textskalierung, vollständiger WCAG-/Touchtest und echte Geräte bleiben offen.
+- [~] [Messung mit 1.000/5.000/20.000 Bürgern](docs/reports/strategy-population-2026-10-24.md) samt Speicherwerten dokumentiert; Zahlenarray-Kopieraufwand beim Speichern behoben. 20.000 Bürger benötigen weiterhin etwa 380 ms pro Monat inklusive Autosave. Worker, Langläufe/Spitzenverbrauch und Gerätebudgets offen.
 
 ## P0 — Veröffentlichung und zuverlässiger Betrieb
 
@@ -94,24 +98,24 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### G1 – Nachbarreiche als erkennbare, bedienbare Welt (P0)
 
-**Ist:** `KingdomMap.drawNeighbors()` zeichnet maximal sechs schematische Ellipsen außerhalb der zentralen Siedlung, mit Namen und Vasallenstatus. Das ist **noch keine Weltkarte**. Nachbarpositionen sind keine historischen Geodaten.
+**Ist:** `KingdomMap.drawNeighbors()` zeigt alle Nachbarn als schematische Territorien mit Verbindungen, Entdeckungs-/Beziehungsstatus und Heimatmarker. Weltmodell, Regionsfokus und Reisen sind vorhanden; Positionen sind keine historischen Geodaten.
 
-- [ ] Nachbarn vollständig aus den vorhandenen `RivalRealm`-Daten inventarisieren (Name, Diplomatie, Wirtschaft, Stärke, Unterwerfung, Veränderungen); fehlende Daten ausdrücklich unbekannt anzeigen, nichts erfinden.
+- [x] Vorhandene Rivalendaten mit Beziehungen, Heer, Befestigung, Beutevorrat und Unterwerfung in der Weltansicht zugänglich; Hauptstadt und gesamte Wirtschaftsleistung ausdrücklich unbekannt.
 - [ ] Je Nachbar eine unterscheidbare **territoriale Retro-Darstellung**: Länderfläche/Grenze, Wappen- oder Fraktionssymbol, Siedlungen, Straßen-/Handelsverbindungen, Hauptstadt nur falls tatsächlich im Modell vorhanden; Vasallen und Kriegsgegner klar unterscheiden.
-- [ ] Außenwelt-Ebene unabhängig von den 16 Bezirken erstellen; echte Weltkoordinaten/Regionenmodell einführen, statt nur sechs Offscreen-Ellipsen.
+- [x] Separate Außenwelt-Ansicht mit stabilen Regionskoordinaten und unbegrenzter Darstellung vorhandener Nachbarn (20 automatisiert geprüft); Heimatbezirke bleiben erhalten.
 - [ ] Auf Nachbar tippen/klicken → erreichbare Detailansicht zu Diplomatie/Handel/Krieg und bekannten Kennzahlen; Tastatur und Touch berücksichtigen. Änderungen nur über bestehende validierte Spielaktionen.
-- [ ] Überlagerungen/Pan/Zoom/Minikarte so gestalten, dass Nachbarn auf 375px **auffindbar** bleiben (Fit-to-World, Zentrieren, Marker für außerhalb des Bildschirms liegende Reiche); bisherige 16-Bezirke-Karte als Heimatansicht erhalten.
-- [ ] Rivalenanzahl > sechs, neue/entfernte Rivalen, historische Epochengrafik, Vasall/Feind/neutral und Save-/Load-Verhalten automatisiert testen.
+- [~] Fit-to-World, Zentrieren und gezielter Regionsfokus auch bei 320 px geprüft; Heimatansicht erhalten. Minikarte und Randmarker bleiben offen.
+- [~] 20 Nachbarn, neue/entfernte Regionen, Reise und Save/Load getestet. Vollständige visuelle Matrix aller Epochen und Vasall/Feind/neutral bleibt offen.
 
 ### G2 – Open World als gesonderter, phasenweiser Umfang (P1; **nicht als bereits vorhanden kennzeichnen**)
 
-**Ist:** Die aktuelle Karte ist eine feste Siedlungsübersicht mit 16 Bezirksankern und schematischen Nachbarn. Es gibt weder eine frei begehbare Welt noch ein persistentes Platzierungsraster. „Open World“ ist eine Produktvision und benötigt bewusst eine eigene technische Entscheidung.
+**Ist:** Erste erkundbare Strategiewelt neben der Siedlungsübersicht mit 16 Bezirksankern. Es gibt keine frei begehbare 3D-Welt und kein freies Platzierungsraster. Details und Grenzen: [Strategiewelt-Spezifikation](docs/05-technical-architecture/STRATEGY_WORLD.md).
 
-- [ ] **OW-0 Konzept/Scope verbindlich beschließen:** zuerst eine frei erkundbare, zoombare **Strategie-Weltkarte** mit Regionen, Wegen und dynamischen Nachbarn; keine Behauptung einer frei begehbaren 3D-RPG-Welt. Letztere ist nur langfristige Option.
-- [ ] **OW-1 WorldModel:** stabile Regions-IDs, Koordinaten/Kamera, Gelände, Grenzen, Verbindungen, Herkunft von Weltpositionen, Fog-of-War/Entdeckung und Ereignisorte; deterministische Generierung mit Seed und reproduzierbaren Tests.
-- [ ] **OW-2 Persistenz:** versioniertes Welt-/Regionsschema und Migration für Alt-Spielstände; keine Änderung an der aktuellen GameEngine ohne spezifizierte Schnittstellen und Tests.
-- [ ] **OW-3 Kamera/Navigation:** freie Bewegung per Touch/Maus/Tastatur, Zoom, Zentrieren, Minikarte, „Zur Heimat“, Region finden, begrenztes Culling und Performancebudgets.
-- [ ] **OW-4 Interaktion:** Regionen erkunden, Nachbarn besuchen/auswählen, Handel/Diplomatie/Reisen als klar geregelte Aktionen; passende epochen- und ressourcenabhängige Aufgaben statt generischer Platzhalter.
+- [x] **OW-0:** Erste Ausbaustufe als Strategie-Weltkarte spezifiziert; 3D-RPG/VR bleiben getrennte spätere Vorhaben.
+- [~] **OW-1 WorldModel:** stabile IDs/Positionen, seedabhängiges Gelände, Verbindungen, Entdeckung und Herkunft der schematischen Geografie implementiert/testbar. Ereignisorte und räumliche Nebelgrafik noch offen.
+- [x] **OW-2 Persistenz:** eigenes versioniertes Welt-/Regionsschema im Spielstand, Altstandmigration, validierte Engine-Schnittstellen und Reise-/Ladetests.
+- [~] **OW-3 Kamera/Navigation:** Maus/Touch-Ziehen, Tastatur-Pan, Zoom, Zentrieren, Regionsfokus und Heimreise implementiert. Pinch, Minikarte, Culling und Gerätebudgets bleiben offen.
+- [~] **OW-4 Interaktion:** bezahlte Reisen, Ankunft/Entdeckung, Nachbarauswahl sowie Handel/Diplomatie integriert. Epochenabhängige regionale Aufträge stehen aus.
 - [ ] **OW-5 Ausbau (separat, später):** freie Bebauung nur nach eigener Raster-/Bauplatz-/Kollisions-/Pfadfindungs-Spezifikation; die 16 Bezirke bis dahin beibehalten.
 - [ ] **OW-6 Abnahme:** End-to-End vom Start über Erkundung, Ortswechsel, Diplomatie/Handel, Speichern/Laden bis zum Fortsetzen auf iPhone/Tablet/Desktop.
 
@@ -201,4 +205,4 @@ Die historische README enthält detailliertere Funktionsumfänge als der bisheri
 
 - [~] Mobiler Retro-Regressionstest (375×812): Pixi-Canvas, Asset-Ladezustand, Overlay-Transparenz, 2D/Retro-Wechsel und Screenshot in Chromium CI; echtes iPhone/iPad Safari weiterhin ungeprüft.
 
-- [~] Asset-Routing für drei optionale Retro-Atlanten im Kartenrenderer: Fantasy für ältere Epochen, Urban für spätere. Noch fehlen die binären Atlanten im GitHub-Build; bis dahin bleibt das bestehende Bildmaterial aktiv.
+- [x] Asset-Routing und drei kleine binäre Retro-Vorschauatlanten im Build vorhanden. Vollständige Originalmodelle/hochaufgelöste Renderings bleiben unter G3 offen.

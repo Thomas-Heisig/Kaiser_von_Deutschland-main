@@ -54,7 +54,7 @@ export const CHAPTERS: Record<CampaignId, readonly [StoryChapter, StoryChapter, 
   kaiserkrone: [
     { title: 'Ein starker Herrschaftssitz', narrative: 'Baue eine Burg und belebe die Märkte.' },
     { title: 'Die Kunst des Friedens', narrative: 'Knüpfe diplomatische Bande und entwickle den Handel.' },
-    { title: 'Die Krone des Reiches', narrative: 'Besiege einen Rivalen und festige den königlichen Schatz.' }
+    { title: 'Die Krone des Reiches', narrative: 'Gewinne zwei Schutzbündnisse oder besiege einen Rivalen und festige den königlichen Schatz.' }
   ]
 };
 export interface CampaignChapterStatus {

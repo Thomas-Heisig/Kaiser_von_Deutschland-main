@@ -31,6 +31,7 @@ jobs:
           node scripts/browser-smoke.mjs
           node scripts/atlas-smoke.mjs
           node scripts/report-smoke.mjs
+          node scripts/strategy-smoke.mjs
       - name: Save screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -39,4 +40,5 @@ jobs:
           path: |
             smoke-*.png
             .temp/report-*.png
+            .temp/strategy-*.png
           if-no-files-found: ignore

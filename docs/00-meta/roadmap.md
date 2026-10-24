@@ -1,6 +1,8 @@
 # Roadmap — Kaiser von Deutschland
 
-## Aktiver Entwicklungsplan · Stand 17.10.2026
+## Aktiver Entwicklungsplan · Stand 24.10.2026
+
+Der Nutzer hat den gesamten Roadmap-Umfang einschließlich der Großsysteme beauftragt. Die Umsetzung erfolgt in prüfbaren Ausbaustufen; offene Systeme bleiben sichtbar offen. Neu umgesetzt: [Strategiewelt und Verträge](../05-technical-architecture/STRATEGY_WORLD.md), reaktive Rivalen, vier friedliche Kampagnenwege und [Lastmessung bis 20.000 Bürger](../reports/strategy-population-2026-10-24.md). Online-Mehrspieler, freie Bebauung, vollständige Grafikproduktion und VR sind damit noch nicht abgeschlossen.
 
 ## Leseregel
 
@@ -26,7 +28,7 @@ Ein vollständiger Kampagnendurchlauf ist jetzt automatisiert: Spielstart → Ba
 
 - Industrie und Wiederaufbau hatten Startinfrastruktur, die einen Großteil des ersten Kapitels ohne Spielerhandlung erfüllte; Anfangsziele verschärft.
 - Die Zielanzeige verwendete bislang globale Ziel-Schwellen anstelle abgeschlossener Kapitel für die Siegmeldung. Siegstatus und Fortschrittsanzeige sind jetzt an Kapitelabschluss gebunden.
-- Noch offen: vollständiger automatisierter Spielabschluss und mehrjährige Wirtschaftsbalance. Reale Niederlagebedingungen (Bankrott, Hungersnot, Anarchie) und die interaktive Tutorial-Kampagne (Bauen → Handeln → Forschen → Reichsrat → Speichern) sind jetzt implementiert und automatisiert geprüft.
+- Automatisierter Spielabschluss, Niederlagebedingungen und Tutorial sind geprüft. Gezielte Balancekalibrierung und reale Endgeräteabnahme bleiben offen.
 
 ## Kartenoberfläche (18.10.2026)
 
@@ -34,7 +36,7 @@ Vollflächige Siedlungskarte unter transparenten Panels, Kartenfilter, Bezirksau
 
 ## Karte – genehmigte Grafikrichtung, Phase 2 (18.10.2026)
 
-**Freigegeben:** Variante A mit Kenney Sketch Town als Referenz, Jahr 1200, 16 feste Bezirke (keine freie Bebauung), vorhandenes PixiJS 8 und unveränderte GameEngine. Zwei Apple-Testgeräte (iPad/iPhone) stehen beim Nutzer für spätere manuelle Tests bereit. Ein Prototyp ist **noch nicht erstellt**, Performance auf Geräten **ungeprüft**. [Renderer- und Prototyp-Plan](../05-technical-architecture/RENDERER.md) · [Asset-Lizenzmanifest](../05-technical-architecture/ASSETS.md).
+**Aktive Entscheidung:** Kenney Retro Fantasy/Textures für frühe Epochen, Retro Urban für spätere; Sketch Town ist Reserve. Prototyp, drei kleine Atlanten und Darstellungen aller 16 Bezirke sind vorhanden. Die vollständige GLB-Produktion und reale Geräteperformance bleiben ungeprüft. [Renderer](../05-technical-architecture/RENDERER.md) · [Asset-Lizenzmanifest](../05-technical-architecture/ASSETS.md).
 
 **Reihenfolge:** konkretes Pack inventarisieren und Rechte nachweisen → isolierte 144-Kachel-Werkstattszene → CI/Browserbuild → echte iPad-/iPhone-Messung → bei Bestehen genau einen bestehenden Bezirk optisch umstellen. Rendering bleibt ein separates Vorhaben, das P1-Kampagnenqualität nicht als abgeschlossen ersetzt.
 
@@ -43,19 +45,19 @@ Vollflächige Siedlungskarte unter transparenten Panels, Kartenfilter, Bezirksau
 1. **Kampagnenabschluss als End-to-End-Ablauf:** Start, Bau, Handel, Forschung, Reichsrat, Monatswechsel, Save/Load, Sieg und Niederlage — **automatisiert abgeschlossen** (`CampaignEndToEnd.test.ts`); offen ist nur die manuelle Abnahme der Schlusswertungs-Oberfläche.
 2. **Langzeit-Balancing:** Jahresprotokolle über 10 Jahre liegen vor; die gezielte Grenzwertverbesserung anhand dieser Daten steht aus.
 3. **Systemintegration:** Forschung/Handel/Kultur/Diplomatie/Rivalen als wechselseitige strategische Entscheidungen.
-4. **Tutorial, reaktive Rivalen und dauerhafte Chronik:** Chronikspeicherung und die interaktive Tutorial-Kampagne sind implementiert; E2E und reaktive Rivalen stehen aus.
+4. **Tutorial, reaktive Rivalen und dauerhafte Chronik:** implementiert und automatisiert geprüft; Langzeit-Balance weiter offen.
 5. **Qualität:** Mobile/Barrierefreiheit, Hotseat und große Bevölkerungen. Erst danach neue große Legacy-Systeme erweitern.
 
-Diese Reihenfolge betrifft die Gameplay-Arbeit; HTTPS/PWA bleibt unabhängig als blockiertes Veröffentlichungs-Gate P0 offen.
+HTTPS/Pages ist aktiv; Geräteinstallation und Rechte-/Impressumsnachweise bleiben separate Abnahmen.
 
 ## Jetzt — Gate A: zuverlässige Veröffentlichung (P0)
 
 **Ziel:** eine nachweislich erreichbare HTTPS-PWA mit echter Offline-Nutzung.
 
-1. Pages-Berechtigung in privatem Repo klären oder anderes HTTPS-Hosting verbinden.
+1. Bestehende Pages-Veröffentlichung und Update-Pfad bei jedem Release prüfen.
 2. HTTPS, Service-Worker-Scope, PWA-Manifest, PNG-Icons, MP3-/Video-Status 200/206 und Installation messen.
 3. Medienrechte, Credits, Datenschutz und vollständiges Impressum vor öffentlicher Freigabe.
-**Vorhanden:** automatischer Build, Veröffentlichungsworkflow, Offline-ZIP, Medien-Gate, 15 MP3s, 5 Videos. **Blocker:** GitHub Pages `Resource not accessible by integration`.
+**Vorhanden:** öffentliche HTTPS-Seite, automatischer Vite-Build, Veröffentlichungsworkflow, Offline-ZIP, Medien-Gate, 15 MP3s, 5 Videos. Der alte Pages-Berechtigungsfehler ist behoben.
 
 ## Danach — Gate B: lebendige Generationen (P1)
 

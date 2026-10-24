@@ -1,4 +1,5 @@
 import { doctrineForYear, rivalIdentity } from './HistoricalGameplay';
+import { rivalReaction, type RealmProgress } from './RivalStrategy';
 // src/core/CampaignWarfareSystem.ts
 import type { Kingdom } from './Kingdom';
 
@@ -36,6 +37,7 @@ export const rivalPersonality = (id: string): RivalPersonality =>
 
 export interface BattleReport {
   id: string;
+  rivalId?: string;
   year: number;
   month: number;
   kind: 'campaign' | 'raid' | 'duel';
@@ -384,7 +386,7 @@ export class CampaignWarfareSystem {
     }
     summary = '[' + doctrineForYear(date.year).raid + '] ' + summary;
     return this.addReport({
-      year: date.year, month: date.month, kind: 'raid', attacker: rivalIdentity(raider.id,date.year)?.name ?? raider.name, defender: kingdom.name,
+      year: date.year, month: date.month, kind: 'raid', rivalId: raider.id, attacker: rivalIdentity(raider.id,date.year)?.name ?? raider.name, defender: kingdom.name,
       attackerPower: raidPower, defenderPower: defense, victoryChance: raiderChance, attackerWon: raiderWon,
       attackerLosses: raiderLosses, defenderLosses, plunder, summary, playerIds: [playerId]
     });
@@ -394,7 +396,7 @@ export class CampaignWarfareSystem {
    * Yearly processing: hostile rivals rebuild their armies.
    * @returns Nothing.
    */
-  public processYear(year: number = 0): RivalDevelopment[] {
+  public processYear(year: number = 0, progressFor?: (playerId: string) => RealmProgress): RivalDevelopment[] {
     const news: RivalDevelopment[] = [];
     for (const rival of this.rivals) {
       if (rival.subjugated) continue;
@@ -415,7 +417,14 @@ export class CampaignWarfareSystem {
         rival.loot = Math.min(25000, rival.loot + 225);
         message = `${rival.name} erweitert seine Handelswege und füllt die Schatzkammer.`;
       }
-      news.push({ playerId: rival.playerId, rivalId: rival.id, name: rival.name, personality, year, message });
+      const reaction = rivalReaction(personality, progressFor?.(rival.playerId));
+      rival.soldiers = Math.min(limit, rival.soldiers + reaction.soldiers);
+      rival.fortification = Math.min(1.8, rival.fortification + reaction.fortification);
+      rival.loot = Math.min(25000, rival.loot + reaction.wealth);
+      if (reaction.reason) message += ' ' + reaction.reason;
+      const identity = rivalIdentity(rival.id, year);
+      if (identity) message = message.replace(rival.name, identity.name);
+      news.push({ playerId: rival.playerId, rivalId: rival.id, name: identity?.name ?? rival.name, personality, year, message });
     }
     return news;
   }

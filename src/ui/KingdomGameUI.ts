@@ -1026,9 +1026,12 @@ export class KingdomGameUI {
       engine.on('espionageEvent', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) this.record(detail.message);
       }),
-      engine.on('diplomacyEvent', (detail: { playerId: string; message: string }): void => {
+      engine.on('worldEvent', (detail: {playerId:string;message:string}): void => {
+        if (this.player?.id === detail.playerId) { this.notify(detail.message); this.renderReport(); }
+      }),
+      engine.on('diplomacyEvent', (detail: { playerId: string; message: string; recorded?:boolean }): void => {
         if (this.player?.id === detail.playerId) {
-          this.record(detail.message);
+          if (!detail.recorded) this.record(detail.message);
           this.notify(detail.message);
         }
       }),
@@ -1679,6 +1682,10 @@ export class KingdomGameUI {
       <button data-open-district class="secondary">Bezirk ausbauen →</button>`;
     setText('settlement-season', SEASON_LABELS[kingdom.currentSeason] + ' · ' + this.engine.getCurrentEpoch());
     this.renderMapFallback();
+    this.map?.setStrategyWorld(this.engine.getStrategyWorld(this.player.id), Object.fromEntries(
+      this.engine.getRivalRelations(this.player.id).map(relation=>[relation.kingdomId,
+        this.engine!.getRivalTreaties(this.player!.id).some(t=>t.parties.includes(relation.kingdomId)) ? 'Vertragspartner' :
+        relation.relationshipValue < -25 ? 'Feindlich' : 'Neutral'])));
     this.map?.update(kingdom, this.selected, this.engine.getModernizationOptions(this.player.id)
       .filter(option => option.completed).map(option => option.project.id), this.engine.getCurrentYear(),
       this.engine.getRivals(this.player.id));
@@ -1983,12 +1990,28 @@ export class KingdomGameUI {
           (Zuverlässigkeit ${format(report.reliability)} %)</p></li>`).join('') ||
           '<li>Keine aktuellen Berichte.</li>'}</ol>`;
     } else if (this.view === 'world') {
+      const atlas = this.engine.getStrategyWorld(this.player.id);
+      const neighbors = this.engine.getRivals(this.player.id);
+      const name = (id:string):string => id === 'home' ? kingdom.name : neighbors.find(r=>'rival:'+r.id===id)?.name ?? 'Unbekannt';
+      const travelCards = `<h3>Strategiewelt · Reisen und Erkundung</h3><p class="muted">Generierte Spielregionen, keine historischen Grenzen. Dein Reich bleibt während einer Reise verwaltbar.</p>
+        <p>Aufenthalt: <strong>${escape(name(atlas.currentRegion))}</strong>${atlas.journey ? ` · Reise nach ${escape(name(atlas.journey.destination))}: ${atlas.journey.remaining} Monat(e)` : ''}</p>
+        <div class="build-grid">${atlas.regions.map(region=>{
+          const rival = neighbors.find(r=>r.id===region.rivalId);
+          const here = region.id===atlas.currentRegion;
+          const plan = !here && !atlas.journey ? this.engine!.getWorldTravelPlan(this.player!.id,region.id) : null;
+          return `<article class="build-card"><h3>${escape(name(region.id))}</h3>
+            <button data-world-focus="${escape(region.id)}">Auf der Karte zeigen →</button>
+            <p>Gelände: ${region.discovered ? region.terrain : 'Noch nicht erkundet'} · ${rival?.subjugated ? 'Vasallenreich' : region.rivalId ? 'Nachbarreich' : 'Heimat'}</p>
+            ${rival ? `<p>Heer: ${format(rival.soldiers)} · Befestigung: ${rival.fortification.toFixed(2)} · Beutevorrat: ${format(rival.loot)} Gold</p><p class="muted">Hauptstadt und gesamte Wirtschaftsleistung: nicht im Modell erfasst.</p><button data-world-diplomacy="${escape(rival.id)}">Diplomatie & Handel →</button>` : ''}
+            <button data-world-travel="${escape(region.id)}" ${!plan || kingdom.resources.gold<plan.gold || kingdom.resources.food<plan.food ? 'disabled' : ''}>${here ? 'Du bist hier' : plan ? `${region.id==='home' ? 'Heimreise' : 'Bereisen'} · ${plan.months} Monat(e), ${plan.gold} Gold, ${plan.food} Nahrung` : 'Reise läuft'}</button>
+          </article>`;
+        }).join('')}</div>`;
       const world = this.engine.getEcologicalStats();
       const people = this.engine.getPopulationStats();
       const movements = this.engine.getMigrationSystem().getMigrationStats();
       const famine = this.engine.getFamineSystem().getActiveFamines();
       panel.innerHTML = heading('LEBENDIGE WELT', 'Land, Klima und Bevölkerung',
-        'Aktuelle Werte aus den bestehenden Klima-, Tier-, Bevölkerungs- und Migrationssystemen.') +
+        'Aktuelle Werte aus den bestehenden Klima-, Tier-, Bevölkerungs- und Migrationssystemen.') + travelCards +
         `<div class="summary-grid">
           <article><span>Wetter</span><strong>${escape(world.climate.currentWeather)}</strong><small>${escape(world.climate.currentSeason)}</small></article>
           <article><span>Individuelle Bürger</span><strong>${format(people.total)}</strong><small>Erfasste Simulationspersonen</small></article>
@@ -2018,11 +2041,13 @@ export class KingdomGameUI {
         · Vertrauen: ${format(relations.find((r) => r.kingdomId === selectedRival.id)?.trust ?? 50)} / 100</p>
       </article>` : '';
       panel.innerHTML = heading('GESANDTSCHAFT & NACHBARN', 'Der diplomatische Hof',
-        'Verhandle mit benachbarten Reichen. Gesandtschaften kosten 350 Gold und bringen im Folgejahr eine Chance auf bessere Beziehungen.') + focusedCard +
+        'Gesandtschaften kosten 350 Gold. Im Folgejahr: Erfolg verbessert Beziehung um 10 und Vertrauen um 5; Scheitern senkt beides um 5.') + focusedCard +
+        `<p>Vertragserträge: ${format(this.engine.getDiplomaticIncome(this.player.id))} Gold/Monat zusätzlich zur Produktionsbilanz. Vertragsbruch beendet alle Abkommen mit dem Partner und kostet bei anderen Nachbarn 10 Vertrauen.</p>` +
         `<div class="build-grid">${rivals.map((rival) => {
           const relation = relations.find((entry) => entry.kingdomId === rival.id);
           const underway = missions.some((mission) => mission.targetKingdomId === rival.id);
-          const truce = treaties.find((treaty) => treaty.parties.includes(rival.id));
+          const ownTreaties = treaties.filter(treaty=>treaty.parties.includes(rival.id));
+          const truce = ownTreaties.find(treaty=>treaty.type==='non_aggression'||treaty.type==='alliance');
           return `<article class="build-card"><h3>${escape(rival.name)}</h3>
             <p>${escape(rival.description)}</p>
             <p class="eyebrow">Strategie: ${escape(this.engine!.getRivalPersonality(this.player!.id, rival.id))}</p>
@@ -2032,8 +2057,13 @@ export class KingdomGameUI {
             <button data-send-envoy="${escape(rival.id)}" ${rival.subjugated || underway ||
               kingdom.resources.gold < 350 ? 'disabled' : ''}>Gesandtschaft entsenden · 350 Gold</button>
             <button data-negotiate-truce="${escape(rival.id)}" ${rival.subjugated || truce ||
-              (relation?.relationshipValue ?? 0) < 10 || kingdom.resources.gold < 500 ? 'disabled' : ''}>
+              (relation?.relationshipValue ?? 0) < 10 || (relation?.trust ?? 0) < 40 || kingdom.resources.gold < 500 ? 'disabled' : ''}>
               ${truce ? 'Nichtangriffspakt aktiv' : 'Frieden verhandeln · 500 Gold'}</button>
+            <button data-agreement="trade" data-rival="${escape(rival.id)}" ${rival.subjugated || ownTreaties.some(t=>t.type==='trade') || (relation?.relationshipValue??0)<10 || (relation?.trust??0)<40 || kingdom.resources.gold<600 ? 'disabled' : ''}>Handelsvertrag · 600 Gold</button>
+            <p class="muted">3 Jahre, 80 Gold/Monat. Benötigt 10 Beziehung und 40 Vertrauen.</p>
+            <button data-agreement="alliance" data-rival="${escape(rival.id)}" ${rival.subjugated || ownTreaties.some(t=>t.type==='alliance') || (relation?.relationshipValue??0)<30 || (relation?.trust??0)<40 || kingdom.resources.gold<1200 ? 'disabled' : ''}>Schutzbündnis · 1.200 Gold</button>
+            <p class="muted">3 Jahre, gegenseitiger Angriffsschutz und +15 % Führung bei Überfällen; nicht stapelbar. Benötigt 30 Beziehung und 40 Vertrauen.</p>
+            ${ownTreaties.map(t=>`<p>${t.type==='trade' ? 'Handelsvertrag' : t.type==='alliance' ? 'Schutzbündnis' : 'Nichtangriffspakt'} bis ${t.expiryMonth??1}/${t.expiryYear}</p><button data-break-treaty="${escape(t.id)}">Verträge brechen · Beziehung −30, Vertrauen −40, Prestige −5</button>`).join('')}
           </article>`;
         }).join('')}</div>`;
     } else if (this.view === 'war') {
@@ -2273,6 +2303,27 @@ export class KingdomGameUI {
           this.audio.playEffect('trade');
         });
       });
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-world-travel]').forEach(button=>{
+      button.onclick=()=>void this.run(()=>{this.notify(this.requireEngine().travelWorld(this.requirePlayer().id,button.dataset.worldTravel!));});
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-world-focus]').forEach(button=>{
+      button.onclick=()=>{
+        this.root.querySelector<HTMLDialogElement>('#section-dialog')?.close();
+        const scope=this.root.querySelector<HTMLSelectElement>('#map-scope');
+        if(scope)scope.value='world';
+        this.map?.focusWorldRegion(button.dataset.worldFocus!);
+        this.updateZoomHint();
+      };
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-world-diplomacy]').forEach(button=>{
+      button.onclick=()=>{this.focusedRivalId=button.dataset.worldDiplomacy;this.navigate('diplomacy');};
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-agreement]').forEach(button=>{
+      button.onclick=()=>void this.run(()=>{this.notify(this.requireEngine().negotiateRivalAgreement(this.requirePlayer().id,button.dataset.rival!,button.dataset.agreement as 'trade'|'alliance'));});
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-break-treaty]').forEach(button=>{
+      button.onclick=()=>void this.run(()=>{this.notify(this.requireEngine().breakRivalTreaty(this.requirePlayer().id,button.dataset.breakTreaty!));});
     });
     this.bindCouncilAutomatic(panel);
     panel.querySelectorAll<HTMLButtonElement>('[data-council-choice]').forEach((button) => {

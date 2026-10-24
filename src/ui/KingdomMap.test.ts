@@ -13,7 +13,7 @@ function mapFixture() {
     observer: { disconnect: vi.fn() }
   });
   for (const name of ['settlements', 'retroScenery', 'neighbors', 'animation',
-    'world', 'atmosphere', 'regionLayer', 'reliefLayer']) {
+    'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer']) {
     map[name] = { visible: true, children: [{}] };
   }
   return map;
@@ -45,8 +45,10 @@ describe('map lifecycle and view transitions', () => {
     expect(map.reliefLayer.visible).toBe(false);
     expect(map.settlements.visible).toBe(false);
     expect(map.neighbors.visible).toBe(true);
+    expect(map.worldMarker.visible).toBe(true);
     map.setMapScope('home');
     expect(map.settlements.visible).toBe(true);
+    expect(map.worldMarker.visible).toBe(false);
     expect(map.animation.visible).toBe(true);
     expect(map.retroScenery.visible).toBe(false);
     expect(map.app.canvas.dataset.zoomLevel).toBe('dorf');

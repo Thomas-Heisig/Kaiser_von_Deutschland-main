@@ -50,6 +50,120 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('persists paid travel, discovers the destination and migrates old saves', async()=>{
+    const engine=await campaign(),player=engine.getPlayers()[0];
+    const gold=player.kingdom.resources.gold,food=player.kingdom.resources.food;
+    expect(engine.getStrategyWorld(player.id).regions).toHaveLength(4);
+    engine.travelWorld(player.id,'rival:ostmark');
+    expect(player.kingdom.resources.gold).toBe(gold-150);
+    expect(player.kingdom.resources.food).toBe(food-50);
+    expect(()=>engine.travelWorld(player.id,'rival:nordland')).toThrow('bereits');
+    await engine.saveGame('world-travel');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);
+    await restored.loadGame('world-travel');
+    expect(restored.getStrategyWorld(player.id).journey?.remaining).toBe(1);
+    await restored.advanceMonth();
+    const world=restored.getStrategyWorld(player.id);
+    expect(world.currentRegion).toBe('rival:ostmark');
+    expect(world.regions.find(r=>r.id==='rival:ostmark')?.discovered).toBe(true);
+    expect(restored.getChronicle().some(e=>e.message.includes('Reise abgeschlossen'))).toBe(true);
+    const data:any=await localforage.getItem('kaiser-ii-save-world-travel');
+    const {decodeSave}=await import('./SaveCodec');const decoded:any=await decodeSave(data);
+    decoded.strategyWorlds[player.id].journey.remaining=-1;
+    await localforage.setItem('kaiser-ii-save-bad-world',decoded);
+    await expect(restored.loadGame('bad-world')).rejects.toThrow('Strategiewelt');
+    expect(restored.getStrategyWorld(player.id).currentRegion).toBe('rival:ostmark');
+    delete decoded.strategyWorlds;await localforage.setItem('kaiser-ii-save-old-world',decoded);
+    await restored.loadGame('old-world');
+    expect(restored.getStrategyWorld(player.id).currentRegion).toBe('home');
+  });
+
+  it('saves trade and defensive alliances and applies a single consequential treaty breach',async()=>{
+    const engine=await campaign(),player=engine.getPlayers()[0];
+    player.kingdom.resources.gold=10000;
+    const relation=engine.getRivalRelations(player.id).find(r=>r.kingdomId==='ostmark')!;
+    relation.relationshipValue=40;
+    engine.negotiateRivalAgreement(player.id,'ostmark','trade');
+    expect(()=>engine.attackRival(player.id,'ostmark')).toThrow('Verträge');
+    expect(()=>engine.beginCampaignSiege(player.id,'ostmark')).toThrow('Verträge');
+    engine.negotiateRivalAgreement(player.id,'ostmark','alliance');
+    expect(engine.getRivalTreaties(player.id)).toHaveLength(2);
+    expect(engine.getDiplomaticIncome(player.id)).toBe(80);
+    expect(engine.getAllianceDefenseBonus(player.id)).toBe(0.15);
+    expect(engine.hasRivalTruce(player.id,'ostmark')).toBe(true);
+    expect(()=>engine.attackRival(player.id,'ostmark')).toThrow('Nichtangriffspakt');
+    expect(()=>engine.negotiateRivalAgreement(player.id,'ostmark','trade')).toThrow('bereits');
+    await engine.saveGame('contracts');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('contracts');
+    expect(restored.getDiplomaticIncome(player.id)).toBe(80);
+    const id=restored.getRivalTreaties(player.id)[0].id;
+    restored.breakRivalTreaty(player.id,id);
+    expect(restored.getRivalTreaties(player.id)).toHaveLength(0);
+    expect(restored.getDiplomaticIncome(player.id)).toBe(0);
+    expect(restored.getAllianceDefenseBonus(player.id)).toBe(0);
+    expect(restored.getRivalRelations(player.id).find(r=>r.kingdomId==='ostmark')).toMatchObject({relationshipValue:30,trust:10});
+    expect(restored.getRivalRelations(player.id).find(r=>r.kingdomId==='nordland')?.trust).toBe(40);
+    expect(()=>restored.breakRivalTreaty(player.id,id)).toThrow('Kein aktiver');
+    expect(()=>restored.negotiateRivalAgreement(player.id,'ostmark','trade')).toThrow('Vertrauen');
+    expect(()=>restored.negotiateRivalTruce(player.id,'ostmark')).toThrow('Vertrauen');
+  });
+
+  it('keeps world travel and contracts isolated to the active hotseat player',async()=>{
+    const engine=new GameEngine({startingYear:1200,campaignId:'frei',randomEvents:false,enableWiki:false});engines.push(engine);
+    const first=engine.addPlayer({name:'Anna',kingdomName:'West',gender:'other'});
+    const second=engine.addPlayer({name:'Berta',kingdomName:'Ost',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    for(const player of [first,second]) {
+      player.kingdom.resources.gold=10000;
+      engine.getRivalRelations(player.id).find(r=>r.kingdomId==='ostmark')!.relationshipValue=40;
+    }
+    const gold=second.kingdom.resources.gold;
+    expect(()=>engine.travelWorld(second.id,'rival:ostmark')).toThrow('Nicht am Zug');
+    expect(()=>engine.negotiateRivalAgreement(second.id,'ostmark','trade')).toThrow('Nicht am Zug');
+    expect(()=>engine.attackRival(second.id,'ostmark')).toThrow('Nicht am Zug');
+    expect(()=>engine.attackPlayer(second.id,first.id)).toThrow('Nicht am Zug');
+    expect(second.kingdom.resources.gold).toBe(gold);
+    engine.travelWorld(first.id,'rival:ostmark');
+    engine.negotiateRivalAgreement(first.id,'ostmark','trade');
+    const treaty=engine.getRivalTreaties(first.id)[0];
+    expect(()=>engine.breakRivalTreaty(second.id,treaty.id)).toThrow('Nicht am Zug');
+    expect(engine.getStrategyWorld(second.id).journey).toBeNull();
+    expect(engine.getDiplomaticIncome(second.id)).toBe(0);
+  });
+
+  it('ends trade when the rival raids without blaming the player for the breach',async()=>{
+    const engine=new GameEngine({startingYear:1200,campaignId:'frei',randomEvents:true,enableWiki:false});engines.push(engine);
+    const player=engine.addPlayer({name:'Anna',kingdomName:'Handelsreich',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    player.kingdom.resources.gold=10000;
+    engine.getRivalRelations(player.id).find(r=>r.kingdomId==='raubritter')!.relationshipValue=20;
+    engine.negotiateRivalAgreement(player.id,'raubritter','trade');
+    const prestige=player.stats.prestige;
+    vi.mocked(Math.random).mockReturnValue(0);
+    await engine.advanceMonth();
+    expect(engine.getBattleReports(player.id).some(r=>r.kind==='raid' && r.rivalId==='raubritter')).toBe(true);
+    expect(engine.getDiplomaticIncome(player.id)).toBe(0);
+    expect(player.stats.prestige).toBeGreaterThanOrEqual(prestige); // ordinary monthly prestige still accrues
+    expect(engine.getChronicle().some(e=>e.message.includes('bricht durch den Überfall'))).toBe(true);
+  });
+
+  it('pays trade income monthly and expires a mid-year agreement exactly 36 months later',async()=>{
+    const engine=await campaign(),baseline=await campaign();
+    const player=engine.getPlayers()[0],other=baseline.getPlayers()[0];
+    for(const p of [player,other]) {p.kingdom.resources.gold=100000;p.kingdom.resources.food=100000;}
+    for(let i=0;i<6;i++){await engine.advanceMonth();await baseline.advanceMonth();}
+    engine.getRivalRelations(player.id).find(r=>r.kingdomId==='ostmark')!.relationshipValue=20;
+    engine.negotiateRivalAgreement(player.id,'ostmark','trade');
+    other.kingdom.resources.gold-=600;
+    await engine.advanceMonth();await baseline.advanceMonth();
+    expect(player.kingdom.resources.gold-other.kingdom.resources.gold).toBeCloseTo(80,6);
+    for(let i=0;i<34;i++)await engine.advanceMonth();
+    expect(engine.getDiplomaticIncome(player.id)).toBe(80);
+    await engine.advanceMonth();
+    expect(engine.getCurrentMonth()).toBe(7);
+    expect(engine.getDiplomaticIncome(player.id)).toBe(0);
+  });
+
   it('automates opted-in events, persists the preference and lets manual decisions pause again', async () => {
     const engine = new GameEngine({startingYear:1200,randomEvents:true,enableWiki:false});
     engines.push(engine);
@@ -340,6 +454,8 @@ describe('Playable campaign integration', (): void => {
     await restored.loadGame('active-siege');
     expect(restored.getCampaignSiege(ruler.id)?.rivalId).toBe(rival.id);
     expect(restored.getCampaignSiege(ruler.id)?.duration).toBe(0);
+    expect(()=>restored.negotiateRivalAgreement(ruler.id,rival.id,'alliance')).toThrow('Belagerung');
+    expect(()=>restored.negotiateRivalTruce(ruler.id,rival.id)).toThrow('Belagerung');
     await restored.advanceMonth();
     expect(restored.getCampaignSiege(ruler.id)?.duration).toBe(5);
     expect(restored.getRivals(ruler.id)[0].fortification).toBe(before);

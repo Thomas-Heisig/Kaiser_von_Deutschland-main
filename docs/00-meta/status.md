@@ -2,6 +2,10 @@
 **Stand 24.10.2026 · Codebasis: main · Live unter https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/**
 
 ## Belegt
+- Persistente Strategiewelt mit Reisen, Entdeckung und Regionsfokus; 20 Nachbarn und 320/768/1024-px-Oberfläche automatisiert geprüft. Handelsverträge, Bündnisse, nachvollziehbarer Vertragsbruch und jährliche Rivalenreaktionen. [Spezifikation](../05-technical-architecture/STRATEGY_WORLD.md).
+- Vier friedliche Kampagnenwege bis Sieg mit Save/Load getestet; Tests verwenden zusätzliche Startressourcen und ersetzen keine Balance-Abnahme.
+- [Lastmessung](../reports/strategy-population-2026-10-24.md) mit 1.000/5.000/20.000 Bürgern, kompakteres rückwärtskompatibles Speicherformat. 20.000 Bürger benötigen weiterhin etwa 380 ms pro Monat inklusive Autosave; Worker und Mobilmessungen bleiben offen.
+- Gemeinsames Epochenlayout ohne Seitenscrollen, virtueller Schreibtisch, sichtbare Flüsse; Lagebericht mit Tutorial, Quellen zur Jahresgeschichte und optionaler Ereignisautomatik (PR #96/#97).
 - Standardspiel `src/main.ts` → `KingdomGameUI` → `GameEngine`, Build mit Vite/TypeScript.
 - **Öffentlich spielbar via GitHub Pages** – HTTPS, PWA, Offline-Modus bestätigt.
 - Lokaler Hotseat (2–4), Siedlung, Wirtschaft, Forschung, Bürgeraufträge, Ratsdialoge, Krieg, Kultur, Musik-/Filmmenü.
@@ -22,7 +26,7 @@
 
 Die ursprüngliche README nennt unter anderem 15/35 Rollen, 23/68 Gebäude, 24 Technologien, 27/70 historische Ereignisse, sieben/zehn Religionen sowie zahlreiche spezialisierte Simulationssysteme. Diese Zahlen stammen aus unterschiedlichen historischen Entwicklungsständen und wurden **nicht als funktionsfähiger Umfang der aktuellen Spieloberfläche verifiziert**. Für jede Gruppe stehen jetzt konkrete Nachweis- und Integrationsaufgaben in [TODO](../../TODO.md) und [Roadmap](roadmap.md).
 
-Im neuesten `main` ist die gemeinsame Einstellungsoberfläche mit fünf Tabs bereits in CI und Browser-Smoke geprüft. Der HTTPS-Pages-Workflow scheiterte weiterhin an GitHub-Berechtigungen.
+Die gemeinsame Einstellungsoberfläche mit fünf Tabs ist in CI und Browser-Smoke geprüft. Der frühere Pages-Berechtigungsfehler ist behoben; die Veröffentlichung erfolgt über den Vite-Workflow auf GitHub Pages.
 
 ## Aktuelle Priorität
 [TODO](../../TODO.md) (P0 zuerst), [Roadmap](roadmap.md) und [Changelog](../../CHANGELOG.md). Vollständige historische Ideen: [README-Backlog](backlog-from-readme.md). Aktive Dokumente sind maßgeblich, Archivschnappschüsse bleiben lesbar.

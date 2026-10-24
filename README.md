@@ -2,7 +2,7 @@
 
 Historische Strategiesimulation mit einer spielbaren, lokalen Aufbaukampagne, Gesellschafts- und Bürgerentwicklung sowie optionalen KI-Hilfen. **Aktueller Einstieg:** `src/main.ts` → `src/ui/KingdomGameUI.ts` → `src/core/GameEngine.ts`. Ältere Frameworks und Planungsstände sind nicht automatisch im Hauptspiel enthalten.
 
-> **Stand 18.10.2026:** Quellcode und Builds auf `main` geprüft. CI und Chromium-Smoke bestanden.
+> **Stand 24.10.2026:** Einheitliche Epochenoberfläche mit Schreibtisch, Fluss-/Reliefkarte und Lagebericht. Neue Strategiewelt mit Reisen und Verträgen; Umfang und Grenzen im [Projektstatus](docs/00-meta/status.md).
 
 ## Spielen
 
@@ -38,10 +38,11 @@ npm run preview
 
 ## Im aktiven Hauptspiel verfügbar
 
-## Im aktiven Hauptspiel verfügbar
-
 - Einzelspieler und lokaler Hotseat mit 2–4 Herrschern (kein Online-Mehrspieler).
 - Aufbauwirtschaft, Markt, Forschung, Handel/Schifffahrt, Diplomatie, Kultur und Hofverwaltung; Epoche und Startjahr wählbar.
+- Strategiewelt mit allen Nachbarn, Regionsfokus, bezahlten Reisen, Entdeckung und gespeicherten Aufenthaltsorten. [Regeln und Grenzen](docs/05-technical-architecture/STRATEGY_WORLD.md).
+- Handelsverträge, Schutzbündnisse, Vertragsbruch und reaktive Rivalen; Kaiserkrone auch durch zwei Bündnisse ohne Eroberung erreichbar.
+- Sichtbarer Lagebericht: Meldungen, Tutorialfortschritt, belegte Jahresgeschichte und freiwillige automatische Ratsentscheidungen mit gespeichertem Häkchen.
 - Historisch begrenzte Bürgeraufträge mit Kosten, mehrmonatigem Fortschritt und Lebensläufen; im Spiel über **⚒ Bürgeraufträge** erreichbar.
 - Ratsdilemmata: Wiederkehrende Ereignisse merken sich den früheren Delegierten, wenn er lebt. Sonst wird nach fünf Sekunden ein zufälliger lebender Erwachsener **vorausgewählt**. Die eigentliche Entscheidung verlangt weiterhin Delegation durch den Spieler; Berufs- und Persönlichkeitsmerkmale beeinflussen sie.
 - Familien: reale Kinder bei Schwangerschaftsende, Eltern-Kind-Relationen, einfache Schwangerschaftsbedingungen und historisch angelehnte Vornamen. Komplexe Partnervermittlung, Erbschaften und lange Generationenbalance fehlen.

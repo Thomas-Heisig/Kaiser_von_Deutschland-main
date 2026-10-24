@@ -5,6 +5,7 @@ import { Player, PlayerCreationData } from './Player';
 import { EconomySystem } from './Economy';
 import { EventSystem } from './Events';
 import { CouncilDecisionSystem, CouncilSnapshot } from './CouncilDecisionSystem';
+import { StrategyWorld, type StrategyWorldSnapshot } from './StrategyWorld';
 import { TitleSystem } from '../data/Titles';
 import { PolicySystem } from './PolicySystem';
 import { OllamaService } from './OllamaService';
@@ -202,6 +203,7 @@ export class GameEngine {
   private turnIndex: number = 0;
   private technologySystems: Map<string, PlayerTechnologySystem> = new Map();
   private council: CouncilDecisionSystem = new CouncilDecisionSystem();
+  private strategyWorlds = new Map<string, StrategyWorld>();
   private rivalDiplomacy = new Map<string, DiplomacySystem>();
   private festivalsHeld = new Map<string, number>();
   private warFinanceByPlayer = new Map<string, WarFinancingSystem>();
@@ -765,7 +767,12 @@ export class GameEngine {
         this.policySystem.applyYearlyEffects(player);
       }
       this.roadmapFeaturesManager.update(this.currentYear, 1);
-      for (const development of this.warfare.processYear(this.currentYear)) {
+      for (const development of this.warfare.processYear(this.currentYear, playerId => {
+        const kingdom = this.requirePlayer(playerId).kingdom;
+        return {gold:kingdom.resources.gold, tradeRoutes:kingdom.getActiveTradeRoutes().length,
+          researched:this.requireTechnologySystem(playerId).getResearchedTechnologyIds().length,
+          soldiers:CampaignWarfareSystem.fieldSoldiers(kingdom), difficulty:this.config.difficulty};
+      })) {
         this.emit('rivalDeveloped', development);
       }
       this.checkForPromotions();
@@ -907,15 +914,33 @@ export class GameEngine {
     const watch = this.borderWatch.get(player.id) ?? 0;
     const commander = this.getCommanderModifiers(player.id);
     const defenseModifiers: PowerModifiers = {
-      ...commander, commanderBonus: Math.min(0.5, (commander.commanderBonus ?? 0) + watch)
+      ...commander, commanderBonus: Math.min(0.5, (commander.commanderBonus ?? 0) + watch + this.getAllianceDefenseBonus(player.id))
     };
     this.borderWatch.delete(player.id);
     const raid = this.warfare.processMonth(player.id, player.kingdom,
       { year: this.currentYear, month: this.currentMonth },
       { raids: this.config.randomEvents, modifiers: defenseModifiers,
         protectedByTreaty: (rivalId: string): boolean => this.hasRivalTruce(player.id, rivalId) });
-    if (raid) this.emit('battleResolved', { report: raid });
+    if (raid) {
+      const diplomacy = this.requireRivalDiplomacy(player.id);
+      const contracts = this.getRivalTreaties(player.id).filter(t=>raid.rivalId && t.parties.includes(raid.rivalId));
+      if (contracts.length) {
+        diplomacy.breakTreaty(contracts[0].id);
+        for (const treaty of contracts) treaty.active = false;
+        const message = `${raid.attacker} bricht durch den Überfall den Handelsvertrag. Der Vertragsertrag endet; Beziehung und Vertrauen sinken. Dein Prestige bleibt unverändert.`;
+        this.recordChronicle(message,player.id);
+        this.emit('diplomacyEvent',{playerId:player.id,message,recorded:true});
+      }
+      this.emit('battleResolved', { report: raid });
+    }
     this.processRivalDiplomacy(player);
+    const arrival = this.requireStrategyWorld(player.id).processMonth(this.getRivals(player.id).map(r=>r.id));
+    if (arrival) {
+      const name = arrival.rivalId ? this.getRivals(player.id).find(r=>r.id===arrival.rivalId)?.name : player.kingdom.name;
+      const message = `Reise abgeschlossen: ${name ?? arrival.id}. Gelände erkundet: ${arrival.terrain}.`;
+      this.recordChronicle(message,player.id);
+      this.emit('worldEvent',{playerId:player.id,message});
+    }
 
     const technology = this.requireTechnologySystem(player.id);
     const baseResearch = player.kingdom.infrastructure.schools * 10 + player.kingdom.infrastructure.universities * 25;
@@ -985,6 +1010,7 @@ export class GameEngine {
       this.warfare.removePlayer(playerId);
       this.technologySystems.delete(playerId);
       this.rivalDiplomacy.delete(playerId);
+      this.strategyWorlds.delete(playerId);
       this.warFinanceByPlayer.delete(playerId);
       this.warFinanceUsed.delete(playerId);
       this.campaignChapters.delete(playerId);
@@ -1235,6 +1261,7 @@ export class GameEngine {
       dynamicGameView: this.dynamicGameView.createSnapshot(),
       warfare: this.warfare.serialize(),
       council: this.council.serialize(),
+      strategyWorlds: Object.fromEntries(Array.from(this.strategyWorlds,([id,world])=>[id,world.serialize()])),
       rivalDiplomacy: Object.fromEntries(Array.from(this.rivalDiplomacy, ([id, system]) => [id, system.serialize()])),
       festivalsHeld: Array.from(this.festivalsHeld),
       espionage: this.espionageSystem.serialize(),
@@ -1330,8 +1357,18 @@ export class GameEngine {
     }
     const restoredCouncil = new CouncilDecisionSystem();
     if (saveData.council !== undefined) restoredCouncil.load(saveData.council as CouncilSnapshot);
+    const restoredWorlds = new Map<string,StrategyWorld>();
+    if (saveData.strategyWorlds !== undefined) {
+      if (!saveData.strategyWorlds || typeof saveData.strategyWorlds !== 'object' || Array.isArray(saveData.strategyWorlds))
+        throw new Error('Beschädigte Strategiewelten.');
+      for (const [id,snapshot] of Object.entries(saveData.strategyWorlds)) {
+        if (!restoredPlayers.some((p:Player)=>p.id===id)) throw new Error('Strategiewelt ohne zugehörigen Spieler.');
+        restoredWorlds.set(id,StrategyWorld.restore(snapshot as StrategyWorldSnapshot));
+      }
+    }
     this.pauseGame();
     this.council = restoredCouncil;
+    this.strategyWorlds = restoredWorlds;
     this.players = new Map(restoredPlayers.map((player: Player) => [player.id, player]));
     this.warfare = restoredWarfare;
     this.technologySystems = restoredTechnology;
@@ -1681,7 +1718,8 @@ export class GameEngine {
     return campaignGoals(this.getCampaignId(), player.kingdom,
       this.requireTechnologySystem(playerId).getResearchedTechnologyIds().length,
       this.warfare.subjugatedCount(playerId), player.kingdom.getActiveTradeRoutes().length,
-      this.getRivalTreaties(playerId).filter((treaty) => treaty.type === 'non_aggression').length);
+      this.getRivalTreaties(playerId).filter((treaty) => treaty.type === 'non_aggression' || treaty.type === 'alliance').length,
+      this.getRivalTreaties(playerId).filter((treaty) => treaty.type === 'alliance').length);
   }
 
   // === Warfare (v3.0) ===
@@ -1801,28 +1839,29 @@ export class GameEngine {
   /** An active non-aggression treaty blocks raids and offensive campaigns. */
   public hasRivalTruce(playerId: string, rivalId: string): boolean {
     this.requirePlayer(playerId);
-    return this.requireRivalDiplomacy(playerId).getActiveTreaties().some((treaty) =>
-      treaty.type === 'non_aggression' && treaty.parties.includes(playerId) &&
-      treaty.parties.includes(rivalId) && (treaty.expiryYear === undefined ||
-        treaty.expiryYear > this.currentYear));
+    return this.getRivalTreaties(playerId).some((treaty) =>
+      (treaty.type === 'non_aggression' || treaty.type === 'alliance') && treaty.parties.includes(playerId) &&
+      treaty.parties.includes(rivalId));
   }
 
   public getRivalTreaties(playerId: string) {
     this.requirePlayer(playerId);
     return this.requireRivalDiplomacy(playerId).getActiveTreaties()
-      .filter((treaty) => treaty.expiryYear === undefined || treaty.expiryYear > this.currentYear);
+      .filter((treaty) => treaty.expiryYear === undefined ||
+        treaty.expiryYear * 12 + (treaty.expiryMonth ?? 1) > this.currentYear * 12 + this.currentMonth);
   }
 
   public negotiateRivalTruce(playerId: string, rivalId: string): string {
     const player = this.requirePlayer(playerId);
     if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    if (this.getCampaignSiege(playerId)?.rivalId === rivalId) throw new Error('Beende zuerst die laufende Belagerung.');
     const rival = this.warfare.getRivals(playerId).find((entry) => entry.id === rivalId && !entry.subjugated);
     if (!rival) throw new Error('Mit diesem Reich ist kein Pakt möglich.');
     if (this.hasRivalTruce(playerId, rivalId)) throw new Error('Es besteht bereits ein Nichtangriffspakt.');
     const diplomacy = this.requireRivalDiplomacy(playerId);
     const relation = diplomacy.getRelation(rivalId);
-    if (!relation || relation.relationshipValue < 10) {
-      throw new Error('Mindestens 10 Beziehungspunkte erforderlich. Entsende zunächst Gesandte.');
+    if (!relation || relation.relationshipValue < 10 || relation.trust < 40) {
+      throw new Error('Mindestens 10 Beziehungspunkte und 40 Vertrauen erforderlich. Entsende zunächst Gesandte.');
     }
     const cost = 500;
     if (player.kingdom.resources.gold < cost) throw new Error('Für den Friedenspakt fehlen 500 Gold.');
@@ -1830,11 +1869,69 @@ export class GameEngine {
     player.kingdom.resources.gold -= cost;
     diplomacy.proposeTreaty({
       type: 'non_aggression', parties: [playerId, rivalId],
-      signedYear: this.currentYear, expiryYear: this.currentYear + 2,
+      signedYear: this.currentYear, expiryYear: this.currentYear + 2, expiryMonth: this.currentMonth,
       terms: {}, active: true
     });
     const message = `Nichtangriffspakt mit ${rival.name} geschlossen (500 Gold, zwei Jahre).`;
     this.emit('diplomacyEvent', { playerId, message });
+    return message;
+  }
+
+  public getAllianceDefenseBonus(playerId: string): number {
+    return this.getRivalTreaties(playerId).some(t => t.type === 'alliance') ? 0.15 : 0;
+  }
+
+  public getDiplomaticIncome(playerId: string): number {
+    return this.getRivalTreaties(playerId).filter(t => t.type === 'trade')
+      .reduce((sum, t) => sum + Math.floor((t.terms.goldPerYear ?? 0) / 12), 0);
+  }
+
+  public negotiateRivalAgreement(playerId: string, rivalId: string, type: 'trade' | 'alliance'): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    if (this.getCampaignSiege(playerId)?.rivalId === rivalId) throw new Error('Beende zuerst die laufende Belagerung.');
+    if (type !== 'trade' && type !== 'alliance') throw new Error('Unbekannte Vertragsart.');
+    const rival = this.getRivals(playerId).find(r => r.id === rivalId && !r.subjugated);
+    if (!rival) throw new Error('Dieses Nachbarreich ist nicht verfügbar.');
+    const diplomacy = this.requireRivalDiplomacy(playerId);
+    const relation = diplomacy.getRelation(rivalId);
+    const minimum = type === 'trade' ? 10 : 30;
+    const cost = type === 'trade' ? 600 : 1200;
+    if (!relation || relation.relationshipValue < minimum || relation.trust < 40)
+      throw new Error(`Mindestens ${minimum} Beziehungspunkte und 40 Vertrauen erforderlich.`);
+    if (this.getRivalTreaties(playerId).some(t => t.type === type && t.parties.includes(rivalId)))
+      throw new Error('Dieser Vertrag besteht bereits.');
+    if (player.kingdom.resources.gold < cost) throw new Error(`Für den Vertrag fehlen ${cost} Gold.`);
+    player.kingdom.resources.gold -= cost;
+    diplomacy.proposeTreaty({type,parties:[playerId,rivalId],signedYear:this.currentYear,
+      expiryYear:this.currentYear + 3,expiryMonth:this.currentMonth,active:true,
+      terms:type === 'trade' ? {goldPerYear:960} : {militarySupport:true}});
+    const message = `${type === 'trade' ? 'Handelsvertrag' : 'Schutzbündnis'} mit ${rival.name}: ${cost} Gold, gültig bis ${this.currentMonth}/${this.currentYear + 3}. ` +
+      (type === 'trade' ? '80 Gold Vertragsertrag je Monat.' : 'Keine gegenseitigen Angriffe; +15 % Führung bei der Überfallabwehr (nicht stapelbar).');
+    this.recordChronicle(message,playerId);
+    this.emit('diplomacyEvent',{playerId,message,recorded:true});
+    return message;
+  }
+
+  public breakRivalTreaty(playerId: string, treatyId: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    const treaty = this.getRivalTreaties(playerId).find(t => t.id === treatyId && t.parties.includes(playerId));
+    if (!treaty) throw new Error('Kein aktiver eigener Vertrag gefunden.');
+    const diplomacy = this.requireRivalDiplomacy(playerId);
+    diplomacy.breakTreaty(treatyId);
+    // Breaking any agreement also ends all agreements with that partner.
+    const partner = treaty.parties.find(id => id !== playerId)!;
+    for (const other of diplomacy.getActiveTreaties()) {
+      if (other.parties.includes(partner)) other.active = false;
+    }
+    for (const relation of diplomacy.getAllRelations()) {
+      if (relation.kingdomId !== partner) relation.trust = Math.max(0, relation.trust - 10);
+    }
+    player.updateStats({prestige:-5});
+    const message = 'Vertragsbruch: Alle Verträge mit diesem Nachbarn enden. Beziehung −30, Vertrauen −40; andere Nachbarn verlieren 10 Vertrauen. Prestige −5.';
+    this.recordChronicle(message,playerId);
+    this.emit('diplomacyEvent',{playerId,message,recorded:true});
     return message;
   }
 
@@ -1878,7 +1975,7 @@ export class GameEngine {
 
   private processRivalDiplomacy(player: Player): void {
     const diplomacy = this.requireRivalDiplomacy(player.id);
-    // Missions use the existing annual processing; trade and formal treaties remain future work.
+    player.kingdom.resources.gold += this.getDiplomaticIncome(player.id);
     if (this.currentMonth === 12) {
       const active = diplomacy.getActiveMissions().map((mission) => mission.id);
       diplomacy.advanceYear(this.currentYear + 1);
@@ -1905,6 +2002,40 @@ export class GameEngine {
   public getRivals(playerId: string): RivalRealm[] {
     this.requirePlayer(playerId);
     return this.warfare.getRivals(playerId, this.currentYear);
+  }
+
+  private requireStrategyWorld(playerId: string): StrategyWorld {
+    this.requirePlayer(playerId);
+    let world = this.strategyWorlds.get(playerId);
+    if (!world) {
+      world = new StrategyWorld(this.config.startingYear);
+      this.strategyWorlds.set(playerId,world);
+    }
+    world.sync(this.getRivals(playerId).map(r=>r.id));
+    return world;
+  }
+
+  public getStrategyWorld(playerId: string) {
+    return this.requireStrategyWorld(playerId).overview(this.getRivals(playerId).map(r=>r.id));
+  }
+
+  public getWorldTravelPlan(playerId: string, destination: string) {
+    return this.requireStrategyWorld(playerId).plan(destination,this.getRivals(playerId).map(r=>r.id));
+  }
+
+  public travelWorld(playerId: string, destination: string): string {
+    const player = this.requirePlayer(playerId);
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    const plan = this.getWorldTravelPlan(playerId,destination);
+    if (player.kingdom.resources.gold < plan.gold || player.kingdom.resources.food < plan.food)
+      throw new Error('Für die Reise fehlen Gold oder Nahrung.');
+    this.requireStrategyWorld(playerId).travel(destination,this.getRivals(playerId).map(r=>r.id));
+    player.kingdom.resources.gold -= plan.gold;
+    player.kingdom.resources.food -= plan.food;
+    const message = `Reise begonnen: ${plan.months} Monat(e), ${plan.gold} Gold und ${plan.food} Nahrung. Die Verwaltung deines Reiches bleibt erreichbar.`;
+    this.recordChronicle(message,playerId);
+    this.emit('worldEvent',{playerId,message});
+    return message;
   }
 
   /**
@@ -1935,6 +2066,8 @@ export class GameEngine {
     if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
     if (this.getCampaignSiege(playerId)) throw new Error('Ein Heer kann nur eine Belagerung gleichzeitig führen.');
     if (this.hasRivalTruce(playerId, rivalId)) throw new Error('Ein Nichtangriffspakt verhindert eine Belagerung.');
+    if (this.getRivalTreaties(playerId).some(t => t.parties.includes(rivalId)))
+      throw new Error('Beende zuerst die Verträge mit diesem Nachbarn im diplomatischen Hof.');
     const rival = this.warfare.getRivals(playerId).find((entry) => entry.id === rivalId && !entry.subjugated);
     if (!rival) throw new Error('Kein belagerbares Ziel.');
     if (CampaignWarfareSystem.fieldSoldiers(player.kingdom) < 40) throw new Error('Mindestens 40 Soldaten benötigt.');
@@ -2095,7 +2228,10 @@ export class GameEngine {
    * @throws Error if supplies, soldiers or the monthly campaign limit prevent the attack.
    */
   public attackRival(playerId: string, rivalId: string): BattleReport {
+    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
     if (this.hasRivalTruce(playerId, rivalId)) throw new Error('Ein Nichtangriffspakt verbietet diesen Feldzug.');
+    if (this.getRivalTreaties(playerId).some(t => t.parties.includes(rivalId)))
+      throw new Error('Beende zuerst die Verträge mit diesem Nachbarn im diplomatischen Hof.');
     const player = this.requirePlayer(playerId);
     const report = this.warfare.attackRival(playerId, player.kingdom, rivalId,
       { year: this.currentYear, month: this.currentMonth }, this.getCommanderModifiers(playerId));
@@ -2112,6 +2248,7 @@ export class GameEngine {
    * @throws Error for invalid targets or missing supplies.
    */
   public attackPlayer(attackerId: string, defenderId: string): BattleReport {
+    if (this.isHotseat() && this.getActivePlayer().id !== attackerId) throw new Error('Nicht am Zug.');
     const attacker = this.requirePlayer(attackerId);
     const defender = this.requirePlayer(defenderId);
     const report = this.warfare.attackPlayer(

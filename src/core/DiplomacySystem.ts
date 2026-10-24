@@ -19,6 +19,7 @@ export interface Treaty {
   parties: string[]; // kingdom IDs
   signedYear: number;
   expiryYear?: number;
+  expiryMonth?: number;
   terms: {
     goldPerYear?: number;
     tradeBonus?: number;
@@ -135,7 +136,7 @@ export class DiplomacySystem {
 
   // Treaties and Alliances
   public proposeTreaty(treaty: Omit<Treaty, 'id'>): string {
-    const id = `treaty_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `treaty_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${this.treaties.size}`;
     this.treaties.set(id, { ...treaty, id });
     
     // Update relations for treaty parties
@@ -158,7 +159,7 @@ export class DiplomacySystem {
 
   public breakTreaty(id: string): void {
     const treaty = this.treaties.get(id);
-    if (treaty) {
+    if (treaty?.active) {
       treaty.active = false;
       treaty.parties.forEach(partyId => {
         if (partyId !== this.kingdomId) {
@@ -291,7 +292,7 @@ export class DiplomacySystem {
 
   // Diplomatic Missions
   public sendMission(mission: Omit<DiplomaticMission, 'id' | 'success'>): string {
-    const id = `mission_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `mission_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${this.missions.size}`;
     this.missions.set(id, { ...mission, id, success: null });
     return id;
   }
@@ -306,13 +307,15 @@ export class DiplomacySystem {
 
   public completeMission(missionId: string, success: boolean, outcome?: DiplomaticMission['outcome']): void {
     const mission = this.missions.get(missionId);
-    if (mission) {
+    if (mission && mission.success === null) {
       mission.success = success;
       mission.outcome = outcome;
       
-      if (success && outcome?.relationshipChange) {
+      if (outcome?.relationshipChange) {
         this.updateRelationship(mission.targetKingdomId, outcome.relationshipChange);
       }
+      const relation = this.relations.get(mission.targetKingdomId);
+      if (relation) relation.trust = Math.max(0, Math.min(100, relation.trust + (success ? 5 : -5)));
     }
   }
 
@@ -322,7 +325,8 @@ export class DiplomacySystem {
     
     // Check for expired treaties
     this.treaties.forEach(treaty => {
-      if (treaty.expiryYear && treaty.expiryYear <= year) {
+      if (treaty.expiryYear !== undefined && (treaty.expiryYear < year ||
+          (treaty.expiryYear === year && (treaty.expiryMonth ?? 1) === 1))) {
         treaty.active = false;
       }
     });
