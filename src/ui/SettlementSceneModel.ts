@@ -3,6 +3,16 @@ import type { ModernizationId } from '../core/ModernizationProjects';
 
 export type DistrictCategory = 'versorgung' | 'stadt' | 'bildung' | 'wehr';
 export type DistrictFilter = 'alle' | DistrictCategory;
+/** Early campaigns reuse saved infrastructure slots with period-neutral functions. */
+export function earlyBuildingName(type: keyof KingdomInfrastructure, year: number, fallback: string): string {
+  if (year >= 500) return fallback;
+  const names: Partial<Record<keyof KingdomInfrastructure, string>> = {
+    churches: 'Kultstätte', castles: 'Befestigter Sitz', universities: 'Lehrstätte',
+    schools: 'Lernhaus', guildhalls: 'Handwerkshaus', hospitals: 'Heilstätte',
+    barracks: 'Wachlager', taverns: 'Versammlungshaus', ports: 'Anlegestelle'
+  };
+  return names[type] ?? fallback;
+}
 export interface SettlementDistrict {
   type: keyof KingdomInfrastructure;
   name: string;

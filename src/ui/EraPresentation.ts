@@ -4,6 +4,8 @@ export function eraPresentation(year: number) {
   if (year >= 1945) return { id: 'modern', title: 'Ein neuer Anfang', desk: 'Regierungsbüro', tool: '▤', object: 'Aufbau & Gesellschaft', council: 'Kabinett', court: 'Verwaltung', war: 'Verteidigung', realm: 'Dein Land', material: 'Kartografischer Atlas', date: year };
   if (year >= 1800) return { id: 'industrial', title: 'Im Zeitalter der Maschinen', desk: 'Arbeitszimmer', tool: '⚙', object: 'Industrie & Fortschritt', council: 'Staatsrat', court: 'Staatsverwaltung', war: 'Militär', realm: 'Dein Reich', material: 'Vermessungskarte', date: year };
   if (year >= 1500) return { id: 'early-modern', title: 'Neue Horizonte', desk: 'Kartenkabinett', tool: '✧', object: 'Entdeckungen & Wissen', council: 'Geheimer Rat', court: 'Hofverwaltung', war: 'Feldzüge', realm: 'Dein Reich', material: 'Kolorierter Atlas', date: year };
+  if (year < -799) return { id: 'bronze', title: 'Siedlungen, Handwerk und Austausch', desk: 'Ratstisch', tool: '▤', object: 'Zeichen & Überlieferung', council: 'Siedlungsrat', court: 'Verwaltung', war: 'Aufgebot', realm: 'Deine Siedlung', material: 'Schematische Landschaft · Spielkarte', date: year };
+  if (year < 500) return { id: 'ancient', title: 'Städte, Handel und Macht', desk: 'Schreibtafel', tool: '▤', object: 'Aufzeichnungen & Chronik', council: 'Rat', court: 'Verwaltung', war: 'Feldzüge', realm: 'Dein Gemeinwesen', material: 'Schematische Landschaft · Spielkarte', date: year };
   return { id: 'medieval', title: 'Land, Flüsse und Herrschaft', desk: 'Schreibstube', tool: '✒', object: 'Urkunden & Chroniken', council: 'Reichsrat', court: 'Hofverwaltung', war: 'Feldzüge', realm: 'Dein Lehen', material: 'Karte auf Pergament', date: year };
 }
 

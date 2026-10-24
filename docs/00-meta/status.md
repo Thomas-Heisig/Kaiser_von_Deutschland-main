@@ -2,6 +2,10 @@
 **Stand 24.10.2026 · Codebasis: main · Live unter https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/**
 
 ## Belegt
+- [Bürgerleben und Charakterautomatik](../05-technical-architecture/CITIZEN_LIFECYCLE.md): Versorgung statt dauerhaftem Bedürfnisverfall, Haushaltsgründung, fünf Charakterpläne und nachvollziehbare erwachsene Nachfolge. Zugewiesene Bürger sichtbar; automatische Hof-/Auftragsnachfolge erhält Aufgabenfortschritt. 60-Jahre-Demografie, Zehnjahres-Engine, Save/Load und Hotseat geprüft. Vollständige Suite: 328 bestanden, sieben vorhandene übersprungen.
+- [Regionale Versorgung und Bedienbarkeit](../05-technical-architecture/REGIONAL_PROVISIONING.md): drei modellierte Versorgungsgebiete je Reich, bezahlte Hilfe, dauerhafte Speicher, tatsächliche Abwanderungsfolgen, Bürgeraufträge und budgetierte Automatik. Hotseat/BCE/Save/Load geprüft. Dauerhafte Zufriedenheits-/Stabilitätsanzeige, lesbare Chronik, sechs Bürgerrollen pro Seite und tragfähigerer Holzausbau; 317 Tests bestanden, sieben vorhandene übersprungen.
+- [Ganderkesee](../05-technical-architecture/GANDERKESEE.md): amtliches Gelände, echtes Gewässernetz und zeitabhängige Ortsmarken; sechs Verwaltungsbereiche mit Sicher/Normal/Gewagt, Kassenabschluss, direkte Steuern, Garnisonsentwicklung und zusätzliche zeitabhängige Projekte. Abhängigkeiten und offene Dependabot-PRs integriert.
+- [Frühstart ab 2000 v. Chr. und Geschichte & Zeitbild](../09-history-model/ZEITBILD.md): belegte Datierungen, Unsicherheitshinweise, regionale Kunst-/Kulturkarten, Monatsfilter und Save/Load vor der Zeitenwende. 20 historische Starts in Chromium geprüft; keine lückenlose Weltchronik und keine vollständige Regionalstil-Enzyklopädie.
 - Persistente Strategiewelt mit Reisen, Entdeckung und Regionsfokus; 20 Nachbarn und 320/768/1024-px-Oberfläche automatisiert geprüft. Handelsverträge, Bündnisse, nachvollziehbarer Vertragsbruch und jährliche Rivalenreaktionen. [Spezifikation](../05-technical-architecture/STRATEGY_WORLD.md).
 - Vier friedliche Kampagnenwege bis Sieg mit Save/Load getestet; Tests verwenden zusätzliche Startressourcen und ersetzen keine Balance-Abnahme.
 - [Lastmessung](../reports/strategy-population-2026-10-24.md) mit 1.000/5.000/20.000 Bürgern, kompakteres rückwärtskompatibles Speicherformat. 20.000 Bürger benötigen weiterhin etwa 380 ms pro Monat inklusive Autosave; Worker und Mobilmessungen bleiben offen.
@@ -19,6 +23,7 @@
 ## Wichtige Grenzen
 - **GitHub Pages ist aktiv – HTTPS, PWA und Offline-Modus bestätigt.** Reale Installation auf Windows/iPad/Android noch nicht umfassend getestet.
 - Online-Multiplayer, detaillierte Berufe/Familien, durchgehende Jahrhunderte-Balance und 3D-Schlachtfelder sind nicht fertig.
+- Versorgungsgebiete sind ein Spielmodell; individuelle Familien werden dadurch nicht geografisch umgesiedelt. Namenslisten sind zeitlich inspirierte Auswahl, keine belegte lokale Bevölkerungsliste.
 - Ältere Berichte dokumentieren teils **Klassen, Prototypen oder alte Einstiege**; daraus folgt keine Hauptspiel-Freigabe.
 - Paketmanifest-Version `2.5.1` beschreibt die Paketversion, nicht den vollständigen Fortschritt historischer Pläne oder eine neue produktive Veröffentlichung.
 

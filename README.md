@@ -4,6 +4,8 @@ Historische Strategiesimulation mit einer spielbaren, lokalen Aufbaukampagne, Ge
 
 > **Stand 24.10.2026:** Einheitliche Epochenoberfläche mit Schreibtisch, Fluss-/Reliefkarte und Lagebericht. Neue Strategiewelt mit Reisen und Verträgen; Umfang und Grenzen im [Projektstatus](docs/00-meta/status.md).
 
+Neu: Start ab **2000 v. Chr.** und [Geschichte & Zeitbild](docs/09-history-model/ZEITBILD.md) mit Quellen zu Ereignissen, Kunst, Baustilen, Kultur und Alltag. Tages-/Monatsdaten, Jahreskontext und längere Zeiträume bleiben unterscheidbar; unsichere Datierungen sind gekennzeichnet.
+
 ## Spielen
 
 ### 🌐 Online (GitHub Pages)

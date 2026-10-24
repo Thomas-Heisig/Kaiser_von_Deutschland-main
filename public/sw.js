@@ -1,5 +1,5 @@
 /* Kaiser von Deutschland – opt-in full offline media cache. */
-const VERSION = 'kvde-offline-v6-strategiewelt-20261024';
+const VERSION = 'kvde-offline-v8-ganderkesee-20261024';
 const SHELL = VERSION + '-shell';
 const MEDIA = VERSION + '-media';
 const BASE = new URL('./', self.registration.scope);

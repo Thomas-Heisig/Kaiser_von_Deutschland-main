@@ -1,11 +1,18 @@
 import { chooseCitizenCouncilOption } from './CitizenCouncilChoice';
-import { CivicMissionSystem } from './CivicMissionSystem';
+import { CivicMissionSystem, CIVIC_MISSIONS } from './CivicMissionSystem';
 // src/core/GameEngine.ts
 import { Player, PlayerCreationData } from './Player';
 import { EconomySystem } from './Economy';
 import { EventSystem } from './Events';
 import { CouncilDecisionSystem, CouncilSnapshot } from './CouncilDecisionSystem';
 import { StrategyWorld, type StrategyWorldSnapshot } from './StrategyWorld';
+import { DEFAULT_START_LOCATION, startLocation, type StartLocation } from './StartLocations';
+import { TreasuryLedger, validateTreasuryReport, type TreasuryReport } from './TreasuryLedger';
+import { socialCelebrations } from './SocialCelebrations';
+import { ADMIN_DOMAINS, ADMIN_LABELS, ADMIN_POLICIES, administrationBudget, defaultAdministration, validateAdministration, type AdministrationPreferences } from './Administration';
+import { developGarrison, garrisonDevelopment } from './GarrisonDevelopment';
+import { RegionalProvisioning } from './RegionalProvisioning';
+import { citizenName } from './HistoricalNames';
 import { TitleSystem } from '../data/Titles';
 import { PolicySystem } from './PolicySystem';
 import { OllamaService } from './OllamaService';
@@ -61,12 +68,13 @@ import { CampaignDefeatSystem, DEFEAT_TITLES, DefeatReason } from './CampaignDef
 import { TutorialSystem, TutorialStepId } from './TutorialSystem';
 import { CourtAssistantRegistry, COURT_OFFICES, CourtOffice, AssistantMode } from './CourtAssistantRegistry';
 import { MODERNIZATION_PROJECTS, applyModernization } from './ModernizationProjects';
-import { epochForYear, milestonesInYear, milestonesThrough } from './WorldHistoryCatalog';
+import { epochForYear, milestonesArrivingInMonth, milestonesThroughDate } from './WorldHistoryCatalog';
+import { formatYear } from './HistoricalCalendar';
 import { buildHistoricalContext, HistoricalContext, historicalEpochFor } from './HistoricalContext';
 import { applyScienceDiscovery, researchImpact, researchProductionBonus } from './ScienceImpact';
 import { KingdomInfrastructure } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
-import type { Citizen } from './CitizenSystem';
+import type { Citizen, CitizenNeeds } from './CitizenSystem';
 
 export type MarketResource = 'food' | 'wood' | 'stone' | 'iron';
 
@@ -114,6 +122,7 @@ export interface GameConfig {
   enableMultiplayer: boolean;
   randomEvents: boolean;
   startingYear: number;
+  startLocationId?: string;
   campaignId?: CampaignId;
   enableOllama?: boolean;
   ollamaUrl?: string;
@@ -218,6 +227,49 @@ export class GameEngine {
   private modernizationCompleted = new Map<string, string[]>();
   private civicMissions = new CivicMissionSystem();
   private chronicle: ChronicleEntry[] = [];
+  private treasuryReports = new Map<string,TreasuryReport>();
+  private administration = new Map<string,AdministrationPreferences>();
+  private regionalProvisioning = new Map<string,RegionalProvisioning>();
+  private requireRegionalProvisioning(playerId:string):RegionalProvisioning {
+    this.requirePlayer(playerId);
+    if(!this.regionalProvisioning.has(playerId))this.regionalProvisioning.set(playerId,new RegionalProvisioning());
+    return this.regionalProvisioning.get(playerId)!;
+  }
+  public getRegionalProvisioning(playerId:string) {
+    return this.requireRegionalProvisioning(playerId).overview(this.requirePlayer(playerId).kingdom,this.currentYear*12+this.currentMonth);
+  }
+  public addressRegionalProvisioning(playerId:string,regionId:string,action:string):string {
+    const player=this.requirePlayer(playerId);
+    if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    const message=this.requireRegionalProvisioning(playerId).act(regionId,action,player.kingdom,this.currentYear*12+this.currentMonth);
+    this.recordChronicle(message,playerId);
+    this.emit('regionalProvisioning',{playerId,message});return message;
+  }
+  public getAdministration(playerId:string):AdministrationPreferences {
+    this.requirePlayer(playerId);
+    return structuredClone(this.administration.get(playerId)??defaultAdministration());
+  }
+  public setAdministration(playerId:string,preferences:AdministrationPreferences):void {
+    this.requirePlayer(playerId);
+    if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    this.administration.set(playerId,validateAdministration(preferences));
+    this.recordChronicle('Verwaltung: '+ADMIN_POLICIES[preferences.policy].label+'; delegiert: '+ADMIN_DOMAINS.filter(d=>preferences.domains[d]).map(d=>ADMIN_LABELS[d]).join(', '),playerId);
+  }
+  public getAdministrationBudget(playerId:string) {return administrationBudget(this.requirePlayer(playerId).kingdom,this.getAdministration(playerId).policy);}
+  public getGarrisonDevelopment(playerId:string) {return garrisonDevelopment(this.requirePlayer(playerId).kingdom,this.currentYear);}
+  public improveGarrison(playerId:string,id:string):string {
+    const player=this.requirePlayer(playerId);
+    if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    const message=developGarrison(player.kingdom,this.currentYear,id);
+    this.recordChronicle(message,playerId);return message;
+  }
+  private treasuryAudit = new Map<string,TreasuryLedger>();
+  public getTreasuryReport(playerId:string):TreasuryReport|null {
+    this.requirePlayer(playerId);return structuredClone(this.treasuryReports.get(playerId)??null);
+  }
+  private treasuryCheckpoint(player:Player,reason:string):void {
+    this.treasuryAudit.get(player.id)?.checkpoint(reason,player.kingdom.resources.gold);
+  }
   /** A bounded, plain-data chronicle is safe to copy into a version-2 save. */
   public getChronicle(): ChronicleEntry[] {
     return this.chronicle.map(entry => ({...entry}));
@@ -225,7 +277,7 @@ export class GameEngine {
   public recordChronicle(message: string, playerId?: string): void {
     if (typeof message !== 'string' || !message.trim() || message.length > 900) return;
     if (playerId !== undefined && !this.players.has(playerId)) throw new Error('Unbekannter Chronikspieler.');
-    const date = String(this.currentMonth).padStart(2,'0') + '/' + this.currentYear;
+    const date = String(this.currentMonth).padStart(2,'0') + '/' + formatYear(this.currentYear);
     this.chronicle.unshift({ date, message, ...(playerId ? { playerId } : {}) });
     this.chronicle.length = Math.min(this.chronicle.length,100);
   }
@@ -239,6 +291,7 @@ export class GameEngine {
       enableMultiplayer: false,
       randomEvents: true,
       startingYear: 1200,
+      startLocationId: DEFAULT_START_LOCATION,
       campaignId: 'aufbau',
       enableOllama: false,
       enableWiki: true,
@@ -251,6 +304,7 @@ export class GameEngine {
     }
 
     if (!CAMPAIGNS.some((campaign) => campaign.id === this.config.campaignId)) throw new RangeError('Unbekannte Kampagne.');
+    this.config.startLocationId = startLocation(this.config.startLocationId).id;
     this.currentYear = this.config.startingYear;
     this.gameState = GameState.LOBBY;
     this._economy = new EconomySystem(this.config);
@@ -376,9 +430,16 @@ export class GameEngine {
 
   public getCivicMissions(playerId:string) {
     this.requirePlayer(playerId);
+    const courtIds=new Set(this.courtAssistants.serialize().map(a=>a.citizenId));
+    const activeIds=new Set(this.civicMissions.active(playerId).map(a=>a.citizenId));
+    const busyIds=new Set(this.civicMissions.serialize().assignments.map(a=>a.citizenId));
     return { options:this.civicMissions.options(this.currentYear),
-      active:this.civicMissions.active(playerId),history:this.civicMissions.historyFor(playerId),
-      citizens:this.citizenSystem.getAliveCitizens().filter(c=>!c.isPlayerCharacter&&c.age>=16)
+      active:this.civicMissions.active(playerId).map(a=>{
+        const citizen=this.citizenSystem.getCitizen(a.citizenId),mission=CIVIC_MISSIONS.find(m=>m.id===a.missionId)!;
+        return {...a,citizenName:citizen?citizen.firstName+' '+citizen.lastName:'Unbekannte Person',citizenAlive:!!citizen?.isAlive,missionTitle:mission.title,totalMonths:mission.months};
+      }),history:this.civicMissions.historyFor(playerId),
+      citizens:this.citizenSystem.getAliveCitizens().filter(c=>!c.isPlayerCharacter&&c.age>=16&&!courtIds.has(c.id)&&(!busyIds.has(c.id)||activeIds.has(c.id)))
+        .sort((a,b)=>Number(activeIds.has(b.id))-Number(activeIds.has(a.id)))
         .slice(0,100).map(c=>({id:c.id,name:c.firstName+' '+c.lastName,profession:c.profession,skills:{...c.skills},
           professionLevel:c.professionLevel,reputation:c.reputation,discipline:c.personality?.discipline??50,
           familyId:c.familyId??'',regionId:c.regionId,lifeEvents:(c.lifeEvents??[]).slice(-3)})) };
@@ -386,8 +447,13 @@ export class GameEngine {
   public assignCivicMission(playerId:string,citizenId:string,missionId:string):string {
     const player=this.requirePlayer(playerId);
     if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    return this.assignCivicMissionFor(player,citizenId,missionId);
+  }
+  private assignCivicMissionFor(player:Player,citizenId:string,missionId:string):string {
+    const playerId=player.id;
     const citizen=this.citizenSystem.getCitizen(citizenId);
     if(!citizen)throw Error('Bürger nicht gefunden.');
+    if(this.courtAssistants.serialize().some(a=>a.citizenId===citizenId))throw Error('Dieser Bürger hat bereits ein Hofamt.');
     const assignment=this.civicMissions.start(playerId,citizen,player.kingdom,missionId,this.currentYear,this.currentMonth);
     const mission=this.civicMissions.options(this.currentYear).find(x=>x.id===assignment.missionId)!;
     const message=citizen.firstName+' '+citizen.lastName+' übernimmt „'+mission.title+'“ ('+mission.months+' Monate).';
@@ -401,17 +467,25 @@ export class GameEngine {
     return MODERNIZATION_PROJECTS.map((project) => {
       const blockers: string[] = [];
       if (this.currentYear < project.year) blockers.push('Verfügbar ab ' + project.year);
+      if (this.currentYear > (project.until??Infinity)) blockers.push('Dieses Vorhaben gehört zu einer früheren Epoche.');
+      const owned=!project.requires||player.kingdom.infrastructure[project.requires]>0;
+      if(!owned)blockers.push('Zuerst den zugehörigen Gebäudebezirk errichten.');
       if (!researched.isResearched(project.requiredTechnology)) blockers.push('Erfordert Forschung: ' + project.requiredTechnology);
       if (completed.includes(project.id)) blockers.push('Bereits umgesetzt');
       for (const resource of ['gold','wood','stone','iron'] as const)
         if (player.kingdom.resources[resource] < project.cost[resource]) blockers.push(resource + ' fehlt');
-      return {project,completed:completed.includes(project.id),canStart:blockers.length===0,blockers};
+      return {project,completed:completed.includes(project.id),canStart:blockers.length===0,blockers,
+        visible:owned&&this.currentYear>=project.year&&this.currentYear<=(project.until??Infinity)};
     });
   }
 
   public launchModernization(playerId: string, projectId: string): string {
     const player = this.requirePlayer(playerId);
     if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    return this.launchModernizationFor(player,projectId);
+  }
+  private launchModernizationFor(player:Player,projectId:string):string {
+    const playerId=player.id;
     const item = this.getModernizationOptions(playerId).find(o=>o.project.id===projectId);
     if (!item) throw new Error('Unbekanntes Modernisierungsprojekt.');
     if (!item.canStart) throw new Error(item.blockers.join(' · '));
@@ -419,17 +493,17 @@ export class GameEngine {
       player.kingdom.resources[res] -= item.project.cost[res];
     applyModernization(item.project,player.kingdom);
     this.modernizationCompleted.set(playerId,[...(this.modernizationCompleted.get(playerId)??[]),item.project.id]);
-    const message = item.project.name + ' abgeschlossen: ' + item.project.effect;
+    const message = item.project.name + ' abgeschlossen: ' + item.project.effect + ' · Kosten: ' + item.project.cost.gold + ' Gold.';
     this.emit('modernizationCompleted',{playerId,message});
     return message;
   }
 
-  public getHistoricalTimeline() { return milestonesThrough(this.currentYear); }
+  public getHistoricalTimeline() { return milestonesThroughDate(this.currentYear, this.currentMonth); }
 
   /** Optional stateful museum action. Real-world history remains informational. */
   public getExhibitionOptions(playerId: string) {
     const player = this.requirePlayer(playerId);
-    return milestonesThrough(this.currentYear).filter((item) => !item.speculative &&
+    return this.getHistoricalTimeline().filter((item) => !item.speculative &&
       (item.kind === 'art' || item.kind === 'culture' || item.kind === 'science' || item.kind === 'invention'))
       .map((item) => ({
         milestone: item, cost: 350 + Math.max(0, this.currentYear - 1200) * 2,
@@ -503,7 +577,11 @@ export class GameEngine {
       evidence: current.evidence,
       previousEpochId: previous.id
     });
-    this.recordChronicle(`Neue Epoche: ${current.name} (ab ${this.currentYear}).`);
+    this.recordChronicle(`Neue Epoche: ${current.name} (ab ${formatYear(this.currentYear)}).`);
+  }
+
+  public getStartLocation(): StartLocation {
+    return startLocation(this.config.startLocationId);
   }
 
   public getCurrentYear(): number {
@@ -568,8 +646,9 @@ export class GameEngine {
         console.warn('Keine lebenden Bürger verfügbar');
         continue;
       }
-      const preferredCitizen = available.find((citizen: Citizen): boolean =>
-        citizen.socialClass === 'noble' || citizen.socialClass === 'middle') ?? available[0];
+      const adults=available.filter(c=>c.age>=18).sort((a,b)=>Math.abs(a.age-30)-Math.abs(b.age-30));
+      const preferredCitizen = adults.find((citizen: Citizen): boolean =>
+        citizen.socialClass === 'noble' || citizen.socialClass === 'middle') ?? adults[0] ?? available[0];
       this.roleSwitchingSystem.switchRole(
         playerId,
         preferredCitizen.id,
@@ -588,9 +667,6 @@ export class GameEngine {
    */
   private generateInitialCitizens(): void {
     const regions = ['preussen', 'bayern', 'sachsen', 'hanse', 'schwaben'];
-    const maleNames = ['Heinrich', 'Friedrich', 'Wilhelm', 'Karl', 'Ludwig', 'Otto', 'Konrad', 'Albrecht'];
-    const femaleNames = ['Elisabeth', 'Margarete', 'Anna', 'Katharina', 'Agnes', 'Gertrud', 'Hedwig'];
-    const lastNames = ['von Berg', 'Schmidt', 'Müller', 'Weber', 'Fischer', 'Wagner', 'Becker', 'Schulz'];
     const professions = ['farmer', 'artisan', 'merchant', 'soldier', 'scholar', 'clergy', 'noble'] as const;
     
     // Generate 50-100 initial citizens
@@ -598,14 +674,12 @@ export class GameEngine {
     
     for (let i = 0; i < citizenCount; i++) {
       const gender: 'male' | 'female' = Math.random() > 0.5 ? 'male' : 'female';
-      const firstName = gender === 'male' 
-        ? maleNames[Math.floor(Math.random() * maleNames.length)]
-        : femaleNames[Math.floor(Math.random() * femaleNames.length)];
-      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
       const age = 18 + Math.floor(Math.random() * 50);
-      const birthYear = this.currentYear - age;
+      const birthMonth = Math.floor(Math.random() * 12) + 1;
+      const birthYear = this.currentYear - age - (this.currentMonth < birthMonth ? 1 : 0);
+      const { firstName, lastName } = citizenName(birthYear, gender, i + 1);
       const profession = professions[Math.floor(Math.random() * professions.length)];
-      const regionId = regions[Math.floor(Math.random() * regions.length)];
+      const regionId = this.currentYear < 500 ? 'siedlung' : regions[Math.floor(Math.random() * regions.length)];
       
       // Determine social class based on profession
       let socialClass: 'peasant' | 'middle' | 'noble' | 'royal' = 'peasant';
@@ -618,7 +692,7 @@ export class GameEngine {
         gender,
         age,
         birthYear,
-        birthMonth: Math.floor(Math.random() * 12) + 1,
+        birthMonth,
         profession,
         regionId,
         socialClass
@@ -700,9 +774,13 @@ export class GameEngine {
   }
 
   private async processMonthSystems(): Promise<void> {
+    this.treasuryAudit.clear();
+    for(const player of this.players.values())this.treasuryAudit.set(player.id,
+      new TreasuryLedger(`${this.currentMonth}/${formatYear(this.currentYear)}`,player.kingdom.resources.gold));
     // Update ecological systems
     const avgIndustrialization = this.getAverageIndustrialization();
     this.climateSystem.updateMonth(this.currentYear, this.currentMonth, avgIndustrialization);
+    this.applyDisasterEffects();
 
     // process each player's month
     for (const player of this.players.values()) {
@@ -710,12 +788,25 @@ export class GameEngine {
     }
     
     for (const player of this.players.values()) {
-      for (const event of this.civicMissions.advance(player.id,player.kingdom,this.currentYear,this.currentMonth,id=>this.citizenSystem.getCitizen(id)))
+      this.reconcileCivicSuccessors(player);
+      for (const event of this.civicMissions.advance(player.id,player.kingdom,this.currentYear,this.currentMonth,id=>this.citizenSystem.getCitizen(id),this.getAdministration(player.id).domains.civic)) {
         this.emit('civicMissionEvent',{playerId:player.id,message:event.message});
+        const consequence=event.success?this.requireRegionalProvisioning(player.id).support(event.missionId):null;
+        if(consequence) {
+          this.recordChronicle(consequence,player.id);
+          this.emit('regionalProvisioning',{playerId:player.id,message:consequence});
+        }
+      }
+      this.treasuryCheckpoint(player,'Abgeschlossene Bürgeraufträge');
     }
     // Process population dynamics systems
-    this.citizenSystem.processMonth(this.currentYear, this.currentMonth);
+    this.citizenSystem.processMonth(this.currentYear, this.currentMonth, this.citizenLivingConditions());
     this.demographicSystem.processMonth(this.citizenSystem, this.currentYear, this.currentMonth);
+    for(const player of this.players.values()) {
+      this.reconcileCharacterSuccessor(player);
+      this.reconcileCourtSuccessors(player);
+      this.reconcileCivicSuccessors(player);
+    }
     this.socialNetworkSystem.processInformationSpread(this.citizenSystem, this.currentYear, this.currentMonth);
     this.socialNetworkSystem.processMovements(this.citizenSystem, this.currentYear, this.currentMonth);
     
@@ -757,6 +848,7 @@ export class GameEngine {
     // They are available via accessor methods for UI and manual triggering
 
     // advance month/year
+    for(const player of this.players.values())this.treasuryCheckpoint(player,'Bevölkerung, Versorgung und laufende Weltprozesse');
     this.currentMonth++;
     if (this.currentMonth > 12) {
       this.currentMonth = 1;
@@ -765,6 +857,7 @@ export class GameEngine {
         player.kingdom.currentYear = this.currentYear;
         player.processYear();
         this.policySystem.applyYearlyEffects(player);
+        this.treasuryCheckpoint(player,'Jährliche Titelboni und politische Jahresfolgen');
       }
       this.roadmapFeaturesManager.update(this.currentYear, 1);
       for (const development of this.warfare.processYear(this.currentYear, playerId => {
@@ -785,16 +878,16 @@ export class GameEngine {
       
       // Yearly processes for ecological systems
       this.processEcologicalYear();
+      for(const player of this.players.values())this.treasuryCheckpoint(player,'Ökologische Jahresfolgen');
       
-      // Informative world-history milestones never mutate resources, technology,
-      // or politics: real-world developments are not automatically invented by this realm.
-      for (const milestone of milestonesInYear(this.currentYear)) {
-        this.emit('historyMilestone', { milestone });
-      }
       this.emit('yearAdvanced', { year: this.currentYear });
       this.emitEpochChange();
     }
 
+    // Informative history follows its recorded month and never mutates the realm.
+    for (const milestone of milestonesArrivingInMonth(this.currentYear, this.currentMonth)) {
+      this.emit('historyMilestone', { milestone });
+    }
     this.timeSystem.setDate(this.currentYear, this.currentMonth);
     if (this.config.randomEvents) {
       for (const player of this.players.values()) {
@@ -809,6 +902,17 @@ export class GameEngine {
       player.kingdom.currentSeason = seasons[Math.floor((this.currentMonth % 12) / 3)];
     }
     for (const player of this.players.values()) this.completeCampaignChapter(player);
+    for(const player of this.players.values()) {
+      this.treasuryCheckpoint(player,'Ratsentscheidungen und Kampagnenbelohnungen');
+      const report=this.treasuryAudit.get(player.id)!.report();
+      this.treasuryReports.set(player.id,report);
+      const number=(n:number)=>Math.round(n).toLocaleString('de-DE');
+      const message=`Kassenabschluss ${report.date}: ${number(report.opening)} → ${number(report.closing)} Gold.\n`+
+        report.entries.map(e=>`${e.reason}: ${e.amount>=0?'+':''}${number(e.amount)} Gold`).join('\n');
+      this.recordChronicle(message.length>890?message.slice(0,887)+'…':message,player.id);
+      this.emit('treasuryReport',{playerId:player.id,report,message});
+    }
+    this.treasuryAudit.clear();
     this.checkCampaignDefeat();
     this.emit('monthAdvanced', { month: this.currentMonth, year: this.currentYear });
   }
@@ -900,13 +1004,18 @@ export class GameEngine {
   }
 
   private async processPlayerMonth(player: Player): Promise<void> {
+    const forecast=player.kingdom.getMonthlyBalance();
     player.kingdom.processMonth();
+    this.treasuryCheckpoint(player,`Produktion ${forecast.production.gold}, Steuern ${forecast.taxes}, Unterhalt ${forecast.consumption.gold}`);
     this.processCampaignSiege(player);
+    this.treasuryCheckpoint(player,'Belagerung und Versorgung');
     const bonus = researchProductionBonus(player.kingdom, this.requireTechnologySystem(player.id).getResearchedTechnologyIds());
     for (const resource of ['food', 'wood', 'stone', 'iron', 'gold'] as const) {
       player.kingdom.resources[resource] += bonus[resource];
     }
+    this.treasuryCheckpoint(player,'Forschungsbedingte Mehrproduktion');
     const debtPayment = this.requireWarFinance(player.id).processMonthlyPayments(player.kingdom);
+    this.treasuryCheckpoint(player,'Darlehen: Tilgung und Zinsen');
     if (debtPayment.cannotAfford) this.emit('financeEvent', { playerId: player.id,
       message: 'Eine Kriegsdarlehensrate konnte nicht bezahlt werden.' });
 
@@ -933,7 +1042,9 @@ export class GameEngine {
       }
       this.emit('battleResolved', { report: raid });
     }
+    this.treasuryCheckpoint(player,'Überfälle und Kriegsfolgen');
     this.processRivalDiplomacy(player);
+    this.treasuryCheckpoint(player,'Diplomatische Verträge');
     const arrival = this.requireStrategyWorld(player.id).processMonth(this.getRivals(player.id).map(r=>r.id));
     if (arrival) {
       const name = arrival.rivalId ? this.getRivals(player.id).find(r=>r.id===arrival.rivalId)?.name : player.kingdom.name;
@@ -953,12 +1064,15 @@ export class GameEngine {
     }
 
     this.processCourtAssistants(player);
+    this.treasuryCheckpoint(player,'Automatische Hofaufträge');
 
     // Apply monthly policy effects
     this.policySystem.applyMonthlyEffects(player);
+    this.treasuryCheckpoint(player,'Politische Maßnahmen und deren Unterhalt');
 
     // Apply trade route benefits (v2.6.0)
     this.applyTradeRouteBenefits(player);
+    this.treasuryCheckpoint(player,'Handelsrouteneinnahmen');
 
     // small monthly stat adjustments
     this.updatePlayerStats(player);
@@ -968,10 +1082,17 @@ export class GameEngine {
       const event = await this.events.getRandomEvent(player, this.currentYear);
       if (event) {
         await this.events.applyEvent(event, player, null);
+        this.treasuryCheckpoint(player,'Ereignis: '+event.title);
         this.emit('gameEvent', { playerId: player.id, title: event.title, description: event.description });
       }
     }
     
+    this.treasuryCheckpoint(player,'Sonstige Monatsfolgen');
+    for(const message of this.requireRegionalProvisioning(player.id).advance(player.kingdom,this.currentYear*12+this.currentMonth)) {
+      this.recordChronicle(message,player.id);
+      this.emit('regionalProvisioning',{playerId:player.id,message});
+    }
+    await this.processAdministration(player);
     // Note: Newly integrated systems are available for manual access via getters
     // but don't have automatic monthly processing yet
   }
@@ -1020,6 +1141,9 @@ export class GameEngine {
       this.siegeTargets.delete(playerId);
       this.courtAssistants.removePlayer(playerId);
       this.civicMissions.removePlayer(playerId);
+      this.administration.delete(playerId);
+      this.regionalProvisioning.delete(playerId);
+      this.treasuryReports.delete(playerId);
       this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
     }
@@ -1278,6 +1402,9 @@ export class GameEngine {
       modernizationCompleted: Array.from(this.modernizationCompleted),
       civicMissions: this.civicMissions.serialize(),
       chronicle: this.getChronicle(),
+      treasuryReports: Object.fromEntries(this.treasuryReports),
+      administration: Object.fromEntries(this.administration),
+      regionalProvisioning:Object.fromEntries(Array.from(this.regionalProvisioning,([id,state])=>[id,state.serialize()])),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -1329,6 +1456,23 @@ export class GameEngine {
         (saveData.version !== undefined && saveData.version !== 2)) {
       throw new Error('Der Spielstand ist beschädigt oder inkompatibel.');
     }
+    const restoredLocation = startLocation(saveData.config.startLocationId);
+    const restoredAdministration=new Map<string,AdministrationPreferences>();
+    if(saveData.administration!==undefined) {
+      if(!saveData.administration||typeof saveData.administration!=='object'||Array.isArray(saveData.administration))throw Error('Beschädigte Verwaltung.');
+      for(const [id,prefs] of Object.entries(saveData.administration)) {
+        if(!saveData.players.some((p: {id:string})=>p.id===id))throw Error('Unbekannter Spieler in der Verwaltung.');
+        restoredAdministration.set(id,validateAdministration(prefs));
+      }
+    }
+    const restoredTreasury=new Map<string,TreasuryReport>();
+    if(saveData.treasuryReports!==undefined) {
+      if(!saveData.treasuryReports||typeof saveData.treasuryReports!=='object'||Array.isArray(saveData.treasuryReports))throw Error('Beschädigte Kassenberichte.');
+      for(const [id,report] of Object.entries(saveData.treasuryReports)) {
+        if(!saveData.players.some((p:{id:string})=>p.id===id))throw Error('Kassenbericht ohne Spieler.');
+        restoredTreasury.set(id,validateTreasuryReport(report));
+      }
+    }
     const restoredPlayers = saveData.players.map((data: ReturnType<Player['serialize']>): Player => {
       if (!data || !data.kingdom || !data.stats || !data.kingdom.resources || !data.kingdom.infrastructure) {
         throw new Error('Unvollständige Spielerdaten im Spielstand.');
@@ -1366,9 +1510,20 @@ export class GameEngine {
         restoredWorlds.set(id,StrategyWorld.restore(snapshot as StrategyWorldSnapshot));
       }
     }
+    const restoredProvisioning=new Map<string,RegionalProvisioning>();
+    if(saveData.regionalProvisioning!==undefined) {
+      if(!saveData.regionalProvisioning||typeof saveData.regionalProvisioning!=='object'||Array.isArray(saveData.regionalProvisioning))throw Error('Beschädigte Versorgungsgebiete.');
+      for(const [id,snapshot] of Object.entries(saveData.regionalProvisioning)) {
+        if(!restoredPlayers.some((p:Player)=>p.id===id))throw Error('Versorgungsgebiete ohne Spieler.');
+        restoredProvisioning.set(id,RegionalProvisioning.restore(snapshot,saveData.currentYear*12+(saveData.currentMonth??1)));
+      }
+    }
     this.pauseGame();
     this.council = restoredCouncil;
+    this.regionalProvisioning=restoredProvisioning;
     this.strategyWorlds = restoredWorlds;
+    this.treasuryReports=restoredTreasury;
+    this.administration=restoredAdministration;
     this.players = new Map(restoredPlayers.map((player: Player) => [player.id, player]));
     this.warfare = restoredWarfare;
     this.technologySystems = restoredTechnology;
@@ -1391,7 +1546,7 @@ export class GameEngine {
           saveData.culturalExhibitions.some((pair: unknown) =>
             !Array.isArray(pair) || pair.length !== 2 || typeof pair[0] !== 'string' ||
             !restoredPlayers.some((p: Player) => pair[0].startsWith(p.id + ':')) ||
-            !Number.isSafeInteger(pair[1]) || pair[1] < 0 || pair[1] > saveData.currentYear)) {
+            !Number.isSafeInteger(pair[1]) || pair[1] < -1999 || pair[1] > saveData.currentYear)) {
         throw new Error('Beschädigtes kulturelles Gedächtnis im Spielstand.');
       }
       this.culturalExhibitions = new Map(saveData.culturalExhibitions);
@@ -1461,7 +1616,7 @@ export class GameEngine {
     this.currentMonth = saveData.currentMonth || 1;
     // Loading is deliberately paused so the player can review the restored kingdom.
     this.gameState = GameState.PAUSED;
-    this.config = saveData.config;
+    this.config = { ...saveData.config, startLocationId: restoredLocation.id };
     
     // Load ecological systems (v2.2.3)
     if (saveData.climateSystem) {
@@ -1511,6 +1666,11 @@ export class GameEngine {
     }
     this.timeSystem.setDate(this.currentYear, this.currentMonth);
     this.timeSystem.pause();
+    for(const player of this.players.values()) {
+      this.reconcileCharacterSuccessor(player);
+      this.reconcileCourtSuccessors(player);
+      this.reconcileCivicSuccessors(player);
+    }
     
     this.emit('gameLoaded', { slot });
   }
@@ -1748,23 +1908,31 @@ export class GameEngine {
     event: CulturalEvent; affordable: boolean; alreadyHeld: boolean;
   }> {
     const player = this.requirePlayer(playerId);
-    return this.religionSystem.getCulturalEvents()
+    const seasonal=this.religionSystem.getCulturalEvents()
       .filter((event) => event.culture === this.religionSystem.getDominantCulture() &&
+        (!event.religion || this.currentYear >= (event.religion.startsWith('christianity') ? 800 : event.religion.startsWith('islam') ? 622 : -1999)) &&
         (event.month === this.currentMonth || event.season === player.kingdom.currentSeason))
+    return [...socialCelebrations(this.currentYear),...seasonal]
       .map((event) => ({
         event,
         affordable: player.kingdom.resources.gold >= (event.effects.goldCost ?? 0) &&
           player.kingdom.resources.food >= (event.effects.foodConsumption ?? 0),
-        alreadyHeld: this.festivalsHeld.get(playerId + ':' + event.id) === this.currentYear
+        alreadyHeld: this.festivalsHeld.get(playerId + ':' + event.id) ===
+          (event.frequency==='monthly'?this.currentYear*12+this.currentMonth:this.currentYear)
       }));
   }
 
   public holdFestival(playerId: string, eventId: string): string {
     const player = this.requirePlayer(playerId);
     if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+    return this.holdFestivalFor(player,eventId);
+  }
+
+  private holdFestivalFor(player:Player,eventId:string):string {
+    const playerId=player.id;
     const option = this.getFestivalOptions(playerId).find((entry) => entry.event.id === eventId);
     if (!option) throw new Error('Dieses Fest ist derzeit nicht verfügbar.');
-    if (option.alreadyHeld) throw new Error('Dieses Fest wurde bereits dieses Jahr gefeiert.');
+    if (option.alreadyHeld) throw new Error('Dieses Fest wurde in diesem Zeitraum bereits gefeiert.');
     if (!option.affordable) throw new Error('Für die Feier fehlen Gold oder Nahrung.');
     const effects = option.event.effects;
     player.kingdom.resources.gold -= effects.goldCost ?? 0;
@@ -1774,7 +1942,7 @@ export class GameEngine {
       player.kingdom.stats.stability + (effects.stability ?? 0)));
     // Culture is shared world data in the legacy system, so don't mutate it for one realm.
     if (effects.culturalInfluence) player.updateStats({ prestige: effects.culturalInfluence / 2 });
-    this.festivalsHeld.set(playerId + ':' + eventId, this.currentYear);
+    this.festivalsHeld.set(playerId + ':' + eventId, option.event.frequency==='monthly'?this.currentYear*12+this.currentMonth:this.currentYear);
     const message = option.event.name + ' gefeiert. Das Volk erinnert sich an diese Feier.';
     this.emit('festivalHeld', { playerId, message });
     return message;
@@ -1906,7 +2074,7 @@ export class GameEngine {
     diplomacy.proposeTreaty({type,parties:[playerId,rivalId],signedYear:this.currentYear,
       expiryYear:this.currentYear + 3,expiryMonth:this.currentMonth,active:true,
       terms:type === 'trade' ? {goldPerYear:960} : {militarySupport:true}});
-    const message = `${type === 'trade' ? 'Handelsvertrag' : 'Schutzbündnis'} mit ${rival.name}: ${cost} Gold, gültig bis ${this.currentMonth}/${this.currentYear + 3}. ` +
+    const message = `${type === 'trade' ? 'Handelsvertrag' : 'Schutzbündnis'} mit ${rival.name}: ${cost} Gold, gültig bis ${this.currentMonth}/${formatYear(this.currentYear + 3)}. ` +
       (type === 'trade' ? '80 Gold Vertragsertrag je Monat.' : 'Keine gegenseitigen Angriffe; +15 % Führung bei der Überfallabwehr (nicht stapelbar).');
     this.recordChronicle(message,playerId);
     this.emit('diplomacyEvent',{playerId,message,recorded:true});
@@ -2286,8 +2454,9 @@ export class GameEngine {
   public getCourtCandidates(playerId: string): Citizen[] {
     this.requirePlayer(playerId);
     const assigned = new Set(this.courtAssistants.serialize().map((a) => a.citizenId));
+    for(const assignment of this.civicMissions.serialize().assignments)assigned.add(assignment.citizenId);
     return this.citizenSystem.getAliveCitizens()
-      .filter((c) => !c.isPlayerCharacter && !assigned.has(c.id))
+      .filter((c) => c.age>=18 && !c.isPlayerCharacter && !assigned.has(c.id))
       .sort((a, b) => b.skills.leadership + b.skills.literacy - a.skills.leadership - a.skills.literacy)
       .slice(0, 15);
   }
@@ -2297,6 +2466,8 @@ export class GameEngine {
     if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
     const candidate = this.getCourtCandidates(playerId).find((c) => c.id === citizenId);
     if (!candidate) throw new Error('Dieser Bürger ist nicht verfügbar.');
+    const previous=this.courtAssistants.list(playerId).find(a=>a.office===office);
+    if(previous&&!this.citizenSystem.getCitizen(previous.citizenId)?.isAlive)this.courtAssistants.dismiss(playerId,office);
     this.courtAssistants.appoint(playerId, office, citizenId);
     this.emit('courtEvent', { playerId, message: candidate.firstName + ' wurde zum Hofamt ernannt.' });
   }
@@ -2314,16 +2485,18 @@ export class GameEngine {
   }
 
   private processCourtAssistants(player: Player): void {
+    this.reconcileCourtSuccessors(player);
     for (const assistant of this.courtAssistants.list(player.id)) {
       const citizen = this.citizenSystem.getCitizen(assistant.citizenId);
       if (!citizen || !citizen.isAlive || citizen.isPlayerCharacter) {
-        this.courtAssistants.dismiss(player.id, assistant.office);
         continue;
       }
       const skill = COURT_OFFICES[assistant.office].skill;
       citizen.skills[skill] = Math.min(100, citizen.skills[skill] + 1);
       this.courtAssistants.advance(player.id, assistant.office);
       if (assistant.mode !== 'automatisch') continue;
+      const delegated=this.getAdministration(player.id).domains;
+      if ((assistant.office==='wirtschaft'&&delegated.economy)||(assistant.office==='forschung'&&delegated.research))continue;
       if (assistant.office === 'wirtschaft') {
         // A cautious, capped purchase when the treasury is secure.
         const food = player.kingdom.resources.food;
@@ -2347,6 +2520,213 @@ export class GameEngine {
     }
   }
 
+  private async processAdministration(player:Player):Promise<void> {
+    const preferences=this.getAdministration(player.id),domains=preferences.domains;
+    if(!ADMIN_DOMAINS.some(d=>domains[d]))return;
+    const kingdom=player.kingdom,resources=kingdom.resources;
+    const limits=administrationBudget(kingdom,preferences.policy);
+    let remaining=limits.budget;
+    const canSpend=(cost:{gold?:number;food?:number;wood?:number;stone?:number;iron?:number},foodEmergency=false):boolean=>
+      (cost.gold??0)<=remaining&&resources.gold-(cost.gold??0)>=limits.reserve&&
+      Object.entries(cost).every(([key,value])=>resources[key as keyof typeof cost]>=value!)&&
+      (foodEmergency||!cost.food||resources.food-cost.food>=limits.foodReserve);
+    const action=async(label:string,operation:()=>unknown|Promise<unknown>):Promise<void>=>{
+      const before=resources.gold;
+      await operation();
+      const spent=Math.max(0,before-resources.gold);
+      remaining=Math.max(0,remaining-spent);
+      this.treasuryCheckpoint(player,'Automatik: '+label);
+      this.recordChronicle('Automatik · '+label+` (${spent?'-'+spent:'+'+(resources.gold-before)} Gold).`,player.id);
+    };
+    if(domains.economy) {
+      const rate=kingdom.happiness<45?.08:ADMIN_POLICIES[preferences.policy].tax;
+      if(kingdom.taxRate!==rate) {
+        this.setTaxRate(player.id,rate);
+        this.recordChronicle(`Automatik · Steuersatz auf ${Math.round(rate*100)} % gesetzt.`,player.id);
+      }
+      const surplus=resources.food-limits.foodReserve;
+      if(surplus>200)await action('Nahrungsüberschuss verkaufen',()=>this.tradeForPlayer(player.id,'food',Math.min(500,Math.floor(surplus)),'sell'));
+      else if(surplus<0) {
+        let amount=Math.min(500,Math.ceil(-surplus));
+        while(amount>0&&!canSpend({gold:this.quoteTrade('food',amount,'buy')},true))amount=Math.floor(amount/2);
+        if(amount>0)await action(`${amount} Nahrung beschaffen`,()=>this.tradeForPlayer(player.id,'food',amount,'buy'));
+      }
+      for(const resource of ['wood','stone','iron'] as const) {
+        const surplus=resources[resource]-(resource==='iron'?1000:2000);
+        if(surplus>=100)await action(`${resource==='wood'?'Holz':resource==='stone'?'Stein':'Eisen'}-Überschuss verkaufen`,()=>this.tradeForPlayer(player.id,resource,Math.min(200,Math.floor(surplus)),'sell'));
+      }
+    }
+    if(domains.civic) {
+      const region=this.getRegionalProvisioning(player.id).filter(r=>r.hunger>=45)
+        .sort((a,b)=>b.hunger-a.hunger)[0];
+      const option=region?.options.find(o=>o.id==='relief'&&o.canStart&&canSpend(o.cost))??
+        region?.options.find(o=>o.id==='settlement'&&o.canStart&&canSpend(o.cost));
+      if(region&&option)await action(region.name+': '+option.name,()=>
+        this.requireRegionalProvisioning(player.id).act(region.id,option.id,kingdom,this.currentYear*12+this.currentMonth));
+    }
+    if(domains.construction) {
+      const option=this.getModernizationOptions(player.id).find(o=>o.visible&&o.canStart&&canSpend(o.project.cost));
+      if(option)await action(option.project.name,()=>this.launchModernizationFor(player,option.project.id));
+      else {
+        const build: keyof KingdomInfrastructure = kingdom.getMonthlyBalance().net.food<0?'farms':
+          domains.research&&kingdom.infrastructure.schools<3?'schools':kingdom.infrastructure.workshops<5?'workshops':'roads';
+        const cost=kingdom.getBuildingData(build)!;
+        if(canSpend({gold:cost.cost,wood:cost.woodCost??0,stone:cost.stoneCost??0,iron:cost.ironCost??0}))
+          await action({farms:'Anbaufläche erweitern',schools:'Lernstätte errichten',workshops:'Werkstatt bauen',roads:'Wege ausbauen'}[build],()=>this.buildForPlayer(player.id,build));
+      }
+    }
+    if(domains.research) {
+      const option=this.getTechnologyOptions(player.id).filter(o=>o.canStart&&canSpend({gold:o.technology.cost.gold}))
+        .sort((a,b)=>a.technology.cost.research-b.technology.cost.research)[0];
+      if(option)await action('Forschung: '+option.technology.name,()=>this.startResearch(player.id,option.technology.id));
+    }
+    if(domains.military) {
+      const option=this.getGarrisonDevelopment(player.id).find(p=>p.available&&canSpend(p.cost));
+      if(option)await action(option.name,()=>developGarrison(kingdom,this.currentYear,option.id));
+    }
+    if(domains.culture&&kingdom.happiness<85) {
+      const option=this.getFestivalOptions(player.id).find(o=>!o.alreadyHeld&&o.affordable&&
+        canSpend({gold:o.event.effects.goldCost??0,food:o.event.effects.foodConsumption??0}));
+      if(option)await action(option.event.name,()=>this.holdFestivalFor(player,option.event.id));
+    }
+    if(domains.civic&&this.civicMissions.active(player.id).length<3) {
+      const busy=new Set(this.civicMissions.serialize().assignments.map(a=>a.citizenId));
+      for(const appointed of this.courtAssistants.serialize())busy.add(appointed.citizenId);
+      const mission=this.civicMissions.options(this.currentYear).find(m=>canSpend(m.cost)&&
+        !this.civicMissions.active(player.id).some(a=>a.missionId===m.id));
+      if(mission) {
+        const citizen=this.citizenSystem.getAliveCitizens().filter(c=>c.age>=16&&!c.isPlayerCharacter&&!busy.has(c.id))
+          .sort((a,b)=>b.skills[mission.preferredSkill]-a.skills[mission.preferredSkill])[0];
+        if(citizen)await action(citizen.firstName+' '+citizen.lastName+': '+mission.title,()=>this.assignCivicMissionFor(player,citizen.id,mission.id));
+      }
+    }
+    if(domains.character) {
+      this.reconcileCharacterSuccessor(player);
+      const character=this.getCurrentCharacter(player.id);
+      if(character&&this.canCharacterAct(player.id)) {
+        const plan=preferences.characterPlan;
+        const choice:CharacterAction=plan==='balanced'
+          ? (character.wealth<200?'work':character.skills.literacy<60?'study':character.skills.combat<50?'train':'work') : plan;
+        await action('Charakter: '+({work:'Arbeiten',study:'Studieren',train:'Waffenübung',serve:'Dem Reich dienen'}[choice]),()=>this.performCharacterActionFor(player,choice));
+      }
+    }
+  }
+
+  private assignedCitizenIds():Set<string> {
+    return new Set([...this.courtAssistants.serialize(),...this.civicMissions.serialize().assignments].map(a=>a.citizenId));
+  }
+
+  /** Named citizens are a sample of aggregate residents, not extra mouths to charge. */
+  private citizenLivingConditions():(citizen:Citizen)=>Partial<CitizenNeeds> {
+    const conditions=new Map<string,Partial<CitizenNeeds>>();
+    for(const player of this.players.values()) {
+      const k=player.kingdom,b=k.getMonthlyBalance();
+      const food=b.consumption.food>0?Math.min(1,k.resources.food/b.consumption.food):1;
+      conditions.set(player.id,{food:food*80,health:Math.min(90,60+k.infrastructure.hospitals*5),
+        shelter:Math.min(85,55+k.infrastructure.workshops*3),safety:Math.max(15,k.stats.stability-(k.isAtWar?20:0)),
+        education:Math.min(85,50+k.infrastructure.schools*4),entertainment:Math.min(85,50+k.infrastructure.taverns*5),
+        spiritual:Math.min(85,60+k.infrastructure.churches*3)});
+    }
+    // Unassigned world citizens share the mean conditions of the simulated realms.
+    const common:Partial<CitizenNeeds>={};
+    for(const key of ['food','health','shelter','safety','education','entertainment','spiritual'] as const)
+      common[key]=[...conditions.values()].reduce((sum,c)=>sum+(c[key]??65),0)/Math.max(1,conditions.size);
+    const owners=new Map([...this.courtAssistants.serialize(),...this.civicMissions.serialize().assignments].map(a=>[a.citizenId,a.playerId]));
+    return citizen=>conditions.get(citizen.controlledByPlayerId??owners.get(citizen.id)??'')??common;
+  }
+
+  private lifeMessage(playerId:string,message:string):void {
+    this.recordChronicle(message,playerId);this.emit('lifeEvent',{playerId,message});
+  }
+
+  public getAutomationPeople(playerId:string) {
+    this.requirePlayer(playerId);
+    const person=(id:string)=>{
+      const c=this.citizenSystem.getCitizen(id);
+      return {name:c?c.firstName+' '+c.lastName:'Unbesetzt',alive:!!c?.isAlive};
+    };
+    return [
+      ...this.courtAssistants.list(playerId).map(a=>({...person(a.citizenId),task:COURT_OFFICES[a.office].name,
+        status:a.mode==='automatisch'?'Automatisch · Nachbesetzung aktiv':'Beratung',progress:`${a.monthsServed} Monate im Amt`})),
+      ...this.civicMissions.active(playerId).map(a=>{
+        const mission=CIVIC_MISSIONS.find(m=>m.id===a.missionId)!;
+        return {...person(a.citizenId),task:mission.title,status:this.getAdministration(playerId).domains.civic?'Automatisch betreut':'Manuell beauftragt',progress:`${a.completedMonths} / ${mission.months} Monate`};
+      })
+    ];
+  }
+
+  public getCharacterSuccession(playerId:string) {
+    this.requirePlayer(playerId);
+    const previous=this.roleSwitchingSystem.getCurrentCharacter(playerId,id=>this.citizenSystem.getCitizen(id));
+    const relation=(id:string)=>previous?.familyRelations.find(r=>r.citizenId===id)?.relationType;
+    const priority=(c:Citizen)=>relation(c.id)==='child'?0:relation(c.id)==='spouse'?1:
+      previous?.familyId&&c.familyId===previous.familyId?2:3;
+    const candidates=this.getPlayableCharacters(Number.MAX_SAFE_INTEGER)
+      .sort((a,b)=>priority(a)-priority(b)||b.skills.leadership-a.skills.leadership||a.age-b.age);
+    return {previous,candidates:candidates.slice(0,6),family:previous?.familyRelations
+      .map(r=>({relation:r.relationType,citizen:this.citizenSystem.getCitizen(r.citizenId)}))
+      .filter((r):r is {relation:Citizen['familyRelations'][number]['relationType'];citizen:Citizen}=>!!r.citizen?.isAlive)??[]};
+  }
+
+  private reconcileCharacterSuccessor(player:Player):void {
+    if(this.getCurrentCharacter(player.id))return;
+    if(!this.roleSwitchingSystem.getSession(player.id))this.roleSwitchingSystem.createSession(player.id);
+    const succession=this.getCharacterSuccession(player.id),previous=succession.previous;
+    const marker=previous?.id??'missing';
+    if(this.roleSwitchingSystem.getMetaKnowledge(player.id,'reportedDeath')!==marker) {
+      this.lifeMessage(player.id,previous?`${previous.firstName} ${previous.lastName} ist im Alter von ${previous.age} Jahren verstorben. Die Herrschaft besteht weiter; eine erwachsene Nachfolge kann übernehmen.`:'Die gespielte Rolle ist unbesetzt. Eine erwachsene Person kann übernehmen.');
+      this.roleSwitchingSystem.storeMetaKnowledge(player.id,'reportedDeath',marker);
+    }
+    let successor=succession.candidates[0];
+    if(!successor&&player.kingdom.getSummary().totalPopulation>this.citizenSystem.getPopulation()) {
+      // Surface an existing unnamed adult; never manufacture an adult descendant.
+      const age=22,birthYear=this.currentYear-age;
+      const gender=Math.random()<.5?'female':'male';
+      successor=this.citizenSystem.createCitizen({...citizenName(birthYear,gender,this.citizenSystem.getAllCitizens().length+1),
+        gender,age,birthYear,birthMonth:this.currentMonth,profession:'farmer',regionId:previous?.regionId??'siedlung'});
+      this.lifeMessage(player.id,`${successor.firstName} ${successor.lastName} wurde aus der bereits vorhandenen Bevölkerung als mögliche Nachfolge erfasst. Keine Verwandtschaft mit der bisherigen Figur.`);
+    }
+    if(successor&&this.getAdministration(player.id).domains.character) {
+      this.switchCharacterFor(player.id,successor.id,'Automatische Nachfolge');
+      const relative=previous?.familyRelations.find(r=>r.citizenId===successor.id)?.relationType;
+      this.lifeMessage(player.id,`Automatische Nachfolge: ${successor.firstName} ${successor.lastName} übernimmt die Rolle${relative==='child'?' als erwachsenes Kind':relative==='spouse'?' als Partnerperson':' als andere erwachsene Person'}.`);
+    }
+  }
+
+  private reconcileCourtSuccessors(player:Player):void {
+    for(const appointment of this.courtAssistants.list(player.id)) {
+      const previous=this.citizenSystem.getCitizen(appointment.citizenId);
+      if(previous?.isAlive&&!previous.isPlayerCharacter)continue;
+      const office=COURT_OFFICES[appointment.office];
+      const key='vacant-'+appointment.office;
+      if(this.roleSwitchingSystem.getMetaKnowledge(player.id,key)!==appointment.citizenId) {
+        this.lifeMessage(player.id,`${office.name}: ${previous?.firstName??'Die bisherige Person'} steht nicht mehr zur Verfügung. ${appointment.mode==='automatisch'?'Nachfolge wird gesucht.':'Bitte eine neue Person ernennen.'}`);
+        this.roleSwitchingSystem.storeMetaKnowledge(player.id,key,appointment.citizenId);
+      }
+      if(appointment.mode!=='automatisch')continue;
+      const candidate=this.getCourtCandidates(player.id).sort((a,b)=>b.skills[office.skill]-a.skills[office.skill])[0];
+      if(!candidate)continue;
+      this.courtAssistants.dismiss(player.id,appointment.office);
+      this.courtAssistants.appoint(player.id,appointment.office,candidate.id);
+      this.courtAssistants.setMode(player.id,appointment.office,'automatisch');
+      this.lifeMessage(player.id,`${office.name}: ${candidate.firstName} ${candidate.lastName} übernimmt das frei gewordene Amt automatisch.`);
+    }
+  }
+
+  private reconcileCivicSuccessors(player:Player):void {
+    if(!this.getAdministration(player.id).domains.civic)return;
+    for(const assignment of this.civicMissions.active(player.id)) {
+      if(this.citizenSystem.getCitizen(assignment.citizenId)?.isAlive)continue;
+      const mission=CIVIC_MISSIONS.find(m=>m.id===assignment.missionId)!;
+      const assigned=this.assignedCitizenIds();
+      const candidate=this.citizenSystem.getAliveCitizens().filter(c=>c.age>=18&&!c.isPlayerCharacter&&!assigned.has(c.id))
+        .sort((a,b)=>b.skills[mission.preferredSkill]-a.skills[mission.preferredSkill])[0];
+      if(!candidate)continue;
+      this.civicMissions.replaceCitizen(player.id,assignment.citizenId,candidate);
+      this.lifeMessage(player.id,`Auftragsnachfolge: ${candidate.firstName} ${candidate.lastName} übernimmt „${mission.title}“. Bisheriger Fortschritt und bezahlte Mittel bleiben erhalten.`);
+    }
+  }
+
   public getCurrentCharacter(playerId: string): Citizen | null {
     const character = this.roleSwitchingSystem.getCurrentCharacter(playerId,
       (id: string) => this.citizenSystem.getCitizen(id));
@@ -2359,8 +2739,9 @@ export class GameEngine {
    * @returns Candidate citizens not controlled by any player.
    */
   public getPlayableCharacters(limit: number = 12): Citizen[] {
+    const assigned=this.assignedCitizenIds();
     const pool = this.citizenSystem.getAliveCitizens()
-      .filter((citizen: Citizen): boolean => !citizen.isPlayerCharacter);
+      .filter((citizen: Citizen): boolean => citizen.age>=18 && !citizen.isPlayerCharacter && !assigned.has(citizen.id));
     const classes: Citizen['socialClass'][] = ['royal', 'noble', 'middle', 'peasant'];
     const groups = classes.map(socialClass => pool
       .filter(citizen => citizen.socialClass === socialClass)
@@ -2387,8 +2768,13 @@ export class GameEngine {
    */
   public switchCharacter(playerId: string, citizenId: string): Citizen {
     this.requirePlayer(playerId);
+    if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    return this.switchCharacterFor(playerId,citizenId,'Spielerwahl');
+  }
+  private switchCharacterFor(playerId:string,citizenId:string,reason:string):Citizen {
     const citizen = this.citizenSystem.getCitizen(citizenId);
     if (!citizen || !citizen.isAlive) throw new Error('Dieser Charakter lebt nicht mehr.');
+    if(citizen.age<18||this.assignedCitizenIds().has(citizenId))throw Error('Diese Person ist minderjährig oder bereits mit einem Amt/Auftrag betraut.');
     if (citizen.isPlayerCharacter && citizen.controlledByPlayerId !== playerId) {
       throw new Error('Dieser Charakter wird bereits von einem anderen Spieler gespielt.');
     }
@@ -2396,7 +2782,7 @@ export class GameEngine {
     const switched = this.roleSwitchingSystem.switchRole(playerId, citizenId,
       (id: string) => this.citizenSystem.getCitizen(id),
       (id: string, updates: Partial<Citizen>) => this.citizenSystem.updateCitizen(id, updates),
-      this.currentYear, this.currentMonth, 'Spielerwahl');
+      this.currentYear, this.currentMonth, reason);
     if (!switched) throw new Error('Der Rollenwechsel ist fehlgeschlagen.');
     this.emit('characterSwitched', { playerId, citizenId });
     return citizen;
@@ -2421,6 +2807,11 @@ export class GameEngine {
    */
   public performCharacterAction(playerId: string, action: CharacterAction): string {
     const player = this.requirePlayer(playerId);
+    if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    return this.performCharacterActionFor(player,action);
+  }
+  private performCharacterActionFor(player:Player,action:CharacterAction):string {
+    const playerId=player.id;
     const character = this.getCurrentCharacter(playerId);
     if (!character) throw new Error('Du spielst gerade keinen lebenden Charakter. Wähle eine neue Rolle.');
     if (!this.canCharacterAct(playerId)) throw new Error('Dein Charakter hat in diesem Monat bereits gehandelt.');
@@ -2460,6 +2851,7 @@ export class GameEngine {
         throw new Error('Unbekannte Charakteraktion.');
     }
     this.roleSwitchingSystem.storeMetaKnowledge(playerId, 'lastActionMonth', this.currentYear * 12 + this.currentMonth);
+    this.recordChronicle(message,playerId);
     this.emit('characterActed', { playerId, action, message });
     return message;
   }
@@ -3444,7 +3836,6 @@ export class GameEngine {
   private applyEcologicalEffects(): void {
     const seasonalEffects = this.climateSystem.getSeasonalEffects();
     const weatherEffects = this.climateSystem.getWeatherEffects();
-    const activeDisasters = this.climateSystem.getActiveDisasters();
     
     for (const player of this.players.values()) {
       const kingdom = player.kingdom;
@@ -3456,22 +3847,24 @@ export class GameEngine {
         (weatherEffects.happinessModifier - 1) * 5
       ));
       
-      // Apply disaster effects
-      for (const disaster of activeDisasters) {
-        kingdom.resources.gold = Math.max(0, kingdom.resources.gold - disaster.economicDamage);
-        kingdom.resources.food = Math.max(0, kingdom.resources.food - disaster.cropDamage);
-        kingdom.happiness = Math.max(0, kingdom.happiness - disaster.severity);
-        
-        // Emit disaster event
-        this.emit('naturalDisaster', {
-          playerId: player.id,
-          disaster: {
-            type: disaster.type,
-            severity: disaster.severity,
-            casualties: disaster.casualties
-          }
-        });
+    }
+  }
+
+  /** Resolve the one-off loss immediately; unresolved disasters must not charge every year. */
+  private applyDisasterEffects():void {
+    const names:Record<string,string>={flood:'Hochwasser',storm:'Sturm',tornado:'Tornado',drought:'Dürre',wildfire:'Waldbrand',locust_plague:'Heuschreckenplage',hailstorm:'Hagel',hurricane:'Orkan',blizzard:'Schneesturm',earthquake:'Erdbeben'};
+    for(const disaster of this.climateSystem.getActiveDisasters()) {
+      if(this.config.randomEvents)for(const player of this.players.values()) {
+        if(disaster.affectedRegions.length&&!disaster.affectedRegions.some(id=>[this.getStartLocation().id,player.id,player.kingdom.id].includes(id)))continue;
+        const kingdom=player.kingdom,gold=Math.min(kingdom.resources.gold,Math.max(0,disaster.economicDamage)),food=Math.min(kingdom.resources.food,Math.max(0,disaster.cropDamage));
+        kingdom.resources.gold-=gold;kingdom.resources.food-=food;
+        kingdom.happiness=Math.max(0,kingdom.happiness-disaster.severity);
+        const message=`Naturereignis: ${names[disaster.type]??disaster.type} · einmaliger Verlust ${gold} Gold, ${food} Nahrung; Schwere ${disaster.severity}/10. Simuliertes Ereignis, keine historische Ortsmeldung.`;
+        this.treasuryCheckpoint(player,'Naturereignis: '+(names[disaster.type]??disaster.type));
+        this.recordChronicle(message,player.id);
+        this.emit('naturalDisaster',{playerId:player.id,message,disaster:{type:disaster.type,severity:disaster.severity,casualties:disaster.casualties}});
       }
+      this.climateSystem.resolveDisaster(disaster.id);
     }
   }
 }

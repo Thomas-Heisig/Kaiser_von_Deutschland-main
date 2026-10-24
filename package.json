@@ -16,17 +16,16 @@
     "@pixi/graphics": "^7.4.3",
     "@pixi/text": "^7.4.3",
     "localforage": "^1.10.0",
-    "pixi.js": "^8.14.3",
-    "sql.js": "^1.13.0",
-    "uuid": "^9.0.1"
+    "pixi.js": "^8.22.0",
+    "sql.js": "^1.15.1",
+    "uuid": "^14.0.3"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "@types/sql.js": "^1.4.9",
-    "@types/uuid": "^9.0.7",
-    "typescript": "^5.3.3",
-    "vite": "^7.3.0",
-    "vitest": "^4.0.16"
+    "@types/node": "^26.6.5",
+    "@types/sql.js": "^1.4.11",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   },
   "keywords": [
     "game",
@@ -38,5 +37,8 @@
     "germany"
   ],
   "author": "Kaiser Development Team",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  }
 }

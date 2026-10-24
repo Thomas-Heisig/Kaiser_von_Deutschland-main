@@ -1,6 +1,8 @@
 # Kenney Retro – geprüfte Pakete und erster Prototyp
 
-**Stand: 18.10.2026.** Die Originalarchive wurden vom Nutzer bereitgestellt und lokal geöffnet.
+**Aktualisierung 24.10.2026:** Die Hauptkarte lädt inzwischen 24 texturierte GLB-Kompositionen aus sechs WebP-Atlanten unter `public/assets/kenney/buildings/`. `provenance.json` hält verwendete Originalteile und Hashes fest; `scripts/render_kenney_districts.py` reproduziert den Export mit Trimesh/VTK und den bereitgestellten ZIPs. Die originale UV-Texturierung wird übernommen. Frühe Epochen vor 500 n. Chr. verwenden eigene schematische Darstellungen. Das neue geografische Kartenpaket ist separat unter [Ganderkesee](GANDERKESEE.md) dokumentiert. Die folgenden Abschnitte beschreiben die ältere Prototyp-Baseline; ihr damaliger Freigabestatus ist historisch.
+
+**Prototypstand: 18.10.2026.** Die Originalarchive wurden vom Nutzer bereitgestellt und lokal geöffnet.
 
 | Paket | Version aus `License.txt` | Lizenz | Inhalt | Einsatz |
 |---|---|---|---|---|

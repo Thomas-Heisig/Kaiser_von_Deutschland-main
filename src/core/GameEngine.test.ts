@@ -50,6 +50,83 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('plays, researches, travels and reloads a Bronze Age realm with negative years', async () => {
+    const engine = new GameEngine({startingYear:-1999,campaignId:'frei',randomEvents:true,enableWiki:false});
+    engines.push(engine);
+    const player = engine.addPlayer({name:'Frühstart',kingdomName:'Siedlung',gender:'other'});
+    await engine.startGame(); engine.pauseGame();
+    player.kingdom.resources.gold=100000;player.kingdom.resources.food=100000;
+    expect(engine.getTechnologyOptions(player.id).map(item=>item.technology.id)).toContain('agriculture');
+    expect(engine.getTechnologyOptions(player.id).some(item=>item.technology.id==='iron_working')).toBe(false);
+    const farms = player.kingdom.infrastructure.farms;
+    await engine.buildForPlayer(player.id,'farms');
+    expect(player.kingdom.infrastructure.farms).toBe(farms+1);
+    player.kingdom.infrastructure.schools=5;
+    engine.travelWorld(player.id,'rival:ostmark');
+    for (let m=0;m<12;m++) {
+      const pending=engine.getPendingCouncilDecision(player.id);
+      if (pending) {
+        expect(pending.id).not.toBe('guild_petition');
+        const choice=engine.getCouncilChoices(player.id).find(c=>c.affordable)!;
+        engine.resolveCouncilDecision(player.id,choice.id);
+      }
+      await engine.advanceMonth();
+      if (m===2) engine.startResearch(player.id,'agriculture');
+    }
+    expect(engine.getCurrentYear()).toBe(-1998);
+    expect(engine.getTechnologyProgress(player.id).researched).toContain('agriculture');
+    expect(engine.getStrategyWorld(player.id).currentRegion).toBe('rival:ostmark');
+    engine.sponsorExhibition(player.id,'aegean-middle-bronze');
+    await engine.saveGame('bronze');
+    const loaded=new GameEngine({enableWiki:false}); engines.push(loaded); await loaded.loadGame('bronze');
+    expect(loaded.getCurrentYear()).toBe(-1998);
+    expect(loaded.getTimeSystem().getFormattedDate()).toBe('1.1.1999 v. Chr.');
+    expect(loaded.getPlayers()[0].kingdom.foundingYear).toBe(-1999);
+    expect(loaded.getExhibitionOptions(player.id).find(item=>item.milestone.id==='aegean-middle-bronze')?.held).toBe(true);
+    expect(()=>loaded.sponsorExhibition(player.id,'aegean-middle-bronze')).toThrow('bereits');
+    expect(Object.values(loaded.getPlayers()[0].kingdom.resources).every(Number.isFinite)).toBe(true);
+  });
+
+  it('crosses the civil era boundary with stable citizens and founding dates', async () => {
+    const engine=new GameEngine({startingYear:0,campaignId:'frei',randomEvents:false,enableWiki:false}); engines.push(engine);
+    const player=engine.addPlayer({name:'Zeitenwende',kingdomName:'Siedlung',gender:'other'});
+    await engine.startGame(); engine.pauseGame();
+    for(let m=0;m<12;m++) await engine.advanceMonth();
+    expect(engine.getCurrentYear()).toBe(1);
+    expect(engine.getTimeSystem().getFormattedDate()).toBe('1.1.1 n. Chr.');
+    await engine.saveGame('era-boundary');
+    const loaded=new GameEngine({enableWiki:false});engines.push(loaded);await loaded.loadGame('era-boundary');
+    expect(loaded.getCurrentYear()).toBe(1);
+    expect(loaded.getPlayers()[0].kingdom.foundingYear).toBe(0);
+    expect(loaded.getCurrentCharacter(player.id)?.age).toBeGreaterThan(0);
+  });
+
+  it('gates historical events and paid exhibitions by month across save/load', async () => {
+    const engine = new GameEngine({startingYear:2000,randomEvents:false,enableWiki:false});
+    engines.push(engine);
+    engine.addPlayer({name:'Ada',kingdomName:'Zeitreich',gender:'other',startingStats:{age:25}});
+    await engine.startGame(); engine.pauseGame();
+    const id = engine.getPlayers()[0].id;
+    const events: string[] = [];
+    engine.on('historyMilestone', ({milestone}: {milestone:{id:string}}) => events.push(milestone.id));
+    expect(() => engine.sponsorExhibition(id, 'expo-hannover')).toThrow('noch nicht');
+    for (let i=0;i<4;i++) await engine.advanceMonth();
+    expect(engine.getCurrentMonth()).toBe(5);
+    expect(events).toEqual([]);
+    await engine.saveGame('history-may');
+    const restored = new GameEngine({enableWiki:false}); engines.push(restored);
+    await restored.loadGame('history-may');
+    restored.on('historyMilestone', ({milestone}: {milestone:{id:string}}) => events.push(milestone.id));
+    expect(restored.getHistoricalTimeline().some(item => item.id === 'expo-hannover')).toBe(false);
+    await restored.advanceMonth();
+    expect(events).toEqual(['expo-hannover']);
+    expect(restored.getExhibitionOptions(id).some(item => item.milestone.id === 'expo-hannover')).toBe(true);
+    await restored.saveGame('history-june');
+    await restored.loadGame('history-june');
+    await restored.advanceMonth();
+    expect(events).toEqual(['expo-hannover']);
+  });
+
   it('persists paid travel, discovers the destination and migrates old saves', async()=>{
     const engine=await campaign(),player=engine.getPlayers()[0];
     const gold=player.kingdom.resources.gold,food=player.kingdom.resources.food;
@@ -210,10 +287,226 @@ describe('Playable campaign integration', (): void => {
     expect(engine.getCouncilHistory(second.id)).toHaveLength(0);
   });
 
+  it('delegates within a shared budget and restores Bronze Age civic assignments',async()=>{
+    const engine=new GameEngine({startingYear:-1999,randomEvents:false,enableWiki:false});engines.push(engine);
+    const player=engine.addPlayer({name:'Test',kingdomName:'Geest',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    Object.assign(player.kingdom.resources,{gold:50000,food:100000,wood:5000,stone:5000,iron:5000});
+    const prefs=engine.getAdministration(player.id);
+    for(const domain of Object.keys(prefs.domains) as Array<keyof typeof prefs.domains>)prefs.domains[domain]=true;
+    engine.setAdministration(player.id,prefs);engine.setCouncilAutomatic(player.id,true);
+    const originalBudget=engine.getAdministrationBudget(player.id).budget;
+    await engine.advanceMonth();
+    const report=engine.getTreasuryReport(player.id)!;
+    const spent=report.entries.filter(e=>e.reason.startsWith('Automatik:')).reduce((sum,e)=>sum+Math.max(0,-e.amount),0);
+    // Monthly earnings precede budget allocation; allow precisely their effect on the 5% budget.
+    const beforeAuto=report.opening+report.entries.filter(e=>!e.reason.startsWith('Automatik:')).reduce((sum,e)=>sum+e.amount,0);
+    expect(spent).toBeLessThanOrEqual(originalBudget+Math.max(0,beforeAuto-report.opening)*.05+1);
+    expect(engine.getCivicMissions(player.id).active.length).toBeGreaterThan(0);
+    expect(engine.getCivicMissions(player.id).active[0].started).toBeLessThan(0);
+    expect(report.closing).toBeCloseTo(player.kingdom.resources.gold);
+    await engine.saveGame('administration-bronze');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('administration-bronze');
+    expect(restored.getAdministration(player.id)).toEqual(prefs);
+    expect(restored.getCivicMissions(player.id).active).toEqual(engine.getCivicMissions(player.id).active);
+  });
+
+  it('runs one delegated personal action per month, persists the plan and respects manual priority',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer(),character=engine.getCurrentCharacter(p.id)!;
+    const prefs=engine.getAdministration(p.id);prefs.domains.character=true;prefs.characterPlan='study';engine.setAdministration(p.id,prefs);
+    const wealth=character.wealth;
+    engine.performCharacterAction(p.id,'work');
+    const literacy=character.skills.literacy;
+    await engine.advanceMonth();
+    expect(character.wealth).toBeGreaterThan(wealth);expect(character.skills.literacy).toBe(literacy);
+    await engine.advanceMonth();expect(character.skills.literacy).toBe(Math.min(100,literacy+6));
+    await engine.saveGame('personal-automation');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('personal-automation');
+    expect(restored.getAdministration(p.id)).toEqual(prefs);
+    expect(restored.getChronicle().some(e=>e.message.includes('studiert'))).toBe(true);
+  });
+
+  it('hands a dead character to an adult child and persists the succession',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer(),old=engine.getCurrentCharacter(p.id)!;
+    const citizens=engine.getCitizenSystem();
+    const child=citizens.createCitizen({firstName:'Nachfolge',lastName:'Test',gender:'female',age:20,birthYear:1180,birthMonth:1,profession:'farmer',regionId:old.regionId,familyId:old.familyId});
+    old.familyRelations.push({citizenId:child.id,relationType:'child'});child.familyRelations.push({citizenId:old.id,relationType:'parent'});
+    const prefs=engine.getAdministration(p.id);prefs.domains.character=true;engine.setAdministration(p.id,prefs);
+    old.isAlive=false;
+    await engine.advanceMonth();
+    expect(engine.getCurrentCharacter(p.id)?.id).toBe(child.id);
+    expect(old.isPlayerCharacter).toBe(false);
+    expect(engine.getChronicle().some(e=>e.message.includes('Automatische Nachfolge: Nachfolge Test'))).toBe(true);
+    await engine.saveGame('successor');const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('successor');
+    expect(restored.getCurrentCharacter(p.id)?.id).toBe(child.id);
+  });
+
+  it('keeps a late-list assigned citizen visible and preserves a funded mission across death',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer(),s=engine.getCitizenSystem();
+    for(let i=0;i<110;i++)s.createCitizen({firstName:'Extra '+i,lastName:'Test',gender:'male',age:30,birthYear:1170,birthMonth:1,profession:'farmer',regionId:'dorf'});
+    const worker=s.getAllCitizens().at(-1)!;
+    engine.assignCivicMission(p.id,worker.id,'crafts');
+    expect(engine.getCivicMissions(p.id).citizens.some(c=>c.id===worker.id)).toBe(true);
+    const prefs=engine.getAdministration(p.id);prefs.domains.civic=true;engine.setAdministration(p.id,prefs);
+    worker.isAlive=false;p.kingdom.resources.gold=0;
+    await engine.advanceMonth();
+    const active=engine.getCivicMissions(p.id).active.find(a=>a.missionId==='crafts')!;
+    expect(active).toBeDefined();expect(active.citizenId).not.toBe(worker.id);expect(active.completedMonths).toBe(0);
+    expect(engine.getAutomationPeople(p.id).some(a=>a.alive&&a.task==='Handwerk weitergeben')).toBe(true);
+    expect(engine.getChronicle().some(e=>e.message.includes('Auftragsnachfolge'))).toBe(true);
+  });
+
+  it('replaces automatic court vacancies, keeps manual vacancies loadable and prevents duplicate jobs',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer();
+    const advisor=engine.getCourtCandidates(p.id)[0];engine.appointCourtAssistant(p.id,'forschung',advisor.id);
+    expect(()=>engine.assignCivicMission(p.id,advisor.id,'grain')).toThrow('Hofamt');
+    engine.setCourtAssistantMode(p.id,'forschung','automatisch');advisor.isAlive=false;
+    await engine.advanceMonth();
+    expect(engine.getCourtAssistants(p.id)[0].citizen?.isAlive).toBe(true);
+    expect(engine.getCourtAssistants(p.id)[0].citizenId).not.toBe(advisor.id);
+    engine.setCourtAssistantMode(p.id,'forschung','beratung');engine.getCourtAssistants(p.id)[0].citizen!.isAlive=false;
+    await engine.saveGame('vacant-court');const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('vacant-court');
+    expect(restored.getCourtAssistants(p.id)[0].citizen?.isAlive).toBe(false);
+    const replacement=restored.getCourtCandidates(p.id)[0];restored.appointCourtAssistant(p.id,'forschung',replacement.id);
+    expect(restored.getCourtAssistants(p.id)[0].citizenId).toBe(replacement.id);
+  });
+
+  it('surfaces an existing unnamed adult when an old save has no living successor',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer();
+    for(const citizen of engine.getCitizenSystem().getAllCitizens())citizen.isAlive=false;
+    await engine.saveGame('no-survivors');const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('no-survivors');
+    expect(restored.getCurrentCharacter(p.id)).toBeNull();
+    expect(restored.getCharacterSuccession(p.id).candidates).toHaveLength(1);
+    expect(restored.getCharacterSuccession(p.id).candidates[0].familyRelations).toEqual([]);
+    expect(restored.getPlayerById(p.id)?.kingdom.population).toEqual(p.kingdom.population);
+  });
+
+  it('runs care and personal automation through ten years of the actual monthly engine',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer(),character=engine.getCurrentCharacter(p.id)!;
+    const prefs=engine.getAdministration(p.id);prefs.domains.character=true;engine.setAdministration(p.id,prefs);
+    engine.setCouncilAutomatic(p.id,true);
+    for(let month=0;month<120;month++) {
+      p.kingdom.resources.food=50000;p.kingdom.resources.gold=50000;
+      await engine.advanceMonth();
+    }
+    expect(character.isAlive).toBe(true);expect(character.health.overall).toBeGreaterThan(60);
+    expect(character.needs.food).toBeGreaterThan(60);expect(character.needs.shelter).toBeGreaterThan(50);
+    expect(engine.getCurrentCharacter(p.id)).not.toBeNull();
+  });
+
+  it('keeps personal automation and successor control separate in hotseat',async()=>{
+    const engine=new GameEngine({startingYear:-1999,enableWiki:false,randomEvents:false});engines.push(engine);
+    const first=engine.addPlayer({name:'A',kingdomName:'A',gender:'other'}),second=engine.addPlayer({name:'B',kingdomName:'B',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    const prefs=engine.getAdministration(first.id);prefs.domains.character=true;prefs.characterPlan='study';engine.setAdministration(first.id,prefs);
+    const other=engine.getCurrentCharacter(second.id)!,literacy=other.skills.literacy;
+    expect(()=>engine.performCharacterAction(second.id,'study')).toThrow('Nicht am Zug');
+    expect(()=>engine.switchCharacter(second.id,engine.getPlayableCharacters(1)[0].id)).toThrow('Nicht am Zug');
+    engine.getCurrentCharacter(first.id)!.isAlive=false;
+    await engine.advanceMonth();
+    expect(engine.getCurrentCharacter(first.id)?.id).not.toBe(other.id);
+    expect(engine.getCurrentCharacter(second.id)?.id).toBe(other.id);
+    expect(other.skills.literacy).toBe(literacy);
+    expect(engine.getAdministration(second.id).domains.character).toBe(false);
+  });
+
+  it('allows small monthly celebrations again after the month changes, including BCE saves',async()=>{
+    const engine=new GameEngine({startingYear:-1999,randomEvents:false,enableWiki:false});engines.push(engine);
+    const player=engine.addPlayer({name:'Fest',kingdomName:'Geest',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    player.kingdom.resources.gold=10000;player.kingdom.resources.food=10000;
+    engine.holdFestival(player.id,'social-meal');
+    expect(()=>engine.holdFestival(player.id,'social-meal')).toThrow('bereits');
+    await engine.saveGame('bronze-festival');
+    await engine.loadGame('bronze-festival');
+    expect(()=>engine.holdFestival(player.id,'social-meal')).toThrow('bereits');
+    await engine.advanceMonth();
+    expect(engine.getFestivalOptions(player.id).find(o=>o.event.id==='social-meal')?.alreadyHeld).toBe(false);
+  });
+
+  it('charges a disaster once, logs the exact loss, and persists its resolution',async()=>{
+    const engine=new GameEngine({startingYear:1200,randomEvents:true,enableWiki:false});engines.push(engine);
+    const player=engine.addPlayer({name:'Test',kingdomName:'Geest',gender:'other'});
+    await engine.startGame();engine.pauseGame();engine.setCouncilAutomatic(player.id,true);
+    player.kingdom.resources.gold=100000;player.kingdom.resources.food=100000;
+    const climate=engine.getClimateSystem();
+    const snapshot=climate.serialize();
+    snapshot.disasters.push(['test-flood',{id:'test-flood',type:'flood',severity:3,year:1200,month:1,affectedRegions:[],casualties:0,economicDamage:750,cropDamage:50,buildingsDamaged:0,resolved:false}]);
+    // Seed through the supported climate save format.
+    const {ClimateSystem}=await import('./ClimateSystem');
+    const seeded=ClimateSystem.deserialize(snapshot);
+    vi.spyOn(climate,'getActiveDisasters').mockImplementation(()=>seeded.getActiveDisasters());
+    vi.spyOn(climate,'resolveDisaster').mockImplementation(id=>seeded.resolveDisaster(id));
+    await engine.advanceMonth();
+    expect(engine.getTreasuryReport(player.id)?.entries.find(e=>e.reason==='Naturereignis: Hochwasser')?.amount).toBe(-750);
+    expect(engine.getChronicle().some(e=>e.message.includes('einmaliger Verlust 750 Gold'))).toBe(true);
+    expect(seeded.getActiveDisasters()).toHaveLength(0);
+    expect(ClimateSystem.deserialize(seeded.serialize()).getActiveDisasters()).toHaveLength(0);
+    await engine.advanceMonth();
+    expect(engine.getTreasuryReport(player.id)?.entries.some(e=>e.reason==='Naturereignis: Hochwasser')).toBe(false);
+  });
+
+  it('persists regional investments, validates actions and links completed civic aid',async()=>{
+    const engine=await campaign(),player=engine.getPlayers()[0];
+    Object.assign(player.kingdom.resources,{gold:50000,food:50000,wood:5000,stone:5000});
+    const gold=player.kingdom.resources.gold;
+    engine.addressRegionalProvisioning(player.id,'geest','storage');
+    expect(player.kingdom.resources.gold).toBe(gold-400);
+    expect(()=>engine.addressRegionalProvisioning(player.id,'geest','storage')).toThrow('bereits');
+    const citizen=engine.getCivicMissions(player.id).citizens[0];
+    engine.assignCivicMission(player.id,citizen.id,'grain');
+    for(let n=0;n<3;n++)await engine.advanceMonth();
+    expect(engine.getChronicle().some(e=>e.message.includes('Bürgerhilfe'))).toBe(true);
+    expect(engine.getRegionalProvisioning(player.id)[0].storage).toBe(1);
+    await engine.saveGame('regional');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('regional');
+    expect(restored.getRegionalProvisioning(player.id)).toEqual(engine.getRegionalProvisioning(player.id));
+    const {decodeSave}=await import('./SaveCodec');
+    const snapshot:any=await decodeSave(await localforage.getItem('kaiser-ii-save-regional'));
+    snapshot.regionalProvisioning[player.id].regions[0].storage=99;
+    await localforage.setItem('kaiser-ii-save-bad-provision',snapshot);
+    await expect(restored.loadGame('bad-provision')).rejects.toThrow('Versorgung');
+    expect(restored.getRegionalProvisioning(player.id)[0].storage).toBe(1);
+    delete snapshot.regionalProvisioning;
+    await localforage.setItem('kaiser-ii-save-old-provision',snapshot);await restored.loadGame('old-provision');
+    expect(restored.getRegionalProvisioning(player.id).every(r=>r.storage===0&&r.hunger===0)).toBe(true);
+  });
+
+  it('isolates regional decisions and persistence across hotseat realms',async()=>{
+    const engine=new GameEngine({startingYear:-1999,randomEvents:false,enableWiki:false});engines.push(engine);
+    const first=engine.addPlayer({name:'A',kingdomName:'A',gender:'other'}),second=engine.addPlayer({name:'B',kingdomName:'B',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    Object.assign(first.kingdom.resources,{gold:50000,wood:5000,stone:5000});
+    expect(()=>engine.addressRegionalProvisioning(second.id,'geest','storage')).toThrow('Nicht am Zug');
+    engine.addressRegionalProvisioning(first.id,'geest','storage');
+    expect(engine.getRegionalProvisioning(second.id)[0].storage).toBe(0);
+    await engine.saveGame('regional-hotseat');await engine.loadGame('regional-hotseat');
+    expect(engine.getRegionalProvisioning(first.id)[0].storage).toBe(1);
+    expect(engine.getRegionalProvisioning(second.id)[0].storage).toBe(0);
+  });
+
+  it('uses the civic administration budget for aid in a stressed region',async()=>{
+    const engine=await campaign(),player=engine.getPlayers()[0];
+    Object.assign(player.kingdom.resources,{gold:50000,food:50000});
+    const prefs=engine.getAdministration(player.id);prefs.domains.civic=true;engine.setAdministration(player.id,prefs);
+    engine.getRegionalProvisioning(player.id);
+    await engine.saveGame('aid');
+    const {decodeSave}=await import('./SaveCodec');
+    const snapshot:any=await decodeSave(await localforage.getItem('kaiser-ii-save-aid'));
+    snapshot.regionalProvisioning[player.id].regions[2].hunger=80;
+    await localforage.setItem('kaiser-ii-save-aid',snapshot);await engine.loadGame('aid');
+    await engine.advanceMonth();
+    const region=engine.getRegionalProvisioning(player.id)[2];
+    expect(region.reliefMonths).toBe(3);
+    expect(region.hunger).toBe(40);
+    expect(engine.getTreasuryReport(player.id)?.entries.some(e=>e.reason.includes('Nothilfe')&&e.amount===-120)).toBe(true);
+  });
+
   it('rejects premature modernization and preserves old-save-compatible progress', async (): Promise<void> => {
     const engine = await campaign();
     const player = engine.getPlayers()[0];
-    expect(engine.getModernizationOptions(player.id)).toHaveLength(6);
+    expect(engine.getModernizationOptions(player.id).some(x=>x.visible&&x.project.id==='village-well')).toBe(true);
+    expect(engine.getModernizationOptions(player.id).find(x=>x.project.id==='manufacturing')?.visible).toBe(false);
     expect(engine.getModernizationOptions(player.id).every(x => !x.canStart)).toBe(true);
     expect(() => engine.launchModernization(player.id,'manufacturing')).toThrow('Verfügbar ab');
     await engine.saveGame('early-modernization');
@@ -557,6 +850,10 @@ describe('Playable campaign integration', (): void => {
     expect(() => engine.takeWarLoan(player.id)).toThrow('bereits');
     await engine.advanceMonth();
     expect(engine.getWarFinanceOverview(player.id).stats.totalWarDebt).toBeLessThan(debt);
+    const report=engine.getTreasuryReport(player.id)!;
+    expect(report.entries.find(e=>e.reason.includes('Darlehen'))?.amount).toBeLessThan(0);
+    expect(report.opening+report.entries.reduce((sum,e)=>sum+e.amount,0)).toBeCloseTo(report.closing);
+    expect(engine.getChronicle().some(e=>e.message.includes('Kassenabschluss'))).toBe(true);
     await engine.saveGame('war-loan');
     const restored = new GameEngine({ enableWiki: false });
     engines.push(restored);
@@ -564,6 +861,7 @@ describe('Playable campaign integration', (): void => {
     expect(restored.getWarFinanceOverview(player.id).stats.totalWarDebt)
       .toBeCloseTo(engine.getWarFinanceOverview(player.id).stats.totalWarDebt);
     expect(restored.getWarFinanceOverview(player.id).available).toBe(false);
+    expect(restored.getTreasuryReport(player.id)).toEqual(report);
   });
 
   it('lets rulers send embassies and restores relations after saving', async (): Promise<void> => {

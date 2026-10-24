@@ -16,7 +16,10 @@ export interface CivicCompletion {
   playerId:string; citizenId:string; missionId:string; success:boolean; message:string;
 }
 export const CIVIC_MISSIONS: readonly CivicMission[] = [
-  {id:'grain',professions:['farmer','laborer'],title:'Dörfer mit Korn versorgen',description:'Ein örtlicher Verwalter verteilt Nahrung und verbessert die Vorratslage.',minYear:0,preferredSkill:'agriculture',months:2,cost:{gold:120,food:200},reward:{food:320},happiness:3},
+  {id:'grain',professions:['farmer','laborer'],title:'Siedlungen mit Korn versorgen',description:'Ein örtlicher Verwalter verteilt Nahrung und verbessert die Vorratslage.',minYear:-1999,preferredSkill:'agriculture',months:2,cost:{gold:120,food:200},reward:{food:320},happiness:3},
+  {id:'water',professions:['laborer','carpenter'],title:'Wasserstellen pflegen',description:'Helfer sichern Zugänge zu Wasser und reinigen die gemeinschaftlichen Entnahmestellen.',minYear:-1999,preferredSkill:'craftsmanship',months:2,cost:{gold:90,wood:60},reward:{food:120},happiness:2,stability:1},
+  {id:'crafts',professions:['artisan','weaver','carpenter'],title:'Handwerk weitergeben',description:'Erfahrene Hände unterrichten Nachwuchs im Werkzeugbau und in der Verarbeitung örtlicher Rohstoffe.',minYear:-1999,preferredSkill:'craftsmanship',months:3,cost:{gold:150,wood:80},reward:{wood:180,gold:80},stability:2},
+  {id:'neighbors',professions:['laborer','farmer'],title:'Nachbarschaftshilfe organisieren',description:'Die Gemeinschaft unterstützt Haushalte bei Ernte, Versorgung und Reparaturen.',minYear:-1999,preferredSkill:'leadership',months:2,cost:{gold:80,food:100},reward:{wood:70},happiness:4},
   {id:'guild',professions:['artisan','blacksmith','carpenter','weaver'],title:'Handwerkszunft aufbauen',description:'Meister und Gesellen errichten eine verlässliche Werkstattorganisation.',minYear:1100,maxYear:1850,preferredSkill:'craftsmanship',months:4,cost:{gold:400,wood:200},reward:{gold:650,iron:90},stability:2},
   {id:'merchant',professions:['merchant'],title:'Handelswege erschließen',description:'Ein Bürger knüpft wirtschaftliche Verbindungen zwischen Märkten.',minYear:1100,preferredSkill:'trading',months:3,cost:{gold:320,food:140},reward:{gold:620},happiness:1},
   {id:'school',professions:['scholar','clergy'],title:'Schreib- und Schulunterricht fördern',description:'Eine Lehrkraft bildet junge Bürger über mehrere Monate aus.',minYear:1250,preferredSkill:'literacy',months:5,cost:{gold:380,wood:110},reward:{gold:220},stability:4},
@@ -42,6 +45,13 @@ export class CivicMissionSystem {
   }
   public active(playerId:string):CivicAssignment[] { return this.assignments.filter(x=>x.playerId===playerId).map(x=>({...x})); }
   public historyFor(playerId:string):CivicCompletion[] { return this.history.filter(x=>x.playerId===playerId).map(x=>({...x})); }
+  public replaceCitizen(playerId:string,oldId:string,citizen:Citizen):void {
+    if(!citizen.isAlive||citizen.isPlayerCharacter||citizen.age<18||this.assignments.some(a=>a.citizenId===citizen.id))
+      throw Error('Nachfolge für diesen Auftrag ist nicht verfügbar.');
+    const assignment=this.assignments.find(a=>a.playerId===playerId&&a.citizenId===oldId);
+    if(!assignment)throw Error('Auftrag nicht gefunden.');
+    assignment.citizenId=citizen.id;
+  }
   public start(playerId:string,citizen:Citizen,kingdom:Kingdom,missionId:string,year:number,month:number):CivicAssignment {
     const mission=this.options(year).find(x=>x.id===missionId);
     if(!mission)throw Error('Auftrag in dieser Epoche nicht verfügbar.');
@@ -55,13 +65,14 @@ export class CivicMissionSystem {
     this.assignments.push(assignment);
     return {...assignment};
   }
-  public advance(playerId:string,kingdom:Kingdom,year:number,month:number,getCitizen:(id:string)=>Citizen|undefined):CivicCompletion[] {
+  public advance(playerId:string,kingdom:Kingdom,year:number,month:number,getCitizen:(id:string)=>Citizen|undefined,waitForSuccessor=false):CivicCompletion[] {
     const events:CivicCompletion[]=[];
     for(const assignment of [...this.assignments].filter(x=>x.playerId===playerId)){
       if(assignment.started>=year*12+month)continue;
       const citizen=getCitizen(assignment.citizenId);
       const mission=CIVIC_MISSIONS.find(m=>m.id===assignment.missionId);
       if(!mission||!citizen?.isAlive){
+        if(mission&&waitForSuccessor)continue;
         const event={playerId,citizenId:assignment.citizenId,missionId:assignment.missionId,success:false,message:'Bürgerauftrag abgebrochen: beauftragte Person nicht mehr verfügbar.'};
         this.history.unshift(event);events.push(event);
         this.assignments=this.assignments.filter(x=>x!==assignment);continue;
@@ -113,7 +124,7 @@ export class CivicMissionSystem {
     const assignments=snapshot.assignments as CivicAssignment[];
     if(assignments.some(x=>!x||!playerIds.has(x.playerId)||typeof x.citizenId!=='string'||
       !getCitizen(x.citizenId)||!CIVIC_MISSIONS.some(m=>m.id===x.missionId)||
-      !Number.isSafeInteger(x.started)||x.started<0||
+      !Number.isSafeInteger(x.started)||x.started<(-1999*12+1)||
       !Number.isSafeInteger(x.completedMonths)||x.completedMonths<0||x.completedMonths>100))
       throw Error('Ungültige Bürgeraufträge im Spielstand.');
     this.assignments=assignments.map(x=>({...x}));

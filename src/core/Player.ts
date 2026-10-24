@@ -260,7 +260,7 @@ export class Player {
       name: data.kingdomName,
       rulerName: data.name,
       difficulty: data.difficulty || 1,
-      foundingYear: data.birthYear || 1
+      foundingYear: data.birthYear ?? 1
     };
     
     this.kingdom = new Kingdom(kingdomConfig);

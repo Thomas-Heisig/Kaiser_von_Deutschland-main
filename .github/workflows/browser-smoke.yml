@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20.x'
+          node-version: '22.x'
           cache: npm
       - run: npm ci
       - run: npm install --prefix .browser-tools --no-save --no-package-lock playwright@1.56.1
@@ -31,14 +31,24 @@ jobs:
           node scripts/browser-smoke.mjs
           node scripts/atlas-smoke.mjs
           node scripts/report-smoke.mjs
+          node scripts/history-smoke.mjs
           node scripts/strategy-smoke.mjs
+          node scripts/ganderkesee-smoke.mjs
+          node scripts/provisioning-smoke.mjs
+          node scripts/lifecycle-smoke.mjs
       - name: Save screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: browser-smoke-shots
           path: |
             smoke-*.png
             .temp/report-*.png
+            .temp/history-*.png
             .temp/strategy-*.png
+            .temp/ganderkesee-*.png
+            .temp/economy-*.png
+            .temp/administration-*.png
+            .temp/provisioning-*.png
+            .temp/lifecycle-*.png
           if-no-files-found: ignore

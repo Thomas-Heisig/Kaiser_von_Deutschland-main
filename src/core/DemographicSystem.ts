@@ -256,7 +256,7 @@ export class DemographicSystem {
     } else if (citizen.age < 5) {
       baseChance *= 2; // Kindersterblichkeit
     } else if (citizen.age > 60) {
-      baseChance *= 2 + (citizen.age - 60) * 0.2;
+      baseChance *= 2 * Math.pow(1.085, citizen.age - 60);
     }
     
     // Gesundheit reduziert Todeswahrscheinlichkeit
@@ -270,7 +270,7 @@ export class DemographicSystem {
     
     // Bedürfnisse beeinflussen Sterbewahrscheinlichkeit
     const criticalNeeds = (citizen.needs.food + citizen.needs.health + citizen.needs.shelter) / 3;
-    if (criticalNeeds < 20) {
+    if (citizen.needs.food < 10 || criticalNeeds < 20) {
       baseChance *= 3;
     } else if (criticalNeeds < 40) {
       baseChance *= 1.5;

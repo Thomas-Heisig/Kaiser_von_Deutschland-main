@@ -71,7 +71,7 @@ export class CourtAssistantRegistry {
       const citizen = typeof a.citizenId === 'string' ? resolve(a.citizenId) : undefined;
       if (!players.has(a.playerId) || !isOffice(a.office) || !isMode(a.mode) ||
         !Number.isSafeInteger(a.monthsServed) || a.monthsServed < 0 || !citizen ||
-        !citizen.isAlive || citizen.isPlayerCharacter ||
+        (citizen.isAlive && citizen.isPlayerCharacter) ||
         seenCitizens.has(a.citizenId) || seenOffices.has(a.playerId + ':' + a.office))
         throw new Error('Beschädigte Hofverwaltung im Spielstand.');
       seenCitizens.add(a.citizenId);

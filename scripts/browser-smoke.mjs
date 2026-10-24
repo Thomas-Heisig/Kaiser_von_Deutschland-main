@@ -104,15 +104,18 @@ try {
       const layout=document.querySelector('.game-layout')?.getBoundingClientRect();
       const map=document.querySelector('.map-card')?.getBoundingClientRect();
       const host=document.querySelector('#kingdom-map')?.getBoundingClientRect();
+      const resources=document.querySelector('.resource-bar')?.getBoundingClientRect();
       return {
         relativeWidth:layout && map ? Math.abs(layout.width-map.width) : Infinity,
         relativeHeight:layout && map ? Math.abs(layout.height-map.height) : Infinity,
         mapHostHeight:host?.height ?? 0,
+        // The persistent vital-sign row deliberately takes 40–44 px from the map.
+        statusBudget:Math.max(0,(resources?.height??0)-(innerWidth<=600?42:46)),
         duplicatedBuildings:document.querySelectorAll('#settlement-districts').length,
         overlaidControls:document.querySelectorAll('.map-card .map-hud #map-style, .map-card .map-hud [data-zoom]').length
       };
     });
-    if(mapLayer.mapHostHeight<300)
+    if(mapLayer.statusBudget>48 || mapLayer.mapHostHeight<300-mapLayer.statusBudget)
       failures.push('map must have a dedicated large viewport '+JSON.stringify(mapLayer));
     if(mapLayer.duplicatedBuildings||mapLayer.overlaidControls!==4)
       failures.push('map has duplicate district list or missing overlay controls '+JSON.stringify(mapLayer));
@@ -162,8 +165,10 @@ try {
     await page.getByRole('heading', { name: /Forschung im Reich/i }).waitFor();
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
     await openView(page, 'history');
-    await page.getByRole('heading', { name: /Erfindungen, Kunst und Kultur/i }).waitFor();
-    await page.getByRole('heading', { name: /Universität Bologna/i }).first().waitFor();
+    await page.getByRole('heading', { name: /Kunst, Kultur und Leben/i }).waitFor();
+    await page.locator('#history-topic').selectOption('archive');
+    if (await page.locator('[data-history-event="university-bologna"]').count() !== 1)
+      failures.push('Bologna is missing from the historical archive');
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
     await openView(page, 'war');
     await page.getByRole('heading', { name: /Nachbarn/i }).waitFor();
@@ -243,10 +248,11 @@ try {
       const hud=document.querySelector('.game-layout>.map-card .map-hud');
       const rect=canvas?.getBoundingClientRect();
       return {width:rect?.width??0,height:rect?.height??0,
+        statusBudget:Math.max(0,(document.querySelector('.resource-bar')?.getBoundingClientRect().height??0)-42),
         hudBackground:hud?getComputedStyle(hud).backgroundColor:'',
         loaded:canvas?.dataset.retroLoaded,visible:canvas?.dataset.retroVisible};
     });
-    if(metrics.width<300 || metrics.height<380) failures.push('Mobile retro canvas too small: '+JSON.stringify(metrics));
+    if(metrics.width<300 || metrics.statusBudget>48 || metrics.height<380-metrics.statusBudget) failures.push('Mobile retro canvas too small: '+JSON.stringify(metrics));
     // The HUD is now a separate panel BELOW the map, not an overlay.
     const overlap = await page.evaluate(() => {
       const host=document.querySelector('#kingdom-map')?.getBoundingClientRect();

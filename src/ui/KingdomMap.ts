@@ -1,8 +1,12 @@
 import { Application, Assets, Container, Graphics, Text, Sprite, Texture, Rectangle } from 'pixi.js';
 import { Kingdom, KingdomInfrastructure } from '../core/Kingdom';
+import { BUILDING_RENDER_VERSION, RenderedBuildingLibrary } from './RenderedBuildingLibrary';
 import type { RivalRealm } from '../core/CampaignWarfareSystem';
 import { StrategyWorld, type StrategyWorldSnapshot } from '../core/StrategyWorld';
-import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature } from './SettlementSceneModel';
+import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature, earlyBuildingName } from './SettlementSceneModel';
+import { formatYear } from '../core/HistoricalCalendar';
+import { startLocation, LOCAL_MAP_NOTE } from '../core/StartLocations';
+import { drawLocalMap, validateLocalMap, type LocalMapData } from './LocalMap';
 import {
   CAMERA_ZOOM_MAX,
   CAMERA_ZOOM_MIN,
@@ -19,6 +23,8 @@ import {
  */
 export class KingdomMap {
   private readonly app = new Application();
+  private readonly renderedBuildings = new RenderedBuildingLibrary();
+  private visibleGlbDistricts = 0;
   private readonly world = new Container();
   private readonly settlements = new Container();
   private readonly retroScenery = new Container();
@@ -68,6 +74,11 @@ export class KingdomMap {
   /** Relief-Textur der Ebene „Zentraleuropa" (Natural Earth, Public Domain). */
   private reliefTexture?: Texture;
   private reliefLoading = false;
+  private localTexture?: Texture;
+  private localMapData?: LocalMapData;
+  private localLoading = false;
+  private localLoadFailed = false;
+  private onLandmark?: () => void;
   private readonly reliefLayer = new Container();
 
   private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
@@ -213,6 +224,14 @@ export class KingdomMap {
     this.fit();
     this.app.ticker.stop();
     void this.loadRetroAssets();
+    this.app.canvas.dataset.buildingRendererVersion=BUILDING_RENDER_VERSION;
+    this.app.canvas.dataset.buildingFramesLoaded='0';
+    void this.renderedBuildings.load(import.meta.env.BASE_URL, () => {
+      if(this.destroyed)return;
+      this.app.canvas.dataset.buildingFramesLoaded=String(this.renderedBuildings.count);
+      this.lastSignature='';
+      if(this.retroContext){ const {kingdom,selected,completed,year,rivals}=this.retroContext; this.update(kingdom,selected,completed,year,rivals); }
+    });
   }
 
   /** Lightweight, license-checked Kenney visual assets; leaves simulation unchanged. */
@@ -348,6 +367,32 @@ export class KingdomMap {
    * All shapes share one roof direction, shadow direction and ground baseline.
    */
   private drawRetroDistrict(group: Container, type: keyof KingdomInfrastructure, count: number, epoch: string): boolean {
+    // Early settlements use schematic low buildings rather than medieval towers.
+    if (epoch === 'bronze' || epoch === 'ancient') {
+      const alpha = count > 0 ? 1 : .35;
+      const wall = epoch === 'bronze' ? 0xb9956a : 0xd3c4a4;
+      const g = new Graphics();
+      if (type === 'farms') {
+        for (let i=0;i<5;i++) g.rect(-42+i*18,-12,12,30).fill({color:i%2 ? 0x9c9657 : 0x7f8c50,alpha});
+      } else if (type === 'roads') {
+        g.poly([-45,5,-30,-8,46,8,32,23]).fill({color:0xac956f,alpha});
+      } else if (type === 'walls') {
+        g.rect(-47,-18,94,30).fill({color:wall,alpha});
+        for (let i=0;i<7;i++) g.rect(-43+i*14,-25,6,8).fill({color:wall,alpha});
+      } else {
+        g.ellipse(3,17,49,13).fill({color:0x17211c,alpha:.3*alpha})
+          .rect(-34,-25,68,38).fill({color:wall,alpha})
+          .poly([34,-25,47,-34,47,5,34,13]).fill({color:0x998365,alpha})
+          .poly([-38,-25,-22,-37,49,-37,35,-25]).fill({color:epoch==='bronze'?0x8d714c:0x9b6e52,alpha})
+          .rect(-7,-10,14,23).fill({color:0x5b5140,alpha});
+        if (epoch === 'ancient' && (type === 'churches' || type === 'universities')) {
+          for (let i=0;i<4;i++) g.rect(-29+i*18,-25,6,38).fill({color:0xe8dcc1,alpha});
+          g.poly([-40,-27,0,-50,40,-27]).fill({color:0xcab899,alpha});
+        }
+      }
+      group.addChild(g);
+      return true;
+    }
     if (this.projection === 'flat') return false;
     const later = epoch === 'modern' || epoch === 'industrial';
     const alpha = count > 0 ? 1 : 0.37;
@@ -506,13 +551,16 @@ export class KingdomMap {
 
   public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure, completed: readonly string[] = [], year = 1200, rivals: readonly RivalRealm[] = []): void {
     if (!this.initialized || this.destroyed) return;
+    const previousYear = this.retroContext?.year;
     this.retroContext = { kingdom, selected, completed, year, rivals };
+    if (previousYear !== year && this.zoomLevel === 'zentraleuropa') this.drawRegionLayer();
     const signature = districtSceneSignature(kingdom.infrastructure, selected,
       this.districtFilter, kingdom.currentSeason, completed) + JSON.stringify(rivals.map(r => [r.id,r.name,r.subjugated])) + JSON.stringify([this.strategyWorld,this.neighborRelations]);
-    const epochStyle = year >= 1945 ? 'modern' : year >= 1800 ? 'industrial' : year >= 1500 ? 'renaissance' : 'medieval';
-    if (signature + epochStyle === this.lastSignature) return;
-    this.lastSignature = signature + epochStyle;
+    const epochStyle = year < -799 ? 'bronze' : year < 500 ? 'ancient' : year >= 1945 ? 'modern' : year >= 1800 ? 'industrial' : year >= 1500 ? 'renaissance' : 'medieval';
+    if (signature + epochStyle + year === this.lastSignature) return;
+    this.lastSignature = signature + epochStyle + year;
     this.chimneys.length = 0;
+    this.visibleGlbDistricts=0;
     this.drawNeighbors(rivals);
     this.drawAtmosphere(kingdom.currentSeason, epochStyle);
     for (const child of this.settlements.removeChildren()) child.destroy({ children: true });
@@ -529,7 +577,9 @@ export class KingdomMap {
           width: selected === location.type ? 2 : 1, alpha: selected === location.type ? 1 : 0.35
         });
       group.addChild(ground);
-      if (this.drawRetroDistrict(group, location.type, count, epochStyle)) {
+      const hasRenderedBuilding = this.projection === 'isometric' && this.renderedBuildings.draw(group,location.type,count,year);
+      if(hasRenderedBuilding){ this.visibleGlbDistricts += 1; }
+      else if (this.drawRetroDistrict(group, location.type, count, epochStyle)) {
         // Visual-only retro representation. Interaction still uses fixed coordinates.
       } else if ((modernization || epochStyle === 'modern' || epochStyle === 'industrial') && count > 0 && location.type !== 'farms' && location.type !== 'roads' && location.type !== 'ports' && location.type !== 'walls') {
         group.addChild(new Graphics().roundRect(-29, -62, 58, 42, 5)
@@ -590,7 +640,7 @@ export class KingdomMap {
       if (winter) group.addChild(new Graphics().ellipse(0, 20, 51, 8)
         .fill({ color: 0xe1e9e6, alpha: 0.38 }));
       const label = new Text({
-        text: `${location.name} · ${count}${modernization ? ' ⚙' : ''}`,
+        text: `${earlyBuildingName(location.type,year,location.name)} · ${count}${modernization ? ' ⚙' : ''}`,
         style: { fontFamily: 'Segoe UI', fontSize: 14, fill: 0xede8d2, fontWeight: '500' }
       });
       label.anchor.set(0.5, 0);
@@ -598,9 +648,11 @@ export class KingdomMap {
       group.addChild(label);
       this.settlements.addChild(group);
     }
+    this.app.canvas.dataset.renderedDistricts=String(this.visibleGlbDistricts);
+    this.app.canvas.dataset.buildingFramesLoaded=String(this.renderedBuildings.count);
     const eraText = epochStyle === 'modern' ? 'Moderne' : epochStyle === 'industrial'
-      ? 'Industrialisierung' : epochStyle === 'renaissance' ? 'Neuzeit' : 'Mittelalter';
-    const badge = new Text({text: eraText + ' · ' + year, style: {fontFamily: 'Georgia',
+      ? 'Industrialisierung' : epochStyle === 'renaissance' ? 'Neuzeit' : epochStyle === 'bronze' ? 'Bronzezeit' : epochStyle === 'ancient' ? 'Antike' : 'Mittelalter';
+    const badge = new Text({text: eraText + ' · ' + formatYear(year), style: {fontFamily: 'Georgia',
       fontSize: 25, fill: 0xf4e6c5}});
     badge.position.set(38, 26);
     this.settlements.addChild(badge);
@@ -667,7 +719,33 @@ export class KingdomMap {
 
   /** Legende der Regionsansicht für die Oberfläche (nie leer). */
   public getRegionLegend(): string {
+    if (this.mapScope === 'home') return this.localLoadFailed ? 'Ganderkesee: Kartendaten konnten nicht geladen werden. Landkarte erneut öffnen, um es nochmals zu versuchen.' : LOCAL_MAP_NOTE;
     return this.regionResult?.message ?? 'Keine Regionsdaten geladen.';
+  }
+
+  public setLandmarkAction(action: () => void): void { this.onLandmark = action; }
+
+  private async loadLocalMap(): Promise<void> {
+    if ((this.localTexture && this.localMapData) || this.localLoading || this.destroyed) return;
+    this.localLoading=true;
+    try {
+      const location=startLocation();
+      const [texture,data]=await Promise.all([
+        Assets.load<Texture>(import.meta.env.BASE_URL+location.terrainAsset),
+        Assets.load<unknown>(import.meta.env.BASE_URL+location.mapAsset)
+      ]);
+      if(this.destroyed)return;
+      this.localMapData=validateLocalMap(data);this.localTexture=texture;this.localLoadFailed=false;
+      this.app.canvas.dataset.localMapLoaded='true';
+      this.app.canvas.dataset.reliefLoaded='true';
+      this.app.canvas.dataset.mapLocation=location.id;
+      this.drawRegionLayer();this.fit();
+    } catch(error) {
+      if(this.destroyed)return;
+      this.localLoadFailed=true;this.app.canvas.dataset.localMapLoaded='false';
+      console.warn('Heimatkarte nicht verfügbar',error);
+      this.drawRegionLayer();this.fit();
+    } finally {this.localLoading=false;}
   }
 
   private syncLevelFromZoom(): void {
@@ -714,6 +792,7 @@ export class KingdomMap {
    * bedienbar (nur Punkte und Namen).
    */
   private async loadReliefTexture(): Promise<void> {
+    if (this.mapScope === 'home') return this.loadLocalMap();
     if (this.reliefTexture || this.reliefLoading || this.destroyed) return;
     this.reliefLoading = true;
     try {
@@ -745,6 +824,13 @@ export class KingdomMap {
     this.app.canvas.dataset.regionCount = String(this.regionResult?.labels.length ?? 0);
     for (const child of this.regionLayer.removeChildren()) child.destroy({ children: true });
     for (const child of this.reliefLayer.removeChildren()) child.destroy({ children: true });
+    if (this.mapScope === 'home') {
+      const count=drawLocalMap(this.reliefLayer,this.localTexture,this.localMapData,this.retroContext?.year??1200,this.onLandmark);
+      this.app.canvas.dataset.localRiverSegments=String(count);
+      this.app.canvas.dataset.regionCount=String(this.localMapData?Object.keys(this.localMapData.places).length:0);
+      if(this.localLoadFailed) this.regionLayer.addChild(new Text({text:'Kartendaten fehlen · Landkarte erneut öffnen',style:{fontSize:22,fill:0xffffff}}));
+      return;
+    }
     const result = this.regionResult;
     const width = 960;
     const height = 660;
@@ -923,7 +1009,7 @@ export class KingdomMap {
       // mehr Zoom vergrößert sie für Details. Die Dorf-Referenz (1350 × 850)
       // würde die Reliefkarte klein und versetzt darstellen.
       const mapWidth = 960;
-      const mapHeight = 660;
+      const mapHeight = this.mapScope === 'home' ? 672 : 660;
       const fitScale = Math.min((this.app.screen.width - 24) / mapWidth, (this.app.screen.height - 76) / mapHeight);
       const scale = fitScale * (0.95 + (zoomToSlider(this.zoom) - 28) * 0.006);
       this.world.scale.set(scale);
@@ -1061,11 +1147,14 @@ export class KingdomMap {
     this.actionTroops = [];
     this.actionVisual = undefined;
     this.destroyed = true;
+    this.renderedBuildings.dispose();
     this.observer?.disconnect();
     document.removeEventListener('visibilitychange', this.visibility);
     if (this.initialized) this.app.ticker.remove(this.animatedTicker);
     if (this.initialized) this.app.destroy(true, { children: true });
     else this.world.destroy({ children: true });
     this.reliefTexture = undefined;
+    this.localTexture = undefined;
+    this.localMapData = undefined;
   }
 }

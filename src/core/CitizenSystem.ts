@@ -165,6 +165,8 @@ export interface Citizen {
   
   // Geschichte
   lifeEvents: LifeEvent[];
+  /** Persisted calendar guard; old saves without this field remain valid. */
+  lastLifeMonth?: number;
 }
 
 /**
@@ -511,17 +513,27 @@ export class CitizenSystem {
   /**
    * Verarbeitet monatliche Updates für alle Bürger
    */
-  public processMonth(currentYear: number, currentMonth: number): void {
+  public processMonth(currentYear: number, currentMonth: number,
+    conditions: (citizen: Citizen) => Partial<CitizenNeeds> = () => ({})): void {
+    const tick = currentYear * 12 + currentMonth;
+    if (currentMonth === 1) this.formHouseholds(currentYear, currentMonth);
     for (const citizen of [...this.citizens.values()]) {
       if (!citizen.isAlive) continue;
+      if (citizen.lastLifeMonth !== undefined && citizen.lastLifeMonth >= tick) continue;
+      citizen.lastLifeMonth = tick;
       
       // Altern (einmal pro Jahr)
-      if (currentMonth === citizen.birthMonth) {
-        citizen.age++;
-      }
+      citizen.age = Math.max(0, currentYear - citizen.birthYear - (currentMonth < citizen.birthMonth ? 1 : 0));
       
-      // Bedürfnisse leicht abnehmen
-      this.updateNeeds(citizen);
+      // Versorgung aus den Lebensbedingungen des Reiches
+      this.updateNeeds(citizen, conditions(citizen));
+      if (citizen.age >= 16 && citizen.profession === 'unemployed') {
+        const parent = citizen.familyRelations.filter(r => r.relationType === 'parent')
+          .map(r => this.citizens.get(r.citizenId)).find(p => p && p.profession !== 'unemployed');
+        citizen.profession = parent?.profession === 'artisan' ? 'artisan' : 'farmer';
+        citizen.income = this.calculateBaseIncome(citizen.profession);
+        citizen.lifeEvents.push({year:currentYear,month:currentMonth,type:'profession_change',description:'Beginnt eine Tätigkeit als '+(citizen.profession==='artisan'?'Handwerker':'Bauer')});
+      }
       
       // Gesundheit aktualisieren
       this.updateHealth(citizen);
@@ -532,14 +544,14 @@ export class CitizenSystem {
       // Naturally occurring pregnancies only among adult partners living together.
       // One attempt per year, bounded and gated by health and fertility.
       if (currentMonth === 1 && citizen.gender === 'female' &&
-          citizen.age >= 18 && citizen.age <= 39 && !citizen.health.isPregnant &&
+          citizen.age >= 18 && citizen.age <= 44 && !citizen.health.isPregnant &&
           citizen.health.overall >= 45 && citizen.needs.food >= 35) {
-        const spouseId = citizen.familyRelations.find(r => r.relationType === 'spouse')?.citizenId;
+        const spouseId = citizen.familyRelations.find(r => r.relationType === 'spouse' && this.citizens.get(r.citizenId)?.isAlive)?.citizenId;
         const spouse = spouseId ? this.citizens.get(spouseId) : undefined;
         const recentBirth = citizen.lifeEvents.some(e => e.type === 'child_born' &&
           (currentYear * 12 + currentMonth) - (e.year * 12 + e.month) < 24);
         if (spouse?.isAlive && spouse.age >= 18 && spouse.regionId === citizen.regionId &&
-            !recentBirth && Math.random() < 0.20 * Math.min(1, citizen.health.fertility / 100)) {
+            !recentBirth && Math.random() < 0.35 * Math.min(1, citizen.health.fertility / 100)) {
           citizen.health.isPregnant = true;
           citizen.health.pregnancyMonth = 1;
         }
@@ -557,16 +569,14 @@ export class CitizenSystem {
   /**
    * Aktualisiert Bedürfnisse eines Bürgers
    */
-  private updateNeeds(citizen: Citizen): void {
-    // Bedürfnisse nehmen leicht ab
-    citizen.needs.food = Math.max(0, citizen.needs.food - Math.random() * 5);
-    citizen.needs.shelter = Math.max(0, citizen.needs.shelter - Math.random() * 2);
-    citizen.needs.safety = Math.max(0, citizen.needs.safety - Math.random() * 3);
-    citizen.needs.health = Math.max(0, citizen.needs.health - Math.random() * 3);
-    citizen.needs.social = Math.max(0, citizen.needs.social - Math.random() * 4);
-    citizen.needs.spiritual = Math.max(0, citizen.needs.spiritual - Math.random() * 2);
-    citizen.needs.education = Math.max(0, citizen.needs.education - Math.random() * 1);
-    citizen.needs.entertainment = Math.max(0, citizen.needs.entertainment - Math.random() * 4);
+  private updateNeeds(citizen: Citizen, provision: Partial<CitizenNeeds>): void {
+    // Everyday supply is already included in the kingdom's aggregate consumption.
+    // Move toward living conditions instead of draining every citizen to zero.
+    const targets: CitizenNeeds = {food:75,shelter:70,safety:65,health:70,social:65,spiritual:65,education:55,entertainment:60,...provision};
+    for (const key of Object.keys(targets) as Array<keyof CitizenNeeds>) {
+      const target = Math.max(0, Math.min(100, targets[key]));
+      citizen.needs[key] = Math.max(0, Math.min(100, citizen.needs[key] + Math.max(-8, Math.min(6, (target-citizen.needs[key])*.2))));
+    }
   }
   
   /**
@@ -576,15 +586,74 @@ export class CitizenSystem {
     // Gesundheit basiert auf Bedürfnissen
     const needsSatisfaction = (citizen.needs.food + citizen.needs.health + citizen.needs.shelter) / 3;
     
-    if (needsSatisfaction < 30) {
+    if (citizen.needs.food < 20 || needsSatisfaction < 30) {
       citizen.health.overall = Math.max(0, citizen.health.overall - Math.random() * 5);
-    } else if (needsSatisfaction > 70) {
-      citizen.health.overall = Math.min(100, citizen.health.overall + Math.random() * 2);
+    } else if (needsSatisfaction >= 60) {
+      citizen.health.overall = Math.min(100, citizen.health.overall + .4);
     }
     
     // Altersabhängige Gesundheit
     if (citizen.age > 60) {
-      citizen.health.overall = Math.max(0, citizen.health.overall - Math.random() * 2);
+      citizen.health.overall = Math.max(0, citizen.health.overall - Math.min(1.5,(citizen.age-60)/120));
+    }
+  }
+
+  /** A bounded, annual household model; not a reconstruction of historic marriage law. */
+  private formHouseholds(year: number, month: number): void {
+    const tick=year*12+month;
+    const singles=this.getAliveCitizens().filter(c=>year-c.birthYear-(month<c.birthMonth?1:0)>=18&&year-c.birthYear<=50&&
+      !c.health.isPregnant&&
+      (c.lastLifeMonth===undefined||c.lastLifeMonth<tick)&&
+      !c.familyRelations.some(r=>r.relationType==='spouse'&&this.citizens.get(r.citizenId)?.isAlive));
+    const ancestors=(c:Citizen):Set<string>=>{
+      const found=new Set<string>([c.id]);let generation=[c];
+      for(let depth=0;depth<3;depth++) {
+        const next:Citizen[]=[];
+        for(const person of generation)for(const relation of person.familyRelations.filter(r=>r.relationType==='parent')) {
+          const parent=this.citizens.get(relation.citizenId);
+          if(parent&&!found.has(parent.id)){found.add(parent.id);next.push(parent);}
+        }
+        generation=next;
+      }
+      return found;
+    };
+    const used=new Set<string>();
+    const pools=new Map<string,Citizen[]>();
+    for(const citizen of singles) {
+      const key=citizen.regionId+':'+citizen.gender;
+      if(!pools.has(key))pools.set(key,[]);
+      pools.get(key)!.push(citizen);
+    }
+    const offsets=new Map<string,number>();
+    for(const person of singles) {
+      if(used.has(person.id)||person.needs.food<35||Math.random()>.4)continue;
+      const family=ancestors(person);
+      let partner:Citizen|undefined;
+      for(const gender of ['female','male','other'] as const) {
+        if(gender===person.gender)continue;
+        const key=person.regionId+':'+gender,pool=pools.get(key)??[];
+        const offset=offsets.get(key)??0;
+        for(let attempt=0;attempt<Math.min(64,pool.length);attempt++) {
+          const index=(offset+attempt)%pool.length,c=pool[index];
+          offsets.set(key,(index+1)%pool.length);
+          if(!used.has(c.id)&&Math.abs(c.age-person.age)<=15&&c.needs.food>=35&&
+            (!c.familyId||c.familyId!==person.familyId)&&!c.familyRelations.some(r=>family.has(r.citizenId)&&r.relationType!=='spouse')&&
+            ![...ancestors(c)].some(id=>family.has(id))) {partner=c;break;}
+        }
+        if(partner)break;
+      }
+      if(!partner)continue;
+      for(const [a,b] of [[person,partner],[partner,person]]) {
+        a.familyRelations=a.familyRelations.filter(r=>r.relationType!=='spouse');
+        a.familyRelations.push({citizenId:b.id,relationType:'spouse'});
+        a.lifeEvents.push({year,month,type:'marriage',description:'Gründet einen Haushalt mit '+b.firstName+' '+b.lastName,relatedCitizenIds:[b.id]});
+        used.add(a.id);
+      }
+      // Keep family lookup coherent; children retain their existing lineage.
+      if(person.familyId&&partner.familyId!==person.familyId) {
+        if(partner.familyId)this.families.get(partner.familyId)?.delete(partner.id);
+        partner.familyId=person.familyId;this.addToFamily(partner.id,person.familyId);
+      }
     }
   }
   
@@ -621,6 +690,7 @@ export class CitizenSystem {
       familyId: mother.familyId
     });
     child.wealth = 0;
+    child.lastLifeMonth = year*12+month;
     child.professionLevel = 0;
     child.familyRelations.push({ citizenId: mother.id, relationType: 'parent' });
     mother.familyRelations.push({ citizenId: child.id, relationType: 'child' });

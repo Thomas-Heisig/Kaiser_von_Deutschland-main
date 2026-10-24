@@ -1,0 +1,21 @@
+{
+  "retrieved": "2026-10-24",
+  "terrain": {
+    "request": "https://opendata.geoservices.lgln.niedersachsen.de/dgm_wcs?service=WCS&version=1.0.0&request=GetCoverage&coverage=ni_dgm1&crs=EPSG%3A25832&bbox=457000%2C5870000%2C477000%2C5884000&width=1200&height=840&format=GEOTIFF_FLOAT32&interpolation=bilinear",
+    "sha256": "1c073e1f492384ae15196c5a630438e9a1a67035852dd78029fe39e5544f81b8",
+    "attribution": "© GeoBasis-DE/LGLN 2026, Daten geändert",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "metadata": "https://opendata.geoservices.lgln.niedersachsen.de/dgm_wcs?request=GetMetadata&layer=ni_dgm1"
+  },
+  "water": {
+    "request": "https://www.umweltkarten-niedersachsen.de/arcgis/rest/services/Hydro_wms/MapServer/20/query?f=json&where=nam+IN+%28%27Welse%27%2C%27Dummb%C3%A4ke%27%2C%27Brookb%C3%A4ke%27%2C%27Kimmer+B%C3%A4ke%27%2C%27Immer+B%C3%A4ke%27%2C%27Delme%27%2C%27Hahlb%C3%A4ke%27%2C%27Schierbroker+B%C3%A4ke%27%29&geometry=457000%2C5870000%2C477000%2C5884000&geometryType=esriGeometryEnvelope&inSR=25832&outSR=25832&spatialRel=esriSpatialRelIntersects&outFields=objectid%2Cnam%2Cgwz%2Cgkz&returnGeometry=true&maxAllowableOffset=8&resultRecordCount=2000",
+    "sha256": "b5ef2da41bba23608decff2257bbf826a1749da1f26a4cc2480846b8dfd9bfb4",
+    "attribution": "Geodaten LGLN © 2023, bearbeitet durch das Nds. Umweltministerium; Auswahl/Zuschnitt für das Spiel",
+    "license": "dl-de/by-2-0",
+    "licenseUrl": "https://www.govdata.de/dl-de/by-2-0",
+    "metadata": "https://www.umweltkarten-niedersachsen.de/arcgis/rest/services/Hydro_wms/MapServer/20?f=pjson"
+  },
+  "processing": "DGM1 bilinear auf 16,67m; Höhentönung, Schummerung, geglättete 5m-Höhenlinien. Gewässerachsen mit 8m Vereinfachung, im Renderer zugeschnitten.",
+  "historicalLimit": "Heutige Vermessung. Keine Rekonstruktion historischer Bachbetten, Waldflächen, Straßen oder Siedlungsgrenzen."
+}

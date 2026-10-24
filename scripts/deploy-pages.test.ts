@@ -92,9 +92,9 @@ describe('deploy-pages workflow structure', () => {
     expect(publishers).toEqual(['deploy-pages.yml']);
   });
   it('gates every publishing action, but not the fallback artifact, on Pages availability', () => {
-    for (const action of ['configure-pages@v5', 'upload-pages-artifact@v3', 'deploy-pages@v4']) {
+    for (const action of ['configure-pages', 'upload-pages-artifact', 'deploy-pages']) {
       expect(workflow).toContain(
-        `        if: steps.pages.outputs.enabled == 'true'\n        uses: actions/${action}`
+        `        if: steps.pages.outputs.enabled == 'true'\n        uses: actions/${action}@`
       );
     }
     expect(workflow).not.toContain('enablement: true');

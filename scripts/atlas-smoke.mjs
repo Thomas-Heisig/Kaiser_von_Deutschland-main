@@ -10,7 +10,7 @@ async function inViewport(page, selector) {
   if (outside.length) failures.push(`${page.viewportSize().width}: clipped ${selector}: ${outside.join(', ')}`);
 }
 try {
-  for (const [width, height, year, era] of [[1280,740,1200,'medieval'],[375,667,2000,'digital'],[844,480,1945,'modern'],[320,568,1820,'industrial']]) {
+  for (const [width, height, year, era] of [[1280,740,1200,'medieval'],[375,667,2000,'digital'],[844,480,1945,'modern'],[320,568,1820,'industrial'],[375,667,-1999,'bronze'],[1024,768,0,'ancient']]) {
     const page = await browser.newPage({viewport:{width,height}, reducedMotion:'reduce'});
     page.setDefaultTimeout(15000);
     page.on('pageerror', error => failures.push(error.message));
@@ -29,8 +29,15 @@ try {
     await page.screenshot({path:`smoke-menu-${year}.png`});
     await page.getByRole('button',{name:/Herrschaft beginnen/}).click();
     await page.locator('#kingdom-map canvas').waitFor();
+    await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.buildingFramesLoaded === '24');
+    if (year < 500 && await page.locator('#kingdom-map canvas').getAttribute('data-rendered-districts') !== '0') failures.push('Medieval GLB models leaked into antiquity');
+    if (width === 1280) {
+      await page.locator('#map-style').selectOption('isometric');
+      await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.renderedDistricts === '16');
+    }
+    if (year<=0 && !(await page.locator('#date').textContent()).includes(`${1-year} v. Chr.`)) failures.push('Civil BCE date missing');
     if (await page.locator('.map-card').getAttribute('data-level') !== 'schreibtisch') failures.push('Desk not first');
-    await inViewport(page, '.header-actions button, .atlas-navigation button, #zoom-slider, #legal-open');
+    await inViewport(page, '.header-actions > button, #game-music-settings > summary, .atlas-navigation button, #zoom-slider, #legal-open');
     if (width === 320) {
       await inViewport(page, '#end-turn, #turn-status');
       await page.locator('#end-turn').click();

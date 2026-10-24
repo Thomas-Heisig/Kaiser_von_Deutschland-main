@@ -857,10 +857,19 @@ export class Kingdom {
   }
 
   private calculateWoodProductionRate(): number {
-    const baseRate = this.terrain.forests * 20;
-    const infrastructureBonus = this.infrastructure.workshops * 15;
+    // Annual rates: woodland supplies fuel; workshops organize timber cutting
+    // and processing. The former +15/year could not repay a 500-wood build.
+    const baseRate = this.terrain.forests * 32;
+    const infrastructureBonus = this.infrastructure.workshops * 300;
     
     return Math.floor(baseRate + infrastructureBonus);
+  }
+
+  /** Same rounding and seasonal factors as the monthly resource forecast. */
+  public getWorkshopWoodGain(): number {
+    const multiplier = this.getSeasonalMultiplier().wood / 12;
+    const production = this.calculateWoodProductionRate();
+    return Math.floor((production + 300) * multiplier) - Math.floor(production * multiplier);
   }
 
   private calculateStoneProductionRate(): number {

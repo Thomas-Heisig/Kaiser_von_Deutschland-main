@@ -8,6 +8,22 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### Stabilisierung und Integration · 24.10.2026
 
+- [x] [Charakterautomatik und Nachfolge](docs/05-technical-architecture/CITIZEN_LIFECYCLE.md): zugewiesene Personen mit Aufgabe/Status/Fortschritt sichtbar, fünf Charakterpläne, manuelle Monatsaktionen mit Vorrang. Automatische Nachbesetzung für Rollen, Hofämter und Bürgeraufträge; keine Doppelbelegung. Todesfälle und Übergaben in der Chronik, alte Spielstände und Hotseat geprüft.
+- [x] Dauerhaften Bedürfnisverfall korrigiert: Versorgung der Bürger an Reichsbedingungen gekoppelt, kalendarische Alterung, Haushaltsgründung und erwachsene Nachkommen. Zwei deterministische 60-Jahre-Läufe mit Zwischen-Save/Load und ein versorgter Zehnjahreslauf durch die Engine; keine pauschale Zehnjahres-Lebensgrenze mehr.
+- [x] Dauerhaft sichtbare Zufriedenheit, Stabilität, Bevölkerung und Nahrungsreichweite; lesbare, scrollbare Meldungen und strukturierte Chronik. Sechs Bürgerrollen je Seite, neue Bürgernamen nach Geburtsjahr. Historische Grenzen und Quellen: [Versorgung und Bedienbarkeit](docs/05-technical-architecture/REGIONAL_PROVISIONING.md).
+- [x] Holzgewinnung neu abgestimmt: Werkstätten liefern saisonal 17–28 zusätzliches Holz/Monat vor Forschungsboni statt rund einem; Wirkung beim Bauen und in Wirtschaft sichtbar, tatsächliche Buchung auch nach Save/Load geprüft.
+
+- [x] Dependabot-PRs #100–#105 integriert: PixiJS 8.22, SQL.js 1.15, UUID 14.0.3, TypeScript 7, Vite 8, Vitest 5 und aktuelle Actions. Node mindestens 22.12, CI auf Node 22; Typen explizit und bisherige Browserziele beibehalten. Produktionsbuild, vollständige Tests und Browser-Smokes geprüft.
+
+- [x] [Ganderkesee als Startregion](docs/05-technical-architecture/GANDERKESEE.md): amtliches Gelände, echtes Gewässernetz, maßstäbliche Karte und zeitabhängige Ortsmarken mit Quellen. Weitere Startorte benötigen noch Kartenpakete.
+- [x] Popups per Rad/Touch scrollen, Audio im Header, Ressourcenbestand in Wirtschaft, direkter Steuerregler und persistente Handelsauswahl.
+- [x] Sieben delegierbare Bereiche einschließlich Charakter mit Sicher/Normal/Gewagt für Reichsausgaben, gemeinsamem Monatsbudget und Zuschauer-Voreinstellung; Speicherung und BCE-Bürgeraufträge geprüft.
+- [x] Neun zusätzliche Bau-/Modernisierungsprojekte, bestands- und epochenbezogene Sichtbarkeit, Garnisonsverbesserung, monatliche Alltagsfeste und sichtbare Forschungswirkungen.
+- [x] Kassenabrechnung mit Einzelposten und Chronik; wiederholte Katastrophenabzüge und negative Politik-Unterhaltsbestände korrigiert.
+
+- [x] [Frühstart und Zeitbilder](docs/09-history-model/ZEITBILD.md): auswählbar ab 2000 v. Chr., bürgerliche Datumsanzeige ohne Jahr null, frühe Darstellung und verfügbare Grundtechnologien. Bauen, Forschung, Reise und Kulturförderung mit Save/Load geprüft.
+- [x] Quellengeprüfte Antikenereignisse und kulturelle Lesekarten: Tag/Monat, Jahreskontext, Datierungsspannen und Epochenwissen getrennt. Themenfilter, Region, Quellen und Unsicherheiten sichtbar; Monatswechsel und 20 Startjahre in Chromium geprüft.
+- [ ] Weitere regionale Stilunterarten der eingereichten Liste und lückenlose Jahresabdeckung ergänzen; vorhandene Auswahl ersetzt keine vollständige Weltchronik. Jahrtausendelange Balance und echte Geräte bleiben gesonderte Abnahmen.
 - [x] Gemeinsames Epochenlayout, Schreibtischstart, sichtbare Flüsse, paginierte Menüs ohne Seitenscrollen; Lagebericht mit Tutorial, Quellen zur Jahresgeschichte und optionaler Ereignisautomatik (PR #96/#97).
 - [x] Erste [Strategiewelt-Ausbaustufe](docs/05-technical-architecture/STRATEGY_WORLD.md): Reisen, Entdeckung, alle Nachbarn, gezielter Kartenfokus, eigene Weltpersistenz und Altstandmigration. Chromium-Bedienabläufe mit 20 Nachbarn bei 320/768/1024 px geprüft.
 - [~] Gesamte Roadmap einschließlich Großsystemen beauftragt. Diese Ausbaustufe schließt nicht Online-Mehrspieler, freie Bebauung, vollständige GLB-Grafik, Rollen-/Generationenintegration oder VR ab. Die zugehörigen Aufgaben unten bleiben offen.
@@ -36,7 +52,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 - [x] Rivalen reagieren jährlich auf Wirtschafts-, Handels-, Forschungs- und Militärfortschritte; begrenzte Regeln je Persönlichkeit/Schwierigkeit und Chronikgründe getestet.
 - [x] Schutzbündnisse, Handelsverträge, Vertragsbruch, Vertrauensverlust/-aufbau und gegenseitige Angriffssperren im Hauptspiel. Fremde Überfälle beenden Handel ohne Prestigeabzug für den Spieler; monatsgenauer Ablauf und Save/Load getestet.
-- [ ] Regionale Hunger-, Wanderungs- und Versorgungslagen als Spielentscheidungen mit Kosten und dauerhaften Auswirkungen verknüpfen.
+- [x] [Regionale Hunger-, Wanderungs- und Versorgungslagen](docs/05-technical-architecture/REGIONAL_PROVISIONING.md) für drei modellierte Versorgungsgebiete der eigenen Herrschaft: Nothilfe, dauerhafte Speicher, Haushaltshilfe, tatsächlicher Verlust an Arbeitskräften, Bürgeraufträge und budgetierte Automatik. Hotseat/BCE/Save/Load und Bedienung geprüft; individuelle Familienwanderung und fremde Regionen bleiben offen.
 - [ ] Logistik, Belagerungen und Kriegsgefangene nur nach vollständigem Hauptkampagnen-/Savegame-Test erweitern.
 - [x] Hanse, Wissenschaft, Kultur und diplomatische Kaiserkrone bis zum Sieg ohne Eroberung inklusive Save/Load geprüft. Finanzierte Testpartien; normale Startbalance bleibt unter P1a offen.
 
@@ -60,10 +76,10 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ## P1 — Stabilität, Gameplay, Bürger und Generationen
 
-- [ ] Echte Partnervermittlung und Eheschließungen, regionale Namensräume sowie Geburten-/Sterblichkeitsbalance bei mehrjährigen Simulationen.
-- [ ] Ausbildung, Berufe, Arbeitsplätze, Karrierewechsel, Familienbesitz und generationsübergreifende Erbschaften kohärent verbinden.
+- [~] Automatische Haushaltsgründung erwachsener, nicht nah verwandter Personen desselben Ortes und Geburten-/Sterblichkeitsprüfungen über 60 Jahre umgesetzt. Regionale Namensräume, historische Ehe-/Haushaltsregeln und Balance über Jahrhunderte bleiben offen.
+- [~] Nachwuchs nimmt ab 16 eine einfache Tätigkeit als Bauer bzw. Handwerker auf. Differenzierte Ausbildung, Arbeitsplätze, Karrierewechsel, Familienbesitz und generationsübergreifende Erbschaften bleiben offen; Rollenfolge überträgt noch keinen Familienbesitz.
 - [ ] Ratsdelegation: lebender früherer Delegierter / Zufall nach fünf Sekunden / manuelle Auswahl / Tod / Hotseat / Save-Load in vollständigen E2E-Tests abnehmen.
-- [ ] Langfristiges Vertrauen, Loyalität, Rivalitäten, politische Fraktionen und regionale Produktion als Folgen von Rats-/Bürgeraufträgen.
+- [~] Örtliches Vertrauen und Versorgung reagieren dauerhaft auf passende Bürgeraufträge; Loyalität, Rivalitäten, politische Fraktionen und regionale Produktionsketten bleiben offen.
 - [ ] Ereignis- und Kampagnenschleifen mit historischen Epochen, Konfliktlösung ohne Krieg, technische Einheiten und Balance über Jahrhunderte.
 - [x] Chronik begrenzt und in Version-2-Spielständen integriert; große Altstände und Migrationsfälle weiterhin gesondert testen.
 - [ ] Größere Spielstände, Bürgerzahlen >5.000 / 100.000, Browser-Latenz, Profiling, Benchmarks, deterministische Langläufe prüfen.
@@ -73,6 +89,8 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Einstellungen auf echtem iPad/Android mit Tastatur und Touch abnehmen.
 
 ## Grafikkarte – aktive Entscheidung: Kenney Retro (18.10.2026)
+
+- [x] PR #93 vervollständigt: 24 texturierte GLB-Kompositionen aus den vorhandenen Kenney-CC0-Originalpaketen als sechs WebP-Atlanten gerendert, Rebuild-Skript und Herkunfts-Hashes eingecheckt. Hauptspiel lädt alle 24 Frames; Antikenpartien verwenden weiterhin frühe Darstellungen. Geräteabnahme und freie Bebauung bleiben offen.
 
 - [x] **Retro Fantasy + Retro Textures Fantasy** für das Mittelalter, **Retro Urban** für spätere Epochen verbindlich; Sketch Town ist nur Reserve, nicht zweite parallele Richtung ([Renderer](docs/05-technical-architecture/RENDERER.md)).
 - [x] PR #67: geprüfte Kenney-CC0-Vorschaugrafiken in kompaktem Atlas, isolierter PixiJS-Prototyp und Browser-Smoke mit realem Atlasladecheck in `main` integriert.
@@ -147,7 +165,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Historische Video-3/4/5-Inhalte nach tatsächlicher Sichtung epochengetreu benennen und verorten; Audio-/Video-Übergänge auf Geräten prüfen.
 - [ ] Hochauflösende Originalcover und vollständige Metadaten/Credits für 15 Musikstücke.
 - [ ] WebGPU-Gerätetest (Modell, Lizenz, Download, Speicher, Inferenz), optionale Ollama-/Mini-KI-Reaktionen; KI bleibt Opt-in.
-- [ ] Bürgeraufträge und Regionen, Produktion, Transport sowie lokale Sicherheit mit Wirtschaft und Familien verbinden.
+- [~] Bürgeraufträge mit örtlicher Versorgung und Vertrauen verbunden; individuelle Familien, regionale Produktionsketten, Transporte und lokale Sicherheit noch offen.
 - [ ] Vorhandene Legacy-Module (Religion, Marine, Recht, Bildung, Lebensphasen, Tagesrhythmus, Stadt, Ökologie) einzeln im Standardspiel zugänglich machen, nur danach als spielbar markieren.
 - [ ] Geführtes Tutorial, historische Szenarien, achtsame Barrierefreiheit und internationales UI.
 - [ ] Code-Splitting, Worker, verlässliche lokale Speicherung und optionales Cloud-Sync-Konzept.

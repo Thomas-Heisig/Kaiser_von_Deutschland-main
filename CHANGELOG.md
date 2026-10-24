@@ -6,6 +6,15 @@
 
 ### Added
 
+- Charakterautomatik mit Ausgewogen/Arbeiten/Studieren/Waffenübung/Dem Reich dienen und Vorrang manueller Monatsaktionen. Zugewiesene Bürger mit Namen, Aufgabe und Fortschritt; Familienübersicht und erwachsene Nachfolge. Automatische Nachbesetzung von Hofämtern und laufenden Bürgeraufträgen ohne erneute Kosten, Chronik und Altstandmigration.
+- Bedürfnisversorgung statt dauerhaftem Verfall, kalendarische Alterung, jährliche Haushaltsgründung und Berufseinstieg für erwachsenen Nachwuchs. Zwei deterministische 60-Jahre-Demografieläufe, zehn Jahre durch die Engine sowie Browserabläufe mit Monatsaktionen und Save/Load ergänzt. [Modell und Grenzen](docs/05-technical-architecture/CITIZEN_LIFECYCLE.md).
+- Regionale Versorgungsentscheidungen mit dauerhaften Speichern, zeitlich begrenzter Hilfe und tatsächlichen Abwanderungsfolgen; erfolgreiche Bürgeraufträge und Verwaltungsbudget angebunden. Hotseat, BCE und Save/Load getestet.
+- Dauerhafte Anzeige von Zufriedenheit, Stabilität, Bevölkerung und Nahrungsvorrat in Monatsverbräuchen. Strukturierte Chronik, vollständig scrollbar lesbare aktuelle Meldungen und sechs Bürgerrollen je Seite.
+- Holzproduktion und Werkstattausbau neu abgestimmt, saisonaler Mehrertrag beim Bauen sichtbar. Neue Bürger erhalten Namen nach Geburtsjahr; vorhandene Personen bleiben erhalten. Naturereignis-Meldungen werden nun in der tatsächlich aktiven Spieloberfläche abonniert.
+
+- Frühstart ab 2000 v. Chr. mit Siedlungsdarstellung, angepassten Begriffen und erreichbaren Grundtechnologien. Chronik, Kalender und Vertragsdaten zeigen v./n. Chr.; der Jahreswechsel überspringt ein sichtbares Jahr null.
+- Geschichte & Zeitbild mit Quellenkarten zu Kunst, Architektur, Kultur und Alltag. Antike Ereignisse und Zeiträume ergänzt; umstrittene Tagesdaten, überlieferte Daten und Näherungen kenntlich gemacht. Monatsdaten erscheinen erst im zugehörigen Monat; Jahrseinträge bleiben Jahreskontext. [Quellenprüfung und Grenzen](docs/09-history-model/ZEITBILD.md).
+- Regressionstests für vorchristliche Kulturförderung und Save/Load; Browsermatrix für 20 historische Starts sowie antike/neuzeitliche Monatswechsel und Themenfilter.
 - Persistente Strategie-Weltkarte: alle Nachbarn, Regionsfokus, Tastatur-Pan, bezahlte Reisen, Geländeentdeckung, Chronik und Altstandmigration. 20 Nachbarn bei 320/768/1024 px automatisiert geprüft.
 - Handelsverträge, Schutzbündnisse, monatsgenauer Ablauf, Vertragsbruch und Vertrauensaufbau; fremde Überfälle beenden Handel ohne Prestigeabzug für den Spieler. Jährliche Rivalen reagieren begrenzt auf Wirtschaft, Handel, Forschung und Heer.
 - Friedlicher Kaiserkrone-Abschluss durch zwei Bündnisse; Hanse/Wissenschaft/Kultur/Kaiserkrone mit bezahlten Aktionen und Save/Load bis zum Sieg geprüft (finanzierte Testpartien).

@@ -6,6 +6,8 @@ Der Nutzer hat den gesamten Roadmap-Umfang einschließlich der Großsysteme beau
 
 ## Leseregel
 
+Aktuelle Ausbaustufe: [regionale Versorgung, sichtbarer Reichszustand und Holzbalance](../05-technical-architecture/REGIONAL_PROVISIONING.md). Bezahlte Entscheidungen und Bürgeraufträge wirken auf drei modellierte Heimatgebiete und die tatsächliche Bauernzahl. Individuelle Familienwanderungen, Produktionsketten und politische Fraktionen bleiben anschließende Schritte. Namen neuer Bürger folgen Geburtskohorten; die Rollenliste ist in Sechsergruppen blätterbar.
+
 Die [TODO](../../TODO.md) ist die *einzige operative Aufgabenliste*. Diese Roadmap zeigt Abhängigkeiten und Entwicklungsziele, **kein selbst attestiertes Fertigstellungsprotokoll**. [Status](status.md) beschreibt ausschließlich nachprüfbare Ergebnisse. Frühere Visionen, Zeitpläne und alle Ideen der bisherigen Dokumentation wurden vollständig archiviert: [Original-Roadmap](../outdated/roadmap-snapshot-2026-10-17.md), [Original-TODO](../outdated/TODO-snapshot-2026-10-17.md), [README-Ideen](backlog-from-readme.md). Keine historischen Ideen wurden gestrichen.
 
 ## P1-Balancing-Befund (18.10.2026)
@@ -61,6 +63,7 @@ HTTPS/Pages ist aktiv; Geräteinstallation und Rechte-/Impressumsnachweise bleib
 
 ## Danach — Gate B: lebendige Generationen (P1)
 
+- Erste Integration: [Versorgung, Haushaltsgründung, Charakterautomatik und erwachsene Nachfolge](../05-technical-architecture/CITIZEN_LIFECYCLE.md) samt sichtbarer Hof-/Auftragsbelegung. Zwei deterministische 60-Jahre-Läufe mit Save/Load und zehn versorgte Jahre durch die Engine; historische Haushaltsregeln, Eigentumsvererbung und die folgende 100+-Jahre-Abnahme bleiben offen.
 - Bestehende Familien-Kernlogik (echte Kinder, Namensgruppen, Ehepartner-Abhängigkeit) zu Partnersuche, Ausbildung, Ehe, Beruf, Erbe und Tod verknüpfen.
 - Demografische Langläufe und Save/Load-Migration nachweisen; Beziehungen und Reputation mit Rats-/Bürgeraufträgen verbinden.
 - UI und Browser-E2E für Bürgerentscheidungen, Hotseat und persistente Chronik.
