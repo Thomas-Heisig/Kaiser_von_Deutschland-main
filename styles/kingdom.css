@@ -151,6 +151,15 @@ progress::-webkit-progress-value { background: #b7bd83; border-radius: 5px; }
 .tutorial-help { font-size: 0.72rem; color: #d8cfa8; background: #1b2820; border-left: 3px solid var(--gold, #c9a227); padding: 8px 10px; margin: 10px 0 0; line-height: 1.5; }
 .tutorial-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .tutorial-actions button { font-size: 0.74rem; padding: 7px 12px; }
+/* Zoom-Schieberegler: primäre, tastaturbedienbare Kartensteuerung */
+.zoom-slider { display: flex; flex-direction: column; gap: 4px; min-width: 190px; }
+.zoom-slider-label { font-size: 0.66rem; letter-spacing: 0.06em; color: var(--gold); }
+.zoom-slider input[type="range"] { width: 100%; accent-color: var(--gold); cursor: pointer; }
+.zoom-hint { font-size: 0.62rem; line-height: 1.35; color: #c9c3a4; max-width: 230px; }
+@media (max-width: 760px) {
+  .zoom-slider { min-width: 150px; }
+  .zoom-hint { max-width: 180px; }
+}
 .council-card h2 { font-size: 1.35rem; margin: 9px 0 16px; color: #e0d6b5; }
 .council-card p:not(.eyebrow) { font-size: 0.76rem; color: #bfc7b2; }
 .council-card .text-button { font-size: 0.72rem; margin-top: 10px; }

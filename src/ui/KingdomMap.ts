@@ -2,6 +2,16 @@ import { Application, Assets, Container, Graphics, Text, Sprite, Texture, Rectan
 import { Kingdom, KingdomInfrastructure } from '../core/Kingdom';
 import type { RivalRealm } from '../core/CampaignWarfareSystem';
 import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature } from './SettlementSceneModel';
+import {
+  CAMERA_ZOOM_MAX,
+  CAMERA_ZOOM_MIN,
+  levelForSlider,
+  MapRegionLabel,
+  MapRegionResult,
+  MapZoomLevel,
+  sliderToZoom,
+  zoomToSlider
+} from './MapZoomLevels';
 
 /**
  * PixiJS settlement overview. Counts represent infrastructure, not geographic claims.
@@ -38,6 +48,14 @@ export class KingdomMap {
   private mapScope: 'home' | 'world' = 'home';
   private retroLoading = false;
   private retroContext?: { kingdom: Kingdom; selected: keyof KingdomInfrastructure; completed: readonly string[]; year: number; rivals: readonly RivalRealm[] };
+  /**
+   * Schematische Regionsnamen für die Ebene „Zentraleuropa".
+   * Additiv: liegt **über** der bestehenden Welt und wird ausschließlich
+   * eingeblendet, wenn die Zoom-Ebene es verlangt.
+   */
+  private readonly regionLayer = new Container();
+  private zoomLevel: MapZoomLevel = 'dorf';
+  private regionResult?: MapRegionResult;
 
   private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
     if (this.destroyed || document.hidden) return;
@@ -103,6 +121,9 @@ export class KingdomMap {
     this.world.addChild(this.neighbors);
     this.world.addChild(this.settlements);
     this.world.addChild(this.animation);
+    // Additive Overlay-Ebene: niemals Teil der Simulation, nur Darstellung.
+    this.regionLayer.visible = false;
+    this.world.addChild(this.regionLayer);
     for (let i = 0; i < 5; i++) {
       const marker = new Container();
       marker.addChild(new Graphics().circle(0, 0, 3).fill({ color: 0xf0d89f, alpha: 0.75 }));
@@ -172,6 +193,8 @@ export class KingdomMap {
     this.app.canvas.dataset.retroProjection = mode;
     this.app.canvas.dataset.retroVisible = String(this.retroEnabled && mode === 'isometric');
     this.lastSignature = '';
+    // Die Projektion darf die aktive Zoom-Ebene nicht überschreiben.
+    this.applyLevel(this.zoomLevel);
     if (this.retroContext && this.initialized && !this.destroyed) {
       const { kingdom, selected, completed, year, rivals } = this.retroContext;
       this.update(kingdom, selected, completed, year, rivals);
@@ -555,13 +578,138 @@ export class KingdomMap {
 
   /**
    * Adjusts zoom or resets the map position.
+   *
+   * Der Bereich wurde für die Zoom-Ebenen auf {@link CAMERA_ZOOM_MIN} bis
+   * {@link CAMERA_ZOOM_MAX} erweitert; die Ebenenumschaltung selbst erfolgt
+   * über {@link setZoomSlider}.
+   *
    * @param change Zoom increment; zero resets the view.
    * @returns Nothing.
    */
   public changeZoom(change: number): void {
-    this.zoom = change === 0 ? 1 : Math.max(0.8, Math.min(2.2, this.zoom + change));
+    this.zoom = change === 0 ? 1 : Math.max(CAMERA_ZOOM_MIN, Math.min(CAMERA_ZOOM_MAX, this.zoom + change));
     if (change === 0) this.offset = { x: 0, y: 0 };
+    this.syncLevelFromZoom();
     this.fit();
+  }
+
+  /** Aktuelle Zoom-Ebene (nur Darstellung, keine Simulation). */
+  public getZoomLevel(): MapZoomLevel {
+    return this.zoomLevel;
+  }
+
+  /**
+   * Setzt den Zoom über einen Slider-Wert (0–100) und schaltet die Ebene um.
+   *
+   * @param slider Slider-Wert; wird im Modul geklemmt.
+   * @returns Nothing.
+   */
+  public setZoomSlider(slider: number): void {
+    this.zoom = sliderToZoom(slider);
+    this.applyLevel(levelForSlider(slider, this.zoomLevel));
+    this.fit();
+  }
+
+  /** Liefert den zum aktuellen Zoom passenden Slider-Wert (für die UI-Synchronisation). */
+  public getZoomSlider(): number {
+    return zoomToSlider(this.zoom);
+  }
+
+  /**
+   * Hinterlegt die schematischen Regionsnamen für die Ebene „Zentraleuropa".
+   *
+   * Es werden ausschließlich Namen und Positionen gezeichnet – **keine**
+   * Polygone, Linien oder Einfärbungen. Der Hinweistext wird im Canvas als
+   * Legende ausgegeben, damit die Schematik sichtbar bleibt.
+   *
+   * @param result Ergebnis aus `regionsForMap(year)`.
+   * @returns Nothing.
+   */
+  public setHistoricalRegions(result: MapRegionResult): void {
+    this.regionResult = result;
+    this.drawRegionLayer();
+  }
+
+  /** Legende der Regionsansicht für die Oberfläche (nie leer). */
+  public getRegionLegend(): string {
+    return this.regionResult?.message ?? 'Keine Regionsdaten geladen.';
+  }
+
+  private syncLevelFromZoom(): void {
+    this.applyLevel(levelForSlider(zoomToSlider(this.zoom), this.zoomLevel));
+  }
+
+  /**
+   * Blendet die Layer passend zur Ebene ein/aus.
+   * Bestehendes Verhalten bleibt erhalten: die 16 Bezirke verschwinden nur
+   * in der Regionsansicht, nicht dauerhaft.
+   */
+  private applyLevel(level: MapZoomLevel): void {
+    if (this.zoomLevel === level && this.regionLayer.children.length > 0) {
+      this.regionLayer.visible = level === 'zentraleuropa';
+      return;
+    }
+    this.zoomLevel = level;
+    const village = level === 'dorf';
+    this.settlements.visible = village && this.mapScope === 'home';
+    this.retroScenery.visible = village && this.mapScope === 'home' && this.projection === 'isometric';
+    this.neighbors.visible = true;
+    this.regionLayer.visible = !village;
+    if (!village) this.drawRegionLayer();
+    this.app.canvas.dataset.zoomLevel = level;
+  }
+
+  /**
+   * Zeichnet die schematischen Regionsnamen.
+   *
+   * Bewusst ohne Grenzlinien: Nur Beschriftung, Positionspunkt und eine
+   * Legende, die die Schematik ausdrücklich benennt.
+   */
+  private drawRegionLayer(): void {
+    for (const child of this.regionLayer.removeChildren()) child.destroy({ children: true });
+    const result = this.regionResult;
+    const width = 1000;
+    const height = 700;
+    // Zurückhaltender Hintergrund: keine Landmasse, keine Grenze – nur Fläche.
+    const backdrop = new Graphics();
+    backdrop.roundRect(0, 0, width, height, 18).fill({ color: 0x16241f, alpha: 0.55 });
+    this.regionLayer.addChild(backdrop);
+    if (!result || result.labels.length === 0) {
+      const empty = new Text({
+        text: result?.message ?? 'Keine Regionsdaten geladen.',
+        style: { fontFamily: 'Georgia', fontSize: 22, fill: 0xd8cfa8, align: 'center', wordWrap: true, wordWrapWidth: width - 120 }
+      });
+      empty.anchor.set(0.5);
+      empty.position.set(width / 2, height / 2);
+      this.regionLayer.addChild(empty);
+      return;
+    }
+    const labels: MapRegionLabel[] = result.labels;
+    for (const label of labels) {
+      const x = (label.xPercent / 100) * width;
+      const y = (label.yPercent / 100) * height;
+      const marker = new Container();
+      marker.position.set(x, y);
+      // Punkt statt Fläche: markiert einen Bezugspunkt, keine Ausdehnung.
+      marker.addChild(new Graphics()
+        .circle(0, 0, 5).fill({ color: 0xd8b96f, alpha: 0.9 })
+        .circle(0, 0, 11).stroke({ color: 0xd8b96f, width: 1, alpha: 0.35 }));
+      const text = new Text({
+        text: label.name,
+        style: { fontFamily: 'Georgia', fontSize: 19, fill: 0xfff0c9, align: 'center' }
+      });
+      text.anchor.set(0.5);
+      text.position.set(0, -24);
+      marker.addChild(text);
+      this.regionLayer.addChild(marker);
+    }
+    const legend = new Text({
+      text: result.message,
+      style: { fontFamily: 'Segoe UI', fontSize: 13, fill: 0xc9c3a4, align: 'left', wordWrap: true, wordWrapWidth: width - 60 }
+    });
+    legend.position.set(30, height - 44);
+    this.regionLayer.addChild(legend);
+    this.app.canvas.dataset.regionCount = String(labels.length);
   }
 
   /** Neighboring realms are geographic illustrations, not claims of historical borders. */
@@ -617,11 +765,11 @@ export class KingdomMap {
   public setMapScope(scope: 'home' | 'world'): void {
     this.mapScope = scope;
     this.app.canvas.dataset.mapScope = scope;
-    this.settlements.visible = scope === 'home';
-    this.retroScenery.visible = scope === 'home' && this.projection === 'isometric';
-    this.neighbors.visible = true;
     this.zoom = 1;
     this.offset = { x: 0, y: 0 };
+    // Die Zoom-Ebene wird über das bestehende Verhalten gelegt, nicht ersetzt.
+    this.zoomLevel = 'dorf';
+    this.applyLevel('dorf');
     this.fit();
   }
 
@@ -751,5 +899,6 @@ export class KingdomMap {
     document.removeEventListener('visibilitychange', this.visibility);
     if (this.initialized) this.app.ticker.remove(this.animatedTicker);
     if (this.initialized) this.app.destroy(true, { children: true });
+    for (const child of this.regionLayer.removeChildren()) child.destroy({ children: true });
   }
 }

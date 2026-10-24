@@ -19,6 +19,7 @@ import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../
 import { GameAmbience, Soundscape } from './GameAmbience';
 import type { HistoryKind } from '../core/WorldHistoryCatalog';
 import { HelpSystem } from './HelpSystem';
+import { isZoomLevelsEnabled, regionsForMap, stepSlider } from './MapZoomLevels';
 
 type View = 'civic' | 'modernization' | 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
@@ -111,6 +112,8 @@ export class KingdomGameUI {
   private readonly helpSystem = new HelpSystem();
   private motionEnabled = false;
   private mapStyle: 'flat' | 'isometric' = 'isometric';
+  /** Jahr, für das die Regionsnamen zuletzt geladen wurden (vermeidet Neuzeichnen pro Frame). */
+  private regionYear?: number;
   private councilDialog?: HTMLDialogElement;
   private councilSelectionTimer?: number;
   private actionBannerTimer?: number;
@@ -676,10 +679,16 @@ export class KingdomGameUI {
                 </div>
                 <div class="map-hud-bottom">
                   <div id="settlement-details" class="settlement-details" role="status" aria-live="polite"></div>
-                  <div class="map-tools" role="group" aria-label="Karte bewegen und zentrieren">
+                  <div class="map-tools" role="group" aria-label="Karte bewegen, zoomen und zentrieren">
                     <button type="button" data-zoom="-0.2" aria-label="Karte verkleinern">−</button>
                     <button type="button" data-zoom="0" aria-label="Karte zentrieren">⌖ Zentrieren</button>
                     <button type="button" data-zoom="0.2" aria-label="Karte vergrößern">+</button>
+                    <label class="zoom-slider" id="zoom-slider-wrap" hidden>
+                      <span class="zoom-slider-label" id="zoom-level-label">Ebene: Dorf</span>
+                      <input type="range" id="zoom-slider" min="0" max="100" step="2" value="100"
+                        aria-label="Kartenzoom: Dorf bis Zentraleuropa" aria-describedby="zoom-hint">
+                      <span id="zoom-hint" class="zoom-hint" role="status" aria-live="polite"></span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -813,8 +822,9 @@ export class KingdomGameUI {
       button.addEventListener('click', (): void => { void this.run(() => this.action(button.dataset.action ?? '')); });
     });
     this.root.querySelectorAll<HTMLButtonElement>('[data-zoom]').forEach((button: HTMLButtonElement): void => {
-      button.addEventListener('click', (): void => this.map?.changeZoom(Number(button.dataset.zoom)));
+      button.addEventListener('click', (): void => this.applyZoomStep(Number(button.dataset.zoom)));
     });
+    this.bindZoomSlider();
     this.root.querySelector<HTMLSelectElement>('#speed')?.addEventListener('change', (event: Event): void => {
       const target = event.target;
       if (target instanceof HTMLSelectElement) engine.getTimeSystem().setSpeed(Number(target.value));
@@ -1444,6 +1454,15 @@ export class KingdomGameUI {
     this.map?.update(kingdom, this.selected, this.engine.getModernizationOptions(this.player.id)
       .filter(option => option.completed).map(option => option.project.id), this.engine.getCurrentYear(),
       this.engine.getRivals(this.player.id));
+    // Regionsnamen hängen am Jahr: bei Epochenwechsel neu laden, sonst unverändert lassen.
+    if (this.map && isZoomLevelsEnabled()) {
+      const year = this.engine.getCurrentYear();
+      if (year !== this.regionYear) {
+        this.regionYear = year;
+        this.map.setHistoricalRegions(regionsForMap(year));
+      }
+      this.updateZoomHint();
+    }
     const scene: Soundscape = this.view === 'war' ? 'battle' :
       this.view === 'culture' ? 'culture' :
       this.view === 'economy' ? 'market' :
@@ -2175,6 +2194,77 @@ export class KingdomGameUI {
       });
     }
     if (focusSelector) panel.querySelector<HTMLElement>(focusSelector)?.focus({ preventScroll: true });
+  }
+
+  /**
+   * Bindet den Zoom-Schieberegler an die Karte.
+   *
+   * Der Slider ist die primäre Steuerung (testbar, tastaturbedienbar); die
+   * bestehenden „+"/„−"-Buttons bleiben als gleichwertiger Weg erhalten.
+   * Ohne aktives Feature-Flag bleibt der Slider ausgeblendet und die Karte
+   * verhält sich wie bisher.
+   */
+  private bindZoomSlider(): void {
+    const wrap = this.root.querySelector<HTMLElement>('#zoom-slider-wrap');
+    const slider = this.root.querySelector<HTMLInputElement>('#zoom-slider');
+    if (!wrap || !slider) return;
+    if (!isZoomLevelsEnabled()) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    slider.value = String(this.map?.getZoomSlider() ?? 100);
+    slider.addEventListener('input', (): void => {
+      this.applyZoomSlider(Number(slider.value));
+    });
+    this.updateZoomHint();
+  }
+
+  /** Wendet einen Slider-Wert auf die Karte an und aktualisiert Hinweis und Ebene. */
+  private applyZoomSlider(value: number): void {
+    if (!this.map) return;
+    this.map.setZoomSlider(value);
+    this.updateZoomHint();
+  }
+
+  /**
+   * Behandelt die bestehenden „+"/„−"/„Zentrieren"-Buttons.
+   *
+   * Bei aktivem Slider wird der Schritt über den Slider-Wert gerechnet, damit
+   * beide Bedienwege denselben Zustand teilen. `0` bleibt „zentrieren".
+   */
+  private applyZoomStep(change: number): void {
+    if (!this.map) return;
+    if (change === 0) {
+      this.map.changeZoom(0);
+      this.updateZoomHint();
+      return;
+    }
+    if (!isZoomLevelsEnabled()) {
+      this.map.changeZoom(change);
+      return;
+    }
+    const next = stepSlider(this.map.getZoomSlider(), change > 0 ? 1 : -1);
+    this.applyZoomSlider(next);
+    const slider = this.root.querySelector<HTMLInputElement>('#zoom-slider');
+    if (slider) slider.value = String(next);
+  }
+
+  /** Aktualisiert Ebenenbezeichnung und Legende unter dem Slider. */
+  private updateZoomHint(): void {
+    if (!this.map) return;
+    const level = this.map.getZoomLevel();
+    const label = this.root.querySelector<HTMLElement>('#zoom-level-label');
+    if (label) label.textContent = level === 'dorf' ? 'Ebene: Dorf (16 Bezirke)' : 'Ebene: Zentraleuropa';
+    const hint = this.root.querySelector<HTMLElement>('#zoom-hint');
+    if (!hint) return;
+    if (level === 'dorf') {
+      hint.hidden = true;
+      hint.textContent = '';
+      return;
+    }
+    hint.hidden = false;
+    hint.textContent = this.map.getRegionLegend();
   }
 
   private async action(action: string): Promise<void> {
