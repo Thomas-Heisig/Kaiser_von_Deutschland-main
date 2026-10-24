@@ -57,7 +57,7 @@ try {
     await page.locator('#playlist-mode').selectOption('shuffle');
     await page.locator('#playlist-repeat').selectOption('one');
     await page.locator('.cover-card').first().waitFor();
-    if (await page.locator('.cover-card').count() !== 20) failures.push('expected all 20 official album covers');
+    if (await page.locator('.cover-card').count() !== 23) failures.push('expected all 23 official album covers');
     await page.locator('[data-jukebox-download]').waitFor({state:'attached'});
     if (await page.locator('#opening-play, [data-music-volume], [data-audio-toggle]').count())
       failures.push('redundant audio controls are still shown');

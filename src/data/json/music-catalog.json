@@ -4,7 +4,7 @@
   "openingTrackId": "schleier-der-vorzeit",
   "assetBase": "public/music/",
   "downloadsAllowed": true,
-  "notes": "20 vom Projektinhaber bereitgestellte Aufnahmen. Fünf Vorzeitstücke mit neuen Titeln, ID3-Tags und generierten Covern ergänzt am 24.10.2026. Alle Stücke sind moderne Spielmusik, keine Rekonstruktion überlieferter Musik: Auch Titel mit antikem oder vorzeitlichem Namen sind heutige Kompositionen. Bisherige 15 Cover stammen aus bereitgestellten Screenshot-Ausschnitten.",
+  "notes": "23 vom Projektinhaber bereitgestellte Aufnahmen. Fünf Vorzeitstücke mit neuen Titeln, ID3-Tags und generierten Covern ergänzt am 24.10.2026. Alle Stücke sind moderne Spielmusik, keine Rekonstruktion überlieferter Musik: Auch Titel mit antikem oder vorzeitlichem Namen sind heutige Kompositionen. Bisherige 15 Cover stammen aus bereitgestellten Screenshot-Ausschnitten.",
   "tracks": [
     {
       "number": 1,
@@ -209,7 +209,7 @@
       "role": "special",
       "description": "Freies Übergangsthema bis zum Mittelalter-Soundtrack. Moderne Spielmusik, keine historische Rekonstruktion.",
       "cover": "/covers/anbeginn-der-zeit.webp",
-      "endYear": 1199,
+      "endYear": 842,
       "authenticity": "modern"
     },
     {
@@ -311,6 +311,45 @@
       "assignmentBasis": "Screenshot-Reihenfolge und Download-Reihenfolge; Originaldateien enthalten keine Titel-Tags.",
       "sourceCommit": "1a85365",
       "authenticity": "modern"
+    },
+    {
+      "number": 21,
+      "id": "imperial-dawn",
+      "title": "Imperial Dawn",
+      "year": 843,
+      "endYear": 1199,
+      "era": "Früh- und Hochmittelalter",
+      "filename": "imperial-dawn.mp3",
+      "role": "era",
+      "authenticity": "modern",
+      "description": "Soundtrack der Spielzeit 843 bis 1199.",
+      "cover": "/covers/imperial-dawn.webp"
+    },
+    {
+      "number": 22,
+      "id": "echowald",
+      "title": "Echowald",
+      "year": 843,
+      "endYear": 1199,
+      "era": "Früh- und Hochmittelalter",
+      "filename": "echowald.mp3",
+      "role": "era",
+      "authenticity": "modern",
+      "description": "Soundtrack der Spielzeit 843 bis 1199.",
+      "cover": "/covers/echowald.webp"
+    },
+    {
+      "number": 23,
+      "id": "ewiger-nebel",
+      "title": "Ewiger Nebel",
+      "year": 843,
+      "endYear": 1199,
+      "era": "Früh- und Hochmittelalter",
+      "filename": "ewiger-nebel.mp3",
+      "role": "era",
+      "authenticity": "modern",
+      "description": "Soundtrack der Spielzeit 843 bis 1199.",
+      "cover": "/covers/ewiger-nebel.webp"
     }
   ],
   "introVideo": "/video/intro.mp4",

@@ -5,8 +5,8 @@ import { AUTHENTICITY_NOTE, BUNDLED_TRACKS, GENERIC_COVER, MAIN_THEME_ID, MusicJ
 
 describe('Official soundtrack assets', () => {
   afterEach(() => vi.unstubAllGlobals());
-  it('contains all 20 uniquely named recordings with covers', () => {
-    expect(BUNDLED_TRACKS).toHaveLength(20);
+  it('contains all 23 uniquely named recordings with covers', () => {
+    expect(BUNDLED_TRACKS).toHaveLength(23);
     expect(new Set(BUNDLED_TRACKS.map(track => track.url)).size).toBe(20);
     for (const track of BUNDLED_TRACKS) {
       expect(track.url).toMatch(/^\/music\/[a-z0-9-]+\.mp3$/);
