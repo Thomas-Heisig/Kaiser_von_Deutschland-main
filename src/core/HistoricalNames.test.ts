@@ -1,22 +1,42 @@
 import { describe, expect, it, vi } from 'vitest';
-import { nameForBirth, citizenName } from './HistoricalNames';
+import { nameForBirth, citizenName, nameSetFor } from './HistoricalNames';
 import { CitizenSystem } from './CitizenSystem';
 
 describe('Roadmap: historische Namen und Familien', () => {
   it('uses birth cohorts and avoids hereditary modern surnames in early periods', () => {
     const random = vi.spyOn(Math, 'random').mockReturnValue(0);
     try {
-      expect(citizenName(-2000, 'female', 7)).toEqual({firstName:'Bewohnerin 7',lastName:'der Siedlung'});
-      expect(citizenName(1100, 'male', 1)).toEqual({firstName:'Heinrich',lastName:'am Bach'});
-      expect(citizenName(1960, 'male', 1)).toEqual({firstName:'Thomas',lastName:'Meyer'});
-      expect(citizenName(2000, 'female', 1).firstName).toBe('Lena');
+      // Vorzeit: fiktionaler Bestand, kein Nachname, keine modernen Namen.
+      expect(citizenName(-2000, 'female')).toEqual({firstName:'Alva',lastName:''});
+      // Frühmittelalter: kein erblicher Familienname, sondern ein Beiname.
+      expect(citizenName(1100, 'male').lastName).not.toBe('Meyer');
+      expect(citizenName(1960, 'male').firstName).toBe('Thomas');
+      expect(citizenName(2000, 'female').firstName).toBe('Lena');
     } finally { random.mockRestore(); }
+  });
+  it('never returns generated placeholder names for any birth year', () => {
+    for (const year of [-2000, -500, 0, 300, 800, 1000, 1200, 1500, 1800, 1900, 1960, 2000]) {
+      for (const gender of ['male','female','other'] as const) {
+        for (let i = 0; i < 40; i++) {
+          const name = nameForBirth(year, gender);
+          expect(name).not.toMatch(/^(Kind|Nachwuchs|Bewohner|Bewohnerin)\s*\d*$/);
+          expect(name.trim().length).toBeGreaterThan(1);
+        }
+      }
+    }
+  });
+  it('uses attested names for antiquity and marks prehistory as fictional', () => {
+    expect(nameSetFor(100).evidence).toBe('attested');
+    expect(nameSetFor(100).familyNames).toBeNull();
+    expect(nameSetFor(-2000).evidence).toBe('fictional');
+    expect(nameSetFor(900).evidence).toBe('attested');
   });
   it('assigns time-sensitive names and clamps random boundaries', () => {
     expect(nameForBirth(1200,'female',()=>0)).toBe('Adelheid');
     expect(nameForBirth(1800,'male',()=>0)).toBe('Wilhelm');
     expect(nameForBirth(2000,'female',()=>0)).toBe('Lena');
-    expect(nameForBirth(2000,'male',()=>1)).toBe('Jonas');
+    // Upper clamp: a roll of 1 must stay inside the list, not overflow to undefined.
+    expect(nameForBirth(2000,'male',()=>1)).toBe('Emil');
   });
   it('starts a pregnancy for adult cohabiting spouses, then creates a named baby', () => {
     const system=new CitizenSystem();

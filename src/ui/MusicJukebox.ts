@@ -32,6 +32,27 @@ export const BUNDLED_TRACKS: readonly JukeboxTrack[] = musicCatalog.tracks.map(t
 export const MAIN_THEME_ID = musicCatalog.openingTrackId;
 export const MAIN_THEME = BUNDLED_TRACKS.find(track => track.id === MAIN_THEME_ID)!;
 
+/**
+ * Eindeutig generischer Ersatz für ein fehlendes Cover.
+ * Bewusst kein Motiv eines anderen Titels, damit keine falsche Zuordnung entsteht.
+ */
+export const GENERIC_COVER =
+  'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+    '<rect width="64" height="64" fill="#2b2b33"/>' +
+    '<circle cx="32" cy="32" r="17" fill="none" stroke="#8a8a99" stroke-width="2"/>' +
+    '<circle cx="32" cy="32" r="4" fill="#8a8a99"/>' +
+    '<text x="32" y="58" text-anchor="middle" fill="#8a8a99" font-size="7" ' +
+    'font-family="sans-serif">Kein Cover</text></svg>');
+
+/**
+ * Einordnung der Musik. Alle Stücke sind moderne Kompositionen; ein antiker oder
+ * vorzeitlicher Titelname bedeutet keine überlieferte historische Musik.
+ */
+export const AUTHENTICITY_NOTE: string =
+  (musicCatalog as { authenticityNote?: string }).authenticityNote ??
+  'Moderne Komposition für das Spiel, kein überliefertes historisches Musikstück.';
+
 const YEAR_NAMES: Record<number, { title: string; era: string }> = {
   1200: { title: 'Kaiserliches Leitmotiv', era: 'Mittelalter' },
   1300: { title: 'Stauferkrone', era: 'Hochmittelalter' },
@@ -60,7 +81,12 @@ export function tracksForYear(tracks: readonly JukeboxTrack[], year: number): Ju
   const date = Number.isFinite(year) ? year : dated[0].year;
   const eligible = dated.filter(track => track.year <= date && (track.endYear === undefined || date <= track.endYear));
   const start = eligible.at(-1)?.year;
-  if (start === undefined) return [tracks.find(track => track.id === 'anbeginn-der-zeit') ?? dated[0]];
+  // Before the earliest era, use that earliest era rather than a later track,
+  // so prehistory never falls back to an antiquity recording.
+  if (start === undefined) {
+    const earliest = dated[0].year;
+    return dated.filter(track => track.year === earliest);
+  }
   return eligible.filter(track => track.year === start);
 }
 
@@ -263,12 +289,18 @@ export class MusicJukebox {
     if (this.playlistMode === 'era') {
       const pool = this.getEraTracks(this.currentYear);
       const index = pool.findIndex(track => track.id === this.currentId);
+      // A track that ended after an era change is not in the new pool: start the
+      // new era from its beginning instead of repeating the previous era.
+      if (index === -1) {
+        const first = pool[0] ?? this.getTrackForYear(this.currentYear);
+        if (first) await this.play(first.id);
+        return;
+      }
       if (this.repeatMode === 'off' && index === pool.length - 1) { this.stop(); return; }
       const track = pool[(index + 1) % pool.length];
       if (track) await this.play(track.id);
       return;
     }
-    if (this.repeatMode === 'one' && this.currentId) { await this.play(this.currentId); return; }
     const tracks = this.tracks;
     const currentIndex = tracks.findIndex(t => t.id === this.currentId);
     if (this.repeatMode === 'off' && currentIndex === tracks.length - 1) { this.stop(); return; }

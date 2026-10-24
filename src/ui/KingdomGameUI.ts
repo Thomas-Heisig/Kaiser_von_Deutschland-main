@@ -26,6 +26,8 @@ import { bce, formatYear, formatYearRange } from '../core/HistoricalCalendar';
 import { knowledgeForDate, knowledgeSpotlight, KNOWLEDGE_TOPICS, type KnowledgeTopic } from '../core/EraKnowledgeCatalog';
 import { HelpSystem } from './HelpSystem';
 import { groupFeaturesByStatus } from './FeatureStatus';
+import { allNameSets, EVIDENCE_LABELS } from '../core/NameCatalog';
+import { AUTHENTICITY_NOTE, GENERIC_COVER } from './MusicJukebox';
 import { isZoomLevelsEnabled, regionsForMap, stepSlider } from './MapZoomLevels';
 import { deskMarkup, eraPresentation } from './EraPresentation';
 
@@ -776,7 +778,7 @@ ${body}
         <details class="game-music-settings" id="game-music-settings"><summary>🎼 Original-Soundtrack & Titelcover</summary>
         <section class="jukebox jukebox-ingame" aria-label="Musik-Jukebox">
           <strong>🎼 Original-Soundtrack · ${this.jukebox.getTracks().length} Titel</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
-          <div class="jukebox-nowplaying"><img data-jukebox-cover src="${MAIN_THEME.coverUrl}" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>${this.jukebox.getTracks().length} historische und thematische Aufnahmen</small></div></div>
+          <div class="jukebox-nowplaying"><img data-jukebox-cover src="${MAIN_THEME.coverUrl}" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>${this.jukebox.getTracks().length} Aufnahmen</small><small data-jukebox-authenticity class="muted"></small></div></div>
           <div class="playlist-toolbar"><label>Wiedergabe <select id="playlist-mode"><option value="era">Nach Epoche</option><option value="sequential">Reihenfolge</option><option value="shuffle">Zufällig</option></select></label><label>Wiederholen <select id="playlist-repeat"><option value="all">Alle</option><option value="one">Titel</option><option value="off">Aus</option></select></label></div>
           <details class="playlist-covers"><summary>Alle ${this.jukebox.getTracks().length} Titelcover anzeigen</summary><div class="jukebox-gallery" data-jukebox-gallery aria-label="Alle Titelcover"></div><div class="cover-pagination"><button type="button" data-cover-page="-1" aria-label="Vorherige Cover">←</button><span data-cover-page-label>1 / 5</span><button type="button" data-cover-page="1" aria-label="Weitere Cover">→</button></div></details>
           <a data-jukebox-download class="jukebox-download" href="#" download>↓ Titel herunterladen</a>
@@ -1940,6 +1942,35 @@ ${body}
   }
 
   /**
+   * Kompakte, zugängliche Namensbibliothek im Hilfe-Bereich.
+   *
+   * Zeigt Zeitraum, regionale Einordnung, Evidenzgrad und Quelle je Bestand.
+   * Fiktionale und rekonstruierte Bestände sind ausdrücklich gekennzeichnet,
+   * damit keine erfundenen Namen als belegt erscheinen.
+   */
+  private renderNameLibrary(): string {
+    const year = this.engine?.getCurrentYear() ?? 1200;
+    const sets = allNameSets();
+    return `<section class="build-card" data-name-library aria-label="Namensbibliothek">
+      <h3>Namen deiner Zeit</h3>
+      <p>Bürger erhalten ihren Namen bei Geburt oder Erstellung nach dem damaligen Jahr.
+      Ein späterer Epochenwechsel benennt niemanden um. Namen sind Atmosphäre, keine
+      Namensstatistik einer einzelnen Region.</p>
+      <div class="help-grid">${sets.map(set => `<article>
+        <h4>${escape(set.label)}</h4>
+        <p class="muted">${escape(formatYear(set.from))} – ${set.to === null ? 'heute' : escape(formatYear(set.to))}
+          · ${escape(set.region)}</p>
+        <p><strong>${escape(EVIDENCE_LABELS[set.evidence])}</strong> · ${escape(set.familyNote)}</p>
+        ${year >= set.from && (set.to === null || year <= set.to)
+          ? `<p class="positive">Aktuell für Geburten verwendet.</p>` : ''}
+        <details><summary>Quelle und Namensbeispiele</summary>
+          <p class="muted">${escape(set.source)}</p>
+          <p class="muted">Beispiele: ${escape(set.female.slice(0, 6).join(', '))} ·
+            ${escape(set.male.slice(0, 6).join(', '))}</p>
+        </details></article>`).join('')}</div></section>`;
+  }
+
+  /**
    * Beschreibt die erwartete Wirkung eines Steuersatzes aus der gemeinsamen
    * Engine-Vorschau. Zahlen sind Erwartungen, keine Garantien: Ernte, Ereignisse
    * und Zufriedenheit verändern die tatsächlichen Einnahmen.
@@ -2499,7 +2530,7 @@ ${body}
           <button class="primary" id="help-open-docs" style="font-size:1.1em;padding:0.75em 2em">
             📚 Vollständige Dokumentation öffnen
           </button>
-        </div>`;
+        </div>` + this.renderNameLibrary();
     }
     panel.querySelector<HTMLSelectElement>('#history-topic')?.addEventListener('change', event => {
       this.historyTopic = (event.target as HTMLSelectElement).value as typeof this.historyTopic;
@@ -3433,6 +3464,8 @@ ${body}
     if (title) title.textContent = selectedTrack?.title ?? 'Soundtrack';
     const desc = this.root.querySelector<HTMLElement>('[data-jukebox-description]');
     if (desc) desc.textContent = selectedTrack?.description ?? selectedTrack?.era ?? '';
+    const authenticity = this.root.querySelector<HTMLElement>('[data-jukebox-authenticity]');
+    if (authenticity) authenticity.textContent = AUTHENTICITY_NOTE;
     const gallery = this.root.querySelector<HTMLElement>('[data-jukebox-gallery]');
     if (gallery && !gallery.hasChildNodes()) {
       this.jukebox.getTracks().filter(t => t.source === 'library').forEach(track => {
@@ -3440,6 +3473,8 @@ ${body}
         button.type = 'button'; button.className = 'cover-card'; button.dataset.coverId = track.id;
         const img = document.createElement('img'); img.src = track.coverUrl ?? '';
         img.alt = ''; img.loading = 'lazy';
+        // A missing file must not leave an empty tile or retry forever.
+        img.addEventListener('error', () => { img.src = GENERIC_COVER; img.dataset.fallback = 'true'; }, { once: true });
         const name = document.createElement('span'); name.textContent = track.title;
         button.append(img, name); button.title = track.era;
         button.addEventListener('click', () => {

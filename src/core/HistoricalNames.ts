@@ -1,56 +1,62 @@
-/** German-speaking, period-inspired given names for the game's alternate-history kingdoms.
- *  Names are atmosphere, not an assertion about an individual region's naming statistics.
+/**
+ * Gemeinsamer Namensgenerator auf Basis der zentralen Namensbibliothek.
+ *
+ * Alle Entstehungswege (Geburt, Startbevölkerung, Nachfolge) nutzen dieselben
+ * Funktionen. Der Name wird **einmal** aus dem Geburtsjahr bestimmt und danach
+ * nie mehr geändert: Ein Epochenwechsel benennt keine bestehende Person um.
+ *
+ * Beziehungen hängen ausschließlich an der Bürger-ID, niemals am Namen.
  */
-export type ChildGender = 'female' | 'male' | 'other';
-type Names = { female: readonly string[]; male: readonly string[] };
-const PERIOD_NAMES: ReadonlyArray<{ since: number; names: Names }> = [
-  { since: -10000, names: {
-    female: ['Adelheid','Mathilde','Hildegard','Gertrud','Kunigunde','Elisabeth','Mechthild','Bertha'],
-    male: ['Heinrich','Konrad','Friedrich','Otto','Ludwig','Ulrich','Albrecht','Hermann']
-  } },
-  { since: 1500, names: {
-    female: ['Anna','Katharina','Margarethe','Barbara','Elisabeth','Dorothea','Maria','Ursula'],
-    male: ['Johann','Georg','Martin','Jakob','Philipp','Matthias','Heinrich','Friedrich']
-  } },
-  { since: 1800, names: {
-    female: ['Luise','Marie','Sophie','Emilie','Auguste','Johanna','Clara','Elise'],
-    male: ['Wilhelm','Karl','Otto','Eduard','Friedrich','Ernst','Theodor','Gustav']
-  } },
-  { since: 1900, names: {
-    female: ['Anna','Gertrud','Martha','Frieda','Erna','Elisabeth','Marie','Hedwig'],
-    male: ['Karl','Hans','Wilhelm','Walter','Heinrich','Otto','Ernst','Paul']
-  } },
-  { since: 1930, names: {
-    female: ['Helga','Ingrid','Gisela','Renate','Brigitte','Monika','Sabine','Petra'],
-    male: ['Peter','Hans','Klaus','Wolfgang','Jürgen','Dieter','Michael','Thomas']
-  } },
-  { since: 1960, names: {
-    female: ['Sabine','Petra','Susanne','Claudia','Andrea','Anja','Birgit','Kerstin'],
-    male: ['Thomas','Michael','Stefan','Andreas','Christian','Markus','Frank','Jörg']
-  } },
-  { since: 1990, names: {
-    female: ['Lena','Mia','Emma','Sophie','Hannah','Lea','Sarah','Lina'],
-    male: ['Leon','Paul','Max','Ben','Lukas','Felix','Finn','Jonas']
-  } }
-];
 
-/** Clamp the random selector to preserve valid names in deterministic test runs. */
-export function nameForBirth(year: number, gender: ChildGender, random: () => number = Math.random): string {
-  // Early Central European personal names are not reconstructable from this dataset.
-  // Keep an explicit fictional identifier instead of projecting medieval names backwards.
-  if (year < 500) return 'Kind ' + (1 + Math.floor(Math.max(0, Math.min(.999999, random() || 0)) * 9999));
-  const historic = [...PERIOD_NAMES].reverse().find(group => year >= group.since) ?? PERIOD_NAMES[0];
-  const options = gender === 'female' ? historic.names.female : historic.names.male;
+import { nameSetForYear, type NameSet } from './NameCatalog';
+
+export type ChildGender = 'female' | 'male' | 'other';
+
+/** Sichere Auswahl aus einer Liste, auch bei unerwarteten Zufallswerten. */
+function pick(list: readonly string[], random: () => number): string {
   const roll = random();
   const normalized = Number.isFinite(roll) ? Math.max(0, Math.min(0.999999, roll)) : 0;
-  return options[Math.floor(normalized * options.length)];
+  return list[Math.floor(normalized * list.length)];
 }
 
-/** Fictional people, selected by birth cohort, never presented as attested locals. */
-export function citizenName(birthYear: number, gender: ChildGender, ordinal: number): { firstName: string; lastName: string } {
-  if (birthYear < 500) return { firstName: `${gender === 'female' ? 'Bewohnerin' : 'Bewohner'} ${ordinal}`, lastName: 'der Siedlung' };
-  const bynames = ['am Bach','auf der Geest','am Wald','vom Anger','am Feld','vom Hof'];
-  const surnames = ['Meyer','Schmidt','Müller','Weber','Fischer','Wagner','Becker','Schulz'];
-  const pool = birthYear < 1200 ? bynames : surnames;
-  return { firstName: nameForBirth(birthYear, gender), lastName: pool[Math.floor(Math.random() * pool.length)] };
+/**
+ * Wählt einen Vornamen für ein Geburtsjahr.
+ * @param year Geburtsjahr der Person; maßgeblich ist die Zeit der Geburt.
+ * @param gender Geschlecht der Person.
+ * @param random Zufallsquelle; Standard `Math.random`, in Tests ersetzbar.
+ * @returns Ein Vorname aus dem für dieses Jahr gültigen Bestand.
+ */
+export function nameForBirth(year: number, gender: ChildGender, random: () => number = Math.random): string {
+  const set = nameSetForYear(year);
+  // `other` nutzt dieselben Bestände, statt eine dritte Liste zu erfinden.
+  const options = gender === 'female' ? set.female : set.male;
+  return pick(options, random);
+}
+
+/**
+ * Erzeugt Vor- und Nachnamen für einen Bürger.
+ *
+ * Vor dem Aufkommen erblicher Familiennamen wird ein Beiname verwendet oder gar
+ * kein Nachname, damit keine modernen Geschlechternamen in frühe Zeiten
+ * zurückprojiziert werden.
+ *
+ * @param birthYear Geburtsjahr der Person.
+ * @param gender Geschlecht der Person.
+ * @param random Zufallsquelle; Standard `Math.random`, in Tests ersetzbar.
+ * @returns Vorname und Nachname; der Nachname kann leer sein.
+ */
+export function citizenName(
+  birthYear: number,
+  gender: ChildGender,
+  random: () => number = Math.random
+): { firstName: string; lastName: string } {
+  const set = nameSetForYear(birthYear);
+  const firstName = nameForBirth(birthYear, gender, random);
+  if (!set.familyNames || set.familyNames.length === 0) return { firstName, lastName: '' };
+  return { firstName, lastName: pick(set.familyNames, random) };
+}
+
+/** Bestand, der für ein Geburtsjahr gilt – für Anzeige und Diagnose. */
+export function nameSetFor(birthYear: number): NameSet {
+  return nameSetForYear(birthYear);
 }

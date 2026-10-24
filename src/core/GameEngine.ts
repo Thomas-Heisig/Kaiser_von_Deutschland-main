@@ -15,6 +15,7 @@ import { ADMIN_DOMAINS, ADMIN_LABELS, ADMIN_POLICIES, administrationBudget, defa
 import { garrisonDevelopment } from './GarrisonDevelopment';
 import { RegionalProvisioning } from './RegionalProvisioning';
 import { citizenName } from './HistoricalNames';
+import { isPlaceholderName, isPlaceholderSurname } from './NameCatalog';
 import { TitleSystem } from '../data/Titles';
 import { PolicySystem } from './PolicySystem';
 import { OllamaService } from './OllamaService';
@@ -823,7 +824,7 @@ export class GameEngine {
       const age = 18 + Math.floor(Math.random() * 50);
       const birthMonth = Math.floor(Math.random() * 12) + 1;
       const birthYear = this.currentYear - age - (this.currentMonth < birthMonth ? 1 : 0);
-      const { firstName, lastName } = citizenName(birthYear, gender, i + 1);
+      const { firstName, lastName } = citizenName(birthYear, gender);
       const profession = professions[Math.floor(Math.random() * professions.length)];
       const regionId = this.currentYear < 500 ? 'siedlung' : regions[Math.floor(Math.random() * regions.length)];
       
@@ -1892,6 +1893,9 @@ export class GameEngine {
     }
     this.chronicle = (saveData.chronicle ?? []).map((entry: ChronicleEntry) => ({...entry}));
     this.citizenSystem.restoreCitizens(saveData.citizens ?? []);
+    // One-time replacement of generated placeholder names. Real names, IDs,
+    // relations and wealth stay untouched; the flag prevents repeat renaming.
+    this.replacePlaceholderNames();
     this.civicMissions = new CivicMissionSystem();
     if(saveData.civicMissions) this.civicMissions.load(saveData.civicMissions,new Set(restoredPlayers.map((p:Player)=>p.id)),id=>this.citizenSystem.getCitizen(id));
     this.courtAssistants = new CourtAssistantRegistry();
@@ -2972,7 +2976,7 @@ export class GameEngine {
       // Surface an existing unnamed adult; never manufacture an adult descendant.
       const age=22,birthYear=this.currentYear-age;
       const gender=Math.random()<.5?'female':'male';
-      successor=this.citizenSystem.createCitizen({...citizenName(birthYear,gender,this.citizenSystem.getAllCitizens().length+1),
+      successor=this.citizenSystem.createCitizen({...citizenName(birthYear,gender),
         gender,age,birthYear,birthMonth:this.currentMonth,profession:'farmer',regionId:previous?.regionId??'siedlung'});
       this.lifeMessage(player.id,`${successor.firstName} ${successor.lastName} wurde aus der bereits vorhandenen Bevölkerung als mögliche Nachfolge erfasst. Keine Verwandtschaft mit der bisherigen Figur.`);
     }
@@ -3000,6 +3004,30 @@ export class GameEngine {
       this.courtAssistants.appoint(player.id,appointment.office,candidate.id);
       this.courtAssistants.setMode(player.id,appointment.office,'automatisch');
       this.lifeMessage(player.id,`${office.name}: ${candidate.firstName} ${candidate.lastName} übernimmt das frei gewordene Amt automatisch.`);
+    }
+  }
+
+  /**
+   * Ersetzt einmalig automatisch erzeugte Platzhalternamen („Kind 34",
+   * „Bewohnerin 124") durch Namen aus der Bibliothek.
+   *
+   * Es werden ausschließlich `firstName`/`lastName` geschrieben. IDs,
+   * Familienbeziehungen, Vermögen und sonstiger Zustand bleiben unverändert,
+   * damit keine Beziehung am Namen hängt. Bereits sinnvolle Namen und eigene
+   * Spielernamen bleiben unangetastet; der Vorgang ist wiederholbar.
+   */
+  private replacePlaceholderNames(): void {
+    let replaced = 0;
+    for (const citizen of this.citizenSystem.getAllCitizens()) {
+      if (!isPlaceholderName(citizen.firstName)) continue;
+      const { firstName, lastName } = citizenName(citizen.birthYear, citizen.gender);
+      citizen.firstName = firstName;
+      // Only the generated placeholder surname is replaced, never a kept one.
+      if (isPlaceholderSurname(citizen.lastName)) citizen.lastName = lastName;
+      replaced++;
+    }
+    if (replaced > 0) {
+      this.recordChronicle(`${replaced} erzeugte Platzhalternamen wurden durch historisch eingeordnete Namen ersetzt.`);
     }
   }
 

@@ -1,6 +1,7 @@
+import { readFile } from 'node:fs/promises';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import musicCatalog from '../data/json/music-catalog.json';
-import { BUNDLED_TRACKS, MAIN_THEME_ID, MusicJukebox, trackForYear, tracksForYear } from './MusicJukebox';
+import { AUTHENTICITY_NOTE, BUNDLED_TRACKS, GENERIC_COVER, MAIN_THEME_ID, MusicJukebox, trackForYear, tracksForYear } from './MusicJukebox';
 
 describe('Official soundtrack assets', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -22,6 +23,48 @@ describe('Official soundtrack assets', () => {
     expect(trackForYear(BUNDLED_TRACKS, -499)?.id).toBe('anbeginn-der-zeit');
     expect(trackForYear(BUNDLED_TRACKS, 800)?.id).toBe('anbeginn-der-zeit');
     expect(trackForYear(BUNDLED_TRACKS, 1200)?.id).toBe('leitmotiv-1200');
+  });
+  it('gives every era its own track and never spills an era into the next', () => {
+    const eras: Array<[number, string]> = [
+      [-1999, 'schleier-der-vorzeit'], [-500, 'schleier-der-vorzeit'],
+      [-499, 'anbeginn-der-zeit'], [0, 'anbeginn-der-zeit'], [500, 'anbeginn-der-zeit'],
+      [843, 'anbeginn-der-zeit'], [1199, 'anbeginn-der-zeit'],
+      [1200, 'leitmotiv-1200'], [1299, 'leitmotiv-1200'], [1300, 'stauferkrone-1300'],
+      [1400, 'leitmotiv-1400'], [1500, 'pavane-1500'], [1600, 'fanfare-1600'],
+      [1750, 'ouvertuere-1750'], [1820, 'romantik-1820'], [1890, 'eiserne-kronen-1890'],
+      [1945, 'truemmerstaaten-1945'], [1970, 'kaisersynthesia-1970'], [2000, 'kaiserreich-erwachen-2000']
+    ];
+    for (const [year, expected] of eras) {
+      expect(trackForYear(BUNDLED_TRACKS, year)?.id, `year ${year}`).toBe(expected);
+    }
+  });
+  it('uses the earliest era before the earliest track instead of a later one', () => {
+    // Before the prehistoric range, prehistory must not fall back to antiquity.
+    for (const year of [-5000, -3000, -2000]) {
+      const track = trackForYear(BUNDLED_TRACKS, year);
+      expect(track).not.toBeNull();
+      expect(track!.year ?? 0).toBeLessThan(-499);
+    }
+  });
+  it('marks every recording as a modern composition, not historical music', () => {
+    expect(AUTHENTICITY_NOTE).toMatch(/moderne/i);
+    expect(AUTHENTICITY_NOTE).toMatch(/kein überliefertes/i);
+    const catalog = musicCatalog as { authenticityNote?: string; tracks: Array<{ authenticity?: string }> };
+    expect(catalog.authenticityNote).toBeTruthy();
+    for (const track of catalog.tracks) expect(track.authenticity).toBe('modern');
+  });
+  it('provides a generic placeholder cover that is not borrowed from a track', () => {
+    expect(GENERIC_COVER.startsWith('data:image/svg+xml')).toBe(true);
+    expect(GENERIC_COVER).toContain('Kein Cover');
+    for (const track of BUNDLED_TRACKS) expect(GENERIC_COVER).not.toContain(track.id);
+  });
+  it('resolves every catalogued cover and audio file on disk', async () => {
+    for (const track of musicCatalog.tracks) {
+      const cover = 'public' + track.cover;
+      const audio = 'public/music/' + track.filename;
+      await expect(readFile(cover), `cover ${track.id}`).resolves.toBeTruthy();
+      await expect(readFile(audio), `audio ${track.id}`).resolves.toBeTruthy();
+    }
   });
   it('cycles all five era tracks without restarting on year sync and respects repeat modes', async () => {
     class AudioMock {

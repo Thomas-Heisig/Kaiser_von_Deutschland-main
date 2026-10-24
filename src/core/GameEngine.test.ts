@@ -106,6 +106,47 @@ describe('Playable campaign integration', (): void => {
     expect(plan.blockers.join(' ')).toContain('Bauern fehlen');
     expect(engine.recruitForPlayer(p.id,10,'cavalry')).toBe(false);
   });
+  it('gives new citizens period names and keeps them across months and save/load',async()=>{
+    const engine=await campaign();
+    const before=engine.getCitizenSystem().getAllCitizens().map((c:Citizen)=>({id:c.id,first:c.firstName,last:c.lastName}));
+    expect(before.length).toBeGreaterThan(0);
+    for(const citizen of before) {
+      expect(citizen.first).not.toMatch(/^(Kind|Nachwuchs|Bewohner|Bewohnerin)\s*\d*$/);
+      expect(citizen.first.length).toBeGreaterThan(1);
+    }
+    for(let n=0;n<6;n++)await engine.advanceMonth();
+    await engine.saveGame('names');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('names');
+    const after=restored.getCitizenSystem().getAllCitizens();
+    for(const citizen of before) {
+      const match=after.find((c:Citizen)=>c.id===citizen.id);
+      expect(match).toBeDefined();
+      // Names are chosen once at birth; a later era change must not rename anyone.
+      expect(match!.firstName).toBe(citizen.first);
+      expect(match!.lastName).toBe(citizen.last);
+    }
+  });
+  it('replaces generated placeholder names once without touching ids or relations',async()=>{
+    const engine=await campaign();
+    const victim=engine.getCitizenSystem().getAllCitizens()[0];
+    const relationIds=victim.familyRelations.map(r=>r.citizenId);
+    const wealth=victim.wealth;
+    // Reproduce the way an older version stored citizens, then load it.
+    victim.firstName='Kind 34';victim.lastName='der Siedlung';
+    await engine.saveGame('legacy-names');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('legacy-names');
+    const fixed=restored.getCitizenSystem().getCitizen(victim.id)!;
+    expect(fixed.firstName).not.toBe('Kind 34');
+    expect(fixed.lastName).not.toBe('der Siedlung');
+    expect(fixed.id).toBe(victim.id);
+    expect(fixed.wealth).toBe(wealth);
+    expect(fixed.familyRelations.map(r=>r.citizenId)).toEqual(relationIds);
+    // Repeating the save/load must not rename again.
+    const once=fixed.firstName;
+    await restored.saveGame('legacy-names-2');
+    const again=new GameEngine({enableWiki:false});engines.push(again);await again.loadGame('legacy-names-2');
+    expect(again.getCitizenSystem().getCitizen(victim.id)!.firstName).toBe(once);
+  });
   it('projects the tax effect with the same formulas the monthly tick applies',async()=>{
     const engine=await campaign(),p=engine.getPlayers()[0];
     // A higher rate must yield more gold and cost more happiness; the preview

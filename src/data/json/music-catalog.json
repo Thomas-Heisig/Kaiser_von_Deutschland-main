@@ -4,7 +4,7 @@
   "openingTrackId": "schleier-der-vorzeit",
   "assetBase": "public/music/",
   "downloadsAllowed": true,
-  "notes": "20 vom Projektinhaber bereitgestellte Aufnahmen. Fünf Vorzeitstücke mit neuen Titeln, ID3-Tags und generierten Covern ergänzt am 24.10.2026. Moderne Spielmusik, keine Rekonstruktion überlieferter Musik. Bisherige 15 Cover stammen aus bereitgestellten Screenshot-Ausschnitten.",
+  "notes": "20 vom Projektinhaber bereitgestellte Aufnahmen. Fünf Vorzeitstücke mit neuen Titeln, ID3-Tags und generierten Covern ergänzt am 24.10.2026. Alle Stücke sind moderne Spielmusik, keine Rekonstruktion überlieferter Musik: Auch Titel mit antikem oder vorzeitlichem Namen sind heutige Kompositionen. Bisherige 15 Cover stammen aus bereitgestellten Screenshot-Ausschnitten.",
   "tracks": [
     {
       "number": 1,
@@ -16,7 +16,9 @@
       "durationSeconds": 161.9,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1200.",
-      "cover": "/covers/leitmotiv-1200.webp"
+      "cover": "/covers/leitmotiv-1200.webp",
+      "endYear": 1299,
+      "authenticity": "modern"
     },
     {
       "number": 2,
@@ -28,7 +30,9 @@
       "durationSeconds": 162.5,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1300.",
-      "cover": "/covers/stauferkrone-1300.webp"
+      "cover": "/covers/stauferkrone-1300.webp",
+      "endYear": 1399,
+      "authenticity": "modern"
     },
     {
       "number": 3,
@@ -40,7 +44,9 @@
       "durationSeconds": 179.2,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1400.",
-      "cover": "/covers/leitmotiv-1400.webp"
+      "cover": "/covers/leitmotiv-1400.webp",
+      "endYear": 1499,
+      "authenticity": "modern"
     },
     {
       "number": 4,
@@ -52,7 +58,9 @@
       "durationSeconds": 166.5,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1500.",
-      "cover": "/covers/pavane-1500.webp"
+      "cover": "/covers/pavane-1500.webp",
+      "endYear": 1599,
+      "authenticity": "modern"
     },
     {
       "number": 5,
@@ -64,7 +72,9 @@
       "durationSeconds": 179.1,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1600.",
-      "cover": "/covers/fanfare-1600.webp"
+      "cover": "/covers/fanfare-1600.webp",
+      "endYear": 1749,
+      "authenticity": "modern"
     },
     {
       "number": 6,
@@ -76,7 +86,9 @@
       "durationSeconds": 164.2,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1750.",
-      "cover": "/covers/ouvertuere-1750.webp"
+      "cover": "/covers/ouvertuere-1750.webp",
+      "endYear": 1819,
+      "authenticity": "modern"
     },
     {
       "number": 7,
@@ -88,7 +100,9 @@
       "durationSeconds": 179.7,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1820.",
-      "cover": "/covers/romantik-1820.webp"
+      "cover": "/covers/romantik-1820.webp",
+      "endYear": 1889,
+      "authenticity": "modern"
     },
     {
       "number": 8,
@@ -100,7 +114,9 @@
       "durationSeconds": 180,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1890.",
-      "cover": "/covers/eiserne-kronen-1890.webp"
+      "cover": "/covers/eiserne-kronen-1890.webp",
+      "endYear": 1944,
+      "authenticity": "modern"
     },
     {
       "number": 9,
@@ -112,7 +128,9 @@
       "durationSeconds": 177.4,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1945.",
-      "cover": "/covers/truemmerstaaten-1945.webp"
+      "cover": "/covers/truemmerstaaten-1945.webp",
+      "endYear": 1969,
+      "authenticity": "modern"
     },
     {
       "number": 10,
@@ -124,7 +142,9 @@
       "durationSeconds": 174.6,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 1970.",
-      "cover": "/covers/kaisersynthesia-1970.webp"
+      "cover": "/covers/kaisersynthesia-1970.webp",
+      "endYear": 1999,
+      "authenticity": "modern"
     },
     {
       "number": 11,
@@ -136,7 +156,8 @@
       "durationSeconds": 176.3,
       "role": "era",
       "description": "Soundtrack der Spielzeit ab dem Jahr 2000.",
-      "cover": "/covers/kaiserreich-erwachen-2000.webp"
+      "cover": "/covers/kaiserreich-erwachen-2000.webp",
+      "authenticity": "modern"
     },
     {
       "number": 12,
@@ -148,7 +169,8 @@
       "durationSeconds": 179,
       "role": "special",
       "description": "Zusätzliches eigenständiges Musikstück ohne festes Startjahr.",
-      "cover": "/covers/kaiser-puls.webp"
+      "cover": "/covers/kaiser-puls.webp",
+      "authenticity": "modern"
     },
     {
       "number": 13,
@@ -160,7 +182,8 @@
       "durationSeconds": 171.2,
       "role": "special",
       "description": "Eigenständiges Zeitmotiv; weiterhin in der Musikbibliothek verfügbar.",
-      "cover": "/covers/zeit-vergeht.webp"
+      "cover": "/covers/zeit-vergeht.webp",
+      "authenticity": "modern"
     },
     {
       "number": 14,
@@ -172,7 +195,8 @@
       "durationSeconds": 172.7,
       "role": "ending",
       "description": "Eigenständiger Soundtrack zum Ende der Zeit.",
-      "cover": "/covers/ende-der-zeit.webp"
+      "cover": "/covers/ende-der-zeit.webp",
+      "authenticity": "modern"
     },
     {
       "number": 15,
@@ -184,7 +208,9 @@
       "durationSeconds": 178.6,
       "role": "special",
       "description": "Freies Übergangsthema bis zum Mittelalter-Soundtrack. Moderne Spielmusik, keine historische Rekonstruktion.",
-      "cover": "/covers/anbeginn-der-zeit.webp"
+      "cover": "/covers/anbeginn-der-zeit.webp",
+      "endYear": 1199,
+      "authenticity": "modern"
     },
     {
       "number": 16,
@@ -203,7 +229,8 @@
       "sourceSha256": "5a465913d4dd15ea66e774cc8429c26a4e23fa8359099ddd433fe296c8e53085",
       "coverOrigin": "Generiert mit imagegen, 24.10.2026",
       "assignmentBasis": "Screenshot-Reihenfolge und Download-Reihenfolge; Originaldateien enthalten keine Titel-Tags.",
-      "sourceCommit": "1a85365"
+      "sourceCommit": "1a85365",
+      "authenticity": "modern"
     },
     {
       "number": 17,
@@ -222,7 +249,8 @@
       "sourceSha256": "cca8e71003fe7486e2d0739ad3dea059ab42b0bedf3dfb239f290c9d0fcf737d",
       "coverOrigin": "Generiert mit imagegen, 24.10.2026",
       "assignmentBasis": "Screenshot-Reihenfolge und Download-Reihenfolge; Originaldateien enthalten keine Titel-Tags.",
-      "sourceCommit": "1a85365"
+      "sourceCommit": "1a85365",
+      "authenticity": "modern"
     },
     {
       "number": 18,
@@ -241,7 +269,8 @@
       "sourceSha256": "70fe0ab427a4a758b2726b63aaf9dd162afb325b7ad9b917090cfb50665b42b6",
       "coverOrigin": "Generiert mit imagegen, 24.10.2026",
       "assignmentBasis": "Screenshot-Reihenfolge und Download-Reihenfolge; Originaldateien enthalten keine Titel-Tags.",
-      "sourceCommit": "1a85365"
+      "sourceCommit": "1a85365",
+      "authenticity": "modern"
     },
     {
       "number": 19,
@@ -260,7 +289,8 @@
       "sourceSha256": "aed115f9a74a74a2f05639d44f7d74a29ec417fc06400bf5f91e1fa423b54c75",
       "coverOrigin": "Generiert mit imagegen, 24.10.2026",
       "assignmentBasis": "Screenshot-Reihenfolge und Download-Reihenfolge; Originaldateien enthalten keine Titel-Tags.",
-      "sourceCommit": "1a85365"
+      "sourceCommit": "1a85365",
+      "authenticity": "modern"
     },
     {
       "number": 20,
@@ -279,9 +309,11 @@
       "sourceSha256": "7b4840c1454c7b867894916963491a0358d6bb2f629f6f7f8c7673e2746dbcb1",
       "coverOrigin": "Generiert mit imagegen, 24.10.2026",
       "assignmentBasis": "Screenshot-Reihenfolge und Download-Reihenfolge; Originaldateien enthalten keine Titel-Tags.",
-      "sourceCommit": "1a85365"
+      "sourceCommit": "1a85365",
+      "authenticity": "modern"
     }
   ],
   "introVideo": "/video/intro.mp4",
-  "introVideoAlternative": "/video/intro-original.mp4"
+  "introVideoAlternative": "/video/intro-original.mp4",
+  "authenticityNote": "Moderne Komposition für das Spiel. Kein überliefertes historisches Musikstück und keine rekonstruierte Aufführungspraxis."
 }
