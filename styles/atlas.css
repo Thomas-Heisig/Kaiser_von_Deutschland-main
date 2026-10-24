@@ -367,3 +367,33 @@ dialog:not(.section-dialog):not(.settings-dialog):not(.paged-info) {max-height:9
 .tax-form input[type=range] {width:100%;padding:0;min-height:32px;accent-color:var(--gold);}
 .economy-grid table {font-size:clamp(.67rem,1.2vw,.9rem);}
 .paper-heading small { color: #55462f; letter-spacing: .03em; }
+
+/* Persistent vital signs, independent of the optional briefing dialog. */
+.kingdom-app { grid-template-rows:58px 86px minmax(0,1fr) 23px!important; }
+.kingdom-app .resource-bar { grid-template-rows:36px 36px; row-gap:4px; }
+.realm-status-strip { grid-column:1 / -1; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; min-width:0; }
+.realm-status-strip button { display:flex; align-items:center; justify-content:space-between; gap:4px; min-height:32px; padding:3px 8px; font-size:.7rem; border:1px solid var(--line); }
+.realm-status-strip strong { font-variant-numeric:tabular-nums; white-space:nowrap; }
+.realm-status-strip button span { color:var(--muted); }
+.message-content { color:var(--ink); overflow-wrap:anywhere; line-height:1.65; }
+.message-content p { margin:0 0 .65em; color:inherit; }
+.message-content ul { margin:.5em 0; padding-left:1.2em; list-style:disc; }
+.journal { margin:1rem 0; padding:0; }
+.journal>li { margin:0 0 1rem; padding:.6rem 0 .8rem 1rem; border-left:2px solid var(--line); }
+.journal time { display:block; margin-bottom:.4rem; font-variant-numeric:tabular-nums; }
+.journal .message-content p { color:var(--ink); font-size:.9rem; line-height:1.65; }
+.journal .message-content li { border:0; padding:.15em 0; font-size:.85rem; }
+.report-card #report-news { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; scrollbar-width:thin; }
+.report-card #report-news p { display:block; overflow:visible; -webkit-line-clamp:unset; font-size:.78rem; line-height:1.55; }
+.report-card #report-news li { font-size:.75rem; margin:.3em 0; }
+.report-card>.report-actions,.report-card>h2,.report-card>small { flex-shrink:0; }
+.character-pagination { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.character-pagination button { font-size:.8rem; }
+.provision-action { padding:12px 0; border-top:1px solid var(--line); }
+.provision-action h5 { font-size:.9rem; margin:0 0 .5rem; }
+@media(max-width:600px) {
+ .kingdom-app { grid-template-rows:58px 86px minmax(0,1fr) 20px!important; }
+ .realm-status-strip button { flex-direction:column; justify-content:center; gap:1px; padding:2px; font-size:.64rem; }
+ .kingdom-app .realm-status-strip button span { font-size:.58rem; }
+ .report-card #report-news p,.report-card #report-news li { font-size:.72rem; line-height:1.45; }
+}

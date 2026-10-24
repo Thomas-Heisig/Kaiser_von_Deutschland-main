@@ -6,6 +6,10 @@
 
 ### Added
 
+- Regionale Versorgungsentscheidungen mit dauerhaften Speichern, zeitlich begrenzter Hilfe und tatsächlichen Abwanderungsfolgen; erfolgreiche Bürgeraufträge und Verwaltungsbudget angebunden. Hotseat, BCE und Save/Load getestet.
+- Dauerhafte Anzeige von Zufriedenheit, Stabilität, Bevölkerung und Nahrungsvorrat in Monatsverbräuchen. Strukturierte Chronik, vollständig scrollbar lesbare aktuelle Meldungen und sechs Bürgerrollen je Seite.
+- Holzproduktion und Werkstattausbau neu abgestimmt, saisonaler Mehrertrag beim Bauen sichtbar. Neue Bürger erhalten Namen nach Geburtsjahr; vorhandene Personen bleiben erhalten. Naturereignis-Meldungen werden nun in der tatsächlich aktiven Spieloberfläche abonniert.
+
 - Frühstart ab 2000 v. Chr. mit Siedlungsdarstellung, angepassten Begriffen und erreichbaren Grundtechnologien. Chronik, Kalender und Vertragsdaten zeigen v./n. Chr.; der Jahreswechsel überspringt ein sichtbares Jahr null.
 - Geschichte & Zeitbild mit Quellenkarten zu Kunst, Architektur, Kultur und Alltag. Antike Ereignisse und Zeiträume ergänzt; umstrittene Tagesdaten, überlieferte Daten und Näherungen kenntlich gemacht. Monatsdaten erscheinen erst im zugehörigen Monat; Jahrseinträge bleiben Jahreskontext. [Quellenprüfung und Grenzen](docs/09-history-model/ZEITBILD.md).
 - Regressionstests für vorchristliche Kulturförderung und Save/Load; Browsermatrix für 20 historische Starts sowie antike/neuzeitliche Monatswechsel und Themenfilter.

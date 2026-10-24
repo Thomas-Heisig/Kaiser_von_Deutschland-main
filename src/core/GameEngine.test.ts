@@ -347,6 +347,62 @@ describe('Playable campaign integration', (): void => {
     expect(engine.getTreasuryReport(player.id)?.entries.some(e=>e.reason==='Naturereignis: Hochwasser')).toBe(false);
   });
 
+  it('persists regional investments, validates actions and links completed civic aid',async()=>{
+    const engine=await campaign(),player=engine.getPlayers()[0];
+    Object.assign(player.kingdom.resources,{gold:50000,food:50000,wood:5000,stone:5000});
+    const gold=player.kingdom.resources.gold;
+    engine.addressRegionalProvisioning(player.id,'geest','storage');
+    expect(player.kingdom.resources.gold).toBe(gold-400);
+    expect(()=>engine.addressRegionalProvisioning(player.id,'geest','storage')).toThrow('bereits');
+    const citizen=engine.getCivicMissions(player.id).citizens[0];
+    engine.assignCivicMission(player.id,citizen.id,'grain');
+    for(let n=0;n<3;n++)await engine.advanceMonth();
+    expect(engine.getChronicle().some(e=>e.message.includes('Bürgerhilfe'))).toBe(true);
+    expect(engine.getRegionalProvisioning(player.id)[0].storage).toBe(1);
+    await engine.saveGame('regional');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('regional');
+    expect(restored.getRegionalProvisioning(player.id)).toEqual(engine.getRegionalProvisioning(player.id));
+    const {decodeSave}=await import('./SaveCodec');
+    const snapshot:any=await decodeSave(await localforage.getItem('kaiser-ii-save-regional'));
+    snapshot.regionalProvisioning[player.id].regions[0].storage=99;
+    await localforage.setItem('kaiser-ii-save-bad-provision',snapshot);
+    await expect(restored.loadGame('bad-provision')).rejects.toThrow('Versorgung');
+    expect(restored.getRegionalProvisioning(player.id)[0].storage).toBe(1);
+    delete snapshot.regionalProvisioning;
+    await localforage.setItem('kaiser-ii-save-old-provision',snapshot);await restored.loadGame('old-provision');
+    expect(restored.getRegionalProvisioning(player.id).every(r=>r.storage===0&&r.hunger===0)).toBe(true);
+  });
+
+  it('isolates regional decisions and persistence across hotseat realms',async()=>{
+    const engine=new GameEngine({startingYear:-1999,randomEvents:false,enableWiki:false});engines.push(engine);
+    const first=engine.addPlayer({name:'A',kingdomName:'A',gender:'other'}),second=engine.addPlayer({name:'B',kingdomName:'B',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    Object.assign(first.kingdom.resources,{gold:50000,wood:5000,stone:5000});
+    expect(()=>engine.addressRegionalProvisioning(second.id,'geest','storage')).toThrow('Nicht am Zug');
+    engine.addressRegionalProvisioning(first.id,'geest','storage');
+    expect(engine.getRegionalProvisioning(second.id)[0].storage).toBe(0);
+    await engine.saveGame('regional-hotseat');await engine.loadGame('regional-hotseat');
+    expect(engine.getRegionalProvisioning(first.id)[0].storage).toBe(1);
+    expect(engine.getRegionalProvisioning(second.id)[0].storage).toBe(0);
+  });
+
+  it('uses the civic administration budget for aid in a stressed region',async()=>{
+    const engine=await campaign(),player=engine.getPlayers()[0];
+    Object.assign(player.kingdom.resources,{gold:50000,food:50000});
+    const prefs=engine.getAdministration(player.id);prefs.domains.civic=true;engine.setAdministration(player.id,prefs);
+    engine.getRegionalProvisioning(player.id);
+    await engine.saveGame('aid');
+    const {decodeSave}=await import('./SaveCodec');
+    const snapshot:any=await decodeSave(await localforage.getItem('kaiser-ii-save-aid'));
+    snapshot.regionalProvisioning[player.id].regions[2].hunger=80;
+    await localforage.setItem('kaiser-ii-save-aid',snapshot);await engine.loadGame('aid');
+    await engine.advanceMonth();
+    const region=engine.getRegionalProvisioning(player.id)[2];
+    expect(region.reliefMonths).toBe(3);
+    expect(region.hunger).toBe(40);
+    expect(engine.getTreasuryReport(player.id)?.entries.some(e=>e.reason.includes('Nothilfe')&&e.amount===-120)).toBe(true);
+  });
+
   it('rejects premature modernization and preserves old-save-compatible progress', async (): Promise<void> => {
     const engine = await campaign();
     const player = engine.getPlayers()[0];

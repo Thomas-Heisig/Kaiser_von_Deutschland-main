@@ -1,8 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
-import { nameForBirth } from './HistoricalNames';
+import { nameForBirth, citizenName } from './HistoricalNames';
 import { CitizenSystem } from './CitizenSystem';
 
 describe('Roadmap: historische Namen und Familien', () => {
+  it('uses birth cohorts and avoids hereditary modern surnames in early periods', () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0);
+    try {
+      expect(citizenName(-2000, 'female', 7)).toEqual({firstName:'Bewohnerin 7',lastName:'der Siedlung'});
+      expect(citizenName(1100, 'male', 1)).toEqual({firstName:'Heinrich',lastName:'am Bach'});
+      expect(citizenName(1960, 'male', 1)).toEqual({firstName:'Thomas',lastName:'Meyer'});
+      expect(citizenName(2000, 'female', 1).firstName).toBe('Lena');
+    } finally { random.mockRestore(); }
+  });
   it('assigns time-sensitive names and clamps random boundaries', () => {
     expect(nameForBirth(1200,'female',()=>0)).toBe('Adelheid');
     expect(nameForBirth(1800,'male',()=>0)).toBe('Wilhelm');

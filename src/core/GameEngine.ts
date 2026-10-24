@@ -11,6 +11,8 @@ import { TreasuryLedger, validateTreasuryReport, type TreasuryReport } from './T
 import { socialCelebrations } from './SocialCelebrations';
 import { ADMIN_DOMAINS, ADMIN_POLICIES, administrationBudget, defaultAdministration, validateAdministration, type AdministrationPreferences } from './Administration';
 import { developGarrison, garrisonDevelopment } from './GarrisonDevelopment';
+import { RegionalProvisioning } from './RegionalProvisioning';
+import { citizenName } from './HistoricalNames';
 import { TitleSystem } from '../data/Titles';
 import { PolicySystem } from './PolicySystem';
 import { OllamaService } from './OllamaService';
@@ -227,6 +229,22 @@ export class GameEngine {
   private chronicle: ChronicleEntry[] = [];
   private treasuryReports = new Map<string,TreasuryReport>();
   private administration = new Map<string,AdministrationPreferences>();
+  private regionalProvisioning = new Map<string,RegionalProvisioning>();
+  private requireRegionalProvisioning(playerId:string):RegionalProvisioning {
+    this.requirePlayer(playerId);
+    if(!this.regionalProvisioning.has(playerId))this.regionalProvisioning.set(playerId,new RegionalProvisioning());
+    return this.regionalProvisioning.get(playerId)!;
+  }
+  public getRegionalProvisioning(playerId:string) {
+    return this.requireRegionalProvisioning(playerId).overview(this.requirePlayer(playerId).kingdom,this.currentYear*12+this.currentMonth);
+  }
+  public addressRegionalProvisioning(playerId:string,regionId:string,action:string):string {
+    const player=this.requirePlayer(playerId);
+    if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    const message=this.requireRegionalProvisioning(playerId).act(regionId,action,player.kingdom,this.currentYear*12+this.currentMonth);
+    this.recordChronicle(message,playerId);
+    this.emit('regionalProvisioning',{playerId,message});return message;
+  }
   public getAdministration(playerId:string):AdministrationPreferences {
     this.requirePlayer(playerId);
     return structuredClone(this.administration.get(playerId)??defaultAdministration());
@@ -640,9 +658,6 @@ export class GameEngine {
    */
   private generateInitialCitizens(): void {
     const regions = ['preussen', 'bayern', 'sachsen', 'hanse', 'schwaben'];
-    const maleNames = ['Heinrich', 'Friedrich', 'Wilhelm', 'Karl', 'Ludwig', 'Otto', 'Konrad', 'Albrecht'];
-    const femaleNames = ['Elisabeth', 'Margarete', 'Anna', 'Katharina', 'Agnes', 'Gertrud', 'Hedwig'];
-    const lastNames = ['von Berg', 'Schmidt', 'Müller', 'Weber', 'Fischer', 'Wagner', 'Becker', 'Schulz'];
     const professions = ['farmer', 'artisan', 'merchant', 'soldier', 'scholar', 'clergy', 'noble'] as const;
     
     // Generate 50-100 initial citizens
@@ -650,12 +665,9 @@ export class GameEngine {
     
     for (let i = 0; i < citizenCount; i++) {
       const gender: 'male' | 'female' = Math.random() > 0.5 ? 'male' : 'female';
-      const firstName = this.currentYear < 500 ? `${gender === 'female' ? 'Bewohnerin' : 'Bewohner'} ${i + 1}` : gender === 'male'
-        ? maleNames[Math.floor(Math.random() * maleNames.length)]
-        : femaleNames[Math.floor(Math.random() * femaleNames.length)];
-      const lastName = this.currentYear < 500 ? 'der Siedlung' : lastNames[Math.floor(Math.random() * lastNames.length)];
       const age = 18 + Math.floor(Math.random() * 50);
       const birthYear = this.currentYear - age;
+      const { firstName, lastName } = citizenName(birthYear, gender, i + 1);
       const profession = professions[Math.floor(Math.random() * professions.length)];
       const regionId = this.currentYear < 500 ? 'siedlung' : regions[Math.floor(Math.random() * regions.length)];
       
@@ -766,8 +778,14 @@ export class GameEngine {
     }
     
     for (const player of this.players.values()) {
-      for (const event of this.civicMissions.advance(player.id,player.kingdom,this.currentYear,this.currentMonth,id=>this.citizenSystem.getCitizen(id)))
+      for (const event of this.civicMissions.advance(player.id,player.kingdom,this.currentYear,this.currentMonth,id=>this.citizenSystem.getCitizen(id))) {
         this.emit('civicMissionEvent',{playerId:player.id,message:event.message});
+        const consequence=event.success?this.requireRegionalProvisioning(player.id).support(event.missionId):null;
+        if(consequence) {
+          this.recordChronicle(consequence,player.id);
+          this.emit('regionalProvisioning',{playerId:player.id,message:consequence});
+        }
+      }
       this.treasuryCheckpoint(player,'Abgeschlossene Bürgeraufträge');
     }
     // Process population dynamics systems
@@ -873,8 +891,8 @@ export class GameEngine {
       const report=this.treasuryAudit.get(player.id)!.report();
       this.treasuryReports.set(player.id,report);
       const number=(n:number)=>Math.round(n).toLocaleString('de-DE');
-      const message=`Kassenabschluss ${report.date}: ${number(report.opening)} → ${number(report.closing)} Gold. `+
-        report.entries.map(e=>`${e.reason}: ${e.amount>=0?'+':''}${number(e.amount)}`).join('; ');
+      const message=`Kassenabschluss ${report.date}: ${number(report.opening)} → ${number(report.closing)} Gold.\n`+
+        report.entries.map(e=>`${e.reason}: ${e.amount>=0?'+':''}${number(e.amount)} Gold`).join('\n');
       this.recordChronicle(message.length>890?message.slice(0,887)+'…':message,player.id);
       this.emit('treasuryReport',{playerId:player.id,report,message});
     }
@@ -1054,6 +1072,10 @@ export class GameEngine {
     }
     
     this.treasuryCheckpoint(player,'Sonstige Monatsfolgen');
+    for(const message of this.requireRegionalProvisioning(player.id).advance(player.kingdom,this.currentYear*12+this.currentMonth)) {
+      this.recordChronicle(message,player.id);
+      this.emit('regionalProvisioning',{playerId:player.id,message});
+    }
     await this.processAdministration(player);
     // Note: Newly integrated systems are available for manual access via getters
     // but don't have automatic monthly processing yet
@@ -1104,6 +1126,7 @@ export class GameEngine {
       this.courtAssistants.removePlayer(playerId);
       this.civicMissions.removePlayer(playerId);
       this.administration.delete(playerId);
+      this.regionalProvisioning.delete(playerId);
       this.treasuryReports.delete(playerId);
       this.turnIndex = this.players.size ? this.turnIndex % this.players.size : 0;
       this.emit('playerRemoved', { playerId });
@@ -1365,6 +1388,7 @@ export class GameEngine {
       chronicle: this.getChronicle(),
       treasuryReports: Object.fromEntries(this.treasuryReports),
       administration: Object.fromEntries(this.administration),
+      regionalProvisioning:Object.fromEntries(Array.from(this.regionalProvisioning,([id,state])=>[id,state.serialize()])),
       technologyProgress: Object.fromEntries(
         Array.from(this.technologySystems, ([playerId, system]) => [playerId, system.serialize()])
       ),
@@ -1470,8 +1494,17 @@ export class GameEngine {
         restoredWorlds.set(id,StrategyWorld.restore(snapshot as StrategyWorldSnapshot));
       }
     }
+    const restoredProvisioning=new Map<string,RegionalProvisioning>();
+    if(saveData.regionalProvisioning!==undefined) {
+      if(!saveData.regionalProvisioning||typeof saveData.regionalProvisioning!=='object'||Array.isArray(saveData.regionalProvisioning))throw Error('Beschädigte Versorgungsgebiete.');
+      for(const [id,snapshot] of Object.entries(saveData.regionalProvisioning)) {
+        if(!restoredPlayers.some((p:Player)=>p.id===id))throw Error('Versorgungsgebiete ohne Spieler.');
+        restoredProvisioning.set(id,RegionalProvisioning.restore(snapshot,saveData.currentYear*12+(saveData.currentMonth??1)));
+      }
+    }
     this.pauseGame();
     this.council = restoredCouncil;
+    this.regionalProvisioning=restoredProvisioning;
     this.strategyWorlds = restoredWorlds;
     this.treasuryReports=restoredTreasury;
     this.administration=restoredAdministration;
@@ -2498,6 +2531,14 @@ export class GameEngine {
         const surplus=resources[resource]-(resource==='iron'?1000:2000);
         if(surplus>=100)await action(`${resource==='wood'?'Holz':resource==='stone'?'Stein':'Eisen'}-Überschuss verkaufen`,()=>this.tradeForPlayer(player.id,resource,Math.min(200,Math.floor(surplus)),'sell'));
       }
+    }
+    if(domains.civic) {
+      const region=this.getRegionalProvisioning(player.id).filter(r=>r.hunger>=45)
+        .sort((a,b)=>b.hunger-a.hunger)[0];
+      const option=region?.options.find(o=>o.id==='relief'&&o.canStart&&canSpend(o.cost))??
+        region?.options.find(o=>o.id==='settlement'&&o.canStart&&canSpend(o.cost));
+      if(region&&option)await action(region.name+': '+option.name,()=>
+        this.requireRegionalProvisioning(player.id).act(region.id,option.id,kingdom,this.currentYear*12+this.currentMonth));
     }
     if(domains.construction) {
       const option=this.getModernizationOptions(player.id).find(o=>o.visible&&o.canStart&&canSpend(o.project.cost));

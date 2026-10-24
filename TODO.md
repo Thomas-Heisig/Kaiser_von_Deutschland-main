@@ -8,6 +8,9 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### Stabilisierung und Integration · 24.10.2026
 
+- [x] Dauerhaft sichtbare Zufriedenheit, Stabilität, Bevölkerung und Nahrungsreichweite; lesbare, scrollbare Meldungen und strukturierte Chronik. Sechs Bürgerrollen je Seite, neue Bürgernamen nach Geburtsjahr. Historische Grenzen und Quellen: [Versorgung und Bedienbarkeit](docs/05-technical-architecture/REGIONAL_PROVISIONING.md).
+- [x] Holzgewinnung neu abgestimmt: Werkstätten liefern saisonal 17–28 zusätzliches Holz/Monat vor Forschungsboni statt rund einem; Wirkung beim Bauen und in Wirtschaft sichtbar, tatsächliche Buchung auch nach Save/Load geprüft.
+
 - [x] Dependabot-PRs #100–#105 integriert: PixiJS 8.22, SQL.js 1.15, UUID 14.0.3, TypeScript 7, Vite 8, Vitest 5 und aktuelle Actions. Node mindestens 22.12, CI auf Node 22; Typen explizit und bisherige Browserziele beibehalten. Produktionsbuild, vollständige Tests und Browser-Smokes geprüft.
 
 - [x] [Ganderkesee als Startregion](docs/05-technical-architecture/GANDERKESEE.md): amtliches Gelände, echtes Gewässernetz, maßstäbliche Karte und zeitabhängige Ortsmarken mit Quellen. Weitere Startorte benötigen noch Kartenpakete.
@@ -47,7 +50,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 - [x] Rivalen reagieren jährlich auf Wirtschafts-, Handels-, Forschungs- und Militärfortschritte; begrenzte Regeln je Persönlichkeit/Schwierigkeit und Chronikgründe getestet.
 - [x] Schutzbündnisse, Handelsverträge, Vertragsbruch, Vertrauensverlust/-aufbau und gegenseitige Angriffssperren im Hauptspiel. Fremde Überfälle beenden Handel ohne Prestigeabzug für den Spieler; monatsgenauer Ablauf und Save/Load getestet.
-- [ ] Regionale Hunger-, Wanderungs- und Versorgungslagen als Spielentscheidungen mit Kosten und dauerhaften Auswirkungen verknüpfen.
+- [x] [Regionale Hunger-, Wanderungs- und Versorgungslagen](docs/05-technical-architecture/REGIONAL_PROVISIONING.md) für drei modellierte Versorgungsgebiete der eigenen Herrschaft: Nothilfe, dauerhafte Speicher, Haushaltshilfe, tatsächlicher Verlust an Arbeitskräften, Bürgeraufträge und budgetierte Automatik. Hotseat/BCE/Save/Load und Bedienung geprüft; individuelle Familienwanderung und fremde Regionen bleiben offen.
 - [ ] Logistik, Belagerungen und Kriegsgefangene nur nach vollständigem Hauptkampagnen-/Savegame-Test erweitern.
 - [x] Hanse, Wissenschaft, Kultur und diplomatische Kaiserkrone bis zum Sieg ohne Eroberung inklusive Save/Load geprüft. Finanzierte Testpartien; normale Startbalance bleibt unter P1a offen.
 
@@ -74,7 +77,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Echte Partnervermittlung und Eheschließungen, regionale Namensräume sowie Geburten-/Sterblichkeitsbalance bei mehrjährigen Simulationen.
 - [ ] Ausbildung, Berufe, Arbeitsplätze, Karrierewechsel, Familienbesitz und generationsübergreifende Erbschaften kohärent verbinden.
 - [ ] Ratsdelegation: lebender früherer Delegierter / Zufall nach fünf Sekunden / manuelle Auswahl / Tod / Hotseat / Save-Load in vollständigen E2E-Tests abnehmen.
-- [ ] Langfristiges Vertrauen, Loyalität, Rivalitäten, politische Fraktionen und regionale Produktion als Folgen von Rats-/Bürgeraufträgen.
+- [~] Örtliches Vertrauen und Versorgung reagieren dauerhaft auf passende Bürgeraufträge; Loyalität, Rivalitäten, politische Fraktionen und regionale Produktionsketten bleiben offen.
 - [ ] Ereignis- und Kampagnenschleifen mit historischen Epochen, Konfliktlösung ohne Krieg, technische Einheiten und Balance über Jahrhunderte.
 - [x] Chronik begrenzt und in Version-2-Spielständen integriert; große Altstände und Migrationsfälle weiterhin gesondert testen.
 - [ ] Größere Spielstände, Bürgerzahlen >5.000 / 100.000, Browser-Latenz, Profiling, Benchmarks, deterministische Langläufe prüfen.
@@ -160,7 +163,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Historische Video-3/4/5-Inhalte nach tatsächlicher Sichtung epochengetreu benennen und verorten; Audio-/Video-Übergänge auf Geräten prüfen.
 - [ ] Hochauflösende Originalcover und vollständige Metadaten/Credits für 15 Musikstücke.
 - [ ] WebGPU-Gerätetest (Modell, Lizenz, Download, Speicher, Inferenz), optionale Ollama-/Mini-KI-Reaktionen; KI bleibt Opt-in.
-- [ ] Bürgeraufträge und Regionen, Produktion, Transport sowie lokale Sicherheit mit Wirtschaft und Familien verbinden.
+- [~] Bürgeraufträge mit örtlicher Versorgung und Vertrauen verbunden; individuelle Familien, regionale Produktionsketten, Transporte und lokale Sicherheit noch offen.
 - [ ] Vorhandene Legacy-Module (Religion, Marine, Recht, Bildung, Lebensphasen, Tagesrhythmus, Stadt, Ökologie) einzeln im Standardspiel zugänglich machen, nur danach als spielbar markieren.
 - [ ] Geführtes Tutorial, historische Szenarien, achtsame Barrierefreiheit und internationales UI.
 - [ ] Code-Splitting, Worker, verlässliche lokale Speicherung und optionales Cloud-Sync-Konzept.

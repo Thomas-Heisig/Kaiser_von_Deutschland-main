@@ -4,6 +4,20 @@ import { Kingdom } from './Kingdom';
 const createKingdom = (): Kingdom => new Kingdom({ name: 'Testreich', rulerName: 'Heinrich', foundingYear: 1200 });
 
 describe('Kingdom campaign economy', (): void => {
+  it('supports timber expansion with an exact seasonal forecast, including old saves', () => {
+    const kingdom = Kingdom.deserialize(createKingdom().serialize());
+    kingdom.currentSeason = 'winter';
+    const before = kingdom.getMonthlyBalance();
+    const gain = kingdom.getWorkshopWoodGain();
+    expect(gain).toBeGreaterThanOrEqual(17);
+    expect(kingdom.buildStructure('workshops')).toBe(true);
+    expect(kingdom.getMonthlyBalance().production.wood - before.production.wood).toBe(gain);
+    expect(kingdom.getMonthlyBalance().net.wood).toBeGreaterThan(0);
+    const stock = kingdom.resources.wood;
+    const forecast = kingdom.getMonthlyBalance();
+    kingdom.processMonth();
+    expect(kingdom.resources.wood).toBe(stock + forecast.net.wood);
+  });
   it('applies exactly the displayed monthly forecast, including taxes', (): void => {
     const kingdom = createKingdom();
     const before = { ...kingdom.resources };

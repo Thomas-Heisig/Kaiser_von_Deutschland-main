@@ -6,6 +6,8 @@ Der Nutzer hat den gesamten Roadmap-Umfang einschließlich der Großsysteme beau
 
 ## Leseregel
 
+Aktuelle Ausbaustufe: [regionale Versorgung, sichtbarer Reichszustand und Holzbalance](../05-technical-architecture/REGIONAL_PROVISIONING.md). Bezahlte Entscheidungen und Bürgeraufträge wirken auf drei modellierte Heimatgebiete und die tatsächliche Bauernzahl. Individuelle Familienwanderungen, Produktionsketten und politische Fraktionen bleiben anschließende Schritte. Namen neuer Bürger folgen Geburtskohorten; die Rollenliste ist in Sechsergruppen blätterbar.
+
 Die [TODO](../../TODO.md) ist die *einzige operative Aufgabenliste*. Diese Roadmap zeigt Abhängigkeiten und Entwicklungsziele, **kein selbst attestiertes Fertigstellungsprotokoll**. [Status](status.md) beschreibt ausschließlich nachprüfbare Ergebnisse. Frühere Visionen, Zeitpläne und alle Ideen der bisherigen Dokumentation wurden vollständig archiviert: [Original-Roadmap](../outdated/roadmap-snapshot-2026-10-17.md), [Original-TODO](../outdated/TODO-snapshot-2026-10-17.md), [README-Ideen](backlog-from-readme.md). Keine historischen Ideen wurden gestrichen.
 
 ## P1-Balancing-Befund (18.10.2026)

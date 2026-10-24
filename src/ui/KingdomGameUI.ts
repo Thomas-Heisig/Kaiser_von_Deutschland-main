@@ -11,6 +11,7 @@ import {
   BattleReport, CampaignWarfareSystem, MIN_CAMPAIGN_SOLDIERS, RivalRealm
 } from '../core/CampaignWarfareSystem';
 import type { Citizen, CitizenSkills, Profession } from '../core/CitizenSystem';
+import { journalMessageHtml } from './JournalFormatting';
 import { KingdomInfrastructure } from '../core/Kingdom';
 import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
@@ -102,6 +103,7 @@ export class KingdomGameUI {
   private busy: boolean = false;
   private saves: SaveMeta[] = [];
   private journal: JournalEntry[] = [];
+  private characterPage = 0;
   private subscriptions: Array<() => void> = [];
   private readonly audio: GameAudio;
   private readonly jukebox = new MusicJukebox(() => this.updateJukeboxStatus());
@@ -639,12 +641,7 @@ export class KingdomGameUI {
 
   private async replaceEngine(engine: GameEngine): Promise<void> {
     for (const unsubscribe of this.subscriptions) unsubscribe();
-    this.subscriptions = [
-      engine.on('naturalDisaster',(detail:{playerId:string;message:string}):void=>{
-        if(this.player?.id!==detail.playerId)return;
-        this.journal=engine.getChronicle();this.notify(detail.message);
-        this.showGameAction('Naturereignis',detail.message,'raid');
-      }),];
+    this.subscriptions = [];
     this.engine?.dispose();
     window.clearTimeout(this.actionBannerTimer);
     this.map?.dispose();
@@ -709,6 +706,12 @@ export class KingdomGameUI {
               { gold: '◈', food: '♧', wood: '♠', stone: '◆', iron: '⬡' }[key]}</span>
               <div><span>${RESOURCE_NAMES[key]}</span><strong id="resource-${key}">0</strong></div>
               <small id="delta-${key}"></small></div>`).join('')}
+          <div class="realm-status-strip" aria-label="Reichszustand auf einen Blick">
+            <button type="button" data-status-open><span>Bevölkerung</span><strong id="hud-population"></strong></button>
+            <button type="button" data-status-open><span>Zufriedenheit</span><strong id="hud-happiness"></strong></button>
+            <button type="button" data-status-open><span>Stabilität</span><strong id="hud-stability"></strong></button>
+            <button type="button" data-status-open><span>Nahrung reicht</span><strong id="hud-reserves"></strong></button>
+          </div>
         </section>
         <div class="game-layout">
             <section class="map-card" aria-label="Interaktive Siedlungsübersicht mit angrenzenden Reichen">
@@ -807,7 +810,7 @@ export class KingdomGameUI {
             </div>
             <section class="report-card" data-report-card="news" aria-label="Was ist passiert?">
               <h2>Was ist passiert?</h2><small id="report-news-date"></small>
-              <p id="report-news"></p>
+              <div id="report-news" class="message-content" tabindex="0" aria-label="Aktuelle Meldung vollständig lesen"></div>
               <div class="report-actions"><button type="button" id="report-previous" aria-label="Neuere Meldung">←</button><span id="report-count"></span><button type="button" id="report-next" aria-label="Ältere Meldung">→</button><button type="button" data-view="chronicle">Chronik öffnen</button></div>
             </section>
             <section class="report-card" data-report-card="tutorial" aria-label="Dein nächster Schritt">
@@ -883,6 +886,7 @@ export class KingdomGameUI {
     const health = this.root.querySelector<HTMLElement>('.realm-health');
     if (briefingBody && council && health) briefingBody.append(health, council);
     this.root.querySelector('#briefing-open')?.addEventListener('click', () => briefing?.showModal());
+    this.root.querySelectorAll('[data-status-open]').forEach(button => button.addEventListener('click', () => briefing?.showModal()));
     briefing?.querySelectorAll<HTMLButtonElement>('[data-page-step]').forEach(button => {
       button.onclick = () => { if (briefingBody) briefingBody.scrollTop += Number(button.dataset.pageStep) * Math.max(1, briefingBody.clientHeight - 48); };
     });
@@ -1036,6 +1040,15 @@ export class KingdomGameUI {
       }),
       engine.on('civicMissionEvent',(detail:{playerId:string;message:string}):void=>{
         if(this.player?.id===detail.playerId)this.record(detail.message);
+      }),
+      engine.on('regionalProvisioning',(detail:{playerId:string;message:string}):void=>{
+        if(this.player?.id!==detail.playerId)return;
+        this.journal=engine.getChronicle();this.notify(detail.message);
+      }),
+      engine.on('naturalDisaster',(detail:{playerId:string;message:string}):void=>{
+        if(this.player?.id!==detail.playerId)return;
+        this.journal=engine.getChronicle();this.notify(detail.message);
+        this.showGameAction('Naturereignis',detail.message,'raid');
       }),
       engine.on('courtEvent', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id === detail.playerId) this.record(detail.message);
@@ -1223,7 +1236,9 @@ export class KingdomGameUI {
     const entry = entries[this.reportIndex];
     text('report-date', this.date());
     text('report-news-date', entry?.date ?? this.date());
-    text('report-news', entry?.message ?? 'Deine Herrschaft beginnt. Baue die Versorgung auf und prüfe deine Monatsbilanz.');
+    const news = this.root.querySelector('#report-news');
+    const newsHtml = journalMessageHtml(entry?.message ?? 'Deine Herrschaft beginnt. Baue die Versorgung auf und prüfe deine Monatsbilanz.');
+    if (news && news.innerHTML !== newsHtml) { news.innerHTML = newsHtml; news.scrollTop = 0; }
     text('report-count', entries.length ? `${this.reportIndex + 1}/${entries.length}` : '0/0');
     this.root.querySelector<HTMLButtonElement>('#report-previous')!.disabled = this.reportIndex === 0;
     this.root.querySelector<HTMLButtonElement>('#report-next')!.disabled = this.reportIndex >= entries.length - 1;
@@ -1631,6 +1646,14 @@ export class KingdomGameUI {
     setText('population', format(kingdom.getSummary().totalPopulation));
     setText('happiness', `${format(kingdom.happiness)} %`);
     setText('stability', `${format(kingdom.stats.stability)} %`);
+    setText('hud-population', format(kingdom.getSummary().totalPopulation));
+    setText('hud-happiness', `${format(kingdom.happiness)} %`);
+    setText('hud-stability', `${format(kingdom.stats.stability)} %`);
+    const reserves = balance.consumption.food > 0 ? kingdom.resources.food / balance.consumption.food : Infinity;
+    setText('hud-reserves', Number.isFinite(reserves) ? `${reserves.toLocaleString('de-DE', {maximumFractionDigits:1})} Mo.` : 'kein Bedarf');
+    for (const [id, critical] of [['hud-happiness', kingdom.happiness < 40], ['hud-stability', kingdom.stats.stability < 40], ['hud-reserves', reserves < 2]] as const) {
+      this.root.querySelector('#' + id)?.classList.toggle('negative', critical);
+    }
     for (const [id, value] of [['happiness', kingdom.happiness], ['stability', kingdom.stats.stability]] as const) {
       const bar = this.root.querySelector<HTMLProgressElement>(`#${id}-bar`);
       if (bar) bar.value = value;
@@ -1702,7 +1725,7 @@ export class KingdomGameUI {
     const latest = this.root.querySelector('#latest');
     this.renderReport();
     if (latest) latest.innerHTML = this.journal.slice(0, 2).map((entry: JournalEntry) =>
-      `<p><small>${escape(entry.date)}</small>${escape(entry.message)}</p>`).join('');
+      `<article><small>${escape(entry.date)}</small><div class="message-content">${journalMessageHtml(entry.message)}</div></article>`).join('');
     this.root.querySelector('.kingdom-app')?.setAttribute('data-view', this.view);
     this.root.querySelectorAll<HTMLButtonElement>('nav [data-view]').forEach((button: HTMLButtonElement): void => {
       button.setAttribute('aria-current', button.dataset.view === this.view ? 'page' : 'false');
@@ -1767,6 +1790,23 @@ export class KingdomGameUI {
       const option = this.root.querySelector<HTMLOptionElement>('#view-select option[value="' + view + '"]');
       if (option) option.textContent = text;
     }
+  }
+
+  private renderProvisioning():string {
+    const regions=this.requireEngine().getRegionalProvisioning(this.requirePlayer().id);
+    return `<section aria-label="Regionale Versorgung"><h3>Versorgung, Vertrauen und Abwanderung</h3>
+      <p>Gemeinsamer Nahrungsvorrat: ${format(this.requirePlayer().kingdom.resources.food)} · etwa ${regions[0].reserves.toFixed(1)} Monatsverbräuche.</p>
+      <p class="muted">Drei modellierte Versorgungsgebiete deiner Herrschaft, keine historischen Verwaltungsgrenzen oder Bevölkerungszahlen. Hunger entsteht aus tatsächlichen Vorräten und Verbrauch; entlegene Siedlungen sind stärker gefährdet. Abwanderung verringert die bäuerliche Bevölkerung, ihre Arbeit und Steuerbasis. Individuelle Familien werden dabei noch nicht umgesiedelt.</p>
+      <div class="build-grid">${regions.map(region=>`<article class="build-card" data-provision-region="${region.id}">
+        <h4>${escape(region.name)}</h4><p>Hunger: <strong data-provision-hunger>${format(region.hunger)} / 100</strong> · Vertrauen: ${format(region.trust)} / 100</p>
+        <p>Speicherstufe: <strong data-provision-storage>${region.storage} / 3</strong> · bisher abgewandert: ${format(region.emigrated)}</p>
+        <p>${region.hunger>=60?'Versorgungskrise':region.hunger>=30?'Angespannte Versorgung':'Versorgung stabil'}${region.reliefMonths?` · Nothilfe: noch ${region.reliefMonths} Monate`:''}${region.settlementMonths?` · Haushaltshilfe: noch ${region.settlementMonths} Monate`:''}</p>
+        ${region.options.map(option=>`<div class="provision-action"><h5>${escape(option.name)}</h5><p>${escape(option.description)}</p>
+          <p class="cost">${format(option.cost.gold)} Gold · ${format(option.cost.food)} Nahrung · ${format(option.cost.wood)} Holz · ${format(option.cost.stone)} Stein</p>
+          <button data-provision-action="${option.id}" data-provision-target="${region.id}" ${option.canStart?'':'disabled'}>${escape(option.name)}</button>
+          ${option.blockers.length?`<small>${escape(option.blockers[0])}</small>`:''}</div>`).join('')}</article>`).join('')}</div>
+      <p>Erfolgreiche Versorgungsaufträge helfen dem am stärksten belasteten Gebiet. Bei delegierten Bürgeraufträgen organisiert die Verwaltung auch Nothilfe innerhalb ihres bestehenden Monatsbudgets.</p>
+      <button data-open="civic">Bürger mit Versorgungsaufträgen betrauen →</button></section>`;
   }
 
   private renderAdministration(domains:readonly AdministrationDomain[]=ADMIN_DOMAINS):string {
@@ -1836,7 +1876,7 @@ export class KingdomGameUI {
       panel.innerHTML = heading('GESELLSCHAFT & ARBEIT', 'Aufträge an Bürger',
         'Verteile Aufgaben passend zum Jahrhundert. Bürger arbeiten mehrere Spielmonate und verbessern ihre Fähigkeiten.') +
         '<p class="muted">Bis zu drei parallele Aufträge. Ressourcen werden bei Beginn verbraucht; Erträge kommen nach Abschluss.</p>' +
-        '<h3>Aktuelle Aufträge</h3><div class="build-grid">' +
+        '<p>Versorgungsaufträge lindern nach Abschluss auch örtlichen Hunger und stärken Vertrauen.</p><button data-open="world">Regionale Versorgung und Hilfsmaßnahmen →</button><h3>Aktuelle Aufträge</h3><div class="build-grid">' +
         (data.active.map(a => {
           const mission = data.options.find(m=>m.id===a.missionId);
           const agent=data.citizens.find(c=>c.id===a.citizenId);
@@ -1897,6 +1937,7 @@ export class KingdomGameUI {
             return `<article class="build-card ${this.selected === type ? 'selected' : ''}">
               <div class="build-title"><span aria-hidden="true">${info.symbol}</span><h3>${info.name}</h3>
                 <small>${kingdom.infrastructure[type]} gebaut</small></div><p>${info.description}</p>
+              ${type === 'workshops' ? `<p class="production-gain">+${kingdom.getWorkshopWoodGain()} Holz/Monat in dieser Jahreszeit, vor Forschungsboni. Organisiert Holzgewinnung und Verarbeitung; 17–28 zusätzlich pro Monat je nach Jahreszeit.</p>` : ''}
               <div class="cost">${format(cost.cost)} Gold${cost.woodCost ? ` · ${format(cost.woodCost)} Holz` : ''}
                 ${cost.stoneCost ? ` · ${format(cost.stoneCost)} Stein` : ''}
                 ${cost.ironCost ? ` · ${format(cost.ironCost)} Eisen` : ''}</div>
@@ -1923,7 +1964,9 @@ export class KingdomGameUI {
             <input id="tax-rate" name="tax" type="range" min="0" max="50" step="1" value="${Math.round(kingdom.taxRate*100)}"></label>
             <small>Wirkt sofort. 0–50 %; kein Bestätigen nötig.</small></div>
           <p class="muted">Über 15 % sinkt die Zufriedenheit monatlich, darunter erholt sie sich.</p></section>
-          <section><h3>Markthandel</h3><p class="muted">Sofortiger Austausch. Einkauf mit 20 % Aufschlag,
+          <section><h3>Holzversorgung</h3><p>Waldflächen und Werkstätten liefern Holz. Aktuell ${format(balance.production.wood)} Eingang und ${format(balance.consumption.wood)} Verbrauch pro Monat; im Winter steigt der Heizbedarf.</p>
+            <p>Eine zusätzliche Werkstatt liefert derzeit +${kingdom.getWorkshopWoodGain()} Holz/Monat vor Forschungsboni. Bei leeren Vorräten kannst du Holz am Markt zukaufen.</p><button data-open="build">Holzgewinnung ausbauen</button>
+            <h3>Markthandel</h3><p class="muted">Sofortiger Austausch. Einkauf mit 20 % Aufschlag,
             Verkauf mit 20 % Abschlag – kein risikoloser Weiterverkauf.</p>
             <form id="trade-form"><label>Ressource<select name="resource" id="trade-resource">
               ${(['food', 'wood', 'stone', 'iron'] as const).map((resource: MarketResource) =>
@@ -2063,7 +2106,7 @@ export class KingdomGameUI {
       const movements = this.engine.getMigrationSystem().getMigrationStats();
       const famine = this.engine.getFamineSystem().getActiveFamines();
       panel.innerHTML = heading('LEBENDIGE WELT', 'Land, Klima und Bevölkerung',
-        'Aktuelle Werte aus den bestehenden Klima-, Tier-, Bevölkerungs- und Migrationssystemen.') + travelCards +
+        'Versorgung deiner Herrschaft und überregionale Weltstatistik.') + this.renderProvisioning() + travelCards +
         `<div class="summary-grid">
           <article><span>Wetter</span><strong>${escape(world.climate.currentWeather)}</strong><small>${escape(world.climate.currentSeason)}</small></article>
           <article><span>Individuelle Bürger</span><strong>${format(people.total)}</strong><small>Erfasste Simulationspersonen</small></article>
@@ -2252,7 +2295,7 @@ export class KingdomGameUI {
       panel.innerHTML = heading('DIE GESCHICHTE DEINER HERRSCHAFT', 'Reichschronik',
         'Die letzten 100 wichtigen Meldungen deiner Herrschaft bleiben auch nach dem Laden erhalten.') + `
         <ol class="journal">${this.journal.map((entry: JournalEntry) =>
-          `<li><time>${escape(entry.date)}</time><p>${escape(entry.message)}</p></li>`).join('')}</ol>`;
+          `<li><time>${escape(entry.date)}</time><div class="message-content">${journalMessageHtml(entry.message)}</div></li>`).join('')}</ol>`;
     } else {
       panel.innerHTML = heading('EIN GUTER ANFANG', 'So regierst du dein Reich',
         'Alle sichtbaren Aktionen verändern denselben gespeicherten Spielzustand.') + `
@@ -2313,6 +2356,16 @@ export class KingdomGameUI {
     })));
     panel.querySelectorAll<HTMLButtonElement>('[data-garrison]').forEach(button=>button.addEventListener('click',()=>void this.run(()=>{
       this.notify(this.requireEngine().improveGarrison(this.requirePlayer().id,button.dataset.garrison!));
+    })));
+    panel.querySelectorAll<HTMLButtonElement>('[data-character-page]').forEach(button => button.addEventListener('click', () => {
+      this.characterPage = Math.max(0, this.characterPage + Number(button.dataset.characterPage));
+      const scroll = this.root.querySelector('#section-dialog-body')?.scrollTop ?? 0;
+      this.renderPanel();
+      const body = this.root.querySelector('#section-dialog-body');
+      if (body) body.scrollTop = scroll;
+    }));
+    panel.querySelectorAll<HTMLButtonElement>('[data-provision-action]').forEach(button=>button.addEventListener('click',()=>void this.run(()=>{
+      this.requireEngine().addressRegionalProvisioning(this.requirePlayer().id,button.dataset.provisionTarget!,button.dataset.provisionAction!);
     })));
     panel.querySelectorAll<HTMLButtonElement>('[data-civic-assign]').forEach(button => {
       button.addEventListener('click',()=>void this.run(()=>{
@@ -2880,7 +2933,10 @@ export class KingdomGameUI {
     const engine = this.requireEngine();
     const character = engine.getCurrentCharacter(player.id);
     const canAct = character !== null && engine.canCharacterAct(player.id);
-    const candidates = engine.getPlayableCharacters(30).map((citizen: Citizen): string => `<li>
+    const people = engine.getPlayableCharacters(Number.MAX_SAFE_INTEGER);
+    const pages = Math.max(1, Math.ceil(people.length / 6));
+    this.characterPage = Math.min(this.characterPage, pages - 1);
+    const candidates = people.slice(this.characterPage * 6, this.characterPage * 6 + 6).map((citizen: Citizen): string => `<li>
         <div><strong>${escape(citizen.firstName)} ${escape(citizen.lastName)}</strong>
           <small>${format(citizen.age)} Jahre · ${PROFESSIONS[citizen.profession] ?? escape(citizen.profession)} · ${
             CLASSES[citizen.socialClass]} · Führung ${format(citizen.skills.leadership)} · Kampf ${
@@ -2910,7 +2966,9 @@ export class KingdomGameUI {
       <div class="build-grid">${actions}</div>
       <h3>Rolle wechseln</h3>
       <p class="muted">Die bisherige Figur lebt als Bürger weiter. Du kannst auch Bauern, Handwerker, Händler und andere gesellschaftliche Gruppen übernehmen.</p>
-      <ul class="character-list">${candidates}</ul>`;
+      <p class="muted">Fiktive Personen mit Namen nach Geburtszeit; frühe, nicht belegbare lokale Namen bleiben als Bewohner gekennzeichnet. Bestehende Spielstände behalten ihre Personen. Sechs Rollen pro Seite.</p>
+      <ul class="character-list">${candidates}</ul>
+      <div class="character-pagination"><button data-character-page="-1" ${this.characterPage === 0 ? 'disabled' : ''}>Vorherige Rollen</button><span>${this.characterPage + 1} / ${pages}</span><button data-character-page="1" ${this.characterPage + 1 >= pages ? 'disabled' : ''}>Weitere Rollen</button></div>`;
   }
 
   private togglePause(): void {
