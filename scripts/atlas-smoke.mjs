@@ -18,7 +18,11 @@ try {
     await page.locator('#intro-skip').click();
     await page.locator('#start-year').selectOption(String(year));
     if (await page.locator('html').getAttribute('data-era') !== era) failures.push(`Menu theme ${year}`);
-    for (let i = 0; i < 4; i++) {
+    if (width === 320) {
+      await page.getByRole('button',{name:'Weitere Einstellungen'}).click();
+      await page.locator('#player-count').selectOption('4');
+    }
+    for (let i = 0; i < 8; i++) {
       await inViewport(page, '#new-game button[type=submit], .menu-pagination button, #continue');
       if (await page.getByRole('button',{name:'Weitere Einstellungen'}).isEnabled()) await page.getByRole('button',{name:'Weitere Einstellungen'}).click();
     }
@@ -26,9 +30,17 @@ try {
     await page.getByRole('button',{name:/Herrschaft beginnen/}).click();
     await page.locator('#kingdom-map canvas').waitFor();
     if (await page.locator('.map-card').getAttribute('data-level') !== 'schreibtisch') failures.push('Desk not first');
-    await inViewport(page, '.header-actions button, .atlas-navigation button, #zoom-slider, [data-action=month], #legal-open');
-    await page.locator('[data-action=month]').click();
-    if (!(await page.locator('#date').textContent()).includes('Februar')) failures.push('Month action failed');
+    await inViewport(page, '.header-actions button, .atlas-navigation button, #zoom-slider, #legal-open');
+    if (width === 320) {
+      await inViewport(page, '#end-turn, #turn-status');
+      await page.locator('#end-turn').click();
+      if (!(await page.locator('#turn-status').textContent()).includes('2/4')) failures.push('Hotseat turn did not advance');
+      await page.locator('#take-turn').click();
+      if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
+    } else {
+      await page.locator('[data-action=month]').click();
+      if (!(await page.locator('#date').textContent()).includes('Februar')) failures.push('Month action failed');
+    }
     if (await page.locator('html').getAttribute('data-era') !== era) failures.push(`Game theme ${year}`);
     await page.screenshot({path:`smoke-atlas-${year}.png`});
     for (let i = 0; i < 2; i++) {
