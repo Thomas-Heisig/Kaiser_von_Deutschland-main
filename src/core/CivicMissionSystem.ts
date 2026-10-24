@@ -45,6 +45,13 @@ export class CivicMissionSystem {
   }
   public active(playerId:string):CivicAssignment[] { return this.assignments.filter(x=>x.playerId===playerId).map(x=>({...x})); }
   public historyFor(playerId:string):CivicCompletion[] { return this.history.filter(x=>x.playerId===playerId).map(x=>({...x})); }
+  public replaceCitizen(playerId:string,oldId:string,citizen:Citizen):void {
+    if(!citizen.isAlive||citizen.isPlayerCharacter||citizen.age<18||this.assignments.some(a=>a.citizenId===citizen.id))
+      throw Error('Nachfolge für diesen Auftrag ist nicht verfügbar.');
+    const assignment=this.assignments.find(a=>a.playerId===playerId&&a.citizenId===oldId);
+    if(!assignment)throw Error('Auftrag nicht gefunden.');
+    assignment.citizenId=citizen.id;
+  }
   public start(playerId:string,citizen:Citizen,kingdom:Kingdom,missionId:string,year:number,month:number):CivicAssignment {
     const mission=this.options(year).find(x=>x.id===missionId);
     if(!mission)throw Error('Auftrag in dieser Epoche nicht verfügbar.');
@@ -58,13 +65,14 @@ export class CivicMissionSystem {
     this.assignments.push(assignment);
     return {...assignment};
   }
-  public advance(playerId:string,kingdom:Kingdom,year:number,month:number,getCitizen:(id:string)=>Citizen|undefined):CivicCompletion[] {
+  public advance(playerId:string,kingdom:Kingdom,year:number,month:number,getCitizen:(id:string)=>Citizen|undefined,waitForSuccessor=false):CivicCompletion[] {
     const events:CivicCompletion[]=[];
     for(const assignment of [...this.assignments].filter(x=>x.playerId===playerId)){
       if(assignment.started>=year*12+month)continue;
       const citizen=getCitizen(assignment.citizenId);
       const mission=CIVIC_MISSIONS.find(m=>m.id===assignment.missionId);
       if(!mission||!citizen?.isAlive){
+        if(mission&&waitForSuccessor)continue;
         const event={playerId,citizenId:assignment.citizenId,missionId:assignment.missionId,success:false,message:'Bürgerauftrag abgebrochen: beauftragte Person nicht mehr verfügbar.'};
         this.history.unshift(event);events.push(event);
         this.assignments=this.assignments.filter(x=>x!==assignment);continue;

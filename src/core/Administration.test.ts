@@ -13,6 +13,9 @@ describe('Delegated spending and treasury accounting',()=>{
     k.resources.gold=100;
     expect(administrationBudget(k,'bold').budget).toBe(0);
     expect(()=>validateAdministration({policy:'reckless',domains:{}})).toThrow();
+    const legacy=JSON.parse(JSON.stringify(defaultAdministration()));delete legacy.characterPlan;delete legacy.domains.character;
+    expect(validateAdministration(legacy)).toEqual(defaultAdministration());
+    expect(()=>validateAdministration({...defaultAdministration(),characterPlan:'unknown'})).toThrow();
   });
   it('records a clamped depletion and rejects unaccounted gold',()=>{
     const ledger=new TreasuryLedger('Januar',50);

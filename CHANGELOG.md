@@ -6,6 +6,8 @@
 
 ### Added
 
+- Charakterautomatik mit Ausgewogen/Arbeiten/Studieren/Waffenübung/Dem Reich dienen und Vorrang manueller Monatsaktionen. Zugewiesene Bürger mit Namen, Aufgabe und Fortschritt; Familienübersicht und erwachsene Nachfolge. Automatische Nachbesetzung von Hofämtern und laufenden Bürgeraufträgen ohne erneute Kosten, Chronik und Altstandmigration.
+- Bedürfnisversorgung statt dauerhaftem Verfall, kalendarische Alterung, jährliche Haushaltsgründung und Berufseinstieg für erwachsenen Nachwuchs. Zwei deterministische 60-Jahre-Demografieläufe, zehn Jahre durch die Engine sowie Browserabläufe mit Monatsaktionen und Save/Load ergänzt. [Modell und Grenzen](docs/05-technical-architecture/CITIZEN_LIFECYCLE.md).
 - Regionale Versorgungsentscheidungen mit dauerhaften Speichern, zeitlich begrenzter Hilfe und tatsächlichen Abwanderungsfolgen; erfolgreiche Bürgeraufträge und Verwaltungsbudget angebunden. Hotseat, BCE und Save/Load getestet.
 - Dauerhafte Anzeige von Zufriedenheit, Stabilität, Bevölkerung und Nahrungsvorrat in Monatsverbräuchen. Strukturierte Chronik, vollständig scrollbar lesbare aktuelle Meldungen und sechs Bürgerrollen je Seite.
 - Holzproduktion und Werkstattausbau neu abgestimmt, saisonaler Mehrertrag beim Bauen sichtbar. Neue Bürger erhalten Namen nach Geburtsjahr; vorhandene Personen bleiben erhalten. Naturereignis-Meldungen werden nun in der tatsächlich aktiven Spieloberfläche abonniert.

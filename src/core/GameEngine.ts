@@ -1,5 +1,5 @@
 import { chooseCitizenCouncilOption } from './CitizenCouncilChoice';
-import { CivicMissionSystem } from './CivicMissionSystem';
+import { CivicMissionSystem, CIVIC_MISSIONS } from './CivicMissionSystem';
 // src/core/GameEngine.ts
 import { Player, PlayerCreationData } from './Player';
 import { EconomySystem } from './Economy';
@@ -9,7 +9,7 @@ import { StrategyWorld, type StrategyWorldSnapshot } from './StrategyWorld';
 import { DEFAULT_START_LOCATION, startLocation, type StartLocation } from './StartLocations';
 import { TreasuryLedger, validateTreasuryReport, type TreasuryReport } from './TreasuryLedger';
 import { socialCelebrations } from './SocialCelebrations';
-import { ADMIN_DOMAINS, ADMIN_POLICIES, administrationBudget, defaultAdministration, validateAdministration, type AdministrationPreferences } from './Administration';
+import { ADMIN_DOMAINS, ADMIN_LABELS, ADMIN_POLICIES, administrationBudget, defaultAdministration, validateAdministration, type AdministrationPreferences } from './Administration';
 import { developGarrison, garrisonDevelopment } from './GarrisonDevelopment';
 import { RegionalProvisioning } from './RegionalProvisioning';
 import { citizenName } from './HistoricalNames';
@@ -74,7 +74,7 @@ import { buildHistoricalContext, HistoricalContext, historicalEpochFor } from '.
 import { applyScienceDiscovery, researchImpact, researchProductionBonus } from './ScienceImpact';
 import { KingdomInfrastructure } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
-import type { Citizen } from './CitizenSystem';
+import type { Citizen, CitizenNeeds } from './CitizenSystem';
 
 export type MarketResource = 'food' | 'wood' | 'stone' | 'iron';
 
@@ -253,7 +253,7 @@ export class GameEngine {
     this.requirePlayer(playerId);
     if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
     this.administration.set(playerId,validateAdministration(preferences));
-    this.recordChronicle('Verwaltung: '+ADMIN_POLICIES[preferences.policy].label+'; delegiert: '+ADMIN_DOMAINS.filter(d=>preferences.domains[d]).join(', '),playerId);
+    this.recordChronicle('Verwaltung: '+ADMIN_POLICIES[preferences.policy].label+'; delegiert: '+ADMIN_DOMAINS.filter(d=>preferences.domains[d]).map(d=>ADMIN_LABELS[d]).join(', '),playerId);
   }
   public getAdministrationBudget(playerId:string) {return administrationBudget(this.requirePlayer(playerId).kingdom,this.getAdministration(playerId).policy);}
   public getGarrisonDevelopment(playerId:string) {return garrisonDevelopment(this.requirePlayer(playerId).kingdom,this.currentYear);}
@@ -430,9 +430,16 @@ export class GameEngine {
 
   public getCivicMissions(playerId:string) {
     this.requirePlayer(playerId);
+    const courtIds=new Set(this.courtAssistants.serialize().map(a=>a.citizenId));
+    const activeIds=new Set(this.civicMissions.active(playerId).map(a=>a.citizenId));
+    const busyIds=new Set(this.civicMissions.serialize().assignments.map(a=>a.citizenId));
     return { options:this.civicMissions.options(this.currentYear),
-      active:this.civicMissions.active(playerId),history:this.civicMissions.historyFor(playerId),
-      citizens:this.citizenSystem.getAliveCitizens().filter(c=>!c.isPlayerCharacter&&c.age>=16)
+      active:this.civicMissions.active(playerId).map(a=>{
+        const citizen=this.citizenSystem.getCitizen(a.citizenId),mission=CIVIC_MISSIONS.find(m=>m.id===a.missionId)!;
+        return {...a,citizenName:citizen?citizen.firstName+' '+citizen.lastName:'Unbekannte Person',citizenAlive:!!citizen?.isAlive,missionTitle:mission.title,totalMonths:mission.months};
+      }),history:this.civicMissions.historyFor(playerId),
+      citizens:this.citizenSystem.getAliveCitizens().filter(c=>!c.isPlayerCharacter&&c.age>=16&&!courtIds.has(c.id)&&(!busyIds.has(c.id)||activeIds.has(c.id)))
+        .sort((a,b)=>Number(activeIds.has(b.id))-Number(activeIds.has(a.id)))
         .slice(0,100).map(c=>({id:c.id,name:c.firstName+' '+c.lastName,profession:c.profession,skills:{...c.skills},
           professionLevel:c.professionLevel,reputation:c.reputation,discipline:c.personality?.discipline??50,
           familyId:c.familyId??'',regionId:c.regionId,lifeEvents:(c.lifeEvents??[]).slice(-3)})) };
@@ -446,6 +453,7 @@ export class GameEngine {
     const playerId=player.id;
     const citizen=this.citizenSystem.getCitizen(citizenId);
     if(!citizen)throw Error('Bürger nicht gefunden.');
+    if(this.courtAssistants.serialize().some(a=>a.citizenId===citizenId))throw Error('Dieser Bürger hat bereits ein Hofamt.');
     const assignment=this.civicMissions.start(playerId,citizen,player.kingdom,missionId,this.currentYear,this.currentMonth);
     const mission=this.civicMissions.options(this.currentYear).find(x=>x.id===assignment.missionId)!;
     const message=citizen.firstName+' '+citizen.lastName+' übernimmt „'+mission.title+'“ ('+mission.months+' Monate).';
@@ -638,8 +646,9 @@ export class GameEngine {
         console.warn('Keine lebenden Bürger verfügbar');
         continue;
       }
-      const preferredCitizen = available.find((citizen: Citizen): boolean =>
-        citizen.socialClass === 'noble' || citizen.socialClass === 'middle') ?? available[0];
+      const adults=available.filter(c=>c.age>=18).sort((a,b)=>Math.abs(a.age-30)-Math.abs(b.age-30));
+      const preferredCitizen = adults.find((citizen: Citizen): boolean =>
+        citizen.socialClass === 'noble' || citizen.socialClass === 'middle') ?? adults[0] ?? available[0];
       this.roleSwitchingSystem.switchRole(
         playerId,
         preferredCitizen.id,
@@ -666,7 +675,8 @@ export class GameEngine {
     for (let i = 0; i < citizenCount; i++) {
       const gender: 'male' | 'female' = Math.random() > 0.5 ? 'male' : 'female';
       const age = 18 + Math.floor(Math.random() * 50);
-      const birthYear = this.currentYear - age;
+      const birthMonth = Math.floor(Math.random() * 12) + 1;
+      const birthYear = this.currentYear - age - (this.currentMonth < birthMonth ? 1 : 0);
       const { firstName, lastName } = citizenName(birthYear, gender, i + 1);
       const profession = professions[Math.floor(Math.random() * professions.length)];
       const regionId = this.currentYear < 500 ? 'siedlung' : regions[Math.floor(Math.random() * regions.length)];
@@ -682,7 +692,7 @@ export class GameEngine {
         gender,
         age,
         birthYear,
-        birthMonth: Math.floor(Math.random() * 12) + 1,
+        birthMonth,
         profession,
         regionId,
         socialClass
@@ -778,7 +788,8 @@ export class GameEngine {
     }
     
     for (const player of this.players.values()) {
-      for (const event of this.civicMissions.advance(player.id,player.kingdom,this.currentYear,this.currentMonth,id=>this.citizenSystem.getCitizen(id))) {
+      this.reconcileCivicSuccessors(player);
+      for (const event of this.civicMissions.advance(player.id,player.kingdom,this.currentYear,this.currentMonth,id=>this.citizenSystem.getCitizen(id),this.getAdministration(player.id).domains.civic)) {
         this.emit('civicMissionEvent',{playerId:player.id,message:event.message});
         const consequence=event.success?this.requireRegionalProvisioning(player.id).support(event.missionId):null;
         if(consequence) {
@@ -789,8 +800,13 @@ export class GameEngine {
       this.treasuryCheckpoint(player,'Abgeschlossene Bürgeraufträge');
     }
     // Process population dynamics systems
-    this.citizenSystem.processMonth(this.currentYear, this.currentMonth);
+    this.citizenSystem.processMonth(this.currentYear, this.currentMonth, this.citizenLivingConditions());
     this.demographicSystem.processMonth(this.citizenSystem, this.currentYear, this.currentMonth);
+    for(const player of this.players.values()) {
+      this.reconcileCharacterSuccessor(player);
+      this.reconcileCourtSuccessors(player);
+      this.reconcileCivicSuccessors(player);
+    }
     this.socialNetworkSystem.processInformationSpread(this.citizenSystem, this.currentYear, this.currentMonth);
     this.socialNetworkSystem.processMovements(this.citizenSystem, this.currentYear, this.currentMonth);
     
@@ -1650,6 +1666,11 @@ export class GameEngine {
     }
     this.timeSystem.setDate(this.currentYear, this.currentMonth);
     this.timeSystem.pause();
+    for(const player of this.players.values()) {
+      this.reconcileCharacterSuccessor(player);
+      this.reconcileCourtSuccessors(player);
+      this.reconcileCivicSuccessors(player);
+    }
     
     this.emit('gameLoaded', { slot });
   }
@@ -2433,8 +2454,9 @@ export class GameEngine {
   public getCourtCandidates(playerId: string): Citizen[] {
     this.requirePlayer(playerId);
     const assigned = new Set(this.courtAssistants.serialize().map((a) => a.citizenId));
+    for(const assignment of this.civicMissions.serialize().assignments)assigned.add(assignment.citizenId);
     return this.citizenSystem.getAliveCitizens()
-      .filter((c) => !c.isPlayerCharacter && !assigned.has(c.id))
+      .filter((c) => c.age>=18 && !c.isPlayerCharacter && !assigned.has(c.id))
       .sort((a, b) => b.skills.leadership + b.skills.literacy - a.skills.leadership - a.skills.literacy)
       .slice(0, 15);
   }
@@ -2444,6 +2466,8 @@ export class GameEngine {
     if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
     const candidate = this.getCourtCandidates(playerId).find((c) => c.id === citizenId);
     if (!candidate) throw new Error('Dieser Bürger ist nicht verfügbar.');
+    const previous=this.courtAssistants.list(playerId).find(a=>a.office===office);
+    if(previous&&!this.citizenSystem.getCitizen(previous.citizenId)?.isAlive)this.courtAssistants.dismiss(playerId,office);
     this.courtAssistants.appoint(playerId, office, citizenId);
     this.emit('courtEvent', { playerId, message: candidate.firstName + ' wurde zum Hofamt ernannt.' });
   }
@@ -2461,10 +2485,10 @@ export class GameEngine {
   }
 
   private processCourtAssistants(player: Player): void {
+    this.reconcileCourtSuccessors(player);
     for (const assistant of this.courtAssistants.list(player.id)) {
       const citizen = this.citizenSystem.getCitizen(assistant.citizenId);
       if (!citizen || !citizen.isAlive || citizen.isPlayerCharacter) {
-        this.courtAssistants.dismiss(player.id, assistant.office);
         continue;
       }
       const skill = COURT_OFFICES[assistant.office].skill;
@@ -2567,13 +2591,139 @@ export class GameEngine {
     }
     if(domains.civic&&this.civicMissions.active(player.id).length<3) {
       const busy=new Set(this.civicMissions.serialize().assignments.map(a=>a.citizenId));
+      for(const appointed of this.courtAssistants.serialize())busy.add(appointed.citizenId);
       const mission=this.civicMissions.options(this.currentYear).find(m=>canSpend(m.cost)&&
         !this.civicMissions.active(player.id).some(a=>a.missionId===m.id));
       if(mission) {
         const citizen=this.citizenSystem.getAliveCitizens().filter(c=>c.age>=16&&!c.isPlayerCharacter&&!busy.has(c.id))
           .sort((a,b)=>b.skills[mission.preferredSkill]-a.skills[mission.preferredSkill])[0];
-        if(citizen)await action(mission.title,()=>this.assignCivicMissionFor(player,citizen.id,mission.id));
+        if(citizen)await action(citizen.firstName+' '+citizen.lastName+': '+mission.title,()=>this.assignCivicMissionFor(player,citizen.id,mission.id));
       }
+    }
+    if(domains.character) {
+      this.reconcileCharacterSuccessor(player);
+      const character=this.getCurrentCharacter(player.id);
+      if(character&&this.canCharacterAct(player.id)) {
+        const plan=preferences.characterPlan;
+        const choice:CharacterAction=plan==='balanced'
+          ? (character.wealth<200?'work':character.skills.literacy<60?'study':character.skills.combat<50?'train':'work') : plan;
+        await action('Charakter: '+({work:'Arbeiten',study:'Studieren',train:'Waffenübung',serve:'Dem Reich dienen'}[choice]),()=>this.performCharacterActionFor(player,choice));
+      }
+    }
+  }
+
+  private assignedCitizenIds():Set<string> {
+    return new Set([...this.courtAssistants.serialize(),...this.civicMissions.serialize().assignments].map(a=>a.citizenId));
+  }
+
+  /** Named citizens are a sample of aggregate residents, not extra mouths to charge. */
+  private citizenLivingConditions():(citizen:Citizen)=>Partial<CitizenNeeds> {
+    const conditions=new Map<string,Partial<CitizenNeeds>>();
+    for(const player of this.players.values()) {
+      const k=player.kingdom,b=k.getMonthlyBalance();
+      const food=b.consumption.food>0?Math.min(1,k.resources.food/b.consumption.food):1;
+      conditions.set(player.id,{food:food*80,health:Math.min(90,60+k.infrastructure.hospitals*5),
+        shelter:Math.min(85,55+k.infrastructure.workshops*3),safety:Math.max(15,k.stats.stability-(k.isAtWar?20:0)),
+        education:Math.min(85,50+k.infrastructure.schools*4),entertainment:Math.min(85,50+k.infrastructure.taverns*5),
+        spiritual:Math.min(85,60+k.infrastructure.churches*3)});
+    }
+    // Unassigned world citizens share the mean conditions of the simulated realms.
+    const common:Partial<CitizenNeeds>={};
+    for(const key of ['food','health','shelter','safety','education','entertainment','spiritual'] as const)
+      common[key]=[...conditions.values()].reduce((sum,c)=>sum+(c[key]??65),0)/Math.max(1,conditions.size);
+    const owners=new Map([...this.courtAssistants.serialize(),...this.civicMissions.serialize().assignments].map(a=>[a.citizenId,a.playerId]));
+    return citizen=>conditions.get(citizen.controlledByPlayerId??owners.get(citizen.id)??'')??common;
+  }
+
+  private lifeMessage(playerId:string,message:string):void {
+    this.recordChronicle(message,playerId);this.emit('lifeEvent',{playerId,message});
+  }
+
+  public getAutomationPeople(playerId:string) {
+    this.requirePlayer(playerId);
+    const person=(id:string)=>{
+      const c=this.citizenSystem.getCitizen(id);
+      return {name:c?c.firstName+' '+c.lastName:'Unbesetzt',alive:!!c?.isAlive};
+    };
+    return [
+      ...this.courtAssistants.list(playerId).map(a=>({...person(a.citizenId),task:COURT_OFFICES[a.office].name,
+        status:a.mode==='automatisch'?'Automatisch · Nachbesetzung aktiv':'Beratung',progress:`${a.monthsServed} Monate im Amt`})),
+      ...this.civicMissions.active(playerId).map(a=>{
+        const mission=CIVIC_MISSIONS.find(m=>m.id===a.missionId)!;
+        return {...person(a.citizenId),task:mission.title,status:this.getAdministration(playerId).domains.civic?'Automatisch betreut':'Manuell beauftragt',progress:`${a.completedMonths} / ${mission.months} Monate`};
+      })
+    ];
+  }
+
+  public getCharacterSuccession(playerId:string) {
+    this.requirePlayer(playerId);
+    const previous=this.roleSwitchingSystem.getCurrentCharacter(playerId,id=>this.citizenSystem.getCitizen(id));
+    const relation=(id:string)=>previous?.familyRelations.find(r=>r.citizenId===id)?.relationType;
+    const priority=(c:Citizen)=>relation(c.id)==='child'?0:relation(c.id)==='spouse'?1:
+      previous?.familyId&&c.familyId===previous.familyId?2:3;
+    const candidates=this.getPlayableCharacters(Number.MAX_SAFE_INTEGER)
+      .sort((a,b)=>priority(a)-priority(b)||b.skills.leadership-a.skills.leadership||a.age-b.age);
+    return {previous,candidates:candidates.slice(0,6),family:previous?.familyRelations
+      .map(r=>({relation:r.relationType,citizen:this.citizenSystem.getCitizen(r.citizenId)}))
+      .filter((r):r is {relation:Citizen['familyRelations'][number]['relationType'];citizen:Citizen}=>!!r.citizen?.isAlive)??[]};
+  }
+
+  private reconcileCharacterSuccessor(player:Player):void {
+    if(this.getCurrentCharacter(player.id))return;
+    if(!this.roleSwitchingSystem.getSession(player.id))this.roleSwitchingSystem.createSession(player.id);
+    const succession=this.getCharacterSuccession(player.id),previous=succession.previous;
+    const marker=previous?.id??'missing';
+    if(this.roleSwitchingSystem.getMetaKnowledge(player.id,'reportedDeath')!==marker) {
+      this.lifeMessage(player.id,previous?`${previous.firstName} ${previous.lastName} ist im Alter von ${previous.age} Jahren verstorben. Die Herrschaft besteht weiter; eine erwachsene Nachfolge kann übernehmen.`:'Die gespielte Rolle ist unbesetzt. Eine erwachsene Person kann übernehmen.');
+      this.roleSwitchingSystem.storeMetaKnowledge(player.id,'reportedDeath',marker);
+    }
+    let successor=succession.candidates[0];
+    if(!successor&&player.kingdom.getSummary().totalPopulation>this.citizenSystem.getPopulation()) {
+      // Surface an existing unnamed adult; never manufacture an adult descendant.
+      const age=22,birthYear=this.currentYear-age;
+      const gender=Math.random()<.5?'female':'male';
+      successor=this.citizenSystem.createCitizen({...citizenName(birthYear,gender,this.citizenSystem.getAllCitizens().length+1),
+        gender,age,birthYear,birthMonth:this.currentMonth,profession:'farmer',regionId:previous?.regionId??'siedlung'});
+      this.lifeMessage(player.id,`${successor.firstName} ${successor.lastName} wurde aus der bereits vorhandenen Bevölkerung als mögliche Nachfolge erfasst. Keine Verwandtschaft mit der bisherigen Figur.`);
+    }
+    if(successor&&this.getAdministration(player.id).domains.character) {
+      this.switchCharacterFor(player.id,successor.id,'Automatische Nachfolge');
+      const relative=previous?.familyRelations.find(r=>r.citizenId===successor.id)?.relationType;
+      this.lifeMessage(player.id,`Automatische Nachfolge: ${successor.firstName} ${successor.lastName} übernimmt die Rolle${relative==='child'?' als erwachsenes Kind':relative==='spouse'?' als Partnerperson':' als andere erwachsene Person'}.`);
+    }
+  }
+
+  private reconcileCourtSuccessors(player:Player):void {
+    for(const appointment of this.courtAssistants.list(player.id)) {
+      const previous=this.citizenSystem.getCitizen(appointment.citizenId);
+      if(previous?.isAlive&&!previous.isPlayerCharacter)continue;
+      const office=COURT_OFFICES[appointment.office];
+      const key='vacant-'+appointment.office;
+      if(this.roleSwitchingSystem.getMetaKnowledge(player.id,key)!==appointment.citizenId) {
+        this.lifeMessage(player.id,`${office.name}: ${previous?.firstName??'Die bisherige Person'} steht nicht mehr zur Verfügung. ${appointment.mode==='automatisch'?'Nachfolge wird gesucht.':'Bitte eine neue Person ernennen.'}`);
+        this.roleSwitchingSystem.storeMetaKnowledge(player.id,key,appointment.citizenId);
+      }
+      if(appointment.mode!=='automatisch')continue;
+      const candidate=this.getCourtCandidates(player.id).sort((a,b)=>b.skills[office.skill]-a.skills[office.skill])[0];
+      if(!candidate)continue;
+      this.courtAssistants.dismiss(player.id,appointment.office);
+      this.courtAssistants.appoint(player.id,appointment.office,candidate.id);
+      this.courtAssistants.setMode(player.id,appointment.office,'automatisch');
+      this.lifeMessage(player.id,`${office.name}: ${candidate.firstName} ${candidate.lastName} übernimmt das frei gewordene Amt automatisch.`);
+    }
+  }
+
+  private reconcileCivicSuccessors(player:Player):void {
+    if(!this.getAdministration(player.id).domains.civic)return;
+    for(const assignment of this.civicMissions.active(player.id)) {
+      if(this.citizenSystem.getCitizen(assignment.citizenId)?.isAlive)continue;
+      const mission=CIVIC_MISSIONS.find(m=>m.id===assignment.missionId)!;
+      const assigned=this.assignedCitizenIds();
+      const candidate=this.citizenSystem.getAliveCitizens().filter(c=>c.age>=18&&!c.isPlayerCharacter&&!assigned.has(c.id))
+        .sort((a,b)=>b.skills[mission.preferredSkill]-a.skills[mission.preferredSkill])[0];
+      if(!candidate)continue;
+      this.civicMissions.replaceCitizen(player.id,assignment.citizenId,candidate);
+      this.lifeMessage(player.id,`Auftragsnachfolge: ${candidate.firstName} ${candidate.lastName} übernimmt „${mission.title}“. Bisheriger Fortschritt und bezahlte Mittel bleiben erhalten.`);
     }
   }
 
@@ -2589,8 +2739,9 @@ export class GameEngine {
    * @returns Candidate citizens not controlled by any player.
    */
   public getPlayableCharacters(limit: number = 12): Citizen[] {
+    const assigned=this.assignedCitizenIds();
     const pool = this.citizenSystem.getAliveCitizens()
-      .filter((citizen: Citizen): boolean => !citizen.isPlayerCharacter);
+      .filter((citizen: Citizen): boolean => citizen.age>=18 && !citizen.isPlayerCharacter && !assigned.has(citizen.id));
     const classes: Citizen['socialClass'][] = ['royal', 'noble', 'middle', 'peasant'];
     const groups = classes.map(socialClass => pool
       .filter(citizen => citizen.socialClass === socialClass)
@@ -2617,8 +2768,13 @@ export class GameEngine {
    */
   public switchCharacter(playerId: string, citizenId: string): Citizen {
     this.requirePlayer(playerId);
+    if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    return this.switchCharacterFor(playerId,citizenId,'Spielerwahl');
+  }
+  private switchCharacterFor(playerId:string,citizenId:string,reason:string):Citizen {
     const citizen = this.citizenSystem.getCitizen(citizenId);
     if (!citizen || !citizen.isAlive) throw new Error('Dieser Charakter lebt nicht mehr.');
+    if(citizen.age<18||this.assignedCitizenIds().has(citizenId))throw Error('Diese Person ist minderjährig oder bereits mit einem Amt/Auftrag betraut.');
     if (citizen.isPlayerCharacter && citizen.controlledByPlayerId !== playerId) {
       throw new Error('Dieser Charakter wird bereits von einem anderen Spieler gespielt.');
     }
@@ -2626,7 +2782,7 @@ export class GameEngine {
     const switched = this.roleSwitchingSystem.switchRole(playerId, citizenId,
       (id: string) => this.citizenSystem.getCitizen(id),
       (id: string, updates: Partial<Citizen>) => this.citizenSystem.updateCitizen(id, updates),
-      this.currentYear, this.currentMonth, 'Spielerwahl');
+      this.currentYear, this.currentMonth, reason);
     if (!switched) throw new Error('Der Rollenwechsel ist fehlgeschlagen.');
     this.emit('characterSwitched', { playerId, citizenId });
     return citizen;
@@ -2651,6 +2807,11 @@ export class GameEngine {
    */
   public performCharacterAction(playerId: string, action: CharacterAction): string {
     const player = this.requirePlayer(playerId);
+    if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    return this.performCharacterActionFor(player,action);
+  }
+  private performCharacterActionFor(player:Player,action:CharacterAction):string {
+    const playerId=player.id;
     const character = this.getCurrentCharacter(playerId);
     if (!character) throw new Error('Du spielst gerade keinen lebenden Charakter. Wähle eine neue Rolle.');
     if (!this.canCharacterAct(playerId)) throw new Error('Dein Charakter hat in diesem Monat bereits gehandelt.');
@@ -2690,6 +2851,7 @@ export class GameEngine {
         throw new Error('Unbekannte Charakteraktion.');
     }
     this.roleSwitchingSystem.storeMetaKnowledge(playerId, 'lastActionMonth', this.currentYear * 12 + this.currentMonth);
+    this.recordChronicle(message,playerId);
     this.emit('characterActed', { playerId, action, message });
     return message;
   }

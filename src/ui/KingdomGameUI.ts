@@ -2,7 +2,7 @@ import { filmForRole, filmPreferences, saveFilmPreferences, loadCinematicLibrary
 import { doctrineForYear } from '../core/HistoricalGameplay';
 import { localLandmarks, localPlaceName, LOCAL_MAP_NOTE, LOCAL_MAP_CREDIT } from '../core/StartLocations';
 import { researchEffectDescriptions } from '../core/ScienceImpact';
-import { ADMIN_DOMAINS, ADMIN_LABELS, ADMIN_POLICIES, type AdministrationDomain, type AdministrationPolicy } from '../core/Administration';
+import { ADMIN_DOMAINS, ADMIN_LABELS, ADMIN_POLICIES, CHARACTER_PLANS, type CharacterPlan, type AdministrationDomain, type AdministrationPolicy } from '../core/Administration';
 import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
 import {
   CampaignGoal, CharacterAction, GameEngine, GameState, MarketResource, SaveMeta
@@ -57,6 +57,7 @@ const CHARACTER_ACTIONS: ReadonlyArray<[CharacterAction, string, string]> = [
   ['train', 'Waffenübung', 'Kampf und Führung steigen; die Garnison wird besser ausgebildet.'],
   ['serve', 'Dem Reich dienen', 'Stiftet die Hälfte des Vermögens der Schatzkammer, bringt Ansehen und Prestige.']
 ];
+const CHARACTER_PLAN_LABELS:Record<CharacterPlan,string>={balanced:'Ausgewogen',work:'Arbeiten',study:'Studieren',train:'Waffenübung',serve:'Dem Reich dienen'};
 
 const STRUCTURES: Record<keyof KingdomInfrastructure, StructureInfo> = {
   farms: { name: 'Bauernhof', description: 'Mehr Nahrung und Arbeit für 250 Menschen.', symbol: '♧' },
@@ -1041,6 +1042,10 @@ export class KingdomGameUI {
       engine.on('civicMissionEvent',(detail:{playerId:string;message:string}):void=>{
         if(this.player?.id===detail.playerId)this.record(detail.message);
       }),
+      engine.on('lifeEvent',(detail:{playerId:string;message:string}):void=>{
+        if(this.player?.id!==detail.playerId)return;
+        this.journal=engine.getChronicle();this.notify(detail.message);
+      }),
       engine.on('regionalProvisioning',(detail:{playerId:string;message:string}):void=>{
         if(this.player?.id!==detail.playerId)return;
         this.journal=engine.getChronicle();this.notify(detail.message);
@@ -1813,11 +1818,18 @@ export class KingdomGameUI {
     const prefs=this.requireEngine().getAdministration(this.requirePlayer().id);
     const budget=this.requireEngine().getAdministrationBudget(this.requirePlayer().id);
     const policy=ADMIN_POLICIES[prefs.policy];
-    return `<section class="build-card administration"><h3>Deine Schwerpunkte · Verwaltung delegieren</h3>
-      <label>Entscheidungen <select data-administration-policy>${Object.entries(ADMIN_POLICIES).map(([key,value])=>`<option value="${key}" ${key===prefs.policy?'selected':''}>${value.label}</option>`).join('')}</select></label>
+    const people=this.requireEngine().getAutomationPeople(this.requirePlayer().id);
+    const character=this.requireEngine().getCurrentCharacter(this.requirePlayer().id);
+    const characterOnly=domains.length===1&&domains[0]==='character';
+    return `<section class="build-card administration"><h3>${characterOnly?'Charakter delegieren':'Deine Schwerpunkte · Verwaltung delegieren'}</h3>
+      ${characterOnly?'':`<label>Entscheidungen <select data-administration-policy>${Object.entries(ADMIN_POLICIES).map(([key,value])=>`<option value="${key}" ${key===prefs.policy?'selected':''}>${value.label}</option>`).join('')}</select></label>
       <p>${policy.months} Monate Gold-Unterhalt als Rücklage (mindestens 500 Gold). Maximal ${Math.round(policy.fraction*100)} % des übrigen Goldes als gemeinsames Monatsbudget: derzeit ${format(budget.budget)} Gold.</p>
-      <p class="muted">Die Rücklage begrenzt freiwillige Ausgaben; laufende Kosten und Ereignisse bleiben wirksam. Die Automatik nimmt keine Kredite auf. Aktivierte Bereiche handeln beim Monatswechsel.</p>
+      <p class="muted">Die Rücklage begrenzt freiwillige Ausgaben; laufende Kosten und Ereignisse bleiben wirksam. Die Automatik nimmt keine Kredite auf. Aktivierte Bereiche handeln beim Monatswechsel.</p>`}
       <div class="administration-domains">${domains.map(domain=>`<label class="checkbox"><input type="checkbox" data-administration-domain="${domain}" ${prefs.domains[domain]?'checked':''}>${ADMIN_LABELS[domain]}</label>`).join('')}</div>
+      ${domains.includes('character')?`<label>Charakterplan<select data-character-plan>${CHARACTER_PLANS.map(plan=>`<option value="${plan}" ${prefs.characterPlan===plan?'selected':''}>${CHARACTER_PLAN_LABELS[plan]}</option>`).join('')}</select></label>
+        <p data-automatic-character>${character?escape(character.firstName+' '+character.lastName):'Rolle unbesetzt'} · ${prefs.domains.character?'Charakterautomatik aktiv':'Manuelle Charaktersteuerung'}</p>
+        <p class="muted">Eine persönliche Handlung pro Monat. Manuelle Handlungen haben Vorrang. „Dem Reich dienen“ spendet jeweils die Hälfte des persönlichen Vermögens. Bei aktiver Automatik folgen erwachsene Kinder, Partner oder andere freie Erwachsene nach.</p>`:''}
+      ${domains.length>1||domains.includes('civic')?`<h4>Zugewiesene Bürger</h4><ul class="automation-people">${people.map(person=>`<li data-automation-person><strong>${escape(person.name)}</strong> · ${escape(person.task)}<br><small>${person.alive?escape(person.status):'Nicht verfügbar · Nachfolge offen'} · ${escape(person.progress)}</small></li>`).join('')||'<li>Noch keine Hofämter oder Bürgeraufträge vergeben.</li>'}</ul><button data-open="civic">Bürgeraufträge verwalten</button>`:''}
       ${domains.length>1?'<div class="quick-actions"><button data-administration-preset="watch">Zuschauen · alles delegieren</button><button data-administration-preset="manual">Alles selbst entscheiden</button></div><p class="muted">Zuschauen aktiviert auch automatische Ereignisentscheidungen. Mit „Fortsetzen“ läuft die Zeit; einzelne Bereiche kannst du jederzeit wieder übernehmen.</p>':''}</section>`;
   }
 
@@ -1875,14 +1887,13 @@ export class KingdomGameUI {
       const data = this.engine.getCivicMissions(this.player.id);
       panel.innerHTML = heading('GESELLSCHAFT & ARBEIT', 'Aufträge an Bürger',
         'Verteile Aufgaben passend zum Jahrhundert. Bürger arbeiten mehrere Spielmonate und verbessern ihre Fähigkeiten.') +
+        this.renderAdministration(['civic']) +
         '<p class="muted">Bis zu drei parallele Aufträge. Ressourcen werden bei Beginn verbraucht; Erträge kommen nach Abschluss.</p>' +
         '<p>Versorgungsaufträge lindern nach Abschluss auch örtlichen Hunger und stärken Vertrauen.</p><button data-open="world">Regionale Versorgung und Hilfsmaßnahmen →</button><h3>Aktuelle Aufträge</h3><div class="build-grid">' +
         (data.active.map(a => {
-          const mission = data.options.find(m=>m.id===a.missionId);
-          const agent=data.citizens.find(c=>c.id===a.citizenId);
-          return '<article class="build-card"><h3>'+escape(mission?.title??a.missionId)+'</h3>'+
-            '<p>Verantwortlich: '+escape(agent?.name??'Bürger '+a.citizenId.slice(0,8))+'</p>'+
-            '<p>Fortschritt: '+a.completedMonths+'/'+(mission?.months??'?')+' Monate</p></article>';
+          return '<article class="build-card" data-active-civic><h3>'+escape(a.missionTitle)+'</h3>'+
+            '<p>Verantwortlich: '+escape(a.citizenName)+(a.citizenAlive?'':' · verstorben, Nachfolge offen')+'</p>'+
+            '<p>Fortschritt: '+a.completedMonths+'/'+a.totalMonths+' Monate</p></article>';
         }).join('')||'<p class="muted">Noch kein Auftrag vergeben.</p>')+
         '</div><h3>Verfügbare Aufgaben</h3><div class="build-grid">' +
         data.options.map(m=>'<article class="build-card"><h3>'+escape(m.title)+'</h3><p>'+escape(m.description)+'</p>'+
@@ -2211,7 +2222,8 @@ export class KingdomGameUI {
           const def = COURT_OFFICES[office];
           const entry = assigned.find((a) => a.office === office);
           return `<article class="build-card"><h3>${escape(def.name)}</h3><p>${escape(def.description)}</p>
-            ${entry && entry.citizen ? `<p><strong>${escape(entry.citizen.firstName)} ${escape(entry.citizen.lastName)}</strong>
+            ${entry && !entry.citizen?.isAlive ? `<p class="negative">Amt unbesetzt. ${entry.mode==='automatisch'?'Automatische Nachfolge wartet auf eine verfügbare erwachsene Person.':'Bitte eine Nachfolge ernennen.'}</p><button data-court-dismiss="${office}">Freies Amt zurücksetzen</button>`:''}
+            ${entry && entry.citizen?.isAlive ? `<p><strong>${escape(entry.citizen.firstName)} ${escape(entry.citizen.lastName)}</strong>
               · ${format(entry.citizen.skills[def.skill])} Fähigkeit · ${format(entry.monthsServed)} Monate Erfahrung</p>
               <label>Steuerung<select data-court-mode="${office}">
                 <option value="beratung" ${entry.mode === 'beratung' ? 'selected' : ''}>Nur beraten</option>
@@ -2334,6 +2346,11 @@ export class KingdomGameUI {
       this.renderPanel();
       this.updatePanelPagination();
     });
+    panel.querySelector<HTMLSelectElement>('[data-character-plan]')?.addEventListener('change',event=>void this.run(()=>{
+      const prefs=this.requireEngine().getAdministration(this.requirePlayer().id);
+      prefs.characterPlan=(event.target as HTMLSelectElement).value as CharacterPlan;
+      this.requireEngine().setAdministration(this.requirePlayer().id,prefs);
+    }));
     panel.querySelector<HTMLSelectElement>('[data-administration-policy]')?.addEventListener('change',event=>void this.run(()=>{
       const prefs=this.requireEngine().getAdministration(this.requirePlayer().id);
       prefs.policy=(event.target as HTMLSelectElement).value as AdministrationPolicy;
@@ -2350,8 +2367,8 @@ export class KingdomGameUI {
       ADMIN_DOMAINS.forEach(domain=>prefs.domains[domain]=enabled);
       this.requireEngine().setAdministration(this.requirePlayer().id,prefs);
       this.requireEngine().setCouncilAutomatic(this.requirePlayer().id,enabled);
-      if(!enabled)for(const assistant of this.requireEngine().getCourtAssistants(this.requirePlayer().id))
-        this.requireEngine().setCourtAssistantMode(this.requirePlayer().id,assistant.office,'beratung');
+      for(const assistant of this.requireEngine().getCourtAssistants(this.requirePlayer().id))
+        this.requireEngine().setCourtAssistantMode(this.requirePlayer().id,assistant.office,enabled?'automatisch':'beratung');
       this.notify(enabled?'Verwaltung und Ereignisse delegiert. Mit Fortsetzen kannst du zuschauen.':'Die Entscheidungen liegen wieder bei dir.');
     })));
     panel.querySelectorAll<HTMLButtonElement>('[data-garrison]').forEach(button=>button.addEventListener('click',()=>void this.run(()=>{
@@ -2599,7 +2616,6 @@ export class KingdomGameUI {
         void this.run((): void => {
           const message = this.requireEngine().performCharacterAction(
             this.requirePlayer().id, button.dataset.charAction as CharacterAction);
-          this.record(message);
           this.notify(message);
         });
       });
@@ -2933,6 +2949,8 @@ export class KingdomGameUI {
     const engine = this.requireEngine();
     const character = engine.getCurrentCharacter(player.id);
     const canAct = character !== null && engine.canCharacterAct(player.id);
+    const succession=engine.getCharacterSuccession(player.id);
+    const familyNames:Record<string,string>={spouse:'Partnerperson',child:'Kind',parent:'Elternteil',sibling:'Geschwister',grandchild:'Enkelkind',grandparent:'Großelternteil'};
     const people = engine.getPlayableCharacters(Number.MAX_SAFE_INTEGER);
     const pages = Math.max(1, Math.ceil(people.length / 6));
     this.characterPage = Math.min(this.characterPage, pages - 1);
@@ -2949,7 +2967,9 @@ export class KingdomGameUI {
             CLASSES[character.socialClass]}</p></div></div>
         <dl class="stat-list"><div><dt>Vermögen</dt><dd>${format(character.wealth)} Gold</dd></div>
           <div><dt>Ansehen</dt><dd>${format(character.reputation)}</dd></div>
-          <div><dt>Gesundheit</dt><dd>${format(character.health.overall)} %</dd></div>
+          <div><dt>Gesundheit</dt><dd data-character-health>${format(character.health.overall)} %</dd></div>
+          <div><dt>Nahrungsversorgung</dt><dd>${format(character.needs.food)} %</dd></div>
+          <div><dt>Unterkunft</dt><dd>${format(character.needs.shelter)} %</dd></div>
           <div><dt>Feldherrenbonus</dt><dd>${Math.round(engine.getArmyOverview(player.id).commanderBonus * 100)} %</dd></div></dl>
         <div class="skill-list">${SKILLS.map(([key, label]): string => `<label>${label}
           <progress max="100" value="${character.skills[key]}"></progress><span>${format(character.skills[key])}</span></label>`)
@@ -2958,7 +2978,11 @@ export class KingdomGameUI {
     const actions = CHARACTER_ACTIONS.map(([key, label, description]): string => `<article class="build-card">
         <h3>${label}</h3><p>${description}</p>
         <button class="secondary" data-char-action="${key}" ${canAct ? '' : 'disabled'}>${label}</button></article>`).join('');
-    return `${current}
+    return `${this.renderAdministration(['character'])}${current}
+      <section class="build-card" data-family-overview><h3>Familie & Nachfolge</h3>
+      <p>Erwachsene freie Kinder werden zuerst berücksichtigt, dann Partner und andere Erwachsene. Minderjährige wachsen regulär heran. Ein eigener Erbe ist keine Voraussetzung, um weiterzuspielen.</p>
+      <ul>${succession.family.slice(0,6).map(({relation,citizen})=>`<li>${familyNames[relation]??escape(relation)}: ${escape(citizen.firstName+' '+citizen.lastName)} · ${citizen.age} Jahre</li>`).join('')||'<li>Noch keine lebenden Angehörigen erfasst. Haushalte und Kinder können im Spielverlauf entstehen.</li>'}</ul>
+      <p data-successor>${succession.candidates[0]?'Derzeit mögliche Nachfolge: '+escape(succession.candidates[0].firstName+' '+succession.candidates[0].lastName):'Noch keine freie erwachsene Nachfolge verfügbar.'}</p></section>
       <h3>Monatliche Handlung</h3>
       <p class="muted">${!character ? 'Ohne lebenden Charakter sind keine Handlungen möglich.'
         : canAct ? 'Dein Charakter kann in diesem Monat eine Handlung ausführen.'

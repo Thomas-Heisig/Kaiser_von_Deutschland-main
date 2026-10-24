@@ -8,6 +8,8 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### Stabilisierung und Integration · 24.10.2026
 
+- [x] [Charakterautomatik und Nachfolge](docs/05-technical-architecture/CITIZEN_LIFECYCLE.md): zugewiesene Personen mit Aufgabe/Status/Fortschritt sichtbar, fünf Charakterpläne, manuelle Monatsaktionen mit Vorrang. Automatische Nachbesetzung für Rollen, Hofämter und Bürgeraufträge; keine Doppelbelegung. Todesfälle und Übergaben in der Chronik, alte Spielstände und Hotseat geprüft.
+- [x] Dauerhaften Bedürfnisverfall korrigiert: Versorgung der Bürger an Reichsbedingungen gekoppelt, kalendarische Alterung, Haushaltsgründung und erwachsene Nachkommen. Zwei deterministische 60-Jahre-Läufe mit Zwischen-Save/Load und ein versorgter Zehnjahreslauf durch die Engine; keine pauschale Zehnjahres-Lebensgrenze mehr.
 - [x] Dauerhaft sichtbare Zufriedenheit, Stabilität, Bevölkerung und Nahrungsreichweite; lesbare, scrollbare Meldungen und strukturierte Chronik. Sechs Bürgerrollen je Seite, neue Bürgernamen nach Geburtsjahr. Historische Grenzen und Quellen: [Versorgung und Bedienbarkeit](docs/05-technical-architecture/REGIONAL_PROVISIONING.md).
 - [x] Holzgewinnung neu abgestimmt: Werkstätten liefern saisonal 17–28 zusätzliches Holz/Monat vor Forschungsboni statt rund einem; Wirkung beim Bauen und in Wirtschaft sichtbar, tatsächliche Buchung auch nach Save/Load geprüft.
 
@@ -15,7 +17,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 - [x] [Ganderkesee als Startregion](docs/05-technical-architecture/GANDERKESEE.md): amtliches Gelände, echtes Gewässernetz, maßstäbliche Karte und zeitabhängige Ortsmarken mit Quellen. Weitere Startorte benötigen noch Kartenpakete.
 - [x] Popups per Rad/Touch scrollen, Audio im Header, Ressourcenbestand in Wirtschaft, direkter Steuerregler und persistente Handelsauswahl.
-- [x] Sechs delegierbare Bereiche mit Sicher/Normal/Gewagt, gemeinsamem Monatsbudget und Zuschauer-Voreinstellung; Speicherung und BCE-Bürgeraufträge geprüft.
+- [x] Sieben delegierbare Bereiche einschließlich Charakter mit Sicher/Normal/Gewagt für Reichsausgaben, gemeinsamem Monatsbudget und Zuschauer-Voreinstellung; Speicherung und BCE-Bürgeraufträge geprüft.
 - [x] Neun zusätzliche Bau-/Modernisierungsprojekte, bestands- und epochenbezogene Sichtbarkeit, Garnisonsverbesserung, monatliche Alltagsfeste und sichtbare Forschungswirkungen.
 - [x] Kassenabrechnung mit Einzelposten und Chronik; wiederholte Katastrophenabzüge und negative Politik-Unterhaltsbestände korrigiert.
 
@@ -74,8 +76,8 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ## P1 — Stabilität, Gameplay, Bürger und Generationen
 
-- [ ] Echte Partnervermittlung und Eheschließungen, regionale Namensräume sowie Geburten-/Sterblichkeitsbalance bei mehrjährigen Simulationen.
-- [ ] Ausbildung, Berufe, Arbeitsplätze, Karrierewechsel, Familienbesitz und generationsübergreifende Erbschaften kohärent verbinden.
+- [~] Automatische Haushaltsgründung erwachsener, nicht nah verwandter Personen desselben Ortes und Geburten-/Sterblichkeitsprüfungen über 60 Jahre umgesetzt. Regionale Namensräume, historische Ehe-/Haushaltsregeln und Balance über Jahrhunderte bleiben offen.
+- [~] Nachwuchs nimmt ab 16 eine einfache Tätigkeit als Bauer bzw. Handwerker auf. Differenzierte Ausbildung, Arbeitsplätze, Karrierewechsel, Familienbesitz und generationsübergreifende Erbschaften bleiben offen; Rollenfolge überträgt noch keinen Familienbesitz.
 - [ ] Ratsdelegation: lebender früherer Delegierter / Zufall nach fünf Sekunden / manuelle Auswahl / Tod / Hotseat / Save-Load in vollständigen E2E-Tests abnehmen.
 - [~] Örtliches Vertrauen und Versorgung reagieren dauerhaft auf passende Bürgeraufträge; Loyalität, Rivalitäten, politische Fraktionen und regionale Produktionsketten bleiben offen.
 - [ ] Ereignis- und Kampagnenschleifen mit historischen Epochen, Konfliktlösung ohne Krieg, technische Einheiten und Balance über Jahrhunderte.

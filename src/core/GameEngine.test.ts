@@ -311,6 +311,105 @@ describe('Playable campaign integration', (): void => {
     expect(restored.getCivicMissions(player.id).active).toEqual(engine.getCivicMissions(player.id).active);
   });
 
+  it('runs one delegated personal action per month, persists the plan and respects manual priority',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer(),character=engine.getCurrentCharacter(p.id)!;
+    const prefs=engine.getAdministration(p.id);prefs.domains.character=true;prefs.characterPlan='study';engine.setAdministration(p.id,prefs);
+    const wealth=character.wealth;
+    engine.performCharacterAction(p.id,'work');
+    const literacy=character.skills.literacy;
+    await engine.advanceMonth();
+    expect(character.wealth).toBeGreaterThan(wealth);expect(character.skills.literacy).toBe(literacy);
+    await engine.advanceMonth();expect(character.skills.literacy).toBe(Math.min(100,literacy+6));
+    await engine.saveGame('personal-automation');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('personal-automation');
+    expect(restored.getAdministration(p.id)).toEqual(prefs);
+    expect(restored.getChronicle().some(e=>e.message.includes('studiert'))).toBe(true);
+  });
+
+  it('hands a dead character to an adult child and persists the succession',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer(),old=engine.getCurrentCharacter(p.id)!;
+    const citizens=engine.getCitizenSystem();
+    const child=citizens.createCitizen({firstName:'Nachfolge',lastName:'Test',gender:'female',age:20,birthYear:1180,birthMonth:1,profession:'farmer',regionId:old.regionId,familyId:old.familyId});
+    old.familyRelations.push({citizenId:child.id,relationType:'child'});child.familyRelations.push({citizenId:old.id,relationType:'parent'});
+    const prefs=engine.getAdministration(p.id);prefs.domains.character=true;engine.setAdministration(p.id,prefs);
+    old.isAlive=false;
+    await engine.advanceMonth();
+    expect(engine.getCurrentCharacter(p.id)?.id).toBe(child.id);
+    expect(old.isPlayerCharacter).toBe(false);
+    expect(engine.getChronicle().some(e=>e.message.includes('Automatische Nachfolge: Nachfolge Test'))).toBe(true);
+    await engine.saveGame('successor');const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('successor');
+    expect(restored.getCurrentCharacter(p.id)?.id).toBe(child.id);
+  });
+
+  it('keeps a late-list assigned citizen visible and preserves a funded mission across death',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer(),s=engine.getCitizenSystem();
+    for(let i=0;i<110;i++)s.createCitizen({firstName:'Extra '+i,lastName:'Test',gender:'male',age:30,birthYear:1170,birthMonth:1,profession:'farmer',regionId:'dorf'});
+    const worker=s.getAllCitizens().at(-1)!;
+    engine.assignCivicMission(p.id,worker.id,'crafts');
+    expect(engine.getCivicMissions(p.id).citizens.some(c=>c.id===worker.id)).toBe(true);
+    const prefs=engine.getAdministration(p.id);prefs.domains.civic=true;engine.setAdministration(p.id,prefs);
+    worker.isAlive=false;p.kingdom.resources.gold=0;
+    await engine.advanceMonth();
+    const active=engine.getCivicMissions(p.id).active.find(a=>a.missionId==='crafts')!;
+    expect(active).toBeDefined();expect(active.citizenId).not.toBe(worker.id);expect(active.completedMonths).toBe(0);
+    expect(engine.getAutomationPeople(p.id).some(a=>a.alive&&a.task==='Handwerk weitergeben')).toBe(true);
+    expect(engine.getChronicle().some(e=>e.message.includes('Auftragsnachfolge'))).toBe(true);
+  });
+
+  it('replaces automatic court vacancies, keeps manual vacancies loadable and prevents duplicate jobs',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer();
+    const advisor=engine.getCourtCandidates(p.id)[0];engine.appointCourtAssistant(p.id,'forschung',advisor.id);
+    expect(()=>engine.assignCivicMission(p.id,advisor.id,'grain')).toThrow('Hofamt');
+    engine.setCourtAssistantMode(p.id,'forschung','automatisch');advisor.isAlive=false;
+    await engine.advanceMonth();
+    expect(engine.getCourtAssistants(p.id)[0].citizen?.isAlive).toBe(true);
+    expect(engine.getCourtAssistants(p.id)[0].citizenId).not.toBe(advisor.id);
+    engine.setCourtAssistantMode(p.id,'forschung','beratung');engine.getCourtAssistants(p.id)[0].citizen!.isAlive=false;
+    await engine.saveGame('vacant-court');const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('vacant-court');
+    expect(restored.getCourtAssistants(p.id)[0].citizen?.isAlive).toBe(false);
+    const replacement=restored.getCourtCandidates(p.id)[0];restored.appointCourtAssistant(p.id,'forschung',replacement.id);
+    expect(restored.getCourtAssistants(p.id)[0].citizenId).toBe(replacement.id);
+  });
+
+  it('surfaces an existing unnamed adult when an old save has no living successor',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer();
+    for(const citizen of engine.getCitizenSystem().getAllCitizens())citizen.isAlive=false;
+    await engine.saveGame('no-survivors');const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('no-survivors');
+    expect(restored.getCurrentCharacter(p.id)).toBeNull();
+    expect(restored.getCharacterSuccession(p.id).candidates).toHaveLength(1);
+    expect(restored.getCharacterSuccession(p.id).candidates[0].familyRelations).toEqual([]);
+    expect(restored.getPlayerById(p.id)?.kingdom.population).toEqual(p.kingdom.population);
+  });
+
+  it('runs care and personal automation through ten years of the actual monthly engine',async()=>{
+    const engine=await campaign(),p=engine.getActivePlayer(),character=engine.getCurrentCharacter(p.id)!;
+    const prefs=engine.getAdministration(p.id);prefs.domains.character=true;engine.setAdministration(p.id,prefs);
+    engine.setCouncilAutomatic(p.id,true);
+    for(let month=0;month<120;month++) {
+      p.kingdom.resources.food=50000;p.kingdom.resources.gold=50000;
+      await engine.advanceMonth();
+    }
+    expect(character.isAlive).toBe(true);expect(character.health.overall).toBeGreaterThan(60);
+    expect(character.needs.food).toBeGreaterThan(60);expect(character.needs.shelter).toBeGreaterThan(50);
+    expect(engine.getCurrentCharacter(p.id)).not.toBeNull();
+  });
+
+  it('keeps personal automation and successor control separate in hotseat',async()=>{
+    const engine=new GameEngine({startingYear:-1999,enableWiki:false,randomEvents:false});engines.push(engine);
+    const first=engine.addPlayer({name:'A',kingdomName:'A',gender:'other'}),second=engine.addPlayer({name:'B',kingdomName:'B',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    const prefs=engine.getAdministration(first.id);prefs.domains.character=true;prefs.characterPlan='study';engine.setAdministration(first.id,prefs);
+    const other=engine.getCurrentCharacter(second.id)!,literacy=other.skills.literacy;
+    expect(()=>engine.performCharacterAction(second.id,'study')).toThrow('Nicht am Zug');
+    expect(()=>engine.switchCharacter(second.id,engine.getPlayableCharacters(1)[0].id)).toThrow('Nicht am Zug');
+    engine.getCurrentCharacter(first.id)!.isAlive=false;
+    await engine.advanceMonth();
+    expect(engine.getCurrentCharacter(first.id)?.id).not.toBe(other.id);
+    expect(engine.getCurrentCharacter(second.id)?.id).toBe(other.id);
+    expect(other.skills.literacy).toBe(literacy);
+    expect(engine.getAdministration(second.id).domains.character).toBe(false);
+  });
+
   it('allows small monthly celebrations again after the month changes, including BCE saves',async()=>{
     const engine=new GameEngine({startingYear:-1999,randomEvents:false,enableWiki:false});engines.push(engine);
     const player=engine.addPlayer({name:'Fest',kingdomName:'Geest',gender:'other'});

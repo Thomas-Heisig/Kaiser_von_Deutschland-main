@@ -35,6 +35,7 @@ jobs:
           node scripts/strategy-smoke.mjs
           node scripts/ganderkesee-smoke.mjs
           node scripts/provisioning-smoke.mjs
+          node scripts/lifecycle-smoke.mjs
       - name: Save screenshots
         if: always()
         uses: actions/upload-artifact@v7
@@ -49,4 +50,5 @@ jobs:
             .temp/economy-*.png
             .temp/administration-*.png
             .temp/provisioning-*.png
+            .temp/lifecycle-*.png
           if-no-files-found: ignore

@@ -63,6 +63,7 @@ HTTPS/Pages ist aktiv; Geräteinstallation und Rechte-/Impressumsnachweise bleib
 
 ## Danach — Gate B: lebendige Generationen (P1)
 
+- Erste Integration: [Versorgung, Haushaltsgründung, Charakterautomatik und erwachsene Nachfolge](../05-technical-architecture/CITIZEN_LIFECYCLE.md) samt sichtbarer Hof-/Auftragsbelegung. Zwei deterministische 60-Jahre-Läufe mit Save/Load und zehn versorgte Jahre durch die Engine; historische Haushaltsregeln, Eigentumsvererbung und die folgende 100+-Jahre-Abnahme bleiben offen.
 - Bestehende Familien-Kernlogik (echte Kinder, Namensgruppen, Ehepartner-Abhängigkeit) zu Partnersuche, Ausbildung, Ehe, Beruf, Erbe und Tod verknüpfen.
 - Demografische Langläufe und Save/Load-Migration nachweisen; Beziehungen und Reputation mit Rats-/Bürgeraufträgen verbinden.
 - UI und Browser-E2E für Bürgerentscheidungen, Hotseat und persistente Chronik.
