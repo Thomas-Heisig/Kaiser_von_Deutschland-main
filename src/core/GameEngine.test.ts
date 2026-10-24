@@ -106,6 +106,20 @@ describe('Playable campaign integration', (): void => {
     expect(plan.blockers.join(' ')).toContain('Bauern fehlen');
     expect(engine.recruitForPlayer(p.id,10,'cavalry')).toBe(false);
   });
+  it('keeps the full project queue blocking after a save and load',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
+    Object.assign(k.resources,{gold:1000000,wood:1000000,stone:1000000,iron:1000000});
+    for(let n=0;n<12;n++)expect(await engine.buildForPlayer(p.id,'roads')).toBe(true);
+    await engine.saveGame('full-queue');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);
+    await restored.loadGame('full-queue');
+    const player=restored.getPlayers()[0];
+    expect(restored.getProjects(player.id)).toHaveLength(12);
+    const plan=restored.getBuildPlan(player.id,'farms');
+    expect(plan.canStart).toBe(false);
+    expect(plan.blockers).toEqual(['12 Vorhaben laufen bereits']);
+    expect(await restored.buildForPlayer(player.id,'farms')).toBe(false);
+  });
   it('finances construction once, persists remaining time and delays all building effects',async()=>{
     const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
     const initial=k.infrastructure.farms,gold=k.resources.gold,food=k.resources.food;

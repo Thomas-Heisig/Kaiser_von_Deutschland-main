@@ -4,6 +4,15 @@
 
 ## [Unreleased] — Stand 24.10.2026
 
+### Fixed
+
+- **Build- und Rekrutierungsvorschau nutzt dieselbe Regel wie die Ausführung.** `GameEngine.getBuildPlan()` und `GameEngine.getRecruitPlan()` liefern Kosten, Bauzeit und konkrete Hindernisse; Oberfläche und Ausführung greifen auf dieselbe Prüfung zu. Damit nennt ein abgelehnter Bau den tatsächlichen Grund.
+- **Volle Vorhabenliste wird nicht länger als Ressourcenmangel gemeldet.** Waren alle zwölf Vorhabenplätze belegt, erschien zuvor „Nicht genügend Ressourcen". Jetzt erscheint „12 Vorhaben laufen bereits" — in Vorschau, Fehlermeldung und nach dem Laden eines Spielstands.
+- **Fehlermeldungen nennen fehlende Mengen.** Statt „Nicht genügend Ressourcen" erscheint z. B. „4.950 Gold fehlt, 2.450 Stein fehlt"; die Rekrutierung nennt zusätzlich fehlende Bauern.
+- **Erfolgsmeldungen beziffern die tatsächliche Zahlung.** Bau und Rekrutierung melden die abgezogenen Beträge („Bezahlt: 1.200 Gold · 300 Holz") statt einer pauschalen Bestätigung.
+- Rekrutierungskosten liegen als `RECRUITMENT_COSTS` in `src/core/Kingdom.ts` an einer Stelle; Vorschau und `recruitSoldiers()` können nicht mehr auseinanderlaufen.
+- Projektstatus-Dialog: doppelte Rückgabetyp-Angabe in `src/ui/FeatureStatus.ts` behoben, die `npm run check` und den Testlauf unterbrach.
+
 ### Added
 
 - Fünf neue Vorzeit-Aufnahmen mit umbenannten Dateien, ID3-Titeln, eingebetteten Covern und neuer Galerie; Ancient Veil als instrumentales Startthema. Epochen-Playlists wechseln passende Titel ohne Neustart bei Monatswechsel.

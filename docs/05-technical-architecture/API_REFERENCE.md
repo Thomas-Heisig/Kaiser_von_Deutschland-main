@@ -85,7 +85,9 @@ und bietet die Geschwindigkeitsmultiplikatoren 1, 2 und 4 über `getTimeSystem()
 
 ```typescript
 setTaxRate(playerId: string, rate: number): void
+getBuildPlan(playerId: string, type: string): BuildPlan
 buildForPlayer(playerId: string, type: string): Promise<boolean>
+getRecruitPlan(playerId: string, count: number, type: 'infantry' | 'archers' | 'cavalry'): RecruitPlan
 recruitForPlayer(playerId: string, count: number, type?: 'infantry' | 'cavalry' | 'archers'): boolean
 quoteTrade(resource: MarketResource, amount: number, direction: 'buy' | 'sell'): number
 tradeForPlayer(playerId: string, resource: MarketResource, amount: number, direction: 'buy' | 'sell'): boolean
@@ -102,6 +104,14 @@ Rekrutenzahlen sind positive ganze Zahlen. Ungültige Eingaben werfen Fehler;
 fehlende Mittel liefern `false`, ohne Teilkosten abzubuchen. Bauaktionen
 akzeptieren die Infrastruktur-Schlüssel sowie die vorhandenen Singular-Aliase.
 Der Steuersatz ist ein endlicher Wert und wird auf 0–0,5 begrenzt.
+
+`getBuildPlan()` und `getRecruitPlan()` sind die verbindliche Vorschau: Sie
+liefern `bill` (exakte Kosten), `months` (Dauer) sowie `blockers` mit konkreten,
+bezifferten Gründen und `canStart`. `buildForPlayer()` und `recruitForPlayer()`
+wenden dieselbe Prüfung an, damit eine Vorschau nie von der Ausführung abweicht.
+Ein voller Vorhabenplatz (`MAX_REALM_PROJECTS`, derzeit 12) erscheint als
+eigener Grund und nicht als Ressourcenmangel. Rekrutierungskosten stehen einmalig
+in `RECRUITMENT_COSTS` (`src/core/Kingdom.ts`).
 
 Einkauf kostet `ceil(Basispreis × Menge × 1,2)`, Verkauf bringt
 `floor(Basispreis × Menge × 0,8)`. Kampagnenziele enthalten jeweils `label` und

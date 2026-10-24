@@ -2005,9 +2005,11 @@ ${body}
               <div class="cost">${format(plan.bill.gold)} Gold${plan.bill.wood ? ` · ${format(plan.bill.wood)} Holz` : ''}
                 ${plan.bill.stone ? ` · ${format(plan.bill.stone)} Stein` : ''}
                 ${plan.bill.iron ? ` · ${format(plan.bill.iron)} Eisen` : ''}</div>
-              <p class="muted">Bauzeit: ${plan.months} Monate${plan.canStart ? '' : ` · es fehlen ${plan.blockers.join(', ')}`}</p>
+              <p class="muted">Bauzeit: ${plan.months} Monate</p>
               <button data-build="${type}" ${plan.canStart ? '' : 'disabled'} class="secondary"
-                aria-label="${info.name} bauen">${plan.canStart ? `${info.name} bauen` : `Nicht möglich: ${plan.blockers.join(', ')}`}</button>
+                aria-label="${plan.canStart ? `${info.name} bauen`
+                  : `${info.name} bauen · nicht möglich: ${plan.blockers.join(', ')}`}">${plan.canStart
+                  ? `${info.name} bauen` : `Nicht möglich: ${plan.blockers.join(', ')}`}</button>
             </article>`;
           }).join('')}</div><h3>Besondere Bauvorhaben deiner Zeit</h3>` + this.renderProjects('construction');
     } else if (this.view === 'economy') {
@@ -2104,9 +2106,9 @@ ${body}
           <p class="cost">10 Rekruten: ${(['gold', 'food', 'wood', 'iron'] as const)
             .filter(resource => plan.bill[resource] > 0)
             .map(resource => `${format(plan.bill[resource])} ${RESOURCE_NAMES[resource]}`).join(' · ')}</p>
-          ${plan.canStart ? '' : `<p class="muted">Es fehlen ${plan.blockers.join(', ')}</p>`}
           <button class="secondary" data-recruit="${type}" ${plan.canStart ? '' : 'disabled'}
-            aria-label="10 ${name} rekrutieren">${plan.canStart
+            aria-label="${plan.canStart ? `10 ${name} rekrutieren`
+              : `10 ${name} rekrutieren · nicht möglich: ${plan.blockers.join(', ')}`}">${plan.canStart
               ? `10 ${name} rekrutieren` : `Nicht möglich: ${plan.blockers.join(', ')}`}</button></article>`;
         }).join('')}</div>
         <p class="muted tip">Mit deiner Garnison ziehst du unter „Feldzüge“ gegen rivalisierende Nachbarn.

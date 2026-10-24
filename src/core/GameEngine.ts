@@ -374,7 +374,7 @@ export class GameEngine {
     this.recordChronicle('Verwaltung: '+ADMIN_POLICIES[preferences.policy].label+'; delegiert: '+ADMIN_DOMAINS.filter(d=>preferences.domains[d]).map(d=>ADMIN_LABELS[d]).join(', '),playerId);
   }
   public getAdministrationBudget(playerId:string) {return administrationBudget(this.requirePlayer(playerId).kingdom,this.getAdministration(playerId).policy);}
-  public getGarrisonDevelopment(playerId:string) {return garrisonDevelopment(this.requirePlayer(playerId).kingdom,this.currentYear).map(p=>({...p,available:p.available&&!this.realmProjects.busy(playerId,'garrison',p.id)&&this.realmProjects.list(playerId).length<12}));}
+  public getGarrisonDevelopment(playerId:string) {return garrisonDevelopment(this.requirePlayer(playerId).kingdom,this.currentYear).map(p=>({...p,available:p.available&&!this.realmProjects.busy(playerId,'garrison',p.id)&&this.realmProjects.list(playerId).length<MAX_REALM_PROJECTS}));}
   public improveGarrison(playerId:string,id:string):string {
     const player=this.requirePlayer(playerId);
     if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
@@ -2806,7 +2806,7 @@ export class GameEngine {
       if(region&&option)await action(region.name+': '+option.name,()=>
         this.requireRegionalProvisioning(player.id).act(region.id,option.id,kingdom,this.currentYear*12+this.currentMonth));
     }
-    if(domains.construction&&this.realmProjects.list(player.id).length<12) {
+    if(domains.construction&&this.realmProjects.list(player.id).length<MAX_REALM_PROJECTS) {
       const option=this.getModernizationOptions(player.id).find(o=>o.visible&&o.canStart&&canSpend(o.project.cost));
       if(option)await action(option.project.name,()=>this.launchModernizationFor(player,option.project.id));
       else {
