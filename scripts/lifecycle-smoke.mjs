@@ -6,6 +6,10 @@ const browser=await chromium.launch({headless:true}),errors=[];
 try {
   for(const [width,year] of [[375,-1999],[1024,1200],[768,2000]]) {
     const page=await browser.newPage({viewport:{width,height:800},hasTouch:width<1000,reducedMotion:'reduce'});
+    await page.addInitScript(()=>{
+      let seed=724;
+      Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+    });
     page.setDefaultTimeout(15000);page.on('pageerror',e=>errors.push(e.message));
     await page.goto(process.env.KAISER_TEST_URL??'http://127.0.0.1:4173/');await page.locator('#intro-skip').click();
     await page.locator('#start-year').selectOption(String(year));
@@ -46,6 +50,9 @@ try {
     await page.screenshot({path:`.temp/lifecycle-character-${year}-${width}.png`});
     await close();await page.locator('[data-action=month]').click();await open('character');
     assert.equal(await literacy(),Math.min(100,before+6));
+    // Assignment holders can die naturally. Compare the saved state, not immortality.
+    await close();await open('court');
+    const savedPeople=await page.locator('.automation-people').innerText();
     await close();await page.locator('[data-action=save]').click();
     await page.locator('#notice').filter({hasText:'Herrschaft gespeichert.'}).waitFor();
     await page.reload();await page.locator('#intro-skip').click();await page.locator('#continue').click();
@@ -53,7 +60,7 @@ try {
     assert.equal(await page.locator('[data-character-plan]').inputValue(),'study');
     assert.equal(await page.locator('[data-administration-domain=character]').isChecked(),true);
     await close();await open('court');
-    assert.ok((await page.locator('.automation-people').innerText()).includes(workerName));
+    assert.equal(await page.locator('.automation-people').innerText(),savedPeople);
     await page.locator('.automation-people').scrollIntoViewIfNeeded();
     await page.screenshot({path:`.temp/lifecycle-people-${year}-${width}.png`});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight>innerHeight+1),false);
