@@ -21,11 +21,11 @@
     "uuid": "^14.0.3"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
+    "@types/node": "^26.6.5",
     "@types/sql.js": "^1.4.11",
     "typescript": "^7.0.2",
     "vite": "^8.3.5",
-    "vitest": "^4.1.12"
+    "vitest": "^5.0.5"
   },
   "keywords": [
     "game",
@@ -37,5 +37,8 @@
     "germany"
   ],
   "author": "Kaiser Development Team",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  }
 }
