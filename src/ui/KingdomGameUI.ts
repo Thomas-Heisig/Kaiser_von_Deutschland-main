@@ -17,7 +17,7 @@ import { MusicJukebox } from './MusicJukebox';
 import { campaignsForYear, CAMPAIGNS, CampaignId } from '../core/CampaignCatalog';
 import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../core/CourtAssistantRegistry';
 import { GameAmbience, Soundscape } from './GameAmbience';
-import type { HistoryKind } from '../core/WorldHistoryCatalog';
+import { historicalYearReport, type HistoryKind } from '../core/WorldHistoryCatalog';
 import { HelpSystem } from './HelpSystem';
 import { isZoomLevelsEnabled, regionsForMap, stepSlider } from './MapZoomLevels';
 import { deskMarkup, eraPresentation } from './EraPresentation';
@@ -107,6 +107,7 @@ export class KingdomGameUI {
   private cinematicTimeout?: number;
   private openingAttempt = false;
   private resumeAfterCouncil = false;
+  private reportIndex = 0;
   private readonly councilAdvisor = new CouncilAdvisor();
   private readonly retryOpening = (): void => { void this.tryOpeningTheme(); };
   private readonly ambience = new GameAmbience();
@@ -781,6 +782,28 @@ export class KingdomGameUI {
             <button id="council-prompt" data-view="council" class="council-alert" hidden></button>
             <section id="panel" class="content-panel" aria-label="Verwaltung"></section>
           </main>
+          <aside class="realm-report" aria-label="Lagebericht" data-report-tab="news">
+            <div class="report-heading"><strong>Lagebericht</strong><span id="report-date"></span></div>
+            <div class="report-tabs" aria-label="Informationen auswählen">
+              <button type="button" data-report-tab="news" aria-pressed="true">Meldungen</button>
+              <button type="button" data-report-tab="tutorial" aria-pressed="false">Tutorial</button>
+              <button type="button" data-report-tab="history" aria-pressed="false">Jahresgeschichte</button>
+            </div>
+            <section class="report-card" data-report-card="news" aria-label="Was ist passiert?">
+              <h2>Was ist passiert?</h2><small id="report-news-date"></small>
+              <p id="report-news"></p>
+              <div class="report-actions"><button type="button" id="report-previous" aria-label="Neuere Meldung">←</button><span id="report-count"></span><button type="button" id="report-next" aria-label="Ältere Meldung">→</button><button type="button" data-view="chronicle">Chronik öffnen</button></div>
+            </section>
+            <section class="report-card" data-report-card="tutorial" aria-label="Dein nächster Schritt">
+              <h2 id="report-tutorial-title">Dein nächster Schritt</h2><p id="report-tutorial-text"></p>
+              <div class="report-actions"><button type="button" id="report-tutorial-go" class="primary">Schritt starten →</button><button type="button" data-view="help">Spielhilfe</button></div>
+            </section>
+            <section class="report-card" data-report-card="history" aria-label="Wahre Jahresgeschichte">
+              <h2 id="report-history-year"></h2><small id="report-history-context"></small><p id="report-history-text"></p>
+              <div class="report-actions"><a id="report-history-source" target="_blank" rel="noopener noreferrer">Quelle ↗</a><button type="button" data-view="history">Mehr Geschichte</button></div>
+            </section>
+            <label class="council-auto"><input type="checkbox" data-council-auto> Ereignisse automatisch entscheiden</label>
+          </aside>
           <aside class="council">
             <section class="council-card tutorial-card" id="tutorial-card" hidden aria-label="Interaktives Tutorial">
               <p class="eyebrow">DEIN TUTORIAL</p>
@@ -844,6 +867,19 @@ export class KingdomGameUI {
       button.onclick = () => { if (briefingBody) briefingBody.scrollTop += Number(button.dataset.pageStep) * Math.max(1, briefingBody.clientHeight - 48); };
     });
     this.bindTutorialControls();
+    this.root.querySelectorAll<HTMLButtonElement>('.report-tabs button').forEach(button => {
+      button.onclick = () => {
+        this.root.querySelector<HTMLElement>('.realm-report')!.dataset.reportTab = button.dataset.reportTab;
+        this.root.querySelectorAll('.report-tabs button').forEach(tab => tab.setAttribute('aria-pressed', String(tab === button)));
+      };
+    });
+    this.root.querySelector('#report-previous')?.addEventListener('click', () => { this.reportIndex--; this.renderReport(); });
+    this.root.querySelector('#report-next')?.addEventListener('click', () => { this.reportIndex++; this.renderReport(); });
+    this.root.querySelector('#report-tutorial-go')?.addEventListener('click', () => {
+      if (this.engine?.getTutorialStep()) this.root.querySelector<HTMLButtonElement>('#tutorial-go')?.click();
+      else this.navigate('help');
+    });
+    this.bindCouncilAutomatic(this.root.querySelector('.realm-report')!);
     this.renderTutorial();
     const sectionDialog = this.root.querySelector<HTMLDialogElement>('#section-dialog');
     sectionDialog?.addEventListener('click', (event) => {
@@ -921,8 +957,12 @@ export class KingdomGameUI {
         this.notify('Dringende Angelegenheit im Reichsrat: ' + detail.title);
         if (!engine.isHotseat()) this.showCouncilDialog();
       }),
-      engine.on('councilResolved', (detail: { playerId: string; outcome: { message: string } }): void => {
-        if (this.player?.id === detail.playerId) this.record(detail.outcome.message);
+      engine.on('councilResolved', (detail: { playerId: string; outcome: { message: string; automatic?: boolean } }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        if (!detail.outcome.automatic) this.record(detail.outcome.message);
+        else this.notify(detail.outcome.message);
+        this.reportIndex = 0;
+        this.renderReport();
       }),
       engine.on('monthAdvanced', (): void => {
         this.record('Monat abgeschlossen. Produktion, Verbrauch und Steuern wurden verbucht.');
@@ -1128,7 +1168,62 @@ export class KingdomGameUI {
   }
 
   /** Aktualisiert die Tutorial-Karte: aktuellen Schritt, Fortschritt und Hilfe. */
+  private bindCouncilAutomatic(container: Element): void {
+    container.querySelectorAll<HTMLInputElement>('[data-council-auto]').forEach(input => {
+      input.checked = this.engine?.isCouncilAutomatic(this.requirePlayer().id) ?? false;
+      input.addEventListener('change', () => void this.run(() => {
+        const outcome = this.requireEngine().setCouncilAutomatic(this.requirePlayer().id, input.checked);
+        if (outcome) {
+          this.councilDialog?.close();
+          this.resumeAfterCouncilDecision();
+        }
+        this.notify(outcome?.message ?? (input.checked
+          ? 'Automatik aktiv: bezahlbare Optionen, sichere Folgen zuerst. Jede Entscheidung steht in der Chronik.'
+          : 'Automatik aus: Du entscheidest wieder selbst.'));
+        this.renderReport();
+      }));
+    });
+  }
+
+  private renderReport(): void {
+    if (!this.engine || !this.player || !this.root.querySelector('.realm-report')) return;
+    const engine = this.engine;
+    const text = (id: string, value: string): void => {
+      const element = this.root.querySelector('#' + id);
+      if (element && element.textContent !== value) element.textContent = value;
+    };
+    const entries = engine.getChronicle().filter(entry => !entry.playerId || entry.playerId === this.player!.id);
+    this.journal = entries;
+    this.reportIndex = Math.max(0, Math.min(this.reportIndex, entries.length - 1));
+    const entry = entries[this.reportIndex];
+    text('report-date', this.date());
+    text('report-news-date', entry?.date ?? this.date());
+    text('report-news', entry?.message ?? 'Deine Herrschaft beginnt. Baue die Versorgung auf und prüfe deine Monatsbilanz.');
+    text('report-count', entries.length ? `${this.reportIndex + 1}/${entries.length}` : '0/0');
+    this.root.querySelector<HTMLButtonElement>('#report-previous')!.disabled = this.reportIndex === 0;
+    this.root.querySelector<HTMLButtonElement>('#report-next')!.disabled = this.reportIndex >= entries.length - 1;
+    const step = engine.getTutorialStep();
+    const progress = engine.getTutorialProgress();
+    text('report-tutorial-title', step ? `Tutorial ${progress.done + 1}/${progress.total} · ${step.title}` : 'Dein Weg durch das Spiel');
+    text('report-tutorial-text', step?.description ?? 'Bauen → Handeln → Forschen → Entscheiden. Prüfe vor jedem Monatswechsel deine Vorräte. Die Spielhilfe erklärt alle Schritte.');
+    text('report-tutorial-go', step ? `Zu „${step.title}“ →` : 'Anleitung öffnen →');
+    const year = engine.getCurrentYear();
+    const history = historicalYearReport(year);
+    const item = history.entries[0];
+    text('report-history-year', `Wahre Geschichte · ${year}`);
+    text('report-history-context', history.exact ? 'Historischer Jahresüberblick · unabhängig vom Spielverlauf'
+      : `Kein belegter Jahreseintrag im Katalog.${item ? ` Rückblick auf ${item.year}:` : ''}`);
+    text('report-history-text', item ? `${item.title}. ${item.description}` : 'Für diesen Zeitraum ist noch kein historischer Eintrag hinterlegt.');
+    const source = this.root.querySelector<HTMLAnchorElement>('#report-history-source')!;
+    source.hidden = !item;
+    if (item) { source.href = item.sourceUrl; source.title = item.sourceTitle; }
+    this.root.querySelectorAll<HTMLInputElement>('[data-council-auto]').forEach(input => {
+      input.checked = engine.isCouncilAutomatic(this.player!.id);
+    });
+  }
+
   private renderTutorial(): void {
+    this.renderReport();
     const card = this.root.querySelector<HTMLElement>('#tutorial-card');
     if (!card) return;
     const engine = this.engine;
@@ -1299,7 +1394,12 @@ export class KingdomGameUI {
     later.className = 'secondary';
     later.textContent = 'Später im Reichsrat entscheiden';
     later.addEventListener('click', () => dialog.close());
-    dialog.append(heading, story, choices, delegation, later);
+    const automatic = document.createElement('label');
+    automatic.className = 'council-auto';
+    automatic.innerHTML = '<input type="checkbox" data-council-auto> Diese und künftige Ereignisse automatisch entscheiden';
+    automatic.title = 'Nur bezahlbare Optionen. Sichere Folgen haben Vorrang; danach zählen Wohlergehen und Kosten. Jederzeit im Lagebericht abschaltbar.';
+    dialog.append(heading, automatic, story, choices, delegation, later);
+    this.bindCouncilAutomatic(dialog);
     this.paginateInfoDialog(dialog);
     dialog.addEventListener('close', () => { this.cancelCouncilSelectionTimer(); if (this.councilDialog === dialog) this.councilDialog = undefined; dialog.remove(); });
     this.root.append(dialog);
@@ -1565,6 +1665,7 @@ export class KingdomGameUI {
       : chapter.ready ? 'Kapitelziele erfüllt. Lasse einen Monat vergehen, um das Kapitel abzuschließen.'
       : `${chapter.goals.filter(goal => goal.done).length} von ${chapter.goals.length} aktuellen Kapitelzielen erfüllt · ${completed} von ${goals.length} Gesamtzielen.`);
     const latest = this.root.querySelector('#latest');
+    this.renderReport();
     if (latest) latest.innerHTML = this.journal.slice(0, 2).map((entry: JournalEntry) =>
       `<p><small>${escape(entry.date)}</small>${escape(entry.message)}</p>`).join('');
     this.root.querySelector('.kingdom-app')?.setAttribute('data-view', this.view);
@@ -1652,6 +1753,7 @@ export class KingdomGameUI {
       const history = this.engine.getCouncilHistory(this.player.id);
       panel.innerHTML = heading('ENTSCHEIDUNGEN MIT FOLGEN', 'Der königliche Reichsrat',
         'Jede Entscheidung verändert den Lauf deiner Herrschaft. Riskante Pläne können glücken oder scheitern.') +
+        '<label class="council-auto"><input type="checkbox" data-council-auto> Ereignisse automatisch entscheiden</label><p class="muted">Nur bezahlbare Optionen. Sichere Folgen haben Vorrang; danach zählen Wohlergehen und Kosten. Entscheidungen werden protokolliert. Jederzeit abschaltbar.</p>' +
         (decision ? `<article class="council-dilemma">
           <p class="eyebrow">${escape(decision.category)} · DRINGEND</p>
           <h3>${escape(decision.title)}</h3><p>${escape(decision.story)}</p>
@@ -2172,6 +2274,7 @@ export class KingdomGameUI {
         });
       });
     });
+    this.bindCouncilAutomatic(panel);
     panel.querySelectorAll<HTMLButtonElement>('[data-council-choice]').forEach((button) => {
       button.addEventListener('click', (): void => {
         void this.run((): void => {

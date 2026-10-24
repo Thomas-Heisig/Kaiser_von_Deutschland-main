@@ -38,6 +38,7 @@ export interface CouncilHistoryEntry {
   message: string;
   delegatedCitizenId?: string;
   delegatedCitizenName?: string;
+  automatic?: boolean;
 }
 
 export interface CouncilSnapshot {
@@ -45,6 +46,7 @@ export interface CouncilSnapshot {
   lastTriggered: Array<[string, number]>;
   lastDecision: Array<[string, string]>;
   history: CouncilHistoryEntry[];
+  automaticPlayers?: string[];
 }
 
 export interface CouncilChoiceOffer extends CouncilChoice {
@@ -259,8 +261,32 @@ export class CouncilDecisionSystem {
   private lastTriggered = new Map<string, number>();
   private lastDecision = new Map<string, string>();
   private history: CouncilHistoryEntry[] = [];
+  private automaticPlayers = new Set<string>();
 
   constructor(private readonly random: () => number = Math.random) {}
+
+  public isAutomatic(playerId: string): boolean { return this.automaticPlayers.has(playerId); }
+
+  public setAutomatic(playerId: string, enabled: boolean): void {
+    if (enabled) this.automaticPlayers.add(playerId);
+    else this.automaticPlayers.delete(playerId);
+  }
+
+  /** Only affordable choices; guaranteed outcomes first, then welfare and cost. */
+  public resolveAutomatic(player: Player, year: number, month: number): CouncilHistoryEntry | null {
+    if (!this.isAutomatic(player.id)) return null;
+    const score = (choice: CouncilChoiceOffer): number => {
+      const welfare = (effect: CouncilEffect): number => (effect.happiness ?? 0) * 4 +
+        (effect.stability ?? 0) * 4 + (effect.prestige ?? 0) +
+        RESOURCES.reduce((sum, key) => sum + (effect[key] ?? 0) / 100, 0);
+      const probability = choice.probability ?? 1;
+      return probability * welfare(choice.effect) + (1 - probability) * welfare(choice.failure ?? {}) -
+        RESOURCES.reduce((sum, key) => sum + (choice.cost[key] ?? 0) / Math.max(1, player.kingdom.resources[key]), 0);
+    };
+    const choice = this.getChoices(player).filter(offer => offer.affordable).sort((a, b) =>
+      (b.probability ?? 1) - (a.probability ?? 1) || score(b) - score(a))[0];
+    return choice ? this.resolve(player, choice.id, year, month, undefined, true) : null;
+  }
 
   public getPending(playerId: string): CouncilDecision | null {
     const id = this.pending.get(playerId)?.decisionId;
@@ -332,7 +358,7 @@ export class CouncilDecisionSystem {
     return decision;
   }
 
-  public resolve(player: Player, choiceId: string, year: number, month: number, delegate?: { id: string; name: string }): CouncilHistoryEntry {
+  public resolve(player: Player, choiceId: string, year: number, month: number, delegate?: { id: string; name: string }, automatic = false): CouncilHistoryEntry {
     const decision = this.getPending(player.id);
     if (!decision) throw new Error('Zurzeit liegt keine Ratsentscheidung vor.');
     const choice = this.getChoices(player).find((offer) => offer.id === choiceId);
@@ -352,9 +378,10 @@ export class CouncilDecisionSystem {
 
     const result: CouncilHistoryEntry = {
       playerId: player.id, decisionId: decision.id, choiceId: choice.id, success,
+      ...(automatic ? { automatic: true } : {}),
       ...(delegate ? { delegatedCitizenId: delegate.id, delegatedCitizenName: delegate.name } : {}),
       date: String(month).padStart(2, '0') + '/' + year,
-      message: (delegate ? delegate.name + ' übernimmt: ' : '') + decision.title + ': ' + choice.title + (choice.probability === null ? '.' :
+      message: (automatic ? 'Automatisch entschieden: ' : '') + (delegate ? delegate.name + ' übernimmt: ' : '') + decision.title + ': ' + choice.title + (choice.probability === null ? '.' :
         success ? ' – der Plan gelingt.' : ' – der Plan scheitert.')
     };
     this.pending.delete(player.id);
@@ -368,13 +395,16 @@ export class CouncilDecisionSystem {
       pending: Array.from(this.pending, ([key, value]) => [key, { ...value }]),
       lastTriggered: Array.from(this.lastTriggered),
       lastDecision: Array.from(this.lastDecision),
-      history: this.history.map((entry) => ({ ...entry }))
+      history: this.history.map((entry) => ({ ...entry })),
+      automaticPlayers: [...this.automaticPlayers]
     };
   }
 
   public load(snapshot: CouncilSnapshot): void {
     if (!snapshot || !Array.isArray(snapshot.pending) || !Array.isArray(snapshot.lastTriggered) ||
         !Array.isArray(snapshot.lastDecision) || !Array.isArray(snapshot.history) ||
+        (snapshot.automaticPlayers !== undefined && (!Array.isArray(snapshot.automaticPlayers) ||
+          snapshot.automaticPlayers.some(id => typeof id !== 'string'))) ||
         snapshot.pending.some(([id, value]) => typeof id !== 'string' || !value ||
           !COUNCIL_DECISIONS.some((decision) => decision.id === value.decisionId) ||
           !Number.isSafeInteger(value.issuedAt)) ||
@@ -390,5 +420,6 @@ export class CouncilDecisionSystem {
     this.lastTriggered = new Map(snapshot.lastTriggered);
     this.lastDecision = new Map(snapshot.lastDecision);
     this.history = snapshot.history.slice(0, 100).map((entry) => ({ ...entry }));
+    this.automaticPlayers = new Set(snapshot.automaticPlayers ?? []);
   }
 }

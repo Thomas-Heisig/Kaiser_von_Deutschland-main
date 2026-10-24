@@ -50,6 +50,52 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('automates opted-in events, persists the preference and lets manual decisions pause again', async () => {
+    const engine = new GameEngine({startingYear:1200,randomEvents:true,enableWiki:false});
+    engines.push(engine);
+    const player = engine.addPlayer({name:'Anna',kingdomName:'Westreich',gender:'other'});
+    await engine.startGame();
+    const prompted = vi.fn();
+    engine.on('councilDecision',prompted);
+    engine.setCouncilAutomatic(player.id,true);
+    for (let i=0;i<6;i++) await engine.advanceMonth();
+    expect(engine.getPendingCouncilDecision(player.id)).toBeNull();
+    expect(engine.getCouncilHistory(player.id)[0].automatic).toBe(true);
+    expect(engine.getGameState()).toBe(GameState.RUNNING);
+    expect(prompted).not.toHaveBeenCalled();
+    expect(engine.getChronicle().filter(entry=>entry.message.includes('Automatisch entschieden'))).toHaveLength(1);
+    engine.pauseGame();
+    await engine.saveGame('automatic-events');
+    const restored = new GameEngine({enableWiki:false});
+    engines.push(restored);
+    await restored.loadGame('automatic-events');
+    expect(restored.isCouncilAutomatic(player.id)).toBe(true);
+    restored.setCouncilAutomatic(player.id,false);
+    for(let i=0;i<6;i++) await restored.advanceMonth();
+    expect(restored.getPendingCouncilDecision(player.id)).not.toBeNull();
+    expect(restored.getGameState()).toBe(GameState.PAUSED);
+    const outcome = restored.setCouncilAutomatic(player.id,true);
+    expect(outcome?.automatic).toBe(true);
+    expect(restored.getPendingCouncilDecision(player.id)).toBeNull();
+    expect(restored.getGameState()).toBe(GameState.PAUSED);
+  });
+
+  it('keeps automatic event preferences and decisions separate in hotseat', async () => {
+    const engine = new GameEngine({startingYear:1200,randomEvents:true,enableWiki:false});
+    engines.push(engine);
+    const first = engine.addPlayer({name:'Anna',kingdomName:'Westreich',gender:'other'});
+    const second = engine.addPlayer({name:'Otto',kingdomName:'Ostreich',gender:'other'});
+    await engine.startGame();
+    engine.setCouncilAutomatic(first.id,true);
+    expect(()=>engine.setCouncilAutomatic(second.id,true)).toThrow('Nicht am Zug');
+    for(let i=0;i<6;i++){await engine.endTurn();await engine.endTurn();}
+    expect(engine.getCouncilHistory(first.id)[0].automatic).toBe(true);
+    expect(engine.getPendingCouncilDecision(first.id)).toBeNull();
+    expect(engine.isCouncilAutomatic(second.id)).toBe(false);
+    expect(engine.getPendingCouncilDecision(second.id)).not.toBeNull();
+    expect(engine.getCouncilHistory(second.id)).toHaveLength(0);
+  });
+
   it('rejects premature modernization and preserves old-save-compatible progress', async (): Promise<void> => {
     const engine = await campaign();
     const player = engine.getPlayers()[0];
