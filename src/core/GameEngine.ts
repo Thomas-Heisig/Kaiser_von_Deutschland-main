@@ -74,7 +74,7 @@ import { epochForYear, milestonesArrivingInMonth, milestonesThroughDate } from '
 import { formatYear } from './HistoricalCalendar';
 import { buildHistoricalContext, HistoricalContext, historicalEpochFor } from './HistoricalContext';
 import { applyScienceDiscovery, researchImpact, researchProductionBonus } from './ScienceImpact';
-import { KingdomInfrastructure } from './Kingdom';
+import { KingdomInfrastructure, RECRUITMENT_COSTS } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
 import type { Citizen, CitizenNeeds } from './CitizenSystem';
 
@@ -109,6 +109,59 @@ export interface CampaignGoal {
 
 const formatResearch = (value: number): string =>
   new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(value);
+
+/** Upper bound on simultaneously running realm projects. Shared by preview and execution. */
+export const MAX_REALM_PROJECTS = 12;
+
+/** Resources a building bill can draw on, in display order. */
+export const BILL_RESOURCES = ['gold', 'wood', 'stone', 'iron'] as const;
+
+/** A bill for one building order. */
+export type BuildBill = Record<(typeof BILL_RESOURCES)[number], number>;
+
+/** Resources a recruitment bill can draw on, in display order. */
+export const RECRUIT_RESOURCES = ['gold', 'food', 'wood', 'iron'] as const;
+
+/** A bill for one recruitment order. */
+export type RecruitBill = Record<(typeof RECRUIT_RESOURCES)[number], number>;
+
+/** German labels for billable resources, used by preview and failure messages. */
+export const RESOURCE_LABELS: Record<(typeof RECRUIT_RESOURCES)[number] | 'stone', string> = {
+  gold: 'Gold', food: 'Nahrung', wood: 'Holz', stone: 'Stein', iron: 'Eisen'
+};
+
+/** Result of evaluating one planned building against the current rules. */
+export interface BuildPlan {
+  /** Resolved infrastructure key (aliases already mapped). */
+  key: keyof KingdomInfrastructure;
+  /** Exact resources charged when the build starts. */
+  bill: BuildBill;
+  /** Construction time in calendar months. */
+  months: number;
+  /** Human-readable reasons the build cannot start right now. */
+  blockers: string[];
+  /** Whether the build can start. */
+  canStart: boolean;
+}
+
+const formatResource = (value: number): string =>
+  new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(value);
+
+/** Per-recruit costs, re-exported from `Kingdom` so previews cannot drift from execution. */
+export const RECRUIT_COSTS: Record<'infantry' | 'archers' | 'cavalry', Partial<RecruitBill>> =
+  RECRUITMENT_COSTS;
+
+/** Result of evaluating one planned levy against the current rules. */
+export interface RecruitPlan {
+  /** Exact resources charged when the levy starts. */
+  bill: RecruitBill;
+  /** Training time in calendar months. */
+  months: number;
+  /** Human-readable reasons the levy cannot start right now. */
+  blockers: string[];
+  /** Whether the levy can start. */
+  canStart: boolean;
+}
 
 export enum GameState {
   LOBBY = 'LOBBY',
@@ -544,7 +597,7 @@ export class GameEngine {
       if (!researched.isResearched(project.requiredTechnology)) blockers.push('Erfordert Forschung: ' + project.requiredTechnology);
       if (completed.includes(project.id)) blockers.push('Bereits umgesetzt');
       if(this.realmProjects.busy(playerId,'modernization',project.id))blockers.push('Bereits im Bau');
-      if(this.realmProjects.list(playerId).length>=12)blockers.push('Zwölf Vorhaben laufen bereits');
+      if(this.realmProjects.list(playerId).length>=MAX_REALM_PROJECTS)blockers.push(`${MAX_REALM_PROJECTS} Vorhaben laufen bereits`);
       for (const resource of ['gold','wood','stone','iron'] as const)
         if (player.kingdom.resources[resource] < project.cost[resource]) blockers.push(resource + ' fehlt');
       return {project,completed:completed.includes(project.id),canStart:blockers.length===0,blockers,
@@ -1250,18 +1303,58 @@ export class GameEngine {
     this.emit('taxRateChanged', { playerId, taxRate: clampedRate });
   }
 
+  /**
+   * Evaluates a building order against the rules `buildForPlayer` will apply.
+   * The UI preview and the actual construction share this single source of truth,
+   * so a shown blocker always matches the reason a build would fail.
+   * @param playerId Player planning the building.
+   * @param type Building key.
+   * @returns Cost, concrete blockers and startability.
+   */
+  public getBuildPlan(playerId: string, type: string): BuildPlan {
+    const player = this.requirePlayer(playerId);
+    const key = this.resolveBuildingKey(type);
+    const cost = player.kingdom.getBuildingData(key);
+    if (!cost) throw new Error('Unbekanntes Gebäude: ' + type);
+    const bill: BuildBill = {
+      gold: cost.cost,
+      wood: cost.woodCost ?? 0,
+      stone: cost.stoneCost ?? 0,
+      iron: cost.ironCost ?? 0
+    };
+    const blockers: string[] = [];
+    if (this.realmProjects.list(playerId).length >= MAX_REALM_PROJECTS) {
+      blockers.push(`${MAX_REALM_PROJECTS} Vorhaben laufen bereits`);
+    }
+    for (const resource of BILL_RESOURCES) {
+      const missing = bill[resource] - player.kingdom.resources[resource];
+      if (missing > 0) blockers.push(`${formatResource(missing)} ${RESOURCE_LABELS[resource]} fehlt`);
+    }
+    return {
+      key,
+      bill,
+      months: constructionMonths(key, this.currentYear),
+      blockers,
+      canStart: blockers.length === 0
+    };
+  }
+
+  /** Maps legacy building aliases onto infrastructure keys. */
+  private resolveBuildingKey(type: string): keyof KingdomInfrastructure {
+    const aliases: Record<string, keyof KingdomInfrastructure> = {
+      market: 'markets', farm: 'farms', mill: 'workshops', mine: 'mines', workshop: 'workshops'
+    };
+    const key = aliases[type] ?? type as keyof KingdomInfrastructure;
+    if (!Object.hasOwn(BUILD_NAMES, key)) throw new Error('Unbekanntes Gebäude: ' + type);
+    return key;
+  }
+
   public async buildForPlayer(playerId:string,type:string):Promise<boolean> {
     const player=this.requirePlayer(playerId);
-    const aliases:Record<string,keyof KingdomInfrastructure>={market:'markets',farm:'farms',mill:'workshops',mine:'mines',workshop:'workshops'};
-    const key=aliases[type]??type as keyof KingdomInfrastructure;
-    if(!Object.hasOwn(BUILD_NAMES,key))throw Error('Unbekanntes Gebäude: '+type);
-    const cost=player.kingdom.getBuildingData(key);
-    if(!cost)throw Error('Unbekanntes Gebäude: '+type);
-    if(this.realmProjects.list(playerId).length>=12)return false;
-    const bill={gold:cost.cost,wood:cost.woodCost??0,stone:cost.stoneCost??0,iron:cost.ironCost??0};
-    for(const resource of ['gold','wood','stone','iron'] as const)if(player.kingdom.resources[resource]<bill[resource])return false;
-    for(const resource of ['gold','wood','stone','iron'] as const)player.kingdom.resources[resource]-=bill[resource];
-    this.addProject(playerId,'building',key,BUILD_NAMES[key],constructionMonths(key,this.currentYear),1,bill);
+    const plan=this.getBuildPlan(playerId,type);
+    if(!plan.canStart)return false;
+    for(const resource of BILL_RESOURCES)player.kingdom.resources[resource]-=plan.bill[resource];
+    this.addProject(playerId,'building',plan.key,BUILD_NAMES[plan.key],plan.months,1,plan.bill);
     this.markTutorialStep(playerId,'build');return true;
   }
 
@@ -1269,7 +1362,7 @@ export class GameEngine {
     const player = this.players.get(playerId);
     if (!player) throw new Error('Spieler nicht gefunden');
 
-    if(this.realmProjects.list(playerId).length>=12)return false;
+    if(this.realmProjects.list(playerId).length>=MAX_REALM_PROJECTS)return false;
     const before={...player.kingdom.resources},morale=player.kingdom.military.morale;
     const success = player.kingdom.recruitSoldiers(count, type);
     
@@ -1281,6 +1374,42 @@ export class GameEngine {
     }
 
     return success;
+  }
+
+  /**
+   * Evaluates a recruitment order against the rules `recruitForPlayer` will apply.
+   * Preview and execution share this rule, so the shown reason always matches the
+   * reason a recruitment would fail.
+   * @param playerId Player raising the levy.
+   * @param count Number of recruits.
+   * @param type Troop type.
+   * @returns Cost, concrete blockers and startability.
+   */
+  public getRecruitPlan(
+    playerId: string,
+    count: number,
+    type: 'infantry' | 'archers' | 'cavalry'
+  ): RecruitPlan {
+    const player = this.requirePlayer(playerId);
+    const costs = RECRUIT_COSTS[type];
+    const bill: RecruitBill = {
+      gold: (costs.gold ?? 0) * count,
+      food: (costs.food ?? 0) * count,
+      wood: (costs.wood ?? 0) * count,
+      iron: (costs.iron ?? 0) * count
+    };
+    const blockers: string[] = [];
+    if (this.realmProjects.list(playerId).length >= MAX_REALM_PROJECTS) {
+      blockers.push(`${MAX_REALM_PROJECTS} Vorhaben laufen bereits`);
+    }
+    if (player.kingdom.population.peasants < count) {
+      blockers.push(`${formatResource(count - player.kingdom.population.peasants)} Bauern fehlen als Rekruten`);
+    }
+    for (const resource of RECRUIT_RESOURCES) {
+      const missing = bill[resource] - player.kingdom.resources[resource];
+      if (missing > 0) blockers.push(`${formatResource(missing)} ${RESOURCE_LABELS[resource]} fehlt`);
+    }
+    return { bill, months: type === 'cavalry' ? 6 : 3, blockers, canStart: blockers.length === 0 };
   }
 
   // Event System
@@ -2478,7 +2607,7 @@ export class GameEngine {
     const rival=this.getRivals(playerId).find(r=>r.id===rivalId&&!r.subjugated);
     if(!rival)throw Error('Kein verfügbares Feldzugsziel.');
     if(this.realmProjects.busy(playerId,'campaign')||this.realmProjects.busy(playerId,'duel'))throw Error('Ein Feldzug ist bereits unterwegs.');
-    if(this.realmProjects.list(playerId).length>=12)throw Error('Zwölf Vorhaben laufen bereits.');
+    if(this.realmProjects.list(playerId).length>=MAX_REALM_PROJECTS)throw Error(`${MAX_REALM_PROJECTS} Vorhaben laufen bereits.`);
     const cost=CampaignWarfareSystem.campaignCost(player.kingdom);
     if(CampaignWarfareSystem.fieldSoldiers(player.kingdom)<20)throw Error('Mindestens 20 einsatzfähige Soldaten erforderlich.');
     if(player.kingdom.resources.gold<cost.gold||player.kingdom.resources.food<cost.food)throw Error('Nicht genügend Nachschub.');
@@ -2518,7 +2647,7 @@ export class GameEngine {
     const attacker=this.requirePlayer(attackerId),defender=this.requirePlayer(defenderId);
     if(attackerId===defenderId)throw Error('Ein Reich kann sich nicht selbst angreifen.');
     if(this.isHotseat()&&this.getActivePlayer().id!==attackerId)throw Error('Nicht am Zug.');
-    if(!this.getArmyOverview(attackerId).canCampaign||this.getProjects(attackerId).length>=12)throw Error('Ein Feldzug läuft bereits oder alle Vorhabenplätze sind belegt.');
+    if(!this.getArmyOverview(attackerId).canCampaign||this.getProjects(attackerId).length>=MAX_REALM_PROJECTS)throw Error('Ein Feldzug läuft bereits oder alle Vorhabenplätze sind belegt.');
     const cost=CampaignWarfareSystem.campaignCost(attacker.kingdom);
     if(CampaignWarfareSystem.fieldSoldiers(attacker.kingdom)<20||attacker.kingdom.resources.gold<cost.gold||attacker.kingdom.resources.food<cost.food)throw Error('Heer oder Nachschub fehlen.');
     attacker.kingdom.resources.gold-=cost.gold;attacker.kingdom.resources.food-=cost.food;

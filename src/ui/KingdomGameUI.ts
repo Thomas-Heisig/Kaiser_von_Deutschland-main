@@ -1995,23 +1995,19 @@ ${body}
         <div class="build-grid">${(Object.keys(STRUCTURES) as Array<keyof KingdomInfrastructure>).map(
           (type: keyof KingdomInfrastructure): string => {
             const info = {...STRUCTURES[type], name:earlyBuildingName(type, this.engine!.getCurrentYear(), STRUCTURES[type].name)};
-            const cost = kingdom.getBuildingData(type);
-            if (!cost) throw new Error(`Baukosten fehlen: ${type}`);
-            const missing = [
-              kingdom.resources.gold < cost.cost ? 'Gold' : '',
-              kingdom.resources.wood < (cost.woodCost ?? 0) ? 'Holz' : '',
-              kingdom.resources.stone < (cost.stoneCost ?? 0) ? 'Stein' : '',
-              kingdom.resources.iron < (cost.ironCost ?? 0) ? 'Eisen' : ''
-            ].filter(Boolean);
+            // One shared rule for preview and execution: the shown blocker is the
+            // exact reason the engine would refuse the build.
+            const plan = this.engine!.getBuildPlan(this.player!.id, type);
             return `<article class="build-card ${this.selected === type ? 'selected' : ''}">
               <div class="build-title"><span aria-hidden="true">${info.symbol}</span><h3>${info.name}</h3>
                 <small>${kingdom.infrastructure[type]} gebaut</small></div><p>${info.description}</p>
               ${type === 'workshops' ? `<p class="production-gain">+${kingdom.getWorkshopWoodGain()} Holz/Monat in dieser Jahreszeit, vor Forschungsboni. Organisiert Holzgewinnung und Verarbeitung; 17–28 zusätzlich pro Monat je nach Jahreszeit.</p>` : ''}
-              <div class="cost">${format(cost.cost)} Gold${cost.woodCost ? ` · ${format(cost.woodCost)} Holz` : ''}
-                ${cost.stoneCost ? ` · ${format(cost.stoneCost)} Stein` : ''}
-                ${cost.ironCost ? ` · ${format(cost.ironCost)} Eisen` : ''}</div>
-              <p class="muted">Bauzeit: ${this.engine!.getConstructionMonths(type)} Monate</p><button data-build="${type}" ${missing.length ? 'disabled' : ''} class="secondary"
-                aria-label="${info.name} bauen">${missing.length ? `Fehlt: ${missing.join(', ')}` : `${info.name} bauen`}</button>
+              <div class="cost">${format(plan.bill.gold)} Gold${plan.bill.wood ? ` · ${format(plan.bill.wood)} Holz` : ''}
+                ${plan.bill.stone ? ` · ${format(plan.bill.stone)} Stein` : ''}
+                ${plan.bill.iron ? ` · ${format(plan.bill.iron)} Eisen` : ''}</div>
+              <p class="muted">Bauzeit: ${plan.months} Monate${plan.canStart ? '' : ` · es fehlen ${plan.blockers.join(', ')}`}</p>
+              <button data-build="${type}" ${plan.canStart ? '' : 'disabled'} class="secondary"
+                aria-label="${info.name} bauen">${plan.canStart ? `${info.name} bauen` : `Nicht möglich: ${plan.blockers.join(', ')}`}</button>
             </article>`;
           }).join('')}</div><h3>Besondere Bauvorhaben deiner Zeit</h3>` + this.renderProjects('construction');
     } else if (this.view === 'economy') {
@@ -2094,15 +2090,25 @@ ${body}
         <p class="muted">${escape(doctrine.label)} · ${escape(doctrine.context)}</p>
         <p class="muted">Moral: ${format(kingdom.military.morale)} % · Ausbildung: ${
           format(kingdom.military.trainingLevel)} % · Ausrüstung: ${format(kingdom.military.equipmentQuality)} %</p>
-        <div class="build-grid">${([
-          ['infantry', doctrine.units.infantry, 50, '50 Gold · 10 Nahrung'],
-          ['archers', doctrine.units.archers, 75, '75 Gold · 15 Nahrung · 10 Holz'],
-          ['cavalry', doctrine.units.cavalry, 150, '150 Gold · 30 Nahrung · 5 Eisen']
-        ] as const).map(([type, name, gold, cost]) => `<article class="build-card">
+        <div class="build-grid">${(['infantry', 'archers', 'cavalry'] as const).map(type => {
+          const name = doctrine.units[type];
+          // Shared rule: the shown reason is the exact reason the engine refuses.
+          const plan = this.engine!.getRecruitPlan(this.player!.id, 10, type);
+          const perRecruit = (['gold', 'food', 'wood', 'iron'] as const)
+            .filter(resource => plan.bill[resource] > 0)
+            .map(resource => `${format(plan.bill[resource] / 10)} ${RESOURCE_NAMES[resource]}`)
+            .join(' · ');
+          return `<article class="build-card">
           <h3>${name}</h3><strong class="troop-count">${format(kingdom.military[type])}</strong>
-          <p>${cost} je Rekrut</p><button class="secondary" data-recruit="${type}"
-            ${kingdom.resources.gold < gold * 10 || kingdom.population.peasants < 10 ? 'disabled' : ''}>
-            10 ${name} rekrutieren</button></article>`).join('')}</div>
+          <p>${perRecruit} je Rekrut</p>
+          <p class="cost">10 Rekruten: ${(['gold', 'food', 'wood', 'iron'] as const)
+            .filter(resource => plan.bill[resource] > 0)
+            .map(resource => `${format(plan.bill[resource])} ${RESOURCE_NAMES[resource]}`).join(' · ')}</p>
+          ${plan.canStart ? '' : `<p class="muted">Es fehlen ${plan.blockers.join(', ')}</p>`}
+          <button class="secondary" data-recruit="${type}" ${plan.canStart ? '' : 'disabled'}
+            aria-label="10 ${name} rekrutieren">${plan.canStart
+              ? `10 ${name} rekrutieren` : `Nicht möglich: ${plan.blockers.join(', ')}`}</button></article>`;
+        }).join('')}</div>
         <p class="muted tip">Mit deiner Garnison ziehst du unter „Feldzüge“ gegen rivalisierende Nachbarn.
           Kasernen, Ausbildung und Ausrüstung erhöhen die Kampfkraft, Mauern und Burgen die Verteidigung.</p>
         <h3>Ausbildung und Modernisierung</h3><div class="build-grid">${this.engine.getGarrisonDevelopment(this.player.id).map(p=>`
@@ -2637,13 +2643,20 @@ ${body}
       button.addEventListener('click', (): void => {
         void this.run(async (): Promise<void> => {
           const type = button.dataset.build as keyof KingdomInfrastructure;
-          if (!await this.requireEngine().buildForPlayer(this.requirePlayer().id, type)) {
-            throw new Error('Nicht genügend Ressourcen für dieses Bauvorhaben.');
+          const engine = this.requireEngine();
+          const playerId = this.requirePlayer().id;
+          const plan = engine.getBuildPlan(playerId, type);
+          if (!await engine.buildForPlayer(playerId, type)) {
+            throw new Error(`Bau nicht möglich: ${plan.blockers.join(', ')}.`);
           }
           this.audio.playEffect('build');
           this.selected = type;
-          const name = earlyBuildingName(type, this.requireEngine().getCurrentYear(), STRUCTURES[type].name);
-          this.notify(`${name} beauftragt. Fertigstellung in ${this.requireEngine().getConstructionMonths(type)} Monaten; Kosten bezahlt.`);
+          const name = earlyBuildingName(type, engine.getCurrentYear(), STRUCTURES[type].name);
+          const paid = (['gold', 'wood', 'stone', 'iron'] as const)
+            .filter(resource => plan.bill[resource] > 0)
+            .map(resource => `${format(plan.bill[resource])} ${RESOURCE_NAMES[resource]}`)
+            .join(' · ');
+          this.notify(`${name} beauftragt. Bezahlt: ${paid}. Fertigstellung in ${plan.months} Monaten.`);
         });
       });
     });
@@ -2651,11 +2664,18 @@ ${body}
       button.addEventListener('click', (): void => {
         void this.run((): void => {
           const type = button.dataset.recruit as 'infantry' | 'archers' | 'cavalry';
-          if (!this.requireEngine().recruitForPlayer(this.requirePlayer().id, 10, type)) {
-            throw new Error('Nicht genügend Vorräte oder verfügbare Rekruten.');
+          const engine = this.requireEngine();
+          const playerId = this.requirePlayer().id;
+          const plan = engine.getRecruitPlan(playerId, 10, type);
+          if (!engine.recruitForPlayer(playerId, 10, type)) {
+            throw new Error(`Rekrutierung nicht möglich: ${plan.blockers.join(', ')}.`);
           }
           this.audio.playEffect('success');
-          this.notify('10 Rekruten beginnen ihre Ausbildung. Einsatzbereit nach 3 Monaten, Reiterei nach 6 Monaten.');
+          const paid = (['gold', 'food', 'wood', 'iron'] as const)
+            .filter(resource => plan.bill[resource] > 0)
+            .map(resource => `${format(plan.bill[resource])} ${RESOURCE_NAMES[resource]}`)
+            .join(' · ');
+          this.notify(`10 Rekruten beginnen ihre Ausbildung. Bezahlt: ${paid}. Einsatzbereit nach ${plan.months} Monaten.`);
         });
       });
     });

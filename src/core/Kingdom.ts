@@ -119,6 +119,13 @@ export interface MonthlyBalance {
   net: ProductionRates;
 }
 
+/** Per-recruit costs. Single source of truth for recruitment and its UI preview. */
+export const RECRUITMENT_COSTS = {
+  infantry: { gold: 50, food: 10 },
+  cavalry: { gold: 150, food: 30, iron: 5 },
+  archers: { gold: 75, food: 15, wood: 10 }
+} as const;
+
 export class Kingdom {
   public id: string;
   public name: string;
@@ -441,13 +448,7 @@ export class Kingdom {
       throw new RangeError('Die Rekrutenzahl muss eine positive ganze Zahl sein.');
     }
     if (count > this.population.peasants) return false;
-    const recruitmentCosts = {
-      infantry: { gold: 50, food: 10 },
-      cavalry: { gold: 150, food: 30, iron: 5 },
-      archers: { gold: 75, food: 15, wood: 10 }
-    };
-
-    const cost = recruitmentCosts[type];
+    const cost = RECRUITMENT_COSTS[type];
     const totalGoldCost = cost.gold * count;
     const totalFoodCost = cost.food * count;
     const totalIronCost = ('iron' in cost ? cost.iron * count : 0);
