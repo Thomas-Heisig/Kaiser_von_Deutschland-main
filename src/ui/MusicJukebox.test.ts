@@ -55,7 +55,7 @@ describe('Official soundtrack assets', () => {
   });
   it('provides a generic placeholder cover that is not borrowed from a track', () => {
     expect(GENERIC_COVER.startsWith('data:image/svg+xml')).toBe(true);
-    expect(GENERIC_COVER).toContain('Kein Cover');
+    expect(decodeURIComponent(GENERIC_COVER)).toContain('Kein Cover');
     for (const track of BUNDLED_TRACKS) expect(GENERIC_COVER).not.toContain(track.id);
   });
   it('resolves every catalogued cover and audio file on disk', async () => {
