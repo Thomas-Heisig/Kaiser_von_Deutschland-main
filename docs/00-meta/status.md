@@ -9,6 +9,7 @@
 - Ratsdelegation und historisch begrenzte Bürgeraufträge; reale Geburten, einfache familiäre Schwangerschaftsbedingungen, historische Namenslisten. Langzeitdemografie nicht validiert.
 - **Echte Niederlagebedingungen** (Bankrott, Hungersnot, Anarchie) als monatliche Prüfung mit Erholungsrücksetzung und dauerhafter Festhaltung; Untergang pausiert das Spiel, schreibt die Chronik und öffnet die Niederlageseite. 12 Unit-Tests und 7 Engine-Integrationstests; Save/Load-Migration und Fehlalarmfreiheit belegt.
 - **Interaktive Tutorial-Kampagne** (Bauen → Handeln → Forschen → Reichsrat → Speichern) mit Fortschrittskarte, Navigation, Ressourcen-Hilfe, Überspringen und Save/Load-Persistenz; 11 Unit-Tests und 9 Engine-Integrationstests.
+- **Automatisierter End-to-End-Kampagnenabschluss**: vollständiger Lauf bis Sieg mit Zufallsereignissen und Zwischen-Save/Load, vollständiger Niederlage-Lauf mit Save/Load, Ausschluss „Niederlage ≠ Sieg", 10-Jahres-Balancing-Protokoll und 5-Jahres-Digitallauf; sechs Systemkopplungen über konkrete Zustandsänderungen nachgewiesen (12 Tests).
 - CI, Unit-Tests, Produktionsbuild und Chromium-Smoke bestanden für `main`.
 
 ## Wichtige Grenzen

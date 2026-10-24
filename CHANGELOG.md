@@ -6,6 +6,7 @@
 
 ### Added
 
+- **Automatisierter End-to-End-Kampagnenabschluss** (`src/core/CampaignEndToEnd.test.ts`): vollständiger Lauf von Spielstart über Bauen, Handel, Forschung, Reichsrat, Monatswechsel und Zwischen-Save/Load bis zum Sieg (alle drei Kapitel) mit aktivierten Zufallsereignissen; vollständiger Niederlage-Lauf inklusive Save/Load und dauerhafter Niederlage; Ausschluss „Niederlage ≠ Sieg im selben Monat"; 10-Jahres-Balancing-Protokoll und 5-Jahres-Digitallauf. Sechs Systemkopplungen (Rat, Handel, Forschung, Kultur, Diplomatie, Rivalen) über konkrete Zustandsänderungen nachgewiesen.
 - **Interaktive Tutorial-Kampagne** (Bauen → Handeln → Forschen → Reichsrat → Speichern): fünf verbindliche Schritte an den echten Engine-Aktionen, Fortschrittskarte mit Navigation und Ressourcen-Hilfe, Startguthaben, Überspringen und Save/Load-Persistenz; 11 Unit-Tests und 9 Engine-Integrationstests.
 - **Echte Niederlagebedingungen** (Bankrott, Hungersnot, Anarchie) über das neue `CampaignDefeatSystem`: monatliche Prüfung mit aufeinanderfolgenden Monaten, Erholungsrücksetzung und dauerhafter Festhaltung; Untergang pausiert das Spiel, schreibt die Chronik und öffnet die Vollbild-Niederlageseite. Schwellen liegen über Minimum-Werten gesunder Läufe und sind konfigurierbar; Save/Load-Migration und Fehlalarmfreiheit automatisiert geprüft.
 - P1-Integrationstest der Industrie-Kampagne mit Bauen, Forschung, drei Kapiteln, Save/Load und Sieg sowie 60-Monats-Wirtschaftsstabilität.

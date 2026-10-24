@@ -18,9 +18,9 @@ Die Standardkampagne hatte bisher keine echten Niederlagebedingungen; die Nieder
 
 Die neue interaktive Tutorial-Kampagne führt neue Herrschaften über die fünf Kernschritte **Bauen → Handeln → Forschen → Reichsrat → Speichern** durch die echte Spielschleife. Die Schritte sind strikt geordnet, werden an den tatsächlichen Engine-Aktionen (Gebäudebau, Markthandel, Forschungsstart, Ratsentscheidung, manuelles Speichern) erkannt und fortlaufend in einer eigenen Karte in der Seitenleiste angezeigt – mit Fortschrittsbalken, Navigation zum passenden Bereich und kontextsensitiver Hilfe bei fehlenden Ressourcen. Für den Rats-Schritt stellt der Rat eine feste, bedingungslose Angelegenheit („Feuer im Dorf") zur Verfügung. Das Tutorial ist im Startmenü aktivierbar, gibt Startguthaben für den ersten Schritt, ist überspringbar und wird im Spielstand persistiert (Altstände ohne Tutorial-Daten bleiben ladbar). 11 Unit-Tests und 9 Engine-Integrationstests sichern Reihenfolge, Events, Save/Load und Überspringen.
 
-## P1-Testabdeckung (17.10.2026)
+## P1-Testabdeckung (24.10.2026)
 
-Eine Industriekampagne wird automatisiert mit echten Bauten, Forschung, Save/Load und Sieg getestet. Ein zusätzlicher 60-Monats-Lauf sichert endliche Werte und zentrale Grenzen. Andere Kampagnen, echte Niederlagebedingungen, freie Wirtschaftsbalance und Lasttests bleiben offen.
+Ein vollständiger Kampagnendurchlauf ist jetzt automatisiert: Spielstart → Bauen → Handel → Forschung → Reichsrat → Monatswechsel → Speichern/Laden → Sieg (alle drei Kapitel) mit aktivierten Zufallsereignissen und deterministischem RNG. Ergänzt wurden ein vollständiger Niederlage-Lauf (Bankrott) inklusive Save/Load und Sandbox-Fortsetzung, ein Ausschlusstest „Niederlage ≠ Sieg im selben Monat", ein 10-Jahres-Balancing-Lauf mit Jahresprotokoll und ein 5-Jahres-Lauf der Digital-Kampagne. Sechs Systemkopplungen (Rat, Handel, Forschung, Kultur, Diplomatie, Rivalen) sind über konkrete Zustandsänderungen nachgewiesen. Offen: gezielte Grenzwertverbesserung anhand der Protokolle sowie die manuelle Endgeräteabnahme von Sieg-/Niederlageseite.
 
 ## Gameplay-P1-Befunde (17.10.2026)
 
@@ -40,8 +40,8 @@ Vollflächige Siedlungskarte unter transparenten Panels, Kartenfilter, Bezirksau
 
 ## Gameplay-Freigabereihenfolge (verbindlich)
 
-1. **Kampagnenabschluss als End-to-End-Ablauf:** Start, Bau, Handel, Forschung, Reichsrat, Monatswechsel, Save/Load, Sieg und Niederlage.
-2. **Langzeit-Balancing:** viele Spieljahre und reale Wechselwirkungen messen, statt nur Funktionen zu zählen.
+1. **Kampagnenabschluss als End-to-End-Ablauf:** Start, Bau, Handel, Forschung, Reichsrat, Monatswechsel, Save/Load, Sieg und Niederlage — **automatisiert abgeschlossen** (`CampaignEndToEnd.test.ts`); offen ist nur die manuelle Abnahme der Schlusswertungs-Oberfläche.
+2. **Langzeit-Balancing:** Jahresprotokolle über 10 Jahre liegen vor; die gezielte Grenzwertverbesserung anhand dieser Daten steht aus.
 3. **Systemintegration:** Forschung/Handel/Kultur/Diplomatie/Rivalen als wechselseitige strategische Entscheidungen.
 4. **Tutorial, reaktive Rivalen und dauerhafte Chronik:** Chronikspeicherung und die interaktive Tutorial-Kampagne sind implementiert; E2E und reaktive Rivalen stehen aus.
 5. **Qualität:** Mobile/Barrierefreiheit, Hotseat und große Bevölkerungen. Erst danach neue große Legacy-Systeme erweitern.
