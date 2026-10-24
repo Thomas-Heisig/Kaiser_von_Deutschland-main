@@ -21,7 +21,7 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
+    "@types/node": "^26.6.5",
     "@types/sql.js": "^1.4.9",
     "typescript": "^5.3.3",
     "vite": "^7.3.7",
