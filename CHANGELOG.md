@@ -23,6 +23,9 @@
 - **Musik als moderne Komposition ausgewiesen.** Alle 20 Titel tragen den Vermerk `authenticity: "modern"`; die Jukebox zeigt „Moderne Komposition für das Spiel. Kein überliefertes historisches Musikstück und keine rekonstruierte Aufführungspraxis." Ein antiker oder vorzeitlicher Titelname bedeutet damit keine überlieferte Musik.
 - **Kontrollierter Cover-Ersatz:** Fehlt eine Coverdatei, erscheint ein generisch gestaltetes Ersatzbild („Kein Cover") statt einer leeren Fläche oder eines fremden Motivs; endlos wiederholte Ladeversuche sind ausgeschlossen.
 
+- **Drei Mittelalter-Titel für 843–1199** (`Imperial Dawn`, `Echowald`, `Ewiger Nebel`): schließt die zuvor offene Lücke zwischen Antike und Hochmittelalter. Die drei Stücke bilden gemeinsam die Epochenplaylist für 843–1199; die Antike endet nun bei 842, ab 1200 bleibt das vorhandene Leitmotiv aktiv. Startthema (Schleier der Vorzeit) und alle übrigen Epochen unverändert. Katalog jetzt 23 Titel. Cover 1024 × 1024 WebP, neu gestaltet; MP3s unverändert aus den vorliegenden Originalen übernommen. Offline-Dateiliste und Coverzählung im Browser-Smoke nachgezogen. [Dateizuordnung](docs/05-technical-architecture/MEDIEVAL_SOUNDTRACK.md).
+- **Korrigierte Dateizuordnung:** Die beiden mystischen Originaldateien lagen zwischenzeitlich beide unter einem „Echowald"-Namen. Die Zuordnung wurde per SHA-256 gegen den Git-Stand geprüft und auf die im Referenzdokument festgelegte Reihenfolge korrigiert. Die akustische Zuordnung bleibt eine dokumentierte Annahme.
+
 ### Added
 
 - Fünf neue Vorzeit-Aufnahmen mit umbenannten Dateien, ID3-Titeln, eingebetteten Covern und neuer Galerie; Ancient Veil als instrumentales Startthema. Epochen-Playlists wechseln passende Titel ohne Neustart bei Monatswechsel.

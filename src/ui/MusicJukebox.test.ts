@@ -7,7 +7,7 @@ describe('Official soundtrack assets', () => {
   afterEach(() => vi.unstubAllGlobals());
   it('contains all 23 uniquely named recordings with covers', () => {
     expect(BUNDLED_TRACKS).toHaveLength(23);
-    expect(new Set(BUNDLED_TRACKS.map(track => track.url)).size).toBe(20);
+    expect(new Set(BUNDLED_TRACKS.map(track => track.url)).size).toBe(23);
     for (const track of BUNDLED_TRACKS) {
       expect(track.url).toMatch(/^\/music\/[a-z0-9-]+\.mp3$/);
       expect(track.coverUrl).toMatch(/^\/covers\/[a-z0-9-]+\.webp$/);
@@ -28,7 +28,7 @@ describe('Official soundtrack assets', () => {
     const eras: Array<[number, string]> = [
       [-1999, 'schleier-der-vorzeit'], [-500, 'schleier-der-vorzeit'],
       [-499, 'anbeginn-der-zeit'], [0, 'anbeginn-der-zeit'], [500, 'anbeginn-der-zeit'],
-      [843, 'anbeginn-der-zeit'], [1199, 'anbeginn-der-zeit'],
+      [843, 'imperial-dawn'], [1199, 'imperial-dawn'],
       [1200, 'leitmotiv-1200'], [1299, 'leitmotiv-1200'], [1300, 'stauferkrone-1300'],
       [1400, 'leitmotiv-1400'], [1500, 'pavane-1500'], [1600, 'fanfare-1600'],
       [1750, 'ouvertuere-1750'], [1820, 'romantik-1820'], [1890, 'eiserne-kronen-1890'],
@@ -37,6 +37,28 @@ describe('Official soundtrack assets', () => {
     for (const [year, expected] of eras) {
       expect(trackForYear(BUNDLED_TRACKS, year)?.id, `year ${year}`).toBe(expected);
     }
+  });
+  it('plays the three medieval recordings only between 843 and 1199', () => {
+    const medieval = ['imperial-dawn', 'echowald', 'ewiger-nebel'];
+    for (const id of medieval) {
+      const track = BUNDLED_TRACKS.find(t => t.id === id);
+      expect(track, id).toBeDefined();
+      expect(track!.year).toBe(843);
+      expect(track!.endYear).toBe(1199);
+    }
+    // The three form the era playlist for exactly 843–1199.
+    for (const year of [843, 900, 1000, 1100, 1199]) {
+      const pool = tracksForYear(BUNDLED_TRACKS, year).map(t => t.id);
+      expect(pool.sort()).toEqual([...medieval].sort());
+    }
+    // Antiquity ends at 842 and the 1200 theme is untouched.
+    expect(trackForYear(BUNDLED_TRACKS, 842)?.id).toBe('anbeginn-der-zeit');
+    expect(trackForYear(BUNDLED_TRACKS, 1200)?.id).toBe('leitmotiv-1200');
+  });
+  it('keeps the prehistory opening theme unchanged', () => {
+    expect(MAIN_THEME_ID).toBe('schleier-der-vorzeit');
+    expect(tracksForYear(BUNDLED_TRACKS, -1999)).toHaveLength(5);
+    expect(trackForYear(BUNDLED_TRACKS, -1999)?.id).toBe('schleier-der-vorzeit');
   });
   it('uses the earliest era before the earliest track instead of a later one', () => {
     // Before the prehistoric range, prehistory must not fall back to antiquity.
