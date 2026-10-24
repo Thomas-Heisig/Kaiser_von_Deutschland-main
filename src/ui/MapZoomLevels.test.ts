@@ -72,9 +72,17 @@ describe('Button-Schritte', (): void => {
 });
 
 describe('Ebenenwechsel mit Hysterese', (): void => {
+  it('keeps the desk stable around its boundary and allows direct village jumps', () => {
+    expect(levelForSlider(0, 'dorf')).toBe('schreibtisch');
+    expect(levelForSlider(11, 'zentraleuropa')).toBe('schreibtisch');
+    expect(levelForSlider(12, 'zentraleuropa')).toBe('zentraleuropa');
+    expect(levelForSlider(17, 'schreibtisch')).toBe('schreibtisch');
+    expect(levelForSlider(18, 'schreibtisch')).toBe('zentraleuropa');
+    expect(levelForSlider(40, 'schreibtisch')).toBe('dorf');
+  });
   it('switches to Zentraleuropa below the lower threshold', (): void => {
     expect(levelForSlider(LEVEL_THRESHOLDS.toRegion - 1, 'dorf')).toBe('zentraleuropa');
-    expect(levelForSlider(SLIDER_MIN, 'dorf')).toBe('zentraleuropa');
+    expect(levelForSlider(SLIDER_MIN, 'dorf')).toBe('schreibtisch');
   });
 
   it('stays on Dorf at or above the lower threshold', (): void => {

@@ -659,8 +659,10 @@ export class KingdomMap {
     if (this.destroyed) return;
     if (!isZoomLevelsEnabled()) level = 'dorf';
     const changed = this.zoomLevel !== level;
+    if (changed) this.offset = { x: 0, y: 0 };
     this.zoomLevel = level;
     const village = level === 'dorf';
+    this.world.visible = level !== 'schreibtisch';
     this.settlements.visible = village && this.mapScope === 'home';
     // Legacy thumbnail scatter was retired in favor of the connected landscape.
     // Scope/zoom changes must not resurrect those opaque preview tiles.
@@ -669,9 +671,9 @@ export class KingdomMap {
     this.animation.visible = village && this.mapScope === 'home' && this.motionEnabled;
     this.atmosphere.visible = village;
     if (this.actionVisual) this.actionVisual.visible = village;
-    this.regionLayer.visible = !village;
-    this.reliefLayer.visible = !village;
-    if (!village) {
+    this.regionLayer.visible = level === 'zentraleuropa';
+    this.reliefLayer.visible = level === 'zentraleuropa';
+    if (level === 'zentraleuropa') {
       if (changed || this.regionLayer.children.length === 0) this.drawRegionLayer();
       void this.loadReliefTexture();
     }
@@ -691,7 +693,7 @@ export class KingdomMap {
     this.reliefLoading = true;
     try {
       const base = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? '/';
-      const url = `${base}maps/relief-central-europe.webp`;
+      const url = `${base}maps/landscape-central-europe.webp`;
       const texture = await Assets.load<Texture>(url);
       if (this.destroyed) return;
       this.reliefTexture = texture;
@@ -728,7 +730,7 @@ export class KingdomMap {
       sprite.width = width;
       sprite.height = height;
       // Zurückhaltend abdunkeln, damit Namen lesbar bleiben.
-      sprite.tint = 0xa8b8b0;
+      sprite.tint = 0xffffff;
       this.reliefLayer.addChild(sprite);
     } else {
       const backdrop = new Graphics();
@@ -749,6 +751,7 @@ export class KingdomMap {
       return;
     }
 
+    const labelBoxes: { x: number; y: number; width: number; height: number }[] = [];
     for (const label of result.labels) {
       const x = (label.xPercent / 100) * width;
       const y = (label.yPercent / 100) * height;
@@ -766,7 +769,13 @@ export class KingdomMap {
         }
       });
       text.anchor.set(0.5);
-      text.position.set(0, -20);
+      let labelY = -20;
+      while (labelBoxes.some(box => Math.abs(box.x - x) < (box.width + text.width) / 2 + 6 &&
+        Math.abs(box.y - (y + labelY)) < (box.height + text.height) / 2 + 4)) labelY -= 25;
+      if (labelY !== -20) marker.addChild(new Graphics().moveTo(0, -8).lineTo(0, labelY + 10)
+        .stroke({ color: 0x334e42, width: 1, alpha: 0.7 }));
+      text.position.set(0, labelY);
+      labelBoxes.push({ x, y: y + labelY, width: text.width, height: text.height });
       marker.addChild(text);
       this.regionLayer.addChild(marker);
     }
@@ -856,12 +865,12 @@ export class KingdomMap {
       // würde die Reliefkarte klein und versetzt darstellen.
       const mapWidth = 960;
       const mapHeight = 660;
-      const fitScale = Math.min(this.app.screen.width / mapWidth, this.app.screen.height / mapHeight);
-      const scale = fitScale * (0.85 + this.zoom * 0.35);
+      const fitScale = Math.min((this.app.screen.width - 24) / mapWidth, (this.app.screen.height - 76) / mapHeight);
+      const scale = fitScale * (0.95 + (zoomToSlider(this.zoom) - 28) * 0.006);
       this.world.scale.set(scale);
       this.world.position.set(
         (this.app.screen.width - mapWidth * scale) / 2 + this.offset.x,
-        (this.app.screen.height - mapHeight * scale) / 2 + this.offset.y
+        (this.app.screen.height - mapHeight * scale) / 2 + 25 + this.offset.y
       );
       this.app.renderer.render(this.app.stage);
       return;

@@ -13,7 +13,7 @@ function mapFixture() {
     observer: { disconnect: vi.fn() }
   });
   for (const name of ['settlements', 'retroScenery', 'neighbors', 'animation',
-    'atmosphere', 'regionLayer', 'reliefLayer']) {
+    'world', 'atmosphere', 'regionLayer', 'reliefLayer']) {
     map[name] = { visible: true, children: [{}] };
   }
   return map;
@@ -22,9 +22,21 @@ function mapFixture() {
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
 describe('map lifecycle and view transitions', () => {
-  it('restores playable districts after region → world → home', () => {
+  it('hides the renderer on the desk and restores a centered map without hidden village hits', () => {
     const map = mapFixture();
     map.setZoomSlider(0);
+    expect(map.world.visible).toBe(false);
+    expect(map.settlements.visible).toBe(false);
+    expect(map.reliefLayer.visible).toBe(false);
+    map.setZoomSlider(28);
+    expect(map.world.visible).toBe(true);
+    expect(map.reliefLayer.visible).toBe(true);
+    expect(map.settlements.visible).toBe(false);
+    expect(map.offset).toEqual({ x: 0, y: 0 });
+  });
+  it('restores playable districts after region → world → home', () => {
+    const map = mapFixture();
+    map.setZoomSlider(28);
     expect(map.settlements.visible).toBe(false);
     expect(map.neighbors.visible).toBe(false);
     expect(map.animation.visible).toBe(false);

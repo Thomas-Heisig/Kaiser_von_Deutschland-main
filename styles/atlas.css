@@ -1,0 +1,292 @@
+/* ATLAS — a single, viewport-bound workspace across historical periods. */
+:root { --surface:#252c28; --surface-2:#343c32; --ink:#efe7d0; --muted:#b6b29e; --gold:#d1b679; --line:#8b7b594d; --paper:#e9d9ae; --desk:#442c21; --desk-dark:#1c1713; --heading:Georgia,'Times New Roman',serif; }
+:root[data-era="early-modern"] { --desk:#382923; --desk-dark:#161818; --surface:#242e30; --surface-2:#344443; --gold:#d3b179; --paper:#e9d9b3; }
+:root[data-era="industrial"] { --desk:#342d29; --desk-dark:#141b1e; --surface:#263239; --surface-2:#35454c; --gold:#c8ac7c; --paper:#e3dece; --heading:Georgia,serif; }
+:root[data-era="modern"] { --desk:#48554e; --desk-dark:#1d2c2d; --surface:#263d3d; --surface-2:#3b5250; --gold:#d5c8a2; --paper:#eeeadb; --heading:'Segoe UI',sans-serif; }
+:root[data-era="digital"] { --desk:#293d50; --desk-dark:#111f2d; --surface:#192c3d; --surface-2:#294456; --gold:#9dccd8; --paper:#e2ebeb; --heading:'Segoe UI',sans-serif; }
+html,body,#app { width:100%; height:100%; min-height:0; overflow:hidden; }
+body { background:var(--desk-dark); color:var(--ink); }
+#app { height:var(--app-height,100dvh); }
+[hidden] { display:none!important; }
+h1,h2,h3 { font-family:var(--heading); }
+button,select,input { border-color:var(--line); color:var(--ink); background:var(--surface-2); border-radius:4px; }
+button:hover:not(:disabled) { background:var(--surface-2); border-color:var(--gold); filter:brightness(1.12); }
+button.primary { background:var(--gold); color:var(--desk-dark); }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+.kingdom-app { width:100%; height:100%!important; min-height:0!important; max-width:none!important; margin:0!important; padding:0!important; display:grid!important; grid-template-rows:58px 46px minmax(0,1fr) 23px!important; overflow:hidden!important; background:var(--desk-dark)!important; }
+.kingdom-app .topbar { grid-row:1; min-height:0; padding:8px 18px; gap:16px; display:flex; border-bottom:1px solid var(--line); background:var(--surface); }
+.kingdom-app .brand { flex:none; }
+.kingdom-app .brand strong { font-size:1rem; letter-spacing:.18em; color:var(--gold); }
+.kingdom-app .ruler-title { flex:1; min-width:0; }
+.kingdom-app .header-actions { display:flex; gap:5px; flex-wrap:nowrap; overflow:visible; width:auto; }
+.kingdom-app .header-actions button { min-height:32px; padding:5px 9px; font-size:.7rem; white-space:nowrap; }
+.kingdom-app .resource-bar { grid-row:2; padding:4px 20px; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; background:var(--surface); border-bottom:1px solid var(--line); }
+.kingdom-app .resource { padding:0 10px; min-height:0; border:0; border-right:1px solid var(--line); background:transparent; display:flex; gap:8px; align-items:center; }
+.kingdom-app .resource strong { font-size:.95rem; }
+.kingdom-app .resource span { font-size:.65rem; }
+.kingdom-app .resource small { font-size:.62rem; margin-left:auto; }
+.kingdom-app .game-layout { grid-row:3; display:grid!important; grid-template-columns:164px minmax(0,1fr)!important; grid-template-rows:minmax(0,1fr) 48px!important; gap:0!important; height:100%!important; min-height:0!important; overflow:hidden; padding:0!important; }
+.kingdom-app .game-layout>.sidebar { grid-column:1; grid-row:1 / 3; position:relative!important; width:auto!important; height:100%; padding:12px 8px; display:flex!important; flex-direction:column; gap:8px; background:var(--surface); border:0; border-right:1px solid var(--line); overflow:hidden; }
+.kingdom-app .sidebar .nav-label { margin:0 6px; font-size:.55rem; letter-spacing:.17em; }
+.kingdom-app .sidebar nav { flex:1; min-height:0; display:grid!important; grid-template-rows:repeat(18,minmax(0,1fr)); gap:2px; overflow:hidden; }
+.kingdom-app .sidebar nav button { display:flex; align-items:center; gap:8px; min-height:0; height:auto; padding:2px 8px; font-size:clamp(.58rem,1.3vh,.76rem); white-space:nowrap; text-align:left; border:1px solid transparent; background:transparent; border-radius:3px; }
+.kingdom-app .sidebar nav button span { color:var(--gold); width:18px; }
+.kingdom-app .sidebar nav button.active { background:var(--surface-2); border-color:var(--line); }
+.kingdom-app .sidebar .realm-health,.kingdom-app .sidebar-footer { display:none!important; }
+.compact-navigation { display:none; }
+.kingdom-app .game-layout>.map-card { grid-column:2; grid-row:1; position:relative!important; inset:auto!important; width:100%; height:100%; min-height:0!important; display:grid; grid-template-rows:minmax(0,1fr) 84px; border:0; border-radius:0; overflow:hidden; background:var(--desk-dark); }
+.kingdom-app .game-layout>.map-card .map-host,.kingdom-app[data-view="overview"] .game-layout>.map-card .map-host { position:relative!important; inset:auto!important; height:100%!important; min-height:0!important; width:100%; grid-row:1; }
+.kingdom-app .game-layout>.map-card .map-hud { grid-row:2; position:relative!important; inset:auto!important; height:84px; padding:6px 14px; display:grid; grid-template-columns:1fr; grid-template-rows:32px 32px; gap:4px; background:var(--surface)!important; border-top:1px solid var(--line); overflow:hidden; }
+.kingdom-app .game-layout>.map-card .map-hud-top,.kingdom-app .game-layout>.map-card .map-hud-bottom { display:flex; flex-wrap:nowrap; flex-direction:row; align-items:center; padding:0; gap:12px; justify-content:space-between; }
+.kingdom-app .game-layout>.map-card .map-heading { display:none!important; }
+.kingdom-app .game-layout>.map-card .settlement-controls { display:flex; flex-wrap:nowrap; width:100%; padding:0; gap:12px; }
+.kingdom-app .game-layout>.map-card .settlement-controls label { display:flex; align-items:center; gap:6px; min-width:0; flex:1; font-size:.6rem; white-space:nowrap; }
+.kingdom-app .game-layout>.map-card .settlement-controls select { height:28px; min-height:28px; padding:3px 6px; font-size:.65rem; background:var(--surface-2); color:var(--ink); border:1px solid var(--line); }
+.kingdom-app .game-layout>.map-card .settlement-details { display:flex; align-items:center; flex:1; min-height:0; max-width:50%; gap:8px; padding:0; background:transparent; border:0; font-size:.62rem; box-shadow:none; }
+.kingdom-app .settlement-details button { min-height:27px; padding:3px 8px; margin:0; width:auto; font-size:.6rem; }
+.kingdom-app .game-layout>.map-card .map-tools { position:static; display:flex; flex-wrap:nowrap; align-items:center; gap:4px; padding:0; background:transparent; }
+.kingdom-app .game-layout>.map-card .map-tools button { min-height:28px; min-width:28px; padding:3px 7px; font-size:.65rem; background:var(--surface-2); border:1px solid var(--line); }
+.zoom-slider { min-width:140px; gap:0; }
+.zoom-slider-label { font-size:.55rem; letter-spacing:0; }
+.zoom-slider input[type=range] { min-height:14px; height:14px; padding:0; }
+.zoom-hint { display:none!important; }
+.atlas-navigation { position:absolute; left:50%; top:14px; transform:translateX(-50%); z-index:4; display:flex; gap:3px; padding:4px; border:1px solid var(--line); border-radius:7px; background:var(--surface); box-shadow:0 6px 24px #0004; }
+.atlas-navigation button { min-height:30px; padding:5px 12px; font-size:.65rem; white-space:nowrap; background:transparent; border:0; }
+.atlas-navigation button[aria-pressed=true] { background:var(--gold); color:var(--desk-dark); }
+.kingdom-app .game-layout>.workspace { grid-column:2; grid-row:2; padding:0!important; min-height:0; height:48px; position:relative; overflow:visible; background:var(--surface); }
+.kingdom-app .workspace>.content-panel,.kingdom-app .game-layout>.council { display:none!important; }
+.kingdom-app .timebar { display:flex!important; align-items:center; justify-content:space-between; width:100%; height:48px; min-height:0; padding:4px 16px; margin:0; background:var(--surface); border:0; border-top:1px solid var(--line); border-radius:0; }
+.kingdom-app .timebar .eyebrow { display:none; }
+.kingdom-app .timebar h1 { font-size:1.1rem; margin:0; }
+.kingdom-app .time-actions { display:flex; align-items:center; flex-wrap:nowrap; gap:5px; }
+.kingdom-app .time-actions button,.kingdom-app .time-actions select { min-height:29px; height:29px; padding:4px 8px; font-size:.7rem; }
+.kingdom-app #time-status { display:none; }
+.kingdom-app .game-footer { grid-row:4; height:23px; min-height:0; padding:3px 12px; display:flex; justify-content:space-between; gap:8px; font-size:.53rem; background:var(--desk-dark); }
+.kingdom-app .game-footer button { min-height:0; padding:0; font-size:inherit; }
+.kingdom-app #footer-keys { display:none; }
+.kingdom-app #notice:empty { display:none; }
+.kingdom-app #notice:not(:empty) { position:absolute; right:12px; bottom:55px; width:min(380px,90%); padding:8px 12px; background:var(--surface); border:1px solid var(--line); font-size:.68rem; z-index:9; box-shadow:0 5px 20px #0005; }
+.kingdom-app #game-action-banner { position:absolute; bottom:100px; left:25%; z-index:10; max-width:65%; }
+.kingdom-app #council-prompt:not([hidden]) { position:absolute; bottom:55px; left:12px; width:auto; z-index:9; }
+.game-music-settings { position:absolute; top:62px; right:12px; z-index:20; width:30px; margin:0!important; background:transparent!important; border:0!important; }
+.game-music-settings>summary { font-size:0!important; padding:2px!important; min-height:28px; background:transparent; }
+.game-music-settings>summary:before { content:'♫'; font-size:18px; color:var(--gold); }
+.game-music-settings[open] { width:min(480px,94vw); top:60px; background:var(--surface)!important; border:1px solid var(--line)!important; box-shadow:0 14px 60px #0008; max-height:70vh; overflow:auto; }
+.game-music-settings .jukebox { background:var(--surface); }
+/* The desk is a real first zoom level, with working map and chronicle objects. */
+.desk-scene { position:absolute; inset:0 0 84px; z-index:3; display:none; overflow:hidden; background:radial-gradient(ellipse at 33% 32%,#c6a56a36,transparent 63%),repeating-linear-gradient(94deg,transparent 0 120px,#0002 122px,#d6b28009 124px,transparent 127px),repeating-linear-gradient(3deg,#ffffff02 0 1px,transparent 2px 7px),linear-gradient(125deg,var(--desk),var(--desk-dark)); }
+.map-card[data-level="schreibtisch"] .desk-scene { display:block; }
+.desk-caption { position:absolute; top:14%; left:7%; color:var(--paper); }
+.desk-caption h2 { font-size:clamp(1.2rem,2.5vw,2.5rem); margin:8px 0; }
+.desk-caption p { font-size:.75rem; opacity:.6; }
+.desk-caption .eyebrow { color:var(--gold); font-size:.65rem; letter-spacing:.25em; }
+.desk-map { position:absolute; left:10%; top:35%; width:58%; height:51%; padding:14px; transform:rotate(-5deg); display:flex; flex-direction:column; background:var(--paper)!important; color:#293f3d!important; border:1px solid #bfa980!important; border-radius:1px; box-shadow:4px 15px 30px #0008,inset 0 0 55px #a87d3433; }
+.desk-map:hover { transform:rotate(-3deg) translateY(-4px); filter:none!important; }
+.paper-heading { display:flex; justify-content:space-between; font:clamp(.7rem,1.6vw,1.3rem) Georgia; letter-spacing:.15em; border-bottom:1px solid #75664e66; padding-bottom:5px; }
+.paper-landscape { flex:1; min-height:0; margin:8px 0; background:url('../public/maps/landscape-central-europe.webp') center/cover; mix-blend-mode:multiply; opacity:.9; border:1px solid #75664e33; }
+.paper-footer { display:flex; justify-content:space-between; gap:10px; font-size:.58rem; font-weight:400; }
+.desk-compass { position:absolute; right:10%; top:23%; width:clamp(60px,9vw,130px); aspect-ratio:1; display:grid; place-items:center; border:5px double #b49b63; border-radius:50%; color:#e4ca8e; font-size:clamp(3rem,7vw,6rem); background:radial-gradient(circle,#30433d,#132420); box-shadow:4px 8px 18px #0008; transform:rotate(12deg); }
+.desk-compass span { position:absolute; top:1px; font:10px Georgia; }
+.desk-ledger { position:absolute; right:7%; bottom:12%; width:22%; height:32%; transform:rotate(7deg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; background:linear-gradient(90deg,#0004 0 8%,transparent 9%),var(--surface)!important; border:1px solid var(--gold); border-left:8px solid #0006; color:var(--gold); box-shadow:6px 10px 20px #0008; }
+.desk-ledger>span { font-size:clamp(1.4rem,4vw,3rem); }
+.desk-ledger strong { font:clamp(.65rem,1.2vw,1rem) var(--heading); }
+.desk-ledger small { font-size:.55rem; font-weight:400; }
+.desk-seal { position:absolute; bottom:10%; left:60%; width:52px; height:52px; border:6px double #a64e35; border-radius:50%; background:#7e3129; color:#dfb58b; display:grid; place-items:center; font:25px Georgia; transform:rotate(-15deg); box-shadow:2px 4px 5px #0005; }
+.desk-instruction { position:absolute; bottom:3%; left:10%; color:var(--gold); font-size:.55rem; letter-spacing:.15em; }
+.desk-instruction span { padding:0 12px; opacity:.5; }
+:root[data-era="modern"] .desk-seal,:root[data-era="digital"] .desk-seal { display:none; }
+:root[data-era="digital"] .desk-map { border:8px solid #263e4e!important; border-radius:12px; box-shadow:0 0 25px #77c8d522,8px 12px 30px #0008; transform:rotate(-2deg); }
+:root[data-era="digital"] .desk-compass { border-color:#789eaf; background:#233a47; }
+/* Management is paged within the viewport; the world never moves away. */
+.section-dialog { width:min(1060px,94vw)!important; height:min(760px,90dvh)!important; max-height:90dvh!important; padding:0!important; margin:auto; overflow:hidden!important; border:1px solid var(--gold); background:var(--surface)!important; color:var(--ink); border-radius:7px; box-shadow:0 25px 100px #000a; }
+.section-dialog[open] { display:grid!important; grid-template-rows:52px minmax(0,1fr) 44px; }
+.section-dialog::backdrop { background:#101713ad; backdrop-filter:blur(5px); }
+.section-dialog-head { display:flex; align-items:center; justify-content:space-between; padding:8px 20px; border-bottom:1px solid var(--line); background:var(--surface-2); }
+#section-dialog-body { min-height:0; height:100%; overflow:hidden; padding:0; }
+.section-dialog #panel { display:block!important; max-height:none!important; overflow:visible!important; padding:20px!important; margin:0!important; border:0; background:var(--surface)!important; }
+.panel-pagination { display:flex; align-items:center; justify-content:space-between; padding:4px 16px; background:var(--surface-2); border-top:1px solid var(--line); font-size:.68rem; }
+.panel-pagination button { min-height:30px; padding:3px 12px; }
+.build-card,.council-card,.info-dialog,.settings-dialog,.campaign-result-dialog,.council-modal { background:var(--surface)!important; border-color:var(--line)!important; color:var(--ink)!important; }
+/* Menu shares the same desk, paper, typography and era palette. */
+.welcome { height:100%!important; min-height:0!important; display:grid!important; grid-template-columns:minmax(0,1fr) minmax(360px,460px); overflow:hidden!important; background:var(--desk-dark)!important; }
+.welcome-art { position:relative; inset:auto; min-height:0; background:radial-gradient(circle at 40% 40%,#d7bc7622,transparent 60%),linear-gradient(115deg,var(--desk),var(--desk-dark)); overflow:hidden; }
+.welcome-art:after { content:''; position:absolute; inset:28% 10% 21%; background:linear-gradient(#e3d1a511,#e3d1a511),url('../public/maps/landscape-central-europe.webp') center/cover; border:18px solid var(--paper); box-shadow:10px 15px 40px #0009; transform:rotate(-8deg); opacity:.9; }
+.welcome-art .seal { z-index:2; top:14%; font-size:3rem; width:90px; height:90px; background:var(--surface); border-color:var(--gold); color:var(--gold); }
+.welcome-art .horizon { display:none; }
+.welcome-art p { position:absolute; bottom:8%; z-index:2; color:var(--paper); }
+.welcome-era { position:absolute; top:10%; left:10%; color:var(--gold); font:1rem var(--heading); letter-spacing:.2em; }
+.welcome-content { min-height:0; max-width:none; padding:clamp(16px,3vh,34px)!important; overflow:hidden; display:flex; flex-direction:column; gap:10px; justify-content:center; background:var(--surface); }
+.welcome-content h1 { font-size:clamp(1.8rem,4.6vh,3rem); line-height:1; margin:0; }
+.welcome-content>.eyebrow { color:var(--gold); font-size:.6rem; }
+.welcome-content .lead { font-size:.72rem; margin:0; line-height:1.45; }
+.welcome-content .scenario { margin:0; padding:9px; border:1px solid var(--line); background:var(--surface-2); font-size:.7rem; }
+.welcome-content .scenario p { font-size:.65rem; margin:3px 0 0; }
+.welcome-content .opening-music { margin:0; padding:0; background:none; font-size:.62rem; min-height:26px; }
+.welcome-content .opening-music img { display:none; }
+.welcome-content .opening-music button { min-height:26px; padding:2px 7px; font-size:.6rem; }
+#new-game { margin:0; display:flex; flex-direction:column; gap:10px; min-height:185px; justify-content:flex-start; }
+#new-game label { font-size:.68rem; gap:4px; }
+#new-game select,#new-game input { min-height:34px; height:34px; padding:6px 8px; font-size:.72rem; }
+#new-game input[type=checkbox] { width:16px; height:16px; min-height:16px; }
+#new-game .checkbox { display:flex; align-items:center; font-size:.7rem; }
+#new-game fieldset { padding:8px; border-color:var(--line); }
+#new-game legend { font-size:.62rem; }
+#new-game>button { margin-top:auto; min-height:38px; }
+.menu-pagination { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:.62rem; color:var(--gold); border-top:1px solid var(--line); padding-top:8px; }
+.menu-pagination button { min-height:28px; padding:3px 8px; font-size:.65rem; }
+.welcome-content .continue-row { margin:0; display:flex; align-items:center; gap:8px; }
+.welcome-content .continue-row span { display:none; }
+.welcome-content .continue-row button { min-height:28px; padding:3px 8px; font-size:.65rem; width:100%; }
+.welcome-content .menu-note { font-size:.52rem; margin:0; line-height:1.3; }
+.welcome-content .menu-note:last-of-type { display:none; }
+@media(max-width:900px) {
+ .kingdom-app .game-layout { grid-template-columns:122px minmax(0,1fr)!important; }
+ .kingdom-app .brand { display:none; }
+ .kingdom-app .header-actions button { font-size:.62rem; padding:4px 6px; }
+ .kingdom-app .sidebar nav button { padding:2px 4px; gap:3px; }
+ .kingdom-app .settlement-controls label { font-size:0!important; }
+ .kingdom-app .settlement-details>strong,.kingdom-app .settlement-details>span { display:none; }
+ .desk-caption { top:17%; }
+ .desk-caption p { display:none; }
+ .desk-ledger { right:4%; width:23%; }
+}
+@media(max-width:600px) {
+ .kingdom-app { grid-template-rows:58px 42px minmax(0,1fr) 20px!important; }
+ .kingdom-app .topbar { padding:5px 8px; gap:4px; flex-wrap:wrap; }
+ .kingdom-app .ruler-title { display:none; }
+ .kingdom-app .header-actions { width:100%; justify-content:space-between; }
+ .kingdom-app .header-actions button { min-height:33px; font-size:.6rem; padding:4px 6px; }
+ .kingdom-app .header-actions #epoch-info-toggle { max-width:95px; overflow:hidden; }
+ .kingdom-app .resource-bar { gap:0; padding:3px 5px; }
+ .kingdom-app .resource { padding:0 4px; gap:0; display:flex; flex-direction:column; align-items:flex-start; }
+ .kingdom-app .resource>div { display:flex; flex-direction:column; line-height:1.15; }
+ .kingdom-app .resource .resource-symbol { display:none; }
+ .kingdom-app .resource strong { font-size:.73rem; }
+ .kingdom-app .resource span,.kingdom-app .resource small { font-size:.5rem; margin:0; }
+ .kingdom-app .game-layout { grid-template-columns:minmax(0,1fr)!important; grid-template-rows:36px minmax(0,1fr) 43px!important; }
+ .kingdom-app .game-layout>.sidebar { grid-column:1; grid-row:1; padding:3px 8px; display:block!important; border-bottom:1px solid var(--line); height:36px; }
+ .kingdom-app .sidebar nav,.kingdom-app .sidebar>.nav-label { display:none!important; }
+ .compact-navigation { display:flex; align-items:center; gap:12px; font-size:.65rem; }
+ .compact-navigation select { min-height:28px; height:28px; padding:2px 8px; font-size:.7rem; }
+ .kingdom-app .game-layout>.map-card { grid-column:1; grid-row:2; grid-template-rows:minmax(0,1fr) 72px; }
+ .kingdom-app .game-layout>.map-card .map-hud { height:72px; grid-template-rows:26px 28px; padding:6px; gap:4px; }
+ .kingdom-app .game-layout>.map-card .settlement-controls { gap:4px; }
+ .kingdom-app .game-layout>.map-card .settlement-controls label { flex:1; width:0; }
+ .kingdom-app .game-layout>.map-card .settlement-controls select { font-size:.55rem; min-height:25px; height:25px; padding:2px; }
+ .kingdom-app .game-layout>.map-card .settlement-details { display:none; }
+ .kingdom-app .game-layout>.map-card .map-tools { width:100%; justify-content:space-between; }
+ .zoom-slider { min-width:100px; flex:1; margin-left:8px; }
+ .zoom-slider-label { font-size:.5rem; }
+ .atlas-navigation { top:8px; padding:3px; gap:1px; width:calc(100% - 16px); justify-content:space-between; }
+ .atlas-navigation button { font-size:.54rem; padding:4px 6px; min-height:27px; }
+ .desk-scene { bottom:72px; }
+ .desk-caption { top:20%; left:8%; }
+ .desk-caption h2 { font-size:1.12rem; max-width:80%; }
+ .desk-caption .eyebrow { font-size:.5rem; }
+ .desk-map { left:7%; top:43%; width:71%; height:39%; padding:7px; }
+ .paper-footer { font-size:.4rem; }
+ .paper-heading { font-size:.62rem; }
+ .desk-compass { right:7%; top:28%; width:48px; border-width:3px; font-size:2.5rem; }
+ .desk-ledger { right:4%; bottom:10%; height:25%; width:23%; padding:5px; gap:3px; }
+ .desk-ledger strong { font-size:.5rem; }
+ .desk-ledger small { display:none; }
+ .desk-seal { width:28px; height:28px; border-width:3px; font-size:14px; bottom:14%; left:65%; }
+ .desk-instruction { font-size:.38rem; bottom:4%; left:7%; letter-spacing:.08em; }
+ .desk-instruction span { padding:0 5px; }
+ .kingdom-app .game-layout>.workspace { grid-column:1; grid-row:3; height:43px; }
+ .kingdom-app .timebar { height:43px; padding:4px 8px; }
+ .kingdom-app .timebar h1 { font-size:.9rem; }
+ .kingdom-app .time-actions { gap:3px; }
+ .kingdom-app .time-actions button,.kingdom-app .time-actions select { padding:3px 5px; font-size:.58rem; }
+ .kingdom-app .game-footer { height:20px; font-size:.44rem; padding:2px 6px; }
+ .game-music-settings { right:3px; top:60px; }
+ .section-dialog { width:96vw!important; height:93dvh!important; max-height:93dvh!important; }
+ .section-dialog #panel { padding:12px!important; font-size:.8rem; }
+ .section-dialog .build-grid { grid-template-columns:1fr!important; }
+ .welcome { grid-template-columns:1fr; }
+ .welcome-art { display:none; }
+ .welcome-content { padding:16px 20px!important; gap:8px; background:radial-gradient(ellipse at top right,#bfa46e16,transparent 70%),var(--surface); }
+ .welcome-content h1 { font-size:2rem; }
+ .welcome-content .lead { font-size:.65rem; }
+ .welcome-content .scenario { padding:6px 8px; }
+ .welcome-content .opening-music { font-size:.55rem; }
+ #new-game { min-height:180px; }
+}
+@media(max-height:620px) {
+ .welcome-content { gap:5px; padding:10px 18px!important; }
+ .welcome-content h1 { font-size:1.6rem; }
+ .welcome-content .lead,.welcome-content .opening-music,.welcome-content .scenario p,.welcome-content>.eyebrow { display:none; }
+ #new-game { min-height:155px; gap:6px; }
+ .welcome-content .scenario { padding:5px; }
+ .desk-caption { top:20%; }
+ .desk-caption h2 { font-size:1.2rem; }
+ .kingdom-app .sidebar nav { grid-template-columns:1fr 1fr; grid-template-rows:repeat(9,minmax(0,1fr)); }
+ .kingdom-app .sidebar nav button { font-size:.48rem; padding:0 2px; white-space:normal; }
+ .kingdom-app .sidebar nav button span { display:none; }
+}
+/* Reset the former decorative landscape and keep every functional area reachable. */
+.welcome-art::before { display:none; }
+.welcome-art::after { width:auto; height:auto; border-radius:2px; }
+.welcome-art .seal { position:absolute; left:10%; top:16%; width:62px; height:62px; font-size:2rem; }
+.welcome-art p { left:10%; right:10%; margin:0; text-shadow:none; }
+.welcome-content { align-self:stretch; margin:0!important; }
+.kingdom-app .realm-heading { flex:1; min-width:0; text-align:left; }
+.kingdom-app .realm-heading strong { font-family:var(--heading); font-size:.95rem; }
+.kingdom-app .realm-heading span { font-size:.6rem; }
+.paged-body { min-height:0; overflow:hidden; padding:16px; }
+#briefing-body>.council { display:grid!important; grid-template-columns:1fr 1fr; gap:12px; position:static; padding:0; }
+#briefing-body .realm-health { display:block!important; margin:0 0 16px; padding:12px; }
+#briefing-body .council-card { margin:0; padding:14px; }
+#briefing-body .advisor-seal { display:none; }
+.settings-dialog[open] { display:flex; flex-direction:column; height:min(750px,92dvh); max-height:92dvh; overflow:hidden; }
+.settings-dialog .settings-heading,.settings-dialog .settings-tabs,.settings-dialog .settings-footer { flex-shrink:0; }
+.settings-dialog .settings-tab-panel { min-height:0; overflow:hidden; flex:1; }
+.settings-dialog .settings-footer { display:flex; justify-content:space-between; gap:10px; }
+.settings-dialog .settings-intro { display:none; }
+.settings-dialog .settings-tabs { overflow:hidden; flex-wrap:wrap; }
+.settings-dialog .settings-tab-panel p { font-size:.78rem; }
+.settings-dialog .settings-tab-panel label { margin:8px 0; }
+@media(max-width:600px) {
+ .kingdom-app .realm-heading { display:none; }
+ .kingdom-app .header-actions { gap:3px; }
+ .kingdom-app .header-actions button { font-size:.53rem; padding:3px; }
+ .kingdom-app .header-actions #epoch-info-toggle { max-width:56px; }
+ #briefing-body>.council { grid-template-columns:1fr; }
+ .settings-dialog { padding:12px; }
+ .settings-dialog .settings-tabs button { padding:5px; font-size:.65rem; }
+}
+.kingdom-app .game-footer { flex-direction:row; align-items:center; white-space:nowrap; }
+.kingdom-app #section-dialog-body { height:100%; overflow:hidden; padding:0; }
+.kingdom-app .section-dialog-head { background:var(--surface-2); }
+.settings-heading { background:var(--surface); }
+.settings-tabs [role=tab] { background:var(--surface-2); color:var(--ink); }
+.settings-tabs [role=tab][aria-selected=true] { background:var(--gold); color:var(--desk-dark); border-color:var(--gold); }
+@media(max-width:600px) {
+ .kingdom-app .resource { flex-wrap:nowrap; }
+ .kingdom-app .resource>div { flex:none; }
+ .kingdom-app .resource small { align-self:flex-start; line-height:1; padding:0; }
+ .kingdom-app .header-actions #settings-open { min-width:0; min-height:33px; padding:3px; font-size:.53rem; }
+ .kingdom-app .game-footer { font-size:.38rem; gap:3px; }
+ .settings-dialog .settings-footer button { min-width:0; }
+ .settings-dialog .settings-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:6px 0; padding-bottom:6px; }
+}
+.paged-info[open] { display:grid; grid-template-rows:auto minmax(0,1fr) auto; height:min(640px,88dvh); max-height:88dvh; overflow:hidden!important; padding:16px; }
+.dialog-page-body { overflow:hidden; min-height:0; }
+.dialog-page-footer { display:flex; align-items:center; justify-content:space-between; gap:6px; padding-top:8px; border-top:1px solid var(--line); }
+.dialog-page-footer button { min-width:0; padding:6px; font-size:.7rem; }
+.kingdom-app .game-music-settings[open] { max-height:calc(100dvh - 80px); overflow:hidden; }
+.kingdom-app .jukebox-gallery { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.kingdom-app .cover-card img { width:100%; max-height:84px; object-fit:contain; }
+.cover-pagination { display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:.65rem; }
+.cover-pagination button { min-height:26px; padding:2px 8px; }
+:root[data-era="modern"] .desk-ledger,:root[data-era="digital"] .desk-ledger { border-radius:3px; border-left:8px solid var(--gold); font-family:var(--heading); }
+:root[data-era="digital"] .desk-scene { background:radial-gradient(ellipse at 40% 35%,#6aaccb22,transparent 65%),linear-gradient(125deg,var(--desk),var(--desk-dark)); }
+@media(max-height:620px) {
+ .kingdom-app .jukebox-nowplaying { display:none; }
+ .kingdom-app .cover-card img { max-height:40px; }
+ .kingdom-app .game-music-settings[open] { top:40px; max-height:calc(100dvh - 45px); }
+ .kingdom-app .jukebox { gap:4px; padding:8px; }
+ .kingdom-app .jukebox p { margin:0; font-size:.6rem; }
+}
+.welcome-art p { bottom:5%; font:italic clamp(.8rem,1.7vw,1.2rem)/1.4 var(--heading); }
+@media(max-height:620px) { .welcome-art::after { bottom:25%; } }

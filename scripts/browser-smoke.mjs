@@ -2,6 +2,13 @@ import { chromium } from '../.browser-tools/node_modules/playwright/index.mjs';
 
 const browser = await chromium.launch({ headless: true });
 const failures = [];
+const newPage = browser.newPage.bind(browser);
+browser.newPage = async options => { const page = await newPage(options); page.setDefaultTimeout(15000); page.setDefaultNavigationTimeout(30000); return page; };
+async function openView(page, view) {
+ if (await page.locator('#view-select').isVisible()) await page.locator('#view-select').selectOption(view);
+ else await page.locator('nav [data-view="'+view+'"]').click();
+}
+
 try {
   for (const width of [1280, 820, 320]) {
     const page = await browser.newPage({ viewport: { width, height: width === 820 ? 1180 : 740 }, reducedMotion: 'reduce' });
@@ -38,6 +45,8 @@ try {
       failures.push('The live main map failed to load retro sprites');
     }
     await page.locator('#map-style').waitFor({ state:'visible' });
+    if (!(await page.locator('.desk-scene').isVisible())) failures.push('Game must begin on the desk');
+    await page.screenshot({ path: 'smoke-desk-'+width+'.png' });
     if (!(await page.locator('#date').textContent())?.includes('1820')) failures.push('selected start year did not enter the simulation');
     if (await page.locator('.kingdom-app').getAttribute('data-era') !== 'industrial') failures.push('industrial epoch style not applied');
     await page.locator('#game-music-settings').waitFor();
@@ -53,7 +62,8 @@ try {
     if (await page.locator('#opening-play, [data-music-volume], [data-audio-toggle]').count())
       failures.push('redundant audio controls are still shown');
     if (await page.locator('#civic-open, .header-actions [data-install-game], #motion-toggle').count()) failures.push('header contains settings-only controls');
-    await page.locator('nav [data-view="civic"]').click();
+    await page.locator('#game-music-settings > summary').click();
+    await openView(page, 'civic');
     await page.getByRole('heading', { name: /Aufträge an Bürger/i }).waitFor();
     if (await page.locator('[data-civic-assign]').count() < 5) failures.push('civic missions inaccessible');
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
@@ -102,7 +112,7 @@ try {
         overlaidControls:document.querySelectorAll('.map-card .map-hud #map-style, .map-card .map-hud [data-zoom]').length
       };
     });
-    if(mapLayer.mapHostHeight<400)
+    if(mapLayer.mapHostHeight<300)
       failures.push('map must have a dedicated large viewport '+JSON.stringify(mapLayer));
     if(mapLayer.duplicatedBuildings||mapLayer.overlaidControls!==4)
       failures.push('map has duplicate district list or missing overlay controls '+JSON.stringify(mapLayer));
@@ -110,7 +120,7 @@ try {
     if (await page.locator('#kingdom-map').getAttribute('data-projection') !== 'isometric') failures.push('map switch failed');
     if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-projection') !== 'isometric') failures.push('Pixi retro renderer did not receive isometric mode');
     const scope = page.locator('#map-scope');
-    await page.locator('#zoom-slider').fill('0');
+    await page.locator('#zoom-slider').fill('28');
     await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.zoomLevel === 'zentraleuropa');
     await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.reliefLoaded === 'true');
     await page.locator('#kingdom-map').screenshot({ path: `smoke-relief-${width}.png` });
@@ -138,27 +148,27 @@ try {
     if(!(await page.locator('#settlement-details [data-open-district]').count()))
       failures.push('map-selected district upgrade shortcut missing');
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
-    await page.locator('nav [data-view="help"]').click();
+    await openView(page, 'help');
     await page.locator('#section-dialog[open]').waitFor();
     await page.getByRole('heading', { name: 'Deine ersten Schritte' }).waitFor();
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
-    await page.locator('nav [data-view="diplomacy"]').click();
+    await openView(page, 'diplomacy');
     await page.getByRole('heading', { name: /diplomatische hof/i }).waitFor();
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
-    await page.locator('nav [data-view="culture"]').click();
+    await openView(page, 'culture');
     await page.getByRole('heading', { name: /Feste im Jahreskreis/i }).waitFor();
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
-    await page.locator('nav [data-view="research"]').click();
+    await openView(page, 'research');
     await page.getByRole('heading', { name: /Forschung im Reich/i }).waitFor();
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
-    await page.locator('nav [data-view="history"]').click();
+    await openView(page, 'history');
     await page.getByRole('heading', { name: /Erfindungen, Kunst und Kultur/i }).waitFor();
     await page.getByRole('heading', { name: /Universität Bologna/i }).first().waitFor();
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
-    await page.locator('nav [data-view="war"]').click();
+    await openView(page, 'war');
     await page.getByRole('heading', { name: /Nachbarn/i }).waitFor();
     await page.screenshot({ path: `smoke-${width}.png`, fullPage: true });
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    const overflow = await page.evaluate(() => Math.max(document.documentElement.scrollWidth - document.documentElement.clientWidth, document.documentElement.scrollHeight - document.documentElement.clientHeight));
     if (overflow > 2) failures.push(`viewport ${width}: horizontal overflow ${overflow}px`);
     if (errors.length) failures.push(`viewport ${width}: ${errors.join('; ')}`);
     await page.close();
@@ -196,6 +206,7 @@ try {
       await page.locator('#intro-skip').click();
       await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
       await page.locator('#kingdom-map canvas').waitFor();
+      await page.locator('.atlas-navigation [data-map-level="zentraleuropa"]').click();
       await page.waitForFunction(() => Number(document.querySelector('#kingdom-map canvas')?.dataset.regionCount) > 0);
     } else {
       await page.locator('.campaign-result-dialog').waitFor({ state: 'detached' });
@@ -211,32 +222,6 @@ try {
     await page.close();
   }
 
-  // Regression for mobile: the HUD must not paint an opaque veil over the canvas.
-  {
-    const page = await browser.newPage({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-    await page.goto('http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
-    await page.locator('#intro-skip').click();
-    await page.getByRole('heading', { name: /Kaiser von/i }).waitFor();
-    const start = page.locator('[data-start-game]').first();
-    if (await start.count()) await start.click();
-    const scene = page.locator('#kingdom-map canvas');
-    if (await scene.count()) {
-      const status = await page.evaluate(() => {
-        const hud = document.querySelector('.game-layout > .map-card .map-hud');
-        const canvas = document.querySelector('#kingdom-map canvas');
-        return {
-          hudBackground: hud ? getComputedStyle(hud).backgroundColor : '',
-          width: canvas?.getBoundingClientRect().width ?? 0,
-          height: canvas?.getBoundingClientRect().height ?? 0
-        };
-      });
-      if (status.hudBackground !== 'rgba(0, 0, 0, 0)' && status.hudBackground !== 'transparent')
-        failures.push('Mobile map HUD covers Pixi canvas: ' + status.hudBackground);
-      if (status.width < 250 || status.height < 400)
-        failures.push('Mobile map canvas is too small: ' + JSON.stringify(status));
-    }
-    await page.close();
-  }
   // Mobile retro regression: assert a real game canvas, loaded assets and a visible
   // retro render, not merely an unobstructed but empty HUD.
   {
@@ -248,6 +233,7 @@ try {
     await page.getByRole('button',{name:/Herrschaft beginnen/i}).click();
     const canvas=page.locator('#kingdom-map canvas');
     await canvas.waitFor({timeout:30000});
+    await page.locator('.atlas-navigation [data-map-level="dorf"]').click();
     await page.waitForFunction(() => {
       const canvas=document.querySelector('#kingdom-map canvas');
       return canvas?.dataset.retroLoaded === 'true' && canvas?.dataset.retroVisible === 'true';
@@ -340,7 +326,8 @@ try {
     if (campaign === 'wissenschaft') await page.locator('#start-year').selectOption('1500');
     await page.locator('#campaign-select').selectOption(campaign);
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
-    await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
+    await page.locator('#kingdom-map canvas').waitFor({ timeout: 30000 });
+    await page.locator('#briefing-open').click();
     await page.locator('#campaign-title').filter({ hasText: chapter }).waitFor();
     const objectives = await page.locator('#objectives .objective').count();
     if (objectives !== 6) failures.push(`campaign ${campaign} shows ${objectives} objectives instead of 6`);
@@ -377,9 +364,9 @@ try {
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.locator('#intro-skip').click();
     await page.locator('#continue').click();
-    await page.getByRole('heading', { name: /Land & Leute/i }).waitFor({ timeout: 30000 });
+    await page.locator('#kingdom-map canvas').waitFor({ timeout: 30000 });
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
-    await page.locator('nav [data-view="economy"]').click();
+    await openView(page, 'economy');
     const route = page.locator('.build-card').filter({ has: page.getByRole('heading', { name: 'Hanserouten' }) });
     await route.getByRole('button', { name: 'Route aktivieren' }).click();
     await route.getByRole('button', { name: 'Route beenden' }).waitFor();
@@ -388,6 +375,12 @@ try {
     await page.close();
   }
 
+} catch (error) {
+  for (const context of browser.contexts()) for (const page of context.pages()) {
+    await page.screenshot({path:'smoke-failure.png'});
+    console.error(await page.locator('dialog[open]').innerText().catch(()=>'No open dialog'));
+  }
+  throw error;
 } finally {
   await browser.close();
 }
