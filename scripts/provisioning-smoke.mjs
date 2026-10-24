@@ -47,7 +47,13 @@ try {
     assert.equal(await page.locator('[data-provision-action=storage][data-provision-target=geest]').isDisabled(),true);
     await page.screenshot({path:`.temp/provisioning-${year}-${width}.png`});
     await page.locator('#section-dialog-close').click();await page.locator('[data-action=save]').click();
-    await page.locator('#notice').filter({hasText:'Herrschaft gespeichert.'}).waitFor();
+    try {
+      await page.locator('#notice').filter({hasText:'Herrschaft gespeichert.'}).waitFor();
+    } catch(error) {
+      console.error({width,year,notice:await page.locator('#notice').textContent(),errors});
+      await page.screenshot({path:`.temp/provisioning-save-failure-${width}.png`});
+      throw error;
+    }
     await page.reload();await page.locator('#intro-skip').click();await page.locator('#continue').click();
     await page.locator('#kingdom-map canvas').waitFor();await open('world');
     assert.equal(await page.locator('[data-provision-region=geest] [data-provision-storage]').innerText(),'1 / 3');
