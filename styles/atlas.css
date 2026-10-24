@@ -345,4 +345,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 .history-filter { display: grid; gap: .3rem; margin: .75rem 0; }
 .history-filter select { width: 100%; min-width: 0; max-width: 100%; }
 [data-knowledge] a, [data-history-event] a { overflow-wrap: anywhere; color: var(--gold); text-underline-offset: .2em; }
+
+/* The desktop remains fixed; dialog content supports wheel, touch and keyboard scrolling. */
+.kingdom-app #section-dialog-body, #section-dialog-body, .paged-body,
+.dialog-page-body, .settings-dialog .settings-tab-panel {
+  overflow-y:auto!important; overflow-x:hidden!important; overscroll-behavior:contain;
+  touch-action:pan-y; scrollbar-gutter:stable; -webkit-overflow-scrolling:touch;
+}
+dialog:not(.section-dialog):not(.settings-dialog):not(.paged-info) {max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;}
+.header-actions .game-music-settings {position:relative;top:auto;right:auto;flex:0 0 30px;align-self:center;}
+.header-actions .game-music-settings[open] {position:absolute;top:100%;right:8px;width:min(480px,94vw);overflow-y:auto!important;max-height:75dvh;}
+.kingdom-app .header-actions {position:relative;}
+@media(max-width:360px) {
+ .kingdom-app .header-actions #settings-open {font-size:0!important;min-width:24px;}
+ .kingdom-app .header-actions #settings-open:before {content:'⚙';font-size:15px;}
+ .header-actions .game-music-settings {flex-basis:24px;width:24px;}
+}
+#local-map-info {border:0;background:transparent;color:inherit;font:inherit;padding:0;min-height:0;}
+.tax-form {display:grid;gap:6px;}
+.tax-form label {display:grid;gap:8px;}
+.tax-form input[type=range] {width:100%;padding:0;min-height:32px;accent-color:var(--gold);}
+.economy-grid table {font-size:clamp(.67rem,1.2vw,.9rem);}
 .paper-heading small { color: #55462f; letter-spacing: .03em; }

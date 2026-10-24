@@ -1414,7 +1414,7 @@ export class PolicySystem {
 
       // Apply maintenance costs
       if (activePolicy.maintenanceCost?.goldPerMonth) {
-        player.kingdom.resources.gold -= activePolicy.maintenanceCost.goldPerMonth;
+        player.kingdom.resources.gold = Math.max(0,player.kingdom.resources.gold - activePolicy.maintenanceCost.goldPerMonth);
       }
 
       // Check if policy should expire

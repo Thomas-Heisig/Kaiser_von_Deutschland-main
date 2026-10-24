@@ -66,3 +66,22 @@ export function applyScienceDiscovery(kingdom: Kingdom, tech: TechnologyDefiniti
   kingdom.military.trainingLevel = bounded(kingdom.military.trainingLevel + (e.defense ?? 0) / 5);
   kingdom.happiness = bounded(kingdom.happiness + (e.publicApproval ?? 0) / 5);
 }
+
+/** Only list effects actually consumed by the campaign engine. */
+export function researchEffectDescriptions(tech:TechnologyDefinition):string[] {
+  const effect=researchImpact([tech.id]);
+  const result=['Technologieniveau +2 Punkte bei Abschluss (höchstens 100)'];
+  if(effect.foodPercent)result.push(`Nahrungsproduktion +${effect.foodPercent} % monatlich`);
+  if(effect.industryPercent)result.push(`Holz-, Stein- und Eisenproduktion +${effect.industryPercent} % monatlich`);
+  if(effect.goldPercent)result.push(`Goldproduktion +${effect.goldPercent} % monatlich (ohne Steuern)`);
+  if(effect.researchPercent)result.push(`Forschungspunkte aus Schulen und Lehrstätten +${effect.researchPercent} %`);
+  for(const [key,label,divisor] of [
+    ['literacyRate','Alphabetisierung',1],['culturalInfluence','Kultureller Einfluss',1],
+    ['tradePower','Handelsmacht',1],['stability','Stabilität',1],['militaryStrength','Ausrüstungsqualität',5],
+    ['defense','Ausbildung',5],['publicApproval','Zufriedenheit',5]
+  ] as const) {
+    const value=(tech.effects[key]??0)/divisor;
+    if(value)result.push(`${label} +${value} Punkte einmalig (höchstens 100)`);
+  }
+  return result;
+}

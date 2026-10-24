@@ -1,5 +1,8 @@
 import { filmForRole, filmPreferences, saveFilmPreferences, loadCinematicLibrary, type CinematicClip, type FilmRole } from './CinematicLibrary';
 import { doctrineForYear } from '../core/HistoricalGameplay';
+import { localLandmarks, localPlaceName, LOCAL_MAP_NOTE, LOCAL_MAP_CREDIT } from '../core/StartLocations';
+import { researchEffectDescriptions } from '../core/ScienceImpact';
+import { ADMIN_DOMAINS, ADMIN_LABELS, ADMIN_POLICIES, type AdministrationDomain, type AdministrationPolicy } from '../core/Administration';
 import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
 import {
   CampaignGoal, CharacterAction, GameEngine, GameState, MarketResource, SaveMeta
@@ -31,7 +34,7 @@ interface NewPlayer { name: string; kingdomName: string }
 
 const MAX_PLAYERS = 4;
 const DEFAULT_PLAYERS: ReadonlyArray<NewPlayer> = [
-  { name: 'Heinrich', kingdomName: 'Mittelreich' }, { name: 'Mathilde', kingdomName: 'Westmark' },
+  { name: 'Heinrich', kingdomName: 'Ganderkesee' }, { name: 'Mathilde', kingdomName: 'Westmark' },
   { name: 'Konrad', kingdomName: 'Schwabenland' }, { name: 'Adelheid', kingdomName: 'Sachsenau' }
 ];
 const PROFESSIONS: Partial<Record<Profession, string>> = {
@@ -110,7 +113,9 @@ export class KingdomGameUI {
   private openingAttempt = false;
   private resumeAfterCouncil = false;
   private reportIndex = 0;
-  private historyTopic: 'all' | KnowledgeTopic | 'events' | 'periods' | 'archive' | 'exhibitions' = 'all';
+  private historyTopic: 'all' | KnowledgeTopic | 'events' | 'periods' | 'archive' | 'exhibitions' | 'local' = 'all';
+  private tradeResource: MarketResource = 'food';
+  private tradeAmount = '500';
   private readonly councilAdvisor = new CouncilAdvisor();
   private readonly retryOpening = (): void => { void this.tryOpeningTheme(); };
   private readonly ambience = new GameAmbience();
@@ -582,7 +587,7 @@ export class KingdomGameUI {
       const header = this.root.querySelector('#start-era-summary');
       const info = this.root.querySelector('#start-campaign-summary');
       if (header) header.textContent = yearText;
-      if (info) info.textContent = campaign.name + ': ' + campaign.description;
+      if (info) info.textContent = 'Startgebiet: ' + localPlaceName(year) + ' · heutiges Niedersachsen. ' + campaign.name + ': ' + campaign.description;
     };
     campaignSelect?.addEventListener('change', updateStartSummary);
     startYearSelect?.addEventListener('change', updateStartSummary);
@@ -634,7 +639,12 @@ export class KingdomGameUI {
 
   private async replaceEngine(engine: GameEngine): Promise<void> {
     for (const unsubscribe of this.subscriptions) unsubscribe();
-    this.subscriptions = [];
+    this.subscriptions = [
+      engine.on('naturalDisaster',(detail:{playerId:string;message:string}):void=>{
+        if(this.player?.id!==detail.playerId)return;
+        this.journal=engine.getChronicle();this.notify(detail.message);
+        this.showGameAction('Naturereignis',detail.message,'raid');
+      }),];
     this.engine?.dispose();
     window.clearTimeout(this.actionBannerTimer);
     this.map?.dispose();
@@ -708,14 +718,15 @@ export class KingdomGameUI {
                 <button type="button" data-map-level="schreibtisch">01 · Schreibtisch</button>
                 <button type="button" data-map-level="zentraleuropa">02 · Landkarte</button>
                 <button type="button" data-map-level="dorf">03 · Siedlung</button>
+                <button type="button" id="local-map-info" aria-label="Ganderkesee: Ortsgeschichte und Kartenquellen">ⓘ</button>
               </div>
               <div class="map-hud" aria-label="Kartenwerkzeuge">
                 <div class="map-hud-top">
-                  <div class="map-heading"><span class="eyebrow" data-presentation-realm>DEIN LEHEN</span><h2>Land & Leute</h2>
+                  <div class="map-heading"><span class="eyebrow" data-presentation-realm>DEIN LEHEN</span><h2>Ganderkesee</h2>
                     <span id="settlement-season"></span></div>
                   <div class="settlement-controls" aria-label="Kartendarstellung und Bezirksfilter">
                     <label>Weltkarte <select id="map-scope" aria-label="Heimat oder Weltkarte wählen">
-                      <option value="home">Heimat · 16 Bezirke</option>
+                      <option value="home">Ganderkesee · Heimat</option>
                       <option value="world">Welt · Nachbarreiche</option>
                     </select></label>
                     <label>Kartenansicht <select id="map-style" aria-label="Kartenansicht wählen">
@@ -854,6 +865,10 @@ export class KingdomGameUI {
         this.updateZoomHint();
       });
     });
+    const musicPanel=this.root.querySelector('#game-music-settings');
+    if(musicPanel)this.root.querySelector('.header-actions')?.append(musicPanel);
+    const showLocalHistory = (): void => { this.historyTopic='local'; this.navigate('history'); };
+    this.root.querySelector('#local-map-info')?.addEventListener('click',showLocalHistory);
     for (const [id, direction] of [['panel-prev', -1], ['panel-next', 1]] as const) {
       this.root.querySelector('#' + id)?.addEventListener('click', () => {
         const body = this.root.querySelector<HTMLElement>('#section-dialog-body');
@@ -970,7 +985,7 @@ export class KingdomGameUI {
         this.renderReport();
       }),
       engine.on('monthAdvanced', (): void => {
-        this.record('Monat abgeschlossen. Produktion, Verbrauch und Steuern wurden verbucht.');
+        this.journal=engine.getChronicle().map(entry=>({date:entry.date,message:entry.message}));
         this.audio.playEffect('month');
         this.renderPanel();
         this.refresh();
@@ -1132,6 +1147,7 @@ export class KingdomGameUI {
           this.navigate('diplomacy');
         });
         this.map.setMotion(this.motionEnabled);
+        this.map.setLandmarkAction(() => { this.historyTopic='local'; this.navigate('history'); });
         this.map.setProjection(this.mapStyle);
         if (isZoomLevelsEnabled()) this.map.setZoomSlider(0);
         this.refresh();
@@ -1753,6 +1769,29 @@ export class KingdomGameUI {
     }
   }
 
+  private renderAdministration(domains:readonly AdministrationDomain[]=ADMIN_DOMAINS):string {
+    const prefs=this.requireEngine().getAdministration(this.requirePlayer().id);
+    const budget=this.requireEngine().getAdministrationBudget(this.requirePlayer().id);
+    const policy=ADMIN_POLICIES[prefs.policy];
+    return `<section class="build-card administration"><h3>Deine Schwerpunkte · Verwaltung delegieren</h3>
+      <label>Entscheidungen <select data-administration-policy>${Object.entries(ADMIN_POLICIES).map(([key,value])=>`<option value="${key}" ${key===prefs.policy?'selected':''}>${value.label}</option>`).join('')}</select></label>
+      <p>${policy.months} Monate Gold-Unterhalt als Rücklage (mindestens 500 Gold). Maximal ${Math.round(policy.fraction*100)} % des übrigen Goldes als gemeinsames Monatsbudget: derzeit ${format(budget.budget)} Gold.</p>
+      <p class="muted">Die Rücklage begrenzt freiwillige Ausgaben; laufende Kosten und Ereignisse bleiben wirksam. Die Automatik nimmt keine Kredite auf. Aktivierte Bereiche handeln beim Monatswechsel.</p>
+      <div class="administration-domains">${domains.map(domain=>`<label class="checkbox"><input type="checkbox" data-administration-domain="${domain}" ${prefs.domains[domain]?'checked':''}>${ADMIN_LABELS[domain]}</label>`).join('')}</div>
+      ${domains.length>1?'<div class="quick-actions"><button data-administration-preset="watch">Zuschauen · alles delegieren</button><button data-administration-preset="manual">Alles selbst entscheiden</button></div><p class="muted">Zuschauen aktiviert auch automatische Ereignisentscheidungen. Mit „Fortsetzen“ läuft die Zeit; einzelne Bereiche kannst du jederzeit wieder übernehmen.</p>':''}</section>`;
+  }
+
+  private renderProjects(kind:'construction'|'modernization'):string {
+    const options=this.requireEngine().getModernizationOptions(this.requirePlayer().id)
+      .filter(o=>o.visible&&(o.project.kind??'modernization')===kind);
+    return `<div class="build-grid">${options.map(({project,completed,canStart,blockers})=>`
+      <article class="build-card ${completed?'selected':''}" data-project="${escape(project.id)}"><h3>${escape(project.name)}</h3>
+      <p>${escape(project.description)}</p><p>${escape(project.effect)} (Werte höchstens 100)</p>
+      <p class="cost">${format(project.cost.gold)} Gold · ${format(project.cost.wood)} Holz · ${format(project.cost.stone)} Stein · ${format(project.cost.iron)} Eisen</p>
+      <button data-modernization="${escape(project.id)}" ${canStart?'':'disabled'}>${completed?'Bereits umgesetzt':kind==='construction'?'Bauvorhaben umsetzen':'Modernisieren'}</button>
+      ${!completed&&blockers.length?`<p class="muted">${blockers.map(escape).join(' · ')}</p>`:''}</article>`).join('')||'<p>Für deine bestehenden Gebäude gibt es in dieser Epoche keine weiteren Projekte.</p>'}</div>`;
+  }
+
   private renderPanel(): void {
     const panel = this.root.querySelector<HTMLElement>('#panel');
     if (!panel || !this.player || !this.engine) return;
@@ -1864,36 +1903,37 @@ export class KingdomGameUI {
               <button data-build="${type}" ${missing.length ? 'disabled' : ''} class="secondary"
                 aria-label="${info.name} bauen">${missing.length ? `Fehlt: ${missing.join(', ')}` : `${info.name} bauen`}</button>
             </article>`;
-          }).join('')}</div>`;
+          }).join('')}</div><h3>Besondere Bauvorhaben deiner Zeit</h3>` + this.renderProjects('construction');
     } else if (this.view === 'economy') {
       const tradeIncome = this.engine.getTradeNetworkStats(this.player).monthlyIncome;
+      const treasury=this.engine.getTreasuryReport(this.player.id);
       panel.innerHTML = heading('HANDEL & FINANZEN', 'Eine gesunde Wirtschaft',
         'Die Bilanz ist eine Prognose vor Ereignissen und jährlichen Titelboni. Mangel verursacht Unzufriedenheit.') + `
-        <div class="economy-grid"><section><h3>Monatsbilanz</h3>
+        ${this.renderAdministration(['economy'])}<div class="economy-grid"><section><h3>Monatsbilanz</h3>
           <table><caption class="sr-only">Erwartete Ressourcenänderungen im nächsten Monat</caption>
-            <thead><tr><th>Ressource</th><th>Eingang</th><th>Verbrauch</th><th>Saldo</th></tr></thead>
+            <thead><tr><th>Ressource</th><th>Vorrat</th><th>Eingang</th><th>Verbrauch</th><th>Saldo</th></tr></thead>
             <tbody>${(['gold', 'food', 'wood', 'stone', 'iron'] as const).map((key: MarketResource | 'gold') => {
               const income = balance.production[key] + (key === 'gold' ? balance.taxes + tradeIncome : 0);
               const expense = key === 'food' || key === 'wood' || key === 'gold' ? balance.consumption[key] : 0;
-              return `<tr><th>${RESOURCE_NAMES[key]}</th><td>${format(income)}</td><td>${format(expense)}</td>
+              return `<tr><th>${RESOURCE_NAMES[key]}</th><td data-stock="${key}">${format(kingdom.resources[key])}</td><td>${format(income)}</td><td>${format(expense)}</td>
                 <td class="${income >= expense ? 'positive' : 'negative'}">${format(income - expense)}</td></tr>`;
             }).join('')}</tbody></table><p class="muted">Gold-Eingang enthält ${format(balance.taxes)} Steuern
               und ${format(tradeIncome)} Routeneinkommen.</p>
-          <form id="tax-form" class="tax-form"><label>Steuersatz
-            <select id="tax-rate" name="tax">${[5, 10, 15, 20, 25, 30, 40, 50].map((rate: number) =>
-              `<option value="${rate}" ${Math.round(kingdom.taxRate * 100) === rate ? 'selected' : ''}>${rate} %</option>`
-            ).join('')}</select></label><button class="primary" type="submit">Steuern festlegen</button></form>
+          <div class="tax-form"><label for="tax-rate">Steuersatz · <output id="tax-value">${Math.round(kingdom.taxRate*100)} %</output>
+            <input id="tax-rate" name="tax" type="range" min="0" max="50" step="1" value="${Math.round(kingdom.taxRate*100)}"></label>
+            <small>Wirkt sofort. 0–50 %; kein Bestätigen nötig.</small></div>
           <p class="muted">Über 15 % sinkt die Zufriedenheit monatlich, darunter erholt sie sich.</p></section>
           <section><h3>Markthandel</h3><p class="muted">Sofortiger Austausch. Einkauf mit 20 % Aufschlag,
             Verkauf mit 20 % Abschlag – kein risikoloser Weiterverkauf.</p>
             <form id="trade-form"><label>Ressource<select name="resource" id="trade-resource">
               ${(['food', 'wood', 'stone', 'iron'] as const).map((resource: MarketResource) =>
-                `<option value="${resource}">${RESOURCE_NAMES[resource]}</option>`).join('')}</select></label>
-              <label>Menge<input name="amount" id="trade-amount" type="number" value="500" min="1" max="1000000" step="1" required></label>
+                `<option value="${resource}" ${resource===this.tradeResource?'selected':''}>${RESOURCE_NAMES[resource]}</option>`).join('')}</select></label>
+              <label>Menge<input name="amount" id="trade-amount" type="number" value="${escape(this.tradeAmount)}" min="1" max="1000000" step="1" required></label>
               <p id="trade-quote" class="cost"></p>
               <div class="quick-actions"><button name="direction" value="buy" class="primary">Kaufen</button>
                 <button name="direction" value="sell" class="secondary">Verkaufen</button></div>
             </form></section></div>
+        ${treasury?`<section class="treasury-report"><h3>Kassenabschluss ${escape(treasury.date)}</h3><p>Anfang ${format(treasury.opening)} → Ende ${format(treasury.closing)} Gold</p><ul>${treasury.entries.map(e=>`<li>${escape(e.reason)}: <strong class="${e.amount<0?'negative':'positive'}">${e.amount>=0?'+':''}${format(e.amount)} Gold</strong></li>`).join('')}</ul></section>`:'<p>Nach dem ersten Monat erscheint hier die tatsächliche Kassenabrechnung.</p>'}
         <section class="trade-routes-section"><h3>Handelsrouten</h3>
           <p class="muted">Führe neue Routen über Aktivierungskosten und gegebenenfalls Forschung ein.</p>
           ${this.renderTradeRoutes(this.player)}</section>`;
@@ -1925,6 +1965,7 @@ export class KingdomGameUI {
             <div class="build-title"><span aria-hidden="true">✧</span><h3>${escape(option.technology.name)}</h3>
               <small>Spielverfügbarkeit ab ${formatYear(option.technology.year)}</small></div>
             <p>${escape(option.technology.description)}</p>
+            <ul class="research-effects" aria-label="Wirkungen dieser Forschung">${researchEffectDescriptions(option.technology).map(effect=>`<li>${escape(effect)}</li>`).join('')}</ul>
             <div class="cost">${format(option.technology.cost.gold)} Gold · ${
               format(option.technology.cost.research)} Forschungspunkte · ${format(option.technology.researchTime)} Tage</div>
             ${option.researched ? '<p class="positive">Erforscht</p>' : option.canStart
@@ -1932,17 +1973,8 @@ export class KingdomGameUI {
               : `<p class="muted">${option.blockers.map(escape).join(' · ')}</p>`}
           </article>`).join('')}</div>`;
     } else if (this.view === 'modernization') {
-      const options = this.engine.getModernizationOptions(this.player.id);
-      panel.innerHTML = heading('EPOCHENWANDEL', 'Modernisierung des Reiches',
-        'Vom Dampfzeitalter bis zur Zukunft. Nur eigene Forschung, Ressourcen und Spieljahr entscheiden über die Umsetzung.') +
-        `<div class="build-grid">${options.map(({project,completed,canStart,blockers}) => `
-          <article class="build-card ${completed ? 'selected' : ''}"><h3>${escape(project.name)} · ${project.year}</h3>
-          <p>${escape(project.description)}</p><p>${escape(project.effect)}</p>
-          <p class="cost">${format(project.cost.gold)} Gold · ${format(project.cost.wood)} Holz ·
-          ${format(project.cost.stone)} Stein · ${format(project.cost.iron)} Eisen</p>
-          <button data-modernization="${escape(project.id)}" ${!canStart?'disabled':''}>
-          ${completed?'Bereits umgesetzt':'Modernisieren'}</button>
-          ${blockers.length ? `<p class="muted">${blockers.map(escape).join(' · ')}</p>` : ''}</article>`).join('')}</div>`;
+      panel.innerHTML = heading('EPOCHENWANDEL', 'Modernisierung deines Bestands',
+        'Hier erscheinen Verbesserungen für deine vorhandenen Gebäude in der aktuellen Epoche. Forschung und Vorräte bestimmen, was du umsetzen kannst.') + this.renderProjects('modernization');
     } else if (this.view === 'military') {
       const doctrine = doctrineForYear(this.engine.getCurrentYear());
       panel.innerHTML = heading('SICHERHEIT & VERTEIDIGUNG', 'Die Garnison',
@@ -1961,12 +1993,16 @@ export class KingdomGameUI {
             10 ${name} rekrutieren</button></article>`).join('')}</div>
         <p class="muted tip">Mit deiner Garnison ziehst du unter „Feldzüge“ gegen rivalisierende Nachbarn.
           Kasernen, Ausbildung und Ausrüstung erhöhen die Kampfkraft, Mauern und Burgen die Verteidigung.</p>
+        <h3>Ausbildung und Modernisierung</h3><div class="build-grid">${this.engine.getGarrisonDevelopment(this.player.id).map(p=>`
+          <article class="build-card"><h3>${escape(p.name)}</h3><p>+${p.gain} ${p.field==='trainingLevel'?'Ausbildung':'Ausrüstung'} (höchstens 100)</p>
+          <p class="cost">${format(p.cost.gold)} Gold · ${format(p.cost.food)} Nahrung · ${format(p.cost.wood)} Holz · ${format(p.cost.iron)} Eisen</p>
+          <button data-garrison="${p.id}" ${p.available?'':'disabled'}>Garnison verbessern</button></article>`).join('')}</div>
         <div class="quick-actions"><button data-open="war" class="primary">Zum Kriegsrat →</button></div>`;
     } else if (this.view === 'culture') {
       const events = this.engine.getFestivalOptions(this.player.id);
       const faith = this.engine.getReligiousOverview(this.player.id);
       panel.innerHTML = heading('KULTUR & VOLK', 'Feste im Jahreskreis',
-        'Feiere saisonale und historische Anlässe aus dem bestehenden Kultur- und Religionssystem. Kosten und Folgen sind verbindlich.') +
+        'Gemeinschaftliche Mahlzeiten, Musik und Nachbarschaft ergänzen den saisonalen Jahreskreis. Kleine Zusammenkünfte sind monatlich möglich; sie sind Spielaktionen und keine belegten historischen Ereignisse.') +
         `<article class="build-card" aria-label="Religionsübersicht">
         <h3>Glauben im Reich</h3><p>Vorherrschend: ${escape(faith.dominant)}</p>
         <p>Kultureller Einfluss: ${format(faith.culturalInfluence)} / 100 · Religionsfreiheit:
@@ -2128,7 +2164,7 @@ export class KingdomGameUI {
       const candidates = this.engine.getCourtCandidates(this.player.id);
       panel.innerHTML = heading('OPTIONALE HOFVERWALTUNG', 'Deine Berater',
         'Bürger lernen durch ihre Aufgaben. Beratungsmodus ist Standard; Automatik bleibt pro Amt freiwillig.') +
-        `<div class="build-grid">${COURT_OFFICE_IDS.map((office) => {
+        this.renderAdministration() + `<div class="build-grid">${COURT_OFFICE_IDS.map((office) => {
           const def = COURT_OFFICES[office];
           const entry = assigned.find((a) => a.office === office);
           return `<article class="build-card"><h3>${escape(def.name)}</h3><p>${escape(def.description)}</p>
@@ -2158,6 +2194,7 @@ export class KingdomGameUI {
       const report = historicalMonthReport(year, month);
       const topics: Record<typeof this.historyTopic, string> = {
         all: 'Zeitbild: alle Themen', ...KNOWLEDGE_TOPICS,
+        local: 'Ganderkesee: Land & Geschichte',
         events: 'Ereignisse dieses Monats', periods: 'Zeiträume & Jahrzehnte', archive: 'Chronologie bis heute', exhibitions: 'Ausstellungen fördern'
       };
       const icons: Record<HistoryKind, string> = {
@@ -2172,7 +2209,15 @@ export class KingdomGameUI {
           <a href="${escape(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">Quelle: ${escape(item.sourceTitle)} ↗</a>
         </article>`).join('')}</div>`;
       let content: string;
-      if (this.historyTopic === 'exhibitions') {
+      if (this.historyTopic === 'local') {
+        const location=this.engine.getStartLocation();
+        content=`<div class="build-grid"><article class="build-card" data-local-history="home"><h3>${escape(localPlaceName(year))}</h3>
+          <p>${escape(location.description)}</p><p>${year<860?'Der Start liegt vor der urkundlichen Ersterwähnung um 860. Der moderne Ortsname dient nur der Orientierung; eine damalige Siedlung genau am Kartenanker ist nicht belegt.':'Die Siedlung wird um 860 erstmals erwähnt. Deine Herrschaft und ihre Entwicklung bleiben eine eigene Spielgeschichte.'}</p>
+          <a href="${location.sourceUrl}" target="_blank" rel="noopener noreferrer">${location.sourceTitle} ↗</a></article>
+          ${localLandmarks(year).map(item=>`<article class="build-card" data-local-history="${item.id}"><h3>${escape(item.title)}</h3><p>${escape(item.description)}</p><p class="history-evidence">${escape(item.evidence)}</p><a href="${escape(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">Quelle: ${escape(item.sourceTitle)} ↗</a></article>`).join('')}
+          <article class="build-card" data-local-history="landscape"><h3>Geest, Bäche und Hasbruch</h3><p>Die Ganderkeseer Geest bildet eine flachwellige Landschaft. Welse, Dummbäke und Brookbäke verbinden ihre Niederungen. Der heutige Hasbruch ist ein historisch alter Waldstandort; seine Huteeichen erzählen von Waldweide und menschlicher Nutzung. Seine heutige Ausdehnung ist keine belegte Waldgrenze der Bronzezeit.</p><a href="https://www.nlwkn.niedersachsen.de/naturschutzgebiete/naturschutzgebiet-hasbruch-41382.html" target="_blank" rel="noopener noreferrer">NLWKN: Hasbruch ↗</a></article>
+          <article class="build-card" data-local-history="sources"><h3>So liest du die Landkarte</h3><p>20 × 14 km, Norden oben, Maßstabsbalken 2 km. Die Farben zeigen die Geländehöhe, Höhenlinien liegen 5 m auseinander. Blau markiert ausgewählte reale Bach- und Flussachsen.</p><p>${LOCAL_MAP_NOTE}</p><p>Der Aufbauplan mit 16 Bezirken und die Strategiewelt mit Nachbarn sind Spielmodelle. Ihre Gebäude, Besitzverhältnisse und Wege sind keine historischen Kartierungen Ganderkesees.</p><p>${LOCAL_MAP_CREDIT}</p><a href="${import.meta.env.BASE_URL}maps/ganderkesee-source.json" target="_blank" rel="noopener noreferrer">Datenherkunft, Verarbeitung und Lizenzen ↗</a></article></div>`;
+      } else if (this.historyTopic === 'exhibitions') {
         content = `<p>Kulturförderung ist freiwillig: Jede Ausstellung kostet Gold und bringt einmalig +2 Kultur sowie +1 Prestige.</p>
           <div class="build-grid">${exhibitions.slice().reverse().map((entry) => `
           <article class="build-card"><h3>${escape(entry.milestone.title)}</h3>
@@ -2246,6 +2291,29 @@ export class KingdomGameUI {
       this.renderPanel();
       this.updatePanelPagination();
     });
+    panel.querySelector<HTMLSelectElement>('[data-administration-policy]')?.addEventListener('change',event=>void this.run(()=>{
+      const prefs=this.requireEngine().getAdministration(this.requirePlayer().id);
+      prefs.policy=(event.target as HTMLSelectElement).value as AdministrationPolicy;
+      this.requireEngine().setAdministration(this.requirePlayer().id,prefs);
+    }));
+    panel.querySelectorAll<HTMLInputElement>('[data-administration-domain]').forEach(input=>input.addEventListener('change',()=>void this.run(()=>{
+      const prefs=this.requireEngine().getAdministration(this.requirePlayer().id);
+      prefs.domains[input.dataset.administrationDomain as AdministrationDomain]=input.checked;
+      this.requireEngine().setAdministration(this.requirePlayer().id,prefs);
+    })));
+    panel.querySelectorAll<HTMLButtonElement>('[data-administration-preset]').forEach(button=>button.addEventListener('click',()=>void this.run(()=>{
+      const enabled=button.dataset.administrationPreset==='watch';
+      const prefs=this.requireEngine().getAdministration(this.requirePlayer().id);
+      ADMIN_DOMAINS.forEach(domain=>prefs.domains[domain]=enabled);
+      this.requireEngine().setAdministration(this.requirePlayer().id,prefs);
+      this.requireEngine().setCouncilAutomatic(this.requirePlayer().id,enabled);
+      if(!enabled)for(const assistant of this.requireEngine().getCourtAssistants(this.requirePlayer().id))
+        this.requireEngine().setCourtAssistantMode(this.requirePlayer().id,assistant.office,'beratung');
+      this.notify(enabled?'Verwaltung und Ereignisse delegiert. Mit Fortsetzen kannst du zuschauen.':'Die Entscheidungen liegen wieder bei dir.');
+    })));
+    panel.querySelectorAll<HTMLButtonElement>('[data-garrison]').forEach(button=>button.addEventListener('click',()=>void this.run(()=>{
+      this.notify(this.requireEngine().improveGarrison(this.requirePlayer().id,button.dataset.garrison!));
+    })));
     panel.querySelectorAll<HTMLButtonElement>('[data-civic-assign]').forEach(button => {
       button.addEventListener('click',()=>void this.run(()=>{
         const missionId=button.dataset.civicAssign??'';
@@ -2493,21 +2561,18 @@ export class KingdomGameUI {
         });
       });
     });
-    panel.querySelector<HTMLFormElement>('#tax-form')?.addEventListener('submit', (event: SubmitEvent): void => {
-      event.preventDefault();
-      void this.run((): void => {
-        const select = panel.querySelector<HTMLSelectElement>('#tax-rate');
-        if (!select) return;
-        this.requireEngine().setTaxRate(this.requirePlayer().id, Number(select.value) / 100);
-        this.audio.playEffect('success');
-        this.record(`Steuersatz auf ${select.value} % festgelegt.`);
-        this.notify(`Steuersatz geändert: ${select.value} %.`);
-      });
+    const taxSlider=panel.querySelector<HTMLInputElement>('#tax-rate');
+    taxSlider?.addEventListener('input',()=>{
+      this.requireEngine().setTaxRate(this.requirePlayer().id,Number(taxSlider.value)/100);
+      const output=panel.querySelector('#tax-value'); if(output)output.textContent=taxSlider.value+' %';
     });
+    taxSlider?.addEventListener('change',()=>{this.record(`Steuersatz auf ${taxSlider.value} % festgelegt.`);this.refresh();});
     const tradeForm = panel.querySelector<HTMLFormElement>('#trade-form');
     if (tradeForm) {
       const updateQuote = (): void => {
         const data = new FormData(tradeForm);
+        this.tradeResource=String(data.get('resource')) as MarketResource;
+        this.tradeAmount=String(data.get('amount')??'');
         const amount = Number(data.get('amount'));
         const quote = panel.querySelector('#trade-quote');
         if (!quote) return;
@@ -2517,7 +2582,7 @@ export class KingdomGameUI {
         }
         const resource = String(data.get('resource')) as MarketResource;
         const engine = this.requireEngine();
-        quote.textContent = `Kauf: ${format(engine.quoteTrade(resource, amount, 'buy'))} Gold · Verkauf: ${
+        quote.textContent = `Vorrat: ${format(this.requirePlayer().kingdom.resources[resource])} ${RESOURCE_NAMES[resource]} · Kauf: ${format(engine.quoteTrade(resource, amount, 'buy'))} Gold · Verkauf: ${
           format(engine.quoteTrade(resource, amount, 'sell'))} Gold`;
       };
       tradeForm.addEventListener('input', updateQuote);
@@ -2608,7 +2673,7 @@ export class KingdomGameUI {
     this.root.querySelector('.map-card')?.setAttribute('data-level', level);
     this.root.querySelectorAll<HTMLElement>('[data-map-level]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mapLevel === level)));
     const label = this.root.querySelector<HTMLElement>('#zoom-level-label');
-    if (label) label.textContent = level === 'dorf' ? 'Siedlung · 16 Bezirke' : level === 'schreibtisch' ? 'Dein Schreibtisch' : 'Zentraleuropa · Flüsse & Landschaft';
+    if (label) label.textContent = level === 'dorf' ? 'Aufbauplan · 16 Bezirke' : level === 'schreibtisch' ? 'Dein Schreibtisch' : 'Ganderkesee · Geest & Bäche';
     const hint = this.root.querySelector<HTMLElement>('#zoom-hint');
     if (!hint) return;
     if (level !== 'zentraleuropa') {

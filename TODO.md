@@ -8,6 +8,12 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### Stabilisierung und Integration · 24.10.2026
 
+- [x] [Ganderkesee als Startregion](docs/05-technical-architecture/GANDERKESEE.md): amtliches Gelände, echtes Gewässernetz, maßstäbliche Karte und zeitabhängige Ortsmarken mit Quellen. Weitere Startorte benötigen noch Kartenpakete.
+- [x] Popups per Rad/Touch scrollen, Audio im Header, Ressourcenbestand in Wirtschaft, direkter Steuerregler und persistente Handelsauswahl.
+- [x] Sechs delegierbare Bereiche mit Sicher/Normal/Gewagt, gemeinsamem Monatsbudget und Zuschauer-Voreinstellung; Speicherung und BCE-Bürgeraufträge geprüft.
+- [x] Neun zusätzliche Bau-/Modernisierungsprojekte, bestands- und epochenbezogene Sichtbarkeit, Garnisonsverbesserung, monatliche Alltagsfeste und sichtbare Forschungswirkungen.
+- [x] Kassenabrechnung mit Einzelposten und Chronik; wiederholte Katastrophenabzüge und negative Politik-Unterhaltsbestände korrigiert.
+
 - [x] [Frühstart und Zeitbilder](docs/09-history-model/ZEITBILD.md): auswählbar ab 2000 v. Chr., bürgerliche Datumsanzeige ohne Jahr null, frühe Darstellung und verfügbare Grundtechnologien. Bauen, Forschung, Reise und Kulturförderung mit Save/Load geprüft.
 - [x] Quellengeprüfte Antikenereignisse und kulturelle Lesekarten: Tag/Monat, Jahreskontext, Datierungsspannen und Epochenwissen getrennt. Themenfilter, Region, Quellen und Unsicherheiten sichtbar; Monatswechsel und 20 Startjahre in Chromium geprüft.
 - [ ] Weitere regionale Stilunterarten der eingereichten Liste und lückenlose Jahresabdeckung ergänzen; vorhandene Auswahl ersetzt keine vollständige Weltchronik. Jahrtausendelange Balance und echte Geräte bleiben gesonderte Abnahmen.

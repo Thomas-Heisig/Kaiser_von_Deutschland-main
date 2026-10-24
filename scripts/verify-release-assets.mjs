@@ -17,6 +17,12 @@ for(let page=0;page<6;page++){
 }
 const buildings=JSON.parse((await requireFile('assets/kenney/buildings/provenance.json')).toString('utf8'));
 if(buildings.frames?.length!==24)fail.push('GLB building provenance incomplete');
+const localMap=JSON.parse((await requireFile('maps/ganderkesee-map.json')).toString('utf8'));
+if(localMap.crs!=='EPSG:25832'||localMap.rivers?.length<100||!localMap.places?.home)fail.push('Ganderkesee geodata incomplete');
+const terrain=await requireFile('maps/ganderkesee-terrain.webp');
+if(terrain.subarray(8,12).toString()!=='WEBP')fail.push('Ganderkesee terrain invalid');
+const localSource=JSON.parse((await requireFile('maps/ganderkesee-source.json')).toString('utf8'));
+if(!localSource.terrain?.licenseUrl||!localSource.water?.licenseUrl)fail.push('Map attribution missing');
 for(const filename of files){
  const data=await requireFile(filename);
  if(filename.endsWith('.mp3')&&data.length){

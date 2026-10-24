@@ -5,6 +5,8 @@ import type { RivalRealm } from '../core/CampaignWarfareSystem';
 import { StrategyWorld, type StrategyWorldSnapshot } from '../core/StrategyWorld';
 import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature, earlyBuildingName } from './SettlementSceneModel';
 import { formatYear } from '../core/HistoricalCalendar';
+import { startLocation, LOCAL_MAP_NOTE } from '../core/StartLocations';
+import { drawLocalMap, validateLocalMap, type LocalMapData } from './LocalMap';
 import {
   CAMERA_ZOOM_MAX,
   CAMERA_ZOOM_MIN,
@@ -72,6 +74,11 @@ export class KingdomMap {
   /** Relief-Textur der Ebene „Zentraleuropa" (Natural Earth, Public Domain). */
   private reliefTexture?: Texture;
   private reliefLoading = false;
+  private localTexture?: Texture;
+  private localMapData?: LocalMapData;
+  private localLoading = false;
+  private localLoadFailed = false;
+  private onLandmark?: () => void;
   private readonly reliefLayer = new Container();
 
   private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
@@ -544,7 +551,9 @@ export class KingdomMap {
 
   public update(kingdom: Kingdom, selected: keyof KingdomInfrastructure, completed: readonly string[] = [], year = 1200, rivals: readonly RivalRealm[] = []): void {
     if (!this.initialized || this.destroyed) return;
+    const previousYear = this.retroContext?.year;
     this.retroContext = { kingdom, selected, completed, year, rivals };
+    if (previousYear !== year && this.zoomLevel === 'zentraleuropa') this.drawRegionLayer();
     const signature = districtSceneSignature(kingdom.infrastructure, selected,
       this.districtFilter, kingdom.currentSeason, completed) + JSON.stringify(rivals.map(r => [r.id,r.name,r.subjugated])) + JSON.stringify([this.strategyWorld,this.neighborRelations]);
     const epochStyle = year < -799 ? 'bronze' : year < 500 ? 'ancient' : year >= 1945 ? 'modern' : year >= 1800 ? 'industrial' : year >= 1500 ? 'renaissance' : 'medieval';
@@ -710,7 +719,33 @@ export class KingdomMap {
 
   /** Legende der Regionsansicht für die Oberfläche (nie leer). */
   public getRegionLegend(): string {
+    if (this.mapScope === 'home') return this.localLoadFailed ? 'Ganderkesee: Kartendaten konnten nicht geladen werden. Landkarte erneut öffnen, um es nochmals zu versuchen.' : LOCAL_MAP_NOTE;
     return this.regionResult?.message ?? 'Keine Regionsdaten geladen.';
+  }
+
+  public setLandmarkAction(action: () => void): void { this.onLandmark = action; }
+
+  private async loadLocalMap(): Promise<void> {
+    if ((this.localTexture && this.localMapData) || this.localLoading || this.destroyed) return;
+    this.localLoading=true;
+    try {
+      const location=startLocation();
+      const [texture,data]=await Promise.all([
+        Assets.load<Texture>(import.meta.env.BASE_URL+location.terrainAsset),
+        Assets.load<unknown>(import.meta.env.BASE_URL+location.mapAsset)
+      ]);
+      if(this.destroyed)return;
+      this.localMapData=validateLocalMap(data);this.localTexture=texture;this.localLoadFailed=false;
+      this.app.canvas.dataset.localMapLoaded='true';
+      this.app.canvas.dataset.reliefLoaded='true';
+      this.app.canvas.dataset.mapLocation=location.id;
+      this.drawRegionLayer();this.fit();
+    } catch(error) {
+      if(this.destroyed)return;
+      this.localLoadFailed=true;this.app.canvas.dataset.localMapLoaded='false';
+      console.warn('Heimatkarte nicht verfügbar',error);
+      this.drawRegionLayer();this.fit();
+    } finally {this.localLoading=false;}
   }
 
   private syncLevelFromZoom(): void {
@@ -757,6 +792,7 @@ export class KingdomMap {
    * bedienbar (nur Punkte und Namen).
    */
   private async loadReliefTexture(): Promise<void> {
+    if (this.mapScope === 'home') return this.loadLocalMap();
     if (this.reliefTexture || this.reliefLoading || this.destroyed) return;
     this.reliefLoading = true;
     try {
@@ -788,6 +824,13 @@ export class KingdomMap {
     this.app.canvas.dataset.regionCount = String(this.regionResult?.labels.length ?? 0);
     for (const child of this.regionLayer.removeChildren()) child.destroy({ children: true });
     for (const child of this.reliefLayer.removeChildren()) child.destroy({ children: true });
+    if (this.mapScope === 'home') {
+      const count=drawLocalMap(this.reliefLayer,this.localTexture,this.localMapData,this.retroContext?.year??1200,this.onLandmark);
+      this.app.canvas.dataset.localRiverSegments=String(count);
+      this.app.canvas.dataset.regionCount=String(this.localMapData?Object.keys(this.localMapData.places).length:0);
+      if(this.localLoadFailed) this.regionLayer.addChild(new Text({text:'Kartendaten fehlen · Landkarte erneut öffnen',style:{fontSize:22,fill:0xffffff}}));
+      return;
+    }
     const result = this.regionResult;
     const width = 960;
     const height = 660;
@@ -966,7 +1009,7 @@ export class KingdomMap {
       // mehr Zoom vergrößert sie für Details. Die Dorf-Referenz (1350 × 850)
       // würde die Reliefkarte klein und versetzt darstellen.
       const mapWidth = 960;
-      const mapHeight = 660;
+      const mapHeight = this.mapScope === 'home' ? 672 : 660;
       const fitScale = Math.min((this.app.screen.width - 24) / mapWidth, (this.app.screen.height - 76) / mapHeight);
       const scale = fitScale * (0.95 + (zoomToSlider(this.zoom) - 28) * 0.006);
       this.world.scale.set(scale);
@@ -1111,5 +1154,7 @@ export class KingdomMap {
     if (this.initialized) this.app.destroy(true, { children: true });
     else this.world.destroy({ children: true });
     this.reliefTexture = undefined;
+    this.localTexture = undefined;
+    this.localMapData = undefined;
   }
 }

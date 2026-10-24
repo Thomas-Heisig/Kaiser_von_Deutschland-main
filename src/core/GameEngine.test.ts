@@ -287,10 +287,71 @@ describe('Playable campaign integration', (): void => {
     expect(engine.getCouncilHistory(second.id)).toHaveLength(0);
   });
 
+  it('delegates within a shared budget and restores Bronze Age civic assignments',async()=>{
+    const engine=new GameEngine({startingYear:-1999,randomEvents:false,enableWiki:false});engines.push(engine);
+    const player=engine.addPlayer({name:'Test',kingdomName:'Geest',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    Object.assign(player.kingdom.resources,{gold:50000,food:100000,wood:5000,stone:5000,iron:5000});
+    const prefs=engine.getAdministration(player.id);
+    for(const domain of Object.keys(prefs.domains) as Array<keyof typeof prefs.domains>)prefs.domains[domain]=true;
+    engine.setAdministration(player.id,prefs);engine.setCouncilAutomatic(player.id,true);
+    const originalBudget=engine.getAdministrationBudget(player.id).budget;
+    await engine.advanceMonth();
+    const report=engine.getTreasuryReport(player.id)!;
+    const spent=report.entries.filter(e=>e.reason.startsWith('Automatik:')).reduce((sum,e)=>sum+Math.max(0,-e.amount),0);
+    // Monthly earnings precede budget allocation; allow precisely their effect on the 5% budget.
+    const beforeAuto=report.opening+report.entries.filter(e=>!e.reason.startsWith('Automatik:')).reduce((sum,e)=>sum+e.amount,0);
+    expect(spent).toBeLessThanOrEqual(originalBudget+Math.max(0,beforeAuto-report.opening)*.05+1);
+    expect(engine.getCivicMissions(player.id).active.length).toBeGreaterThan(0);
+    expect(engine.getCivicMissions(player.id).active[0].started).toBeLessThan(0);
+    expect(report.closing).toBeCloseTo(player.kingdom.resources.gold);
+    await engine.saveGame('administration-bronze');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('administration-bronze');
+    expect(restored.getAdministration(player.id)).toEqual(prefs);
+    expect(restored.getCivicMissions(player.id).active).toEqual(engine.getCivicMissions(player.id).active);
+  });
+
+  it('allows small monthly celebrations again after the month changes, including BCE saves',async()=>{
+    const engine=new GameEngine({startingYear:-1999,randomEvents:false,enableWiki:false});engines.push(engine);
+    const player=engine.addPlayer({name:'Fest',kingdomName:'Geest',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    player.kingdom.resources.gold=10000;player.kingdom.resources.food=10000;
+    engine.holdFestival(player.id,'social-meal');
+    expect(()=>engine.holdFestival(player.id,'social-meal')).toThrow('bereits');
+    await engine.saveGame('bronze-festival');
+    await engine.loadGame('bronze-festival');
+    expect(()=>engine.holdFestival(player.id,'social-meal')).toThrow('bereits');
+    await engine.advanceMonth();
+    expect(engine.getFestivalOptions(player.id).find(o=>o.event.id==='social-meal')?.alreadyHeld).toBe(false);
+  });
+
+  it('charges a disaster once, logs the exact loss, and persists its resolution',async()=>{
+    const engine=new GameEngine({startingYear:1200,randomEvents:true,enableWiki:false});engines.push(engine);
+    const player=engine.addPlayer({name:'Test',kingdomName:'Geest',gender:'other'});
+    await engine.startGame();engine.pauseGame();engine.setCouncilAutomatic(player.id,true);
+    player.kingdom.resources.gold=100000;player.kingdom.resources.food=100000;
+    const climate=engine.getClimateSystem();
+    const snapshot=climate.serialize();
+    snapshot.disasters.push(['test-flood',{id:'test-flood',type:'flood',severity:3,year:1200,month:1,affectedRegions:[],casualties:0,economicDamage:750,cropDamage:50,buildingsDamaged:0,resolved:false}]);
+    // Seed through the supported climate save format.
+    const {ClimateSystem}=await import('./ClimateSystem');
+    const seeded=ClimateSystem.deserialize(snapshot);
+    vi.spyOn(climate,'getActiveDisasters').mockImplementation(()=>seeded.getActiveDisasters());
+    vi.spyOn(climate,'resolveDisaster').mockImplementation(id=>seeded.resolveDisaster(id));
+    await engine.advanceMonth();
+    expect(engine.getTreasuryReport(player.id)?.entries.find(e=>e.reason==='Naturereignis: Hochwasser')?.amount).toBe(-750);
+    expect(engine.getChronicle().some(e=>e.message.includes('einmaliger Verlust 750 Gold'))).toBe(true);
+    expect(seeded.getActiveDisasters()).toHaveLength(0);
+    expect(ClimateSystem.deserialize(seeded.serialize()).getActiveDisasters()).toHaveLength(0);
+    await engine.advanceMonth();
+    expect(engine.getTreasuryReport(player.id)?.entries.some(e=>e.reason==='Naturereignis: Hochwasser')).toBe(false);
+  });
+
   it('rejects premature modernization and preserves old-save-compatible progress', async (): Promise<void> => {
     const engine = await campaign();
     const player = engine.getPlayers()[0];
-    expect(engine.getModernizationOptions(player.id)).toHaveLength(6);
+    expect(engine.getModernizationOptions(player.id).some(x=>x.visible&&x.project.id==='village-well')).toBe(true);
+    expect(engine.getModernizationOptions(player.id).find(x=>x.project.id==='manufacturing')?.visible).toBe(false);
     expect(engine.getModernizationOptions(player.id).every(x => !x.canStart)).toBe(true);
     expect(() => engine.launchModernization(player.id,'manufacturing')).toThrow('Verfügbar ab');
     await engine.saveGame('early-modernization');
@@ -634,6 +695,10 @@ describe('Playable campaign integration', (): void => {
     expect(() => engine.takeWarLoan(player.id)).toThrow('bereits');
     await engine.advanceMonth();
     expect(engine.getWarFinanceOverview(player.id).stats.totalWarDebt).toBeLessThan(debt);
+    const report=engine.getTreasuryReport(player.id)!;
+    expect(report.entries.find(e=>e.reason.includes('Darlehen'))?.amount).toBeLessThan(0);
+    expect(report.opening+report.entries.reduce((sum,e)=>sum+e.amount,0)).toBeCloseTo(report.closing);
+    expect(engine.getChronicle().some(e=>e.message.includes('Kassenabschluss'))).toBe(true);
     await engine.saveGame('war-loan');
     const restored = new GameEngine({ enableWiki: false });
     engines.push(restored);
@@ -641,6 +706,7 @@ describe('Playable campaign integration', (): void => {
     expect(restored.getWarFinanceOverview(player.id).stats.totalWarDebt)
       .toBeCloseTo(engine.getWarFinanceOverview(player.id).stats.totalWarDebt);
     expect(restored.getWarFinanceOverview(player.id).available).toBe(false);
+    expect(restored.getTreasuryReport(player.id)).toEqual(report);
   });
 
   it('lets rulers send embassies and restores relations after saving', async (): Promise<void> => {

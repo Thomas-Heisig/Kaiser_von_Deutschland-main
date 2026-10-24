@@ -37,7 +37,7 @@ try {
     }
     if (year<=0 && !(await page.locator('#date').textContent()).includes(`${1-year} v. Chr.`)) failures.push('Civil BCE date missing');
     if (await page.locator('.map-card').getAttribute('data-level') !== 'schreibtisch') failures.push('Desk not first');
-    await inViewport(page, '.header-actions button, .atlas-navigation button, #zoom-slider, #legal-open');
+    await inViewport(page, '.header-actions > button, #game-music-settings > summary, .atlas-navigation button, #zoom-slider, #legal-open');
     if (width === 320) {
       await inViewport(page, '#end-turn, #turn-status');
       await page.locator('#end-turn').click();
