@@ -46,7 +46,17 @@
     "assets/kenney/buildings/districts-v1-3.webp",
     "assets/kenney/buildings/districts-v1-4.webp",
     "assets/kenney/buildings/districts-v1-5.webp",
-    "assets/kenney/buildings/provenance.json"
+    "assets/kenney/buildings/provenance.json",
+    "music/schleier-der-vorzeit.mp3",
+    "covers/schleier-der-vorzeit.webp",
+    "music/ahnenklang.mp3",
+    "covers/ahnenklang.webp",
+    "music/bronze-erwacht.mp3",
+    "covers/bronze-erwacht.webp",
+    "music/ruf-der-luren.mp3",
+    "covers/ruf-der-luren.webp",
+    "music/erz-und-gemeinschaft.mp3",
+    "covers/erz-und-gemeinschaft.webp"
   ],
   "note": "Aktiver Browsercache kann vom Betriebssystem bei Platzmangel gelöscht werden."
 }

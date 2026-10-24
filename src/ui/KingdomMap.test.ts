@@ -13,7 +13,7 @@ function mapFixture() {
     observer: { disconnect: vi.fn() }
     , renderedBuildings: { dispose: vi.fn() }
   });
-  for (const name of ['settlements', 'retroScenery', 'neighbors', 'animation',
+  for (const name of ['settlements', 'settlementTerrain', 'retroScenery', 'neighbors', 'animation',
     'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer']) {
     map[name] = { visible: true, children: [{}] };
   }

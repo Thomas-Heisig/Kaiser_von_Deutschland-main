@@ -89,8 +89,12 @@ describe('Campaign end-to-end and cross-system coupling', (): void => {
       Object.assign(player.kingdom.resources,{gold:1000000,food:1000000,wood:100000,stone:100000,iron:100000});
       engine.setTaxRate(id,10);
       for(const [type,count] of Object.entries({farms:20,markets:8,schools:8,universities:1,churches:6,ports:2,castles:1})) {
-        for(let i=0;i<count;i++)expect(await engine.buildForPlayer(id,type)).toBe(true);
+        for(let i=0;i<count;i++){
+          while(engine.getProjects(id).length>=12)await engine.advanceMonth();
+          expect(await engine.buildForPlayer(id,type)).toBe(true);
+        }
       }
+      while(engine.getProjects(id).length)await engine.advanceMonth();
       if(campaignId==='hanse') {
         for(const route of engine.getAvailableTradeRoutes(player).slice(0,2))
           expect(engine.activateTradeRoute(player,route.id).success).toBe(true);
@@ -143,13 +147,13 @@ describe('Campaign end-to-end and cross-system coupling', (): void => {
       // Kapitel 1: 12 Bauernhöfe, 3 Marktplätze
       for (let i = 0; i < 4; i++) expect(await engine.buildForPlayer(player.id, 'farms')).toBe(true);
       for (let i = 0; i < 2; i++) expect(await engine.buildForPlayer(player.id, 'markets')).toBe(true);
-      await advance(engine, 1);
+      await advance(engine, 6);
       expect(engine.getCampaignChapterStatus(player.id).index).toBe(1);
 
       // Kapitel 2: 2 Schulen, 65 % Zufriedenheit
       expect(await engine.buildForPlayer(player.id, 'schools')).toBe(true);
       kingdom.happiness = 80;
-      await advance(engine, 1);
+      await advance(engine, 6);
       expect(engine.getCampaignChapterStatus(player.id).index).toBeGreaterThanOrEqual(2);
 
       // Zwischenspeichern und wieder laden (echter Produktionspfad).
@@ -187,7 +191,7 @@ describe('Campaign end-to-end and cross-system coupling', (): void => {
       // ausbauen, bis Produktion und Unterhalt eine positive Versorgung ergeben.
       for (let i = 0; i < 3; i++) expect(await restored.buildForPlayer(player.id, 'markets')).toBe(true);
 
-      await advance(restored, 2);
+      await advance(restored, 6);
       expect(restored.getCampaignChapterStatus(player.id).finished).toBe(true);
       expect(completedChapters.length).toBeGreaterThanOrEqual(2);
     });

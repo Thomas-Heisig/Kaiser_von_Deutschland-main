@@ -8,6 +8,8 @@ export type FieldUnit = 'infantry' | 'archers' | 'cavalry';
 
 /** Computer-controlled neighbouring realm of the build campaign. */
 export interface RivalRealm {
+  baseSoldiers?:number;
+  generation?:number;
   id: string;
   name: string;
   description: string;
@@ -249,14 +251,13 @@ export class CampaignWarfareSystem {
    */
   public attackRival(
     playerId: string, kingdom: Kingdom, rivalId: string,
-    date: { year: number; month: number }, modifiers: PowerModifiers = {}
+    date: { year: number; month: number }, modifiers: PowerModifiers = {}, prepaid=false
   ): BattleReport {
     const rival = this.rivals.find((entry: RivalRealm): boolean => entry.playerId === playerId && entry.id === rivalId);
     if (!rival) throw new Error('Unbekannter Gegner.');
     if (rival.subjugated) throw new Error(`${rival.name} ist bereits unterworfen.`);
     const monthIndex = date.year * 12 + date.month;
-    this.assertCampaignPossible(playerId, kingdom, monthIndex);
-    this.payCampaign(kingdom);
+    if(!prepaid){this.assertCampaignPossible(playerId, kingdom, monthIndex);this.payCampaign(kingdom);}
     this.lastCampaignMonth.set(playerId, monthIndex);
 
     const attackerPower = CampaignWarfareSystem.armyPower(kingdom, modifiers, date.year);
@@ -268,6 +269,7 @@ export class CampaignWarfareSystem {
     const attackerLosses = this.applyCasualties(kingdom, won
       ? Math.min(0.4, 0.06 + 0.14 * ratio) : 0.25 + 0.15 * this.random(), ownSoldiers);
     const defenderLosses = Math.round(rival.soldiers * (won ? 0.5 : Math.min(0.3, 0.08 + 0.1 / Math.max(0.2, ratio))));
+    rival.baseSoldiers=Math.max(rival.baseSoldiers??0,rival.soldiers);
     rival.soldiers = Math.max(0, rival.soldiers - defenderLosses);
 
     let plunder = 0;
@@ -306,12 +308,11 @@ export class CampaignWarfareSystem {
   public attackPlayer(
     attacker: { id: string; kingdom: Kingdom }, defender: { id: string; kingdom: Kingdom },
     date: { year: number; month: number },
-    modifiers: { attacker?: PowerModifiers; defender?: PowerModifiers } = {}
+    modifiers: { attacker?: PowerModifiers; defender?: PowerModifiers } = {},prepaid=false
   ): BattleReport {
     if (attacker.id === defender.id) throw new Error('Ein Reich kann sich nicht selbst angreifen.');
     const monthIndex = date.year * 12 + date.month;
-    this.assertCampaignPossible(attacker.id, attacker.kingdom, monthIndex);
-    this.payCampaign(attacker.kingdom);
+    if(!prepaid){this.assertCampaignPossible(attacker.id, attacker.kingdom, monthIndex);this.payCampaign(attacker.kingdom);}
     this.lastCampaignMonth.set(attacker.id, monthIndex);
 
     const attackerPower = CampaignWarfareSystem.armyPower(attacker.kingdom, modifiers.attacker, date.year);
@@ -401,7 +402,7 @@ export class CampaignWarfareSystem {
     for (const rival of this.rivals) {
       if (rival.subjugated) continue;
       // A bounded baseline prevents exponential opponent scaling after long campaigns.
-      const base = RIVAL_TEMPLATES.find((template) => template.id === rival.id)?.soldiers ?? 200;
+      const base = rival.baseSoldiers ?? RIVAL_TEMPLATES.find((template) => template.id === rival.id)?.soldiers ?? 200;
       const limit = base * 5;
       rival.soldiers = Math.min(limit, Math.round(rival.soldiers * 1.04 + 4));
       if (!year) continue;
@@ -427,6 +428,21 @@ export class CampaignWarfareSystem {
       news.push({ playerId: rival.playerId, rivalId: rival.id, name: identity?.name ?? rival.name, personality, year, message });
     }
     return news;
+  }
+
+  /** New fictional neighbours beyond a pacified frontier; defeated realms remain vassals. */
+  public expandFrontier(playerId:string,year:number):RivalRealm[] {
+    const previous=this.rivals.filter(r=>r.playerId===playerId);
+    if(!previous.length||previous.some(r=>!r.subjugated))return [];
+    const generation=Math.max(...previous.map(r=>r.generation??0))+1;
+    const base=Math.min(100000,Math.ceil(Math.max(...previous.map(r=>r.baseSoldiers??r.soldiers),1100)*1.25));
+    const label=year<500?'Bund':year<1800?'Grenzherrschaft':'Regionalmacht';
+    const fresh=[0,1,2].map(i=>({id:`frontier-${generation}-${i}`,name:`${label} ${generation} · ${['West','Nord','Ost'][i]}`,
+      description:'Neue, fiktive Macht jenseits der befriedeten Grenze. Keine historische Staatsgrenze.',playerId,
+      soldiers:Math.ceil(base*(1+i*.25)),baseSoldiers:Math.ceil(base*(1+i*.25)),generation,
+      fortification:Math.min(1.8,1.15+generation*.05+i*.1),loot:Math.min(50000,5000+generation*1500+i*2000),
+      settlers:500+generation*100,subjugated:false}));
+    this.rivals.push(...fresh);return fresh.map(r=>({...r}));
   }
 
   /**

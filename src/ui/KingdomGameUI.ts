@@ -17,11 +17,11 @@ import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
 import { SETTLEMENT_DISTRICTS, DistrictFilter, SEASON_LABELS, earlyBuildingName } from './SettlementSceneModel';
 import { GameAudio } from './GameAudio';
-import { MusicJukebox } from './MusicJukebox';
+import { MAIN_THEME, MusicJukebox } from './MusicJukebox';
 import { campaignsForYear, CAMPAIGNS, CampaignId } from '../core/CampaignCatalog';
 import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../core/CourtAssistantRegistry';
 import { GameAmbience, Soundscape } from './GameAmbience';
-import { historicalMonthReport, milestoneDate, milestoneEvidence, type HistoryKind, type WorldMilestone } from '../core/WorldHistoryCatalog';
+import { milestonesThroughDate, historicalMonthReport, milestoneDate, milestoneEvidence, type HistoryKind, type WorldMilestone } from '../core/WorldHistoryCatalog';
 import { bce, formatYear, formatYearRange } from '../core/HistoricalCalendar';
 import { knowledgeForDate, knowledgeSpotlight, KNOWLEDGE_TOPICS, type KnowledgeTopic } from '../core/EraKnowledgeCatalog';
 import { HelpSystem } from './HelpSystem';
@@ -102,6 +102,9 @@ export class KingdomGameUI {
   private selected: keyof KingdomInfrastructure = 'farms';
   private districtFilter: DistrictFilter = 'alle';
   private busy: boolean = false;
+  private showJourneyGuide=true;
+  private historyYear:number|null=null;
+  private newsFilter="important";
   private saves: SaveMeta[] = [];
   private journal: JournalEntry[] = [];
   private characterPage = 0;
@@ -174,6 +177,7 @@ export class KingdomGameUI {
 <button type="button" role="tab" id="settings-tab-advisor" data-settings-tab="advisor" aria-controls="settings-panel-advisor" aria-selected="false" tabindex="-1">🧠 KI</button>
 <button type="button" role="tab" id="settings-tab-offline" data-settings-tab="offline" aria-controls="settings-panel-offline" aria-selected="false" tabindex="-1">⬇ Installation</button></div>
 <section id="settings-panel-display" role="tabpanel" class="settings-tab-panel" aria-labelledby="settings-tab-display" data-settings-panel="display" ><h3>Anzeige & Bedienung</h3>
+<label class="checkbox"><input type="checkbox" id="setting-journey-guide" ${this.showJourneyGuide?'checked':''}> „Dein Weg durch das Spiel“ anzeigen</label>
 <label class="checkbox"><input type="checkbox" id="setting-motion"> Kartenanimation aktivieren</label>
 <p id="setting-motion-hint" class="muted">Bewegungen und Karteneffekte ein- oder ausschalten.</p>
 <label>Kartendarstellung<select id="setting-map-style"><option value="flat">2D · Draufsicht</option><option value="isometric">3D-Look · isometrisch</option></select></label>
@@ -262,6 +266,9 @@ export class KingdomGameUI {
         const panel = this.root.querySelector<HTMLElement>('[data-settings-panel]:not([hidden])');
         if (panel) panel.scrollTop += Number(button.dataset.settingsPage) * Math.max(1, panel.clientHeight - 48);
       };
+    });
+    this.root.querySelector<HTMLInputElement>('#setting-journey-guide')?.addEventListener('change',event=>{
+      this.showJourneyGuide=(event.target as HTMLInputElement).checked;this.saveDisplayPreferences();this.renderReport();
     });
     const mapSetting = this.root.querySelector<HTMLSelectElement>('#setting-map-style');
     if (mapSetting) {
@@ -441,7 +448,7 @@ export class KingdomGameUI {
 
   private saveDisplayPreferences(): void {
     try {
-      localStorage.setItem('kaiser-display-settings', JSON.stringify({ motion: this.motionEnabled, mapStyle: this.mapStyle }));
+      localStorage.setItem('kaiser-display-settings', JSON.stringify({ motion: this.motionEnabled, mapStyle: this.mapStyle, showJourneyGuide:this.showJourneyGuide }));
     } catch { /* Storage may be blocked: session settings still apply. */ }
   }
 
@@ -451,7 +458,8 @@ export class KingdomGameUI {
       if (!raw) return;
       const stored: unknown = JSON.parse(raw);
       if (!stored || typeof stored !== 'object') return;
-      const value = stored as { motion?: unknown; mapStyle?: unknown };
+      const value = stored as { motion?: unknown; mapStyle?: unknown; showJourneyGuide?:unknown };
+      if(typeof value.showJourneyGuide==='boolean')this.showJourneyGuide=value.showJourneyGuide;
       if (typeof value.motion === 'boolean') this.motionEnabled = value.motion;
       if (value.mapStyle === 'flat' || value.mapStyle === 'isometric') this.mapStyle = value.mapStyle;
     } catch { /* Invalid or disabled storage cannot prevent starting the game. */ }
@@ -461,7 +469,7 @@ export class KingdomGameUI {
     this.root.innerHTML = `
       <main class="welcome">
         <div class="intro-overlay" id="intro-overlay" aria-label="Filmischer Spieleinstieg">
-          <div class="production-card" id="production-card"><span class="production-sigil">♜</span><strong>Eine Thomas Heisig Produktion</strong><small>KAISER VON DEUTSCHLAND</small></div><video id="intro-video" playsinline preload="auto" poster="${import.meta.env.BASE_URL}covers/zeit-vergeht.webp"><source src="${import.meta.env.BASE_URL}video/intro-original.mp4" type="video/mp4"></video>
+          <div class="production-card" id="production-card"><span class="production-sigil">♜</span><strong>Eine Thomas Heisig Produktion</strong><small>KAISER VON DEUTSCHLAND</small></div><video id="intro-video" playsinline preload="auto" poster="${MAIN_THEME.coverUrl}"><source src="${import.meta.env.BASE_URL}video/intro-original.mp4" type="video/mp4"></video>
           <button type="button" id="intro-activation" class="intro-activation" hidden>▶ Intro mit Ton starten</button>
           <div class="intro-caption"><span>KAISER VON DEUTSCHLAND</span><p>Die Geschichte beginnt</p></div>
           <button type="button" id="intro-skip" class="intro-skip">Intro überspringen →</button>
@@ -480,7 +488,7 @@ export class KingdomGameUI {
             <strong id="start-era-summary">Mittelalter · 1200</strong>
             <p id="start-campaign-summary">Wähle Kampagne und Startzeit. Die Welt wächst mit deinem Reich.</p>
           </div></div>
-          <div class="opening-music" id="opening-music" aria-live="polite"><img src="${import.meta.env.BASE_URL}covers/zeit-vergeht.webp" alt="Cover Zeit vergeht"><span id="opening-music-label">♫ Zeit vergeht · Hauptthema nach dem Intro</span><button type="button" id="opening-toggle" class="opening-toggle" aria-label="Musik pausieren">Ⅱ Pause</button></div>
+          <div class="opening-music" id="opening-music" aria-live="polite"><img src="${MAIN_THEME.coverUrl}" alt="Cover Ancient Veil"><span id="opening-music-label">♫ Ancient Veil · Hauptthema nach dem Intro</span><button type="button" id="opening-toggle" class="opening-toggle" aria-label="Musik pausieren">Ⅱ Pause</button></div>
           <form id="new-game">
             <label>Startepoche<select name="startYear" id="start-year">
               ${[2000,1500,1200,800,753,490,480,447,431,371,338,336,333,331,323,216,202,44,31,27,15,1].map(year => `<option value="${bce(year)}">${year} v. Chr. · ${year > 800 ? 'Bronzezeit' : 'Antike'}</option>`).join('')}
@@ -694,10 +702,10 @@ export class KingdomGameUI {
         </header>
         <details class="game-music-settings" id="game-music-settings"><summary>🎼 Original-Soundtrack & Titelcover</summary>
         <section class="jukebox jukebox-ingame" aria-label="Musik-Jukebox">
-          <strong>🎼 Original-Soundtrack · 15 Titel</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
-          <div class="jukebox-nowplaying"><img data-jukebox-cover src="${import.meta.env.BASE_URL}covers/zeit-vergeht.webp" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>15 historische und thematische Aufnahmen</small></div></div>
+          <strong>🎼 Original-Soundtrack · ${this.jukebox.getTracks().length} Titel</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
+          <div class="jukebox-nowplaying"><img data-jukebox-cover src="${MAIN_THEME.coverUrl}" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>${this.jukebox.getTracks().length} historische und thematische Aufnahmen</small></div></div>
           <div class="playlist-toolbar"><label>Wiedergabe <select id="playlist-mode"><option value="era">Nach Epoche</option><option value="sequential">Reihenfolge</option><option value="shuffle">Zufällig</option></select></label><label>Wiederholen <select id="playlist-repeat"><option value="all">Alle</option><option value="one">Titel</option><option value="off">Aus</option></select></label></div>
-          <details class="playlist-covers"><summary>Alle 15 Titelcover anzeigen</summary><div class="jukebox-gallery" data-jukebox-gallery aria-label="Alle Titelcover"></div><div class="cover-pagination"><button type="button" data-cover-page="-1" aria-label="Vorherige Cover">←</button><span data-cover-page-label>1 / 5</span><button type="button" data-cover-page="1" aria-label="Weitere Cover">→</button></div></details>
+          <details class="playlist-covers"><summary>Alle ${this.jukebox.getTracks().length} Titelcover anzeigen</summary><div class="jukebox-gallery" data-jukebox-gallery aria-label="Alle Titelcover"></div><div class="cover-pagination"><button type="button" data-cover-page="-1" aria-label="Vorherige Cover">←</button><span data-cover-page-label>1 / 5</span><button type="button" data-cover-page="1" aria-label="Weitere Cover">→</button></div></details>
           <a data-jukebox-download class="jukebox-download" href="#" download>↓ Titel herunterladen</a>
           <p data-jukebox-status role="status"></p>
         </section></details>
@@ -810,12 +818,12 @@ export class KingdomGameUI {
               <button type="button" data-report-tab="history" aria-pressed="false">Geschichte</button>
             </div>
             <section class="report-card" data-report-card="news" aria-label="Was ist passiert?">
-              <h2>Was ist passiert?</h2><small id="report-news-date"></small>
+              <div class="report-news-heading"><h2>Was ist passiert?</h2><label class="sr-only" for="news-filter">Meldungen filtern</label><select id="news-filter"><option value="important">Wichtig</option><option value="all">Alle</option><option value="finance">Kasse</option></select></div><small id="report-news-date"></small>
               <div id="report-news" class="message-content" tabindex="0" aria-label="Aktuelle Meldung vollständig lesen"></div>
               <div class="report-actions"><button type="button" id="report-previous" aria-label="Neuere Meldung">←</button><span id="report-count"></span><button type="button" id="report-next" aria-label="Ältere Meldung">→</button><button type="button" data-view="chronicle">Chronik öffnen</button></div>
             </section>
             <section class="report-card" data-report-card="tutorial" aria-label="Dein nächster Schritt">
-              <h2 id="report-tutorial-title">Dein nächster Schritt</h2><p id="report-tutorial-text"></p>
+              <button type="button" id="hide-journey-guide" aria-label="Spielbegleitung ausblenden">Ausblenden ×</button><h2 id="report-tutorial-title">Dein nächster Schritt</h2><p id="report-tutorial-text"></p>
               <div class="report-actions"><button type="button" id="report-tutorial-go" class="primary">Schritt starten →</button><button type="button" data-view="help">Spielhilfe</button></div>
             </section>
             <section class="report-card" data-report-card="history" aria-label="Wahre Jahresgeschichte">
@@ -898,6 +906,8 @@ export class KingdomGameUI {
         this.root.querySelectorAll('.report-tabs button').forEach(tab => tab.setAttribute('aria-pressed', String(tab === button)));
       };
     });
+    this.root.querySelector('#hide-journey-guide')?.addEventListener('click',()=>{this.showJourneyGuide=false;this.saveDisplayPreferences();this.renderReport();});
+    this.root.querySelector('#news-filter')?.addEventListener('change',event=>{this.newsFilter=(event.target as HTMLSelectElement).value;this.reportIndex=0;this.renderReport();});
     this.root.querySelector('#report-previous')?.addEventListener('click', () => { this.reportIndex--; this.renderReport(); });
     this.root.querySelector('#report-next')?.addEventListener('click', () => { this.reportIndex++; this.renderReport(); });
     this.root.querySelector('#report-tutorial-go')?.addEventListener('click', () => {
@@ -1007,7 +1017,6 @@ export class KingdomGameUI {
         this.notify(`${detail.title}: ${detail.description}`);
       }),
       engine.on('battleResolved', (detail: { report: BattleReport }): void => {
-        this.record(detail.report.summary);
         this.audio.playEffect('battle');
         if (this.player && detail.report.playerIds.includes(this.player.id)) {
           this.showGameAction(detail.report.kind === 'raid' ? '⚔ Überfall auf dein Reich!' : '⚔ Die Schlacht ist entschieden!', detail.report.summary, 'raid', this.wonBattle(detail.report));
@@ -1095,6 +1104,10 @@ export class KingdomGameUI {
         this.showGameAction('⌛ Neue historische Epoche', `${detail.epochName} – eingeordnet ab ${formatYear(detail.year)}${
           detail.evidence === 'belegt' ? '' : detail.evidence === 'naeherung' ? ' (Grenzen genähert)' : ' (Grenzen ungeprüft)'}.`, 'science');
         this.refresh();
+      }),
+      engine.on('projectEvent',(detail:{playerId:string;message:string})=>{if(detail.playerId===this.player?.id){this.journal=engine.getChronicle();this.notify(detail.message);}}),
+      engine.on('timeTravelProgress',(detail:{completed:number;total:number})=>{
+        const progress=this.root.querySelector<HTMLElement>('#time-travel-progress');if(progress)progress.textContent=detail.completed+' / '+detail.total+' Monate';
       }),
       engine.on('tutorialStarted', (detail: { playerId: string }): void => {
         if (this.player?.id !== detail.playerId) return;
@@ -1235,8 +1248,14 @@ export class KingdomGameUI {
       const element = this.root.querySelector('#' + id);
       if (element && element.textContent !== value) element.textContent = value;
     };
-    const entries = engine.getChronicle().filter(entry => !entry.playerId || entry.playerId === this.player!.id);
-    this.journal = entries;
+    this.root.querySelectorAll<HTMLElement>('[data-report-card=tutorial],[data-report-tab=tutorial]').forEach(el=>el.hidden=!this.showJourneyGuide);
+    const report=this.root.querySelector<HTMLElement>('.realm-report')!;
+    report.dataset.guide=String(this.showJourneyGuide);
+    if(!this.showJourneyGuide&&report.dataset.reportTab==='tutorial')report.dataset.reportTab='news';
+    const allEntries=engine.getChronicle().filter(entry=>!entry.playerId||entry.playerId===this.player!.id);
+    const filtered=allEntries.filter(entry=>this.newsFilter==='all'||(this.newsFilter==='finance'?entry.message.startsWith('Kassenabschluss'):!entry.message.startsWith('Kassenabschluss')));
+    const entries=filtered.length?filtered:allEntries;
+    this.journal = allEntries;
     this.reportIndex = Math.max(0, Math.min(this.reportIndex, entries.length - 1));
     const entry = entries[this.reportIndex];
     text('report-date', this.date());
@@ -1745,7 +1764,7 @@ export class KingdomGameUI {
     this.map?.setStrategyWorld(this.engine.getStrategyWorld(this.player.id), Object.fromEntries(
       this.engine.getRivalRelations(this.player.id).map(relation=>[relation.kingdomId,
         this.engine!.getRivalTreaties(this.player!.id).some(t=>t.parties.includes(relation.kingdomId)) ? 'Vertragspartner' :
-        relation.relationshipValue < -25 ? 'Feindlich' : 'Neutral'])));
+        relation.relationType==='vassal'?'Vasall':relation.relationshipValue < -25 ? 'Feindlich':relation.relationshipValue>25?'Freundlich':'Neutral ('+Math.round(relation.relationshipValue)+')'])));
     this.map?.update(kingdom, this.selected, this.engine.getModernizationOptions(this.player.id)
       .filter(option => option.completed).map(option => option.project.id), this.engine.getCurrentYear(),
       this.engine.getRivals(this.player.id));
@@ -1767,7 +1786,7 @@ export class KingdomGameUI {
     this.jukebox.setCurrentYear(musicContext.year);
     if (this.jukebox.getPlaylistMode() === 'era' && !this.eraMusicSwitching) {
       const matching = this.jukebox.getTrackForYear(musicContext.year);
-      if (matching && matching.id !== this.jukebox.getCurrentId()) {
+      if (matching && !this.jukebox.getEraTracks(musicContext.year).some(track => track.id === this.jukebox.getCurrentId())) {
         this.eraMusicSwitching = true;
         void this.jukebox.play(matching.id)
           .catch(error => {  this.notify(error instanceof Error ? error.message : 'Epoche-Musik nicht verfügbar.', true); })
@@ -1833,12 +1852,24 @@ export class KingdomGameUI {
       ${domains.length>1?'<div class="quick-actions"><button data-administration-preset="watch">Zuschauen · alles delegieren</button><button data-administration-preset="manual">Alles selbst entscheiden</button></div><p class="muted">Zuschauen aktiviert auch automatische Ereignisentscheidungen. Mit „Fortsetzen“ läuft die Zeit; einzelne Bereiche kannst du jederzeit wieder übernehmen.</p>':''}</section>`;
   }
 
+  private renderOngoingProjects():string {
+    const jobs=this.requireEngine().getProjects(this.requirePlayer().id);
+    return `<section class="build-card" data-project-queue><h3>Laufende Vorhaben (${jobs.length}/12)</h3>${jobs.length?'<ul>'+jobs.map(j=>`<li><strong>${escape(j.name)}</strong> · noch ${j.remaining} von ${j.months} Monaten<progress value="${j.months-j.remaining}" max="${j.months}"></progress></li>`).join('')+'</ul>':'<p>Keine Vorhaben im Bau, in Ausbildung oder im Aufmarsch.</p>'}</section>`;
+  }
+  private renderTimeJourney():string {
+    return `<section class="build-card"><h3>Durch die Zeit reisen</h3><p>Jeder Monat wird vollständig berechnet. Versorgung, Alterung, Bau und Gegner laufen weiter. Hält bei Ratsentscheidungen und Kampagnenende an. Automatik kannst du in der Hofverwaltung einstellen.</p><div class="time-journey-actions">${[[12,'1 Jahr'],[120,'1 Jahrzehnt'],[1200,'1 Jahrhundert']].map(([n,label])=>`<button data-time-travel="${n}" ${this.requireEngine().isHotseat()?'disabled':''}>${label} →</button>`).join('')}<button data-time-stop>Reise anhalten</button></div><p id="time-travel-progress" role="status"></p></section>`;
+  }
+  private renderFoodSecurity():string {
+    const supply=this.requireEngine().getFoodSecurity(this.requirePlayer().id);
+    return `<section class="build-card" data-food-security><h3>Vorräte schützen</h3><p>Geschützte Kapazität: ${format(supply.capacity)} Nahrung · ungeschützt: ${format(supply.exposed)}.</p><p>Erwarteter Verderb dieses Bestands: ${format(supply.spoilage)} pro Monat. Ein Speicher schützt weitere 6.000 Nahrung. Bei aktivierten Zufallsereignissen: ${(supply.risk*100).toFixed(1)} % monatliches Risiko zusätzlicher Vorrats- oder Feldschäden; Speicher mindern deren Ausmaß.</p><button data-open="build">Speicher bauen</button></section>`;
+  }
+
   private renderProjects(kind:'construction'|'modernization'):string {
     const options=this.requireEngine().getModernizationOptions(this.requirePlayer().id)
       .filter(o=>o.visible&&(o.project.kind??'modernization')===kind);
     return `<div class="build-grid">${options.map(({project,completed,canStart,blockers})=>`
       <article class="build-card ${completed?'selected':''}" data-project="${escape(project.id)}"><h3>${escape(project.name)}</h3>
-      <p>${escape(project.description)}</p><p>${escape(project.effect)} (Werte höchstens 100)</p>
+      <p>${escape(project.description)}</p><p>Bauzeit: ${(project.kind??'modernization')==='construction'?12:6} Monate</p><p>${escape(project.effect)} (Werte höchstens 100)</p>
       <p class="cost">${format(project.cost.gold)} Gold · ${format(project.cost.wood)} Holz · ${format(project.cost.stone)} Stein · ${format(project.cost.iron)} Eisen</p>
       <button data-modernization="${escape(project.id)}" ${canStart?'':'disabled'}>${completed?'Bereits umgesetzt':kind==='construction'?'Bauvorhaben umsetzen':'Modernisieren'}</button>
       ${!completed&&blockers.length?`<p class="muted">${blockers.map(escape).join(' · ')}</p>`:''}</article>`).join('')||'<p>Für deine bestehenden Gebäude gibt es in dieser Epoche keine weiteren Projekte.</p>'}</div>`;
@@ -1918,7 +1949,8 @@ export class KingdomGameUI {
           <article><span>Verwaltung</span><strong>${format(kingdom.taxRate * 100)} %</strong><small>Steuersatz</small></article>
           <article><span>Entwicklung</span><strong>${format(kingdom.stats.literacyRate)} %</strong><small>Alphabetisierung</small></article>
         </div>
-        <section class="dashboard-shortcuts" aria-label="Deine Herrschaft direkt öffnen">
+          ${this.renderOngoingProjects()}${this.renderTimeJourney()}
+          <section class="dashboard-shortcuts" aria-label="Deine Herrschaft direkt öffnen">
           <button data-open="court">♟ Hofverwaltung</button><button data-open="civic">⚒ Bürgeraufträge</button>
           <button data-open="council">♛ Reichsrat</button>
           <button data-open="economy">⚖ Wirtschaft</button>
@@ -1933,7 +1965,7 @@ export class KingdomGameUI {
           „Fortsetzen“ verarbeitet bei 1× alle vier Sekunden einen Monat.</p>`;
     } else if (this.view === 'build') {
       panel.innerHTML = heading('BAU & ENTWICKLUNG', 'Dein Reich wächst',
-        'Bauten werden sofort fertiggestellt. Kosten und Effekte stammen direkt aus der Simulation.') + `
+        'Bezahle beim Baubeginn. Erst nach mehreren Spielmonaten entstehen Gebäude und Erträge.') + this.renderOngoingProjects() + `
         <div class="build-grid">${(Object.keys(STRUCTURES) as Array<keyof KingdomInfrastructure>).map(
           (type: keyof KingdomInfrastructure): string => {
             const info = {...STRUCTURES[type], name:earlyBuildingName(type, this.engine!.getCurrentYear(), STRUCTURES[type].name)};
@@ -1952,7 +1984,7 @@ export class KingdomGameUI {
               <div class="cost">${format(cost.cost)} Gold${cost.woodCost ? ` · ${format(cost.woodCost)} Holz` : ''}
                 ${cost.stoneCost ? ` · ${format(cost.stoneCost)} Stein` : ''}
                 ${cost.ironCost ? ` · ${format(cost.ironCost)} Eisen` : ''}</div>
-              <button data-build="${type}" ${missing.length ? 'disabled' : ''} class="secondary"
+              <p class="muted">Bauzeit: ${this.engine!.getConstructionMonths(type)} Monate</p><button data-build="${type}" ${missing.length ? 'disabled' : ''} class="secondary"
                 aria-label="${info.name} bauen">${missing.length ? `Fehlt: ${missing.join(', ')}` : `${info.name} bauen`}</button>
             </article>`;
           }).join('')}</div><h3>Besondere Bauvorhaben deiner Zeit</h3>` + this.renderProjects('construction');
@@ -1975,7 +2007,7 @@ export class KingdomGameUI {
             <input id="tax-rate" name="tax" type="range" min="0" max="50" step="1" value="${Math.round(kingdom.taxRate*100)}"></label>
             <small>Wirkt sofort. 0–50 %; kein Bestätigen nötig.</small></div>
           <p class="muted">Über 15 % sinkt die Zufriedenheit monatlich, darunter erholt sie sich.</p></section>
-          <section><h3>Holzversorgung</h3><p>Waldflächen und Werkstätten liefern Holz. Aktuell ${format(balance.production.wood)} Eingang und ${format(balance.consumption.wood)} Verbrauch pro Monat; im Winter steigt der Heizbedarf.</p>
+          ${this.renderFoodSecurity()}<section><h3>Holzversorgung</h3><p>Waldflächen und Werkstätten liefern Holz. Aktuell ${format(balance.production.wood)} Eingang und ${format(balance.consumption.wood)} Verbrauch pro Monat; im Winter steigt der Heizbedarf.</p>
             <p>Eine zusätzliche Werkstatt liefert derzeit +${kingdom.getWorkshopWoodGain()} Holz/Monat vor Forschungsboni. Bei leeren Vorräten kannst du Holz am Markt zukaufen.</p><button data-open="build">Holzgewinnung ausbauen</button>
             <h3>Markthandel</h3><p class="muted">Sofortiger Austausch. Einkauf mit 20 % Aufschlag,
             Verkauf mit 20 % Abschlag – kein risikoloser Weiterverkauf.</p>
@@ -2028,11 +2060,11 @@ export class KingdomGameUI {
           </article>`).join('')}</div>`;
     } else if (this.view === 'modernization') {
       panel.innerHTML = heading('EPOCHENWANDEL', 'Modernisierung deines Bestands',
-        'Hier erscheinen Verbesserungen für deine vorhandenen Gebäude in der aktuellen Epoche. Forschung und Vorräte bestimmen, was du umsetzen kannst.') + this.renderProjects('modernization');
+        'Hier erscheinen Verbesserungen für deine vorhandenen Gebäude in der aktuellen Epoche. Forschung und Vorräte bestimmen, was du umsetzen kannst.') + this.renderOngoingProjects()+this.renderProjects('modernization');
     } else if (this.view === 'military') {
       const doctrine = doctrineForYear(this.engine.getCurrentYear());
       panel.innerHTML = heading('SICHERHEIT & VERTEIDIGUNG', 'Die Garnison',
-        'Rekruten kommen aus der bäuerlichen Bevölkerung. Mehr Truppen kosten Unterhalt und fehlen auf den Feldern.') + `
+        'Rekruten kommen aus der bäuerlichen Bevölkerung. Ausbildung dauert 3 Monate, Reiterei 6 Monate. Sie kosten Unterhalt und fehlen währenddessen auf den Feldern.') + this.renderOngoingProjects()+`
         <p class="muted">${escape(doctrine.label)} · ${escape(doctrine.context)}</p>
         <p class="muted">Moral: ${format(kingdom.military.morale)} % · Ausbildung: ${
           format(kingdom.military.trainingLevel)} % · Ausrüstung: ${format(kingdom.military.equipmentQuality)} %</p>
@@ -2242,9 +2274,9 @@ export class KingdomGameUI {
         'Du lenkst das Reich durch eine Person aus deinem Volk. Wechsle die Rolle, wann immer du willst.') +
         this.renderCharacter(this.player);
     } else if (this.view === 'history') {
-      const year = this.engine.getCurrentYear();
+      const year = this.historyYear??this.engine.getCurrentYear();
       const month = this.engine.getCurrentMonth();
-      const records = this.engine.getHistoricalTimeline();
+      const records = milestonesThroughDate(year,month);
       const exhibitions = this.engine.getExhibitionOptions(this.player.id);
       const report = historicalMonthReport(year, month);
       const topics: Record<typeof this.historyTopic, string> = {
@@ -2301,7 +2333,7 @@ export class KingdomGameUI {
       }
       panel.innerHTML = heading('GESCHICHTE & ZEITBILD', `${MONTHS[month - 1]} ${formatYear(year)}: Kunst, Kultur und Leben`,
         'Historische Quellen begleiten deine eigene Herrschaft. Das Spiel schreitet monatsweise voran; bekannte Tagesdaten werden im betreffenden Monat angezeigt. Lesen verändert keine Ressourcen.')
-        + `<label class="history-filter" for="history-topic">Thema<select id="history-topic">${Object.entries(topics).map(([value, label]) =>
+        + `<form id="history-year-form"><label>Geschichte lesen im Jahr (negativ = v. Chr.)<input id="history-year" type="number" min="-2000" max="2100" value="${year<=0?year-1:year}" required></label><button>Jahr ansehen</button><button type="button" data-history-current>Zum Spieljahr</button></form><div class="quick-actions">${[-100,-10,-1,1,10,100].map(n=>`<button data-history-step="${n}">${n>0?'+':''}${n} Jahre</button>`).join('')}</div><p class="muted">Lesereise: verändert deine Partie nicht. Echte Spieljahre berechnest du mit der Zeitreise im Überblick.</p><label class="history-filter" for="history-topic">Thema<select id="history-topic">${Object.entries(topics).map(([value, label]) =>
           `<option value="${value}" ${value === this.historyTopic ? 'selected' : ''}>${label}</option>`).join('')}</select></label>` + content;
     } else if (this.view === 'chronicle') {
       panel.innerHTML = heading('DIE GESCHICHTE DEINER HERRSCHAFT', 'Reichschronik',
@@ -2449,6 +2481,12 @@ export class KingdomGameUI {
           button.dataset.spyAgent ?? '', button.dataset.spyTarget ?? ''));
       }));
     });
+    panel.querySelector('#history-year-form')?.addEventListener('submit',event=>{
+      event.preventDefault();const value=Number(panel.querySelector<HTMLInputElement>('#history-year')!.value);
+      if(Number.isInteger(value)&&value!==0&&value>=-2000&&value<=2100){this.historyYear=value<0?value+1:value;this.renderPanel();}
+    });
+    panel.querySelector('[data-history-current]')?.addEventListener('click',()=>{this.historyYear=null;this.renderPanel();});
+    panel.querySelectorAll<HTMLButtonElement>('[data-history-step]').forEach(button=>button.onclick=()=>{this.historyYear=Math.max(-1999,Math.min(2100,(this.historyYear??this.requireEngine().getCurrentYear())+Number(button.dataset.historyStep)));this.renderPanel();});
     panel.querySelectorAll<HTMLButtonElement>('[data-modernization]').forEach(button => {
       button.addEventListener('click', () => void this.run(() => {
         this.notify(this.requireEngine().launchModernization(this.requirePlayer().id,
@@ -2565,6 +2603,10 @@ export class KingdomGameUI {
         });
       });
     });
+    panel.querySelectorAll<HTMLButtonElement>('[data-time-travel]').forEach(button=>button.onclick=()=>void this.run(async()=>{
+      const result=await this.requireEngine().travelThroughTime(Number(button.dataset.timeTravel));this.notify(result.completed+' Monate berechnet. '+result.reason);
+    }));
+    panel.querySelector('[data-time-stop]')?.addEventListener('click',()=>this.requireEngine().cancelTimeTravel());
     panel.querySelectorAll<HTMLButtonElement>('[data-build]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => {
         void this.run(async (): Promise<void> => {
@@ -2575,8 +2617,7 @@ export class KingdomGameUI {
           this.audio.playEffect('build');
           this.selected = type;
           const name = earlyBuildingName(type, this.requireEngine().getCurrentYear(), STRUCTURES[type].name);
-          this.record(`${name} fertiggestellt.`);
-          this.notify(`${name} wurde gebaut. Kosten wurden abgezogen.`);
+          this.notify(`${name} beauftragt. Fertigstellung in ${this.requireEngine().getConstructionMonths(type)} Monaten; Kosten bezahlt.`);
         });
       });
     });
@@ -2588,26 +2629,23 @@ export class KingdomGameUI {
             throw new Error('Nicht genügend Vorräte oder verfügbare Rekruten.');
           }
           this.audio.playEffect('success');
-          this.record('10 neue Soldaten wurden in die Garnison aufgenommen.');
-          this.notify('10 Soldaten rekrutiert. Beachte den zusätzlichen Unterhalt.');
+          this.notify('10 Rekruten beginnen ihre Ausbildung. Einsatzbereit nach 3 Monaten, Reiterei nach 6 Monaten.');
         });
       });
     });
     panel.querySelectorAll<HTMLButtonElement>('[data-attack-rival]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => {
         void this.run((): void => {
-          const report = this.requireEngine().attackRival(this.requirePlayer().id, button.dataset.attackRival ?? '');
-          this.audio.playEffect('battle');
-          this.notify(report.summary, !report.attackerWon);
+          const message = this.requireEngine().launchCampaign(this.requirePlayer().id, button.dataset.attackRival ?? '');
+          this.notify(message);
         });
       });
     });
     panel.querySelectorAll<HTMLButtonElement>('[data-attack-player]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => {
         void this.run((): void => {
-          const report = this.requireEngine().attackPlayer(this.requirePlayer().id, button.dataset.attackPlayer ?? '');
-          this.audio.playEffect('battle');
-          this.notify(report.summary, !report.attackerWon);
+          const message = this.requireEngine().launchPlayerCampaign(this.requirePlayer().id, button.dataset.attackPlayer ?? '');
+          this.notify(message);
         });
       });
     });
@@ -2929,7 +2967,7 @@ export class KingdomGameUI {
             percent(report.victoryChance)} · Verluste ${format(report.attackerLosses)} / ${
             format(report.defenderLosses)}${report.plunder ? ` · Beute ${format(report.plunder)} Gold` : ''}</small></div></li>`;
     }).join('');
-    return `<p class="muted"><strong>${escape(doctrine.label)}</strong> · ${escape(doctrine.context)}</p><div class="summary-grid war-summary">
+    return this.renderOngoingProjects()+`<p class="muted"><strong>${escape(doctrine.label)}</strong> · ${escape(doctrine.context)}</p><div class="summary-grid war-summary">
         <article><span>Feldheer</span><strong>${format(army.soldiers)}</strong><small>Soldaten</small></article>
         <article><span>Angriff</span><strong>${format(army.attack)}</strong><small>inkl. ${
           percent(army.commanderBonus)} Feldherrenbonus</small></article>
@@ -3152,8 +3190,8 @@ export class KingdomGameUI {
     try {
       const played = await this.jukebox.playOpening();
       const label = this.root.querySelector<HTMLElement>('#opening-music-label');
-      if (label) label.textContent = played ? '♫ Zeit vergeht · Hauptthema läuft'
-        : '♫ Zeit vergeht · Wiedergabe beim nächsten Klick';
+      if (label) label.textContent = played ? '♫ Ancient Veil · Hauptthema läuft'
+        : '♫ Ancient Veil · Wiedergabe beim nächsten Klick';
       this.updateOpeningMusicButton();
       if (played) {
         document.removeEventListener('pointerdown', this.retryOpening);
@@ -3230,14 +3268,14 @@ export class KingdomGameUI {
         const option=document.createElement('option');option.value=t.id;
         option.textContent=t.title+' · '+t.era;return option;
       }));
-      select.value=items.some(t=>t.id===chosen)?chosen:(this.jukebox.getCurrentId() ?? items[0]?.id ?? '');
+      select.value=this.jukebox.getCurrentId() ?? (items.some(t=>t.id===chosen)?chosen:(items[0]?.id ?? ''));
       select.disabled = !items.length;
     });
     const selectedId = this.root.querySelector<HTMLSelectElement>('[data-jukebox-select]')?.value
-      ?? this.jukebox.getCurrentId() ?? 'zeit-vergeht';
+      ?? this.jukebox.getCurrentId() ?? MAIN_THEME.id;
     const selectedTrack = this.jukebox.getTracks().find(t => t.id === selectedId);
     const cover = this.root.querySelector<HTMLImageElement>('[data-jukebox-cover]');
-    if (cover && selectedTrack) { cover.src = selectedTrack.coverUrl ?? (import.meta.env.BASE_URL + 'covers/zeit-vergeht.webp'); cover.alt = 'Cover: ' + selectedTrack.title; }
+    if (cover && selectedTrack) { cover.src = selectedTrack.coverUrl ?? MAIN_THEME.coverUrl!; cover.alt = 'Cover: ' + selectedTrack.title; }
     const title = this.root.querySelector<HTMLElement>('[data-jukebox-title]');
     if (title) title.textContent = selectedTrack?.title ?? 'Soundtrack';
     const desc = this.root.querySelector<HTMLElement>('[data-jukebox-description]');

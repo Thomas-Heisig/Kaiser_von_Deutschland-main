@@ -555,7 +555,7 @@ export class KingdomMap {
     this.retroContext = { kingdom, selected, completed, year, rivals };
     if (previousYear !== year && this.zoomLevel === 'zentraleuropa') this.drawRegionLayer();
     const signature = districtSceneSignature(kingdom.infrastructure, selected,
-      this.districtFilter, kingdom.currentSeason, completed) + JSON.stringify(rivals.map(r => [r.id,r.name,r.subjugated])) + JSON.stringify([this.strategyWorld,this.neighborRelations]);
+      this.districtFilter, kingdom.currentSeason, completed) + JSON.stringify(rivals.map(r => [r.id,r.name,r.subjugated,r.soldiers,r.fortification])) + JSON.stringify([this.strategyWorld,this.neighborRelations]);
     const epochStyle = year < -799 ? 'bronze' : year < 500 ? 'ancient' : year >= 1945 ? 'modern' : year >= 1800 ? 'industrial' : year >= 1500 ? 'renaissance' : 'medieval';
     if (signature + epochStyle + year === this.lastSignature) return;
     this.lastSignature = signature + epochStyle + year;
@@ -736,6 +736,7 @@ export class KingdomMap {
       ]);
       if(this.destroyed)return;
       this.localMapData=validateLocalMap(data);this.localTexture=texture;this.localLoadFailed=false;
+      this.drawSettlementTerrain();
       this.app.canvas.dataset.localMapLoaded='true';
       this.app.canvas.dataset.reliefLoaded='true';
       this.app.canvas.dataset.mapLocation=location.id;
@@ -766,6 +767,7 @@ export class KingdomMap {
     const village = level === 'dorf';
     this.world.visible = level !== 'schreibtisch';
     this.settlements.visible = village && this.mapScope === 'home';
+    this.settlementTerrain.visible=village&&this.mapScope==='home';
     // Legacy thumbnail scatter was retired in favor of the connected landscape.
     // Scope/zoom changes must not resurrect those opaque preview tiles.
     this.retroScenery.visible = false;
@@ -963,7 +965,7 @@ export class KingdomMap {
       label.anchor.set(0.5);
       label.position.set(0, -8);
       region.addChild(label);
-      const status = new Text({ text: (subdued ? 'Vasall' : this.neighborRelations[rival.id] ?? 'Nachbarreich') + ' · ' + (place.discovered ? place.terrain : 'Unerkundet'),
+      const status = new Text({ text: (subdued ? 'Vasall' : this.neighborRelations[rival.id] ?? 'Nachbarreich') + ' · ' + (place.discovered ? place.terrain : 'Unerkundet') + '\n' + rival.soldiers.toLocaleString('de-DE')+' Soldaten · Befestigung '+rival.fortification.toFixed(2),
         style: { fontFamily: 'Segoe UI', fontSize: 14, fill: 0xffecc9, align: 'center' } });
       status.anchor.set(0.5);
       status.position.set(0, 18);
@@ -1068,73 +1070,29 @@ export class KingdomMap {
     this.atmosphere.addChild(sky);
   }
 
-  private drawLandscape(): void {
-    const terrain = new Graphics();
-    terrain.rect(-2000, -2000, 5000, 5000).fill(0x182d2a);
-    terrain.poly([70, 180, 250, 60, 660, 40, 925, 190, 945, 450, 710, 580, 285, 570, 65, 390])
-      .fill(0x2b4438).stroke({ color: 0x728369, width: 2, alpha: 0.35 });
-    terrain.poly([80, 200, 280, 115, 455, 170, 310, 370, 100, 380]).fill(0x314c3d);
-    terrain.poly([300, 385, 520, 295, 810, 400, 700, 540, 350, 525]).fill(0x3c503c);
-    terrain.moveTo(70, 35).bezierCurveTo(400, 140, 120, 230, 240, 310)
-      .bezierCurveTo(365, 390, 130, 440, 170, 630)
-      .stroke({ width: 37, color: 0x1a3436 });
-    terrain.moveTo(70, 35).bezierCurveTo(400, 140, 120, 230, 240, 310)
-      .bezierCurveTo(365, 390, 130, 440, 170, 630)
-      .stroke({ width: 23, color: 0x416d70 });
-    terrain.moveTo(260, 420).lineTo(385, 275).lineTo(510, 205).lineTo(670, 255).lineTo(760, 145)
-      .moveTo(385, 275).lineTo(530, 360).lineTo(720, 415)
-      .moveTo(530, 360).lineTo(525, 490)
-      .stroke({ width: 7, color: 0x8c8266, alpha: 0.65 });
-    terrain.rect(246, 333, 48, 13).fill(0xa79a7d).stroke({ width: 2, color: 0x4b493b });
-    for (let i = 0; i < 90; i++) {
-      const x = 70 + ((i * 137) % 850);
-      const y = 70 + ((i * 83) % 470);
-      if (SETTLEMENT_DISTRICTS.some((place: SettlementDistrict) => Math.hypot(place.x - x, place.y - y) < 62) ||
-          (x > 130 && x < 300)) continue;
-      terrain.rect(x - 2, y, 4, 10).fill(0x22352d);
-      terrain.poly([x - 12, y + 3, x, y - 24, x + 12, y + 3]).fill(i % 2 ? 0x47634b : 0x38573f);
-      terrain.poly([x - 9, y - 6, x, y - 30, x + 9, y - 6]).fill(0x4a654d);
+  private readonly settlementTerrain=new Container();
+  private drawLandscape():void {
+    this.world.addChild(new Graphics().rect(-2000,-2000,5000,5000).fill(0x182d2a));
+    this.world.addChild(this.settlementTerrain);
+    void this.loadLocalMap();
+  }
+  private drawSettlementTerrain():void {
+    for(const child of this.settlementTerrain.removeChildren())child.destroy({children:true});
+    if(!this.localTexture||!this.localMapData)return;
+    const sprite=new Sprite(this.localTexture);sprite.width=960;sprite.height=672;this.settlementTerrain.addChild(sprite);
+    const water=new Graphics();
+    for(const river of this.localMapData.rivers) {
+      if(river.points.length<2)continue;
+      water.moveTo(...river.points[0]);for(const p of river.points.slice(1))water.lineTo(...p);
     }
-    // Continuous environment details share the established map coordinate system.
-    // Avoid scattering arbitrary thumbnail sprites or painting over district controls.
-    const scenery = new Graphics();
-    const groveCenters = [[785, 100], [830, 480], [150, 475], [690, 95], [890, 335]];
-    for (const [cx, cy] of groveCenters) {
-      scenery.ellipse(cx, cy + 5, 68, 32).fill({ color: 0x284a32, alpha: 0.55 });
-      for (let i = 0; i < 9; i++) {
-        const x = cx + Math.cos(i * 2.4) * (15 + (i % 3) * 13);
-        const y = cy + Math.sin(i * 2.4) * (11 + (i % 4) * 8);
-        if (SETTLEMENT_DISTRICTS.some(d => Math.hypot(d.x - x, d.y - y) < 58)) continue;
-        scenery.ellipse(x + 4, y + 5, 14, 7).fill({color:0x13291e,alpha:0.32});
-        scenery.rect(x - 2, y - 5, 4, 14).fill(0x685442);
-        scenery.poly([x - 13,y - 3,x,y - 37,x + 13,y - 3]).fill(i % 2 ? 0x456d46 : 0x527b4e);
-        scenery.poly([x - 10,y - 14,x,y - 42,x + 10,y - 14]).fill(0x659160);
-      }
-    }
-    // Built stone connections and a bridge aligned to the existing paths.
-    const roads = new Graphics();
-    roads.moveTo(260, 420).lineTo(385, 275).lineTo(510, 205).lineTo(670, 255).lineTo(760, 145)
-      .moveTo(385, 275).lineTo(530, 360).lineTo(720, 415)
-      .moveTo(530, 360).lineTo(525, 490)
-      .stroke({width:11,color:0x665e4b,alpha:0.65});
-    roads.moveTo(260, 420).lineTo(385, 275).lineTo(510, 205).lineTo(670, 255).lineTo(760, 145)
-      .moveTo(385, 275).lineTo(530, 360).lineTo(720, 415)
-      .moveTo(530, 360).lineTo(525, 490)
-      .stroke({width:7,color:0xc1ae83,alpha:0.9});
-    const bridge = new Graphics();
-    bridge.poly([217,325,266,320,290,345,241,350]).fill(0x78634a)
-      .poly([217,323,266,318,289,341,240,346]).fill(0xbca77c)
-      .moveTo(222,319).lineTo(246,341).moveTo(235,319).lineTo(258,343)
-      .moveTo(250,319).lineTo(273,342).stroke({width:2,color:0x796444,alpha:0.75});
-    terrain.addChild(scenery, roads, bridge);
-    this.app.canvas.dataset.landscapeVersion = 'connected-1';
-    this.world.addChild(terrain);
-    const compass = new Text({
-      text: 'N\n↑',
-      style: { fontFamily: 'Georgia', fontSize: 22, fill: 0xc6c5a1, align: 'center' }
-    });
-    compass.position.set(910, 40);
-    this.world.addChild(compass);
+    water.stroke({width:2.3,color:0x287b99});
+    const mask=new Graphics().rect(0,0,960,672).fill(0xffffff);
+    water.mask=mask;this.settlementTerrain.addChild(water,mask);
+    const label=new Text({text:'Ganderkeseer Geest · 20 × 14 km · reale Geländebasis, modellierte Bauplätze',style:{fontSize:13,fill:0x213a35,stroke:{color:0xf2ecd5,width:3}}});
+    label.position.set(22,640);this.settlementTerrain.addChild(label);
+    this.app.canvas.dataset.settlementTerrain='ganderkesee';
+    this.app.canvas.dataset.settlementRiverSegments=String(this.localMapData.rivers.length);
+    this.app.canvas.dataset.landscapeVersion='ganderkesee-2';
   }
 
   /**

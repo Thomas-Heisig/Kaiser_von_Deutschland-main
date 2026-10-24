@@ -371,6 +371,14 @@ export class Kingdom {
     if (buildingData.stoneCost) this.resources.stone -= buildingData.stoneCost * count;
     if (buildingData.ironCost) this.resources.iron -= buildingData.ironCost * count;
 
+    this.completeConstruction(type,count);
+    return true;
+  }
+
+  /** Finish an already financed engine construction order, without charging twice. */
+  public completeConstruction(type:keyof KingdomInfrastructure,count=1):void {
+    const buildingData=this.getBuildingData(type);
+    if(!buildingData||!Number.isSafeInteger(count)||count<1)throw Error('Ungültiger Bauabschluss.');
     // Gebäude hinzufügen
     this.infrastructure[type] += count;
 
@@ -384,7 +392,6 @@ export class Kingdom {
     // Statistiken aktualisieren
     this.updateStatsAfterConstruction(type, count);
 
-    return true;
   }
 
   /**

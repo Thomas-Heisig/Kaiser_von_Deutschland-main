@@ -54,6 +54,7 @@ export class StrategyWorld {
     const plan = this.plan(destination,activeIds);
     this.journey = {destination,remaining:plan.months};
   }
+  public discover(id:string):void {const region=this.regions.find(r=>r.id===id);if(region)region.discovered=true;}
 
   public processMonth(activeIds: readonly string[]): WorldRegion | null {
     const active = this.overview(activeIds);

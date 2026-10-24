@@ -20,7 +20,7 @@ try {
     await page.getByRole('heading', { name: /Kaiser von/i }).waitFor({ timeout: 15000 });
     await page.locator('#start-year').waitFor();
     await page.locator('#opening-music').waitFor();
-    await page.getByText(/Zeit vergeht/).first().waitFor();
+    await page.getByText(/Ancient Veil/).first().waitFor();
     if (await page.locator('.welcome [data-jukebox-select]').count()) failures.push('Jukebox must not appear in start menu');
     if (await page.locator('.welcome #settings-open').count() !== 1) failures.push('start screen settings missing');
     await page.locator('.welcome #settings-open').click();
@@ -57,7 +57,7 @@ try {
     await page.locator('#playlist-mode').selectOption('shuffle');
     await page.locator('#playlist-repeat').selectOption('one');
     await page.locator('.cover-card').first().waitFor();
-    if (await page.locator('.cover-card').count() !== 15) failures.push('expected all 15 official album covers');
+    if (await page.locator('.cover-card').count() !== 20) failures.push('expected all 20 official album covers');
     await page.locator('[data-jukebox-download]').waitFor({state:'attached'});
     if (await page.locator('#opening-play, [data-music-volume], [data-audio-toggle]').count())
       failures.push('redundant audio controls are still shown');

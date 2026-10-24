@@ -7,6 +7,7 @@ export interface JukeboxTrack {
   era: string;
   source: 'library' | 'import';
   year?: number;
+  endYear?: number;
   url?: string;
   coverUrl?: string;
   description?: string;
@@ -21,6 +22,7 @@ export const BUNDLED_TRACKS: readonly JukeboxTrack[] = musicCatalog.tracks.map(t
   title: track.title,
   era: track.era,
   ...(typeof track.year === 'number' ? { year: track.year } : {}),
+  ...('endYear' in track && typeof track.endYear === 'number' ? { endYear: track.endYear } : {}),
   source: 'library' as const,
   url: import.meta.env.BASE_URL + 'music/' + track.filename,
   coverUrl: import.meta.env.BASE_URL + track.cover.replace(/^\//, ''),
@@ -28,6 +30,7 @@ export const BUNDLED_TRACKS: readonly JukeboxTrack[] = musicCatalog.tracks.map(t
 }));
 
 export const MAIN_THEME_ID = musicCatalog.openingTrackId;
+export const MAIN_THEME = BUNDLED_TRACKS.find(track => track.id === MAIN_THEME_ID)!;
 
 const YEAR_NAMES: Record<number, { title: string; era: string }> = {
   1200: { title: 'Kaiserliches Leitmotiv', era: 'Mittelalter' },
@@ -45,12 +48,20 @@ const YEAR_NAMES: Record<number, { title: string; era: string }> = {
 
 /** Select a recording for the current game year, not an unrelated bonus theme. */
 export function trackForYear(tracks: readonly JukeboxTrack[], year: number): JukeboxTrack | null {
+  return tracksForYear(tracks, year)[0] ?? null;
+}
+
+/** Equal start dates form an era playlist; an ending date prevents spill into later eras. */
+export function tracksForYear(tracks: readonly JukeboxTrack[], year: number): JukeboxTrack[] {
   const dated = tracks.filter((track): track is JukeboxTrack & { year: number } =>
     typeof track.year === 'number' && Number.isFinite(track.year))
     .sort((a, b) => a.year - b.year);
-  if (!dated.length) return tracks.find(track => track.id === MAIN_THEME_ID) ?? tracks[0] ?? null;
-  if (!Number.isFinite(year)) return dated[0];
-  return [...dated].reverse().find(track => track.year <= year) ?? dated[0];
+  if (!dated.length) return tracks.length ? [tracks.find(track => track.id === MAIN_THEME_ID) ?? tracks[0]] : [];
+  const date = Number.isFinite(year) ? year : dated[0].year;
+  const eligible = dated.filter(track => track.year <= date && (track.endYear === undefined || date <= track.endYear));
+  const start = eligible.at(-1)?.year;
+  if (start === undefined) return [tracks.find(track => track.id === 'anbeginn-der-zeit') ?? dated[0]];
+  return eligible.filter(track => track.year === start);
 }
 
 /** Infer useful titles for optional private browser imports. */
@@ -82,6 +93,7 @@ export class MusicJukebox {
   private playlistMode: PlaylistMode = 'era';
   private repeatMode: RepeatMode = 'all';
   private currentYear = 1200;
+  private openingPlayback = false;
   private playbackSerial = 0;
   private lastError = '';
   public getLastError(): string { return this.lastError; }
@@ -91,21 +103,21 @@ export class MusicJukebox {
   public getRepeatMode(): RepeatMode { return this.repeatMode; }
   public setPlaylistMode(mode: PlaylistMode): void {
     this.playlistMode = mode;
-    if (this.audio) this.audio.loop = this.repeatMode === 'one' || (this.repeatMode !== 'off' && mode === 'era');
+    if (this.audio) this.audio.loop = this.repeatMode === 'one';
     localStorage.setItem('kaiser-playlist-mode', mode);
     this.onChange();
   }
   public setRepeatMode(mode: RepeatMode): void {
     this.repeatMode = mode;
     localStorage.setItem('kaiser-repeat-mode', mode);
-    if (this.audio) this.audio.loop = mode === 'one' || (mode !== 'off' && this.playlistMode === 'era');
+    if (this.audio) this.audio.loop = mode === 'one';
     this.onChange();
   }
-  public setCurrentYear(year: number): void { this.currentYear = year; }
+  public setCurrentYear(year: number): void { this.currentYear = year; this.openingPlayback = false; }
   public async syncYear(year: number): Promise<void> {
-    this.currentYear = year;
+    this.setCurrentYear(year);
     if (this.playlistMode !== 'era') return;
-    const match = this.getTrackForYear(year);
+    const match = this.getEraTracks(year).find(track => track.id === this.currentId) ?? this.getTrackForYear(year);
     if (match && match.id !== this.currentId) await this.play(match.id);
   }
   public getTracks(): JukeboxTrack[] { return this.tracks.map(track => ({ ...track })); }
@@ -119,6 +131,7 @@ export class MusicJukebox {
   public hasAutoplayBlock(): boolean { return this.autoplayBlocked; }
   public isPlaying(): boolean { return this.enabled && !!this.audio && !this.audio.paused; }
   public getTrackForYear(year: number): JukeboxTrack | null { return trackForYear(this.tracks, year); }
+  public getEraTracks(year: number): JukeboxTrack[] { return tracksForYear(this.tracks, year); }
 
   public async initialize(): Promise<void> {
     const savedMode = localStorage.getItem('kaiser-playlist-mode');
@@ -137,6 +150,7 @@ export class MusicJukebox {
   }
 
   public async playOpening(): Promise<boolean> {
+    this.openingPlayback = true;
     try {
       await this.play(MAIN_THEME_ID);
       this.autoplayBlocked = false;
@@ -194,8 +208,8 @@ export class MusicJukebox {
     if (!source) throw new Error('Audiodatei fehlt.');
     const audio = new Audio(source);
     audio.addEventListener('error', () => { this.lastError = 'Audio nicht abrufbar oder nicht lesbar: ' + (track.title || id) + '. Prüfe die Serverdatei und den Offline-Cache.'; this.onChange(); });
-    audio.loop = this.repeatMode === 'one' || (this.repeatMode !== 'off' && this.playlistMode === 'era');
-    audio.addEventListener('ended', () => { if (this.playbackSerial === serial) void this.advancePlaylist(); });
+    audio.loop = this.repeatMode === 'one';
+    audio.addEventListener('ended', () => { if (this.playbackSerial === serial) void this.advancePlaylist().catch(() => this.onChange()); });
     audio.preload = 'auto';
     audio.volume = this.volume;
     this.audio = audio;
@@ -240,9 +254,17 @@ export class MusicJukebox {
   }
 
   public async advancePlaylist(): Promise<void> {
+    if (this.openingPlayback) {
+      if (this.repeatMode === 'off') this.stop();
+      else await this.play(MAIN_THEME_ID);
+      return;
+    }
+    if (this.repeatMode === 'one' && this.currentId) { await this.play(this.currentId); return; }
     if (this.playlistMode === 'era') {
-      if (this.repeatMode === 'off') { this.stop(); return; }
-      const track = this.getTrackForYear(this.currentYear);
+      const pool = this.getEraTracks(this.currentYear);
+      const index = pool.findIndex(track => track.id === this.currentId);
+      if (this.repeatMode === 'off' && index === pool.length - 1) { this.stop(); return; }
+      const track = pool[(index + 1) % pool.length];
       if (track) await this.play(track.id);
       return;
     }

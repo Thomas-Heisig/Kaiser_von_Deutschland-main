@@ -6,6 +6,8 @@ Der Nutzer hat den gesamten Roadmap-Umfang einschließlich der Großsysteme beau
 
 ## Leseregel
 
+Weitere integrierte Ausbaustufe: [Vorhaben, Zeitreise und langfristige Risiken](../05-technical-architecture/REALM_PACING.md) sowie [Vorzeit-Soundtrack](../05-technical-architecture/PREHISTORY_SOUNDTRACK.md). Langzeitbalance über alle Startlagen, Produktionsketten und echte historische Bauplatzmodelle bleiben offen.
+
 Aktuelle Ausbaustufe: [regionale Versorgung, sichtbarer Reichszustand und Holzbalance](../05-technical-architecture/REGIONAL_PROVISIONING.md). Bezahlte Entscheidungen und Bürgeraufträge wirken auf drei modellierte Heimatgebiete und die tatsächliche Bauernzahl. Individuelle Familienwanderungen, Produktionsketten und politische Fraktionen bleiben anschließende Schritte. Namen neuer Bürger folgen Geburtskohorten; die Rollenliste ist in Sechsergruppen blätterbar.
 
 Die [TODO](../../TODO.md) ist die *einzige operative Aufgabenliste*. Diese Roadmap zeigt Abhängigkeiten und Entwicklungsziele, **kein selbst attestiertes Fertigstellungsprotokoll**. [Status](status.md) beschreibt ausschließlich nachprüfbare Ergebnisse. Frühere Visionen, Zeitpläne und alle Ideen der bisherigen Dokumentation wurden vollständig archiviert: [Original-Roadmap](../outdated/roadmap-snapshot-2026-10-17.md), [Original-TODO](../outdated/TODO-snapshot-2026-10-17.md), [README-Ideen](backlog-from-readme.md). Keine historischen Ideen wurden gestrichen.
@@ -59,7 +61,7 @@ HTTPS/Pages ist aktiv; Geräteinstallation und Rechte-/Impressumsnachweise bleib
 1. Bestehende Pages-Veröffentlichung und Update-Pfad bei jedem Release prüfen.
 2. HTTPS, Service-Worker-Scope, PWA-Manifest, PNG-Icons, MP3-/Video-Status 200/206 und Installation messen.
 3. Medienrechte, Credits, Datenschutz und vollständiges Impressum vor öffentlicher Freigabe.
-**Vorhanden:** öffentliche HTTPS-Seite, automatischer Vite-Build, Veröffentlichungsworkflow, Offline-ZIP, Medien-Gate, 15 MP3s, 5 Videos. Der alte Pages-Berechtigungsfehler ist behoben.
+**Vorhanden:** öffentliche HTTPS-Seite, automatischer Vite-Build, Veröffentlichungsworkflow, Offline-ZIP, Medien-Gate, 20 MP3s, 5 Videos. Der alte Pages-Berechtigungsfehler ist behoben.
 
 ## Danach — Gate B: lebendige Generationen (P1)
 

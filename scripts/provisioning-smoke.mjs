@@ -8,7 +8,11 @@ try {
     const page=await browser.newPage({viewport:{width,height:800},hasTouch:width<1000,reducedMotion:'reduce'});
     page.setDefaultTimeout(15000);page.on('pageerror',e=>errors.push(e.message));
     await page.goto(process.env.KAISER_TEST_URL??'http://127.0.0.1:4173/');await page.locator('#intro-skip').click();
-    await page.locator('#start-year').selectOption(String(year));await page.getByRole('button',{name:/Herrschaft beginnen/}).click();
+    await page.locator('#start-year').selectOption(String(year));
+    await page.locator('#campaign-select').selectOption('frei');
+    for(let i=0;i<6&&!await page.locator('[name=events]').isVisible();i++)await page.getByRole('button',{name:'Weitere Einstellungen',exact:true}).click();
+    await page.locator('[name=events]').uncheck();
+    await page.getByRole('button',{name:/Herrschaft beginnen/}).click();
     await page.locator('#kingdom-map canvas').waitFor();
     const open=async(view)=>{
       if(await page.locator('#view-select').isVisible())await page.locator('#view-select').selectOption(view);
@@ -35,8 +39,10 @@ try {
     if(year===1200) {
       const oldWood=Number((await page.locator('#delta-wood').innerText()).split('/')[0]);
       await open('build');await page.locator('[data-build=workshops]').click();
-      assert.ok(Number((await page.locator('#delta-wood').innerText()).split('/')[0])-oldWood>=17);
+      assert.equal(Number((await page.locator('#delta-wood').innerText()).split('/')[0]),oldWood);
       await page.locator('#section-dialog-close').click();
+      for(let month=0;month<6;month++) await page.locator('[data-action=month]').click();
+      assert.ok(Number((await page.locator('#delta-wood').innerText()).split('/')[0])-oldWood>=17);
     }
     await page.screenshot({path:`.temp/provisioning-status-${year}-${width}.png`});
     await open('world');assert.equal(await page.locator('[data-provision-region]').count(),3);

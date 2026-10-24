@@ -50,6 +50,80 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('finances construction once, persists remaining time and delays all building effects',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
+    const initial=k.infrastructure.farms,gold=k.resources.gold,food=k.resources.food;
+    expect(await engine.buildForPlayer(p.id,'farms')).toBe(true);
+    expect(k.resources.gold).toBe(gold-1200);expect(k.resources.food).toBe(food);
+    expect(k.infrastructure.farms).toBe(initial);
+    await engine.advanceMonth();await engine.saveGame('timed-build');
+    const loaded=new GameEngine({enableWiki:false});engines.push(loaded);await loaded.loadGame('timed-build');
+    expect(loaded.getProjects(p.id)[0].remaining).toBe(2);
+    await loaded.advanceMonth();expect(loaded.getPlayers()[0].kingdom.infrastructure.farms).toBe(initial);
+    await loaded.advanceMonth();expect(loaded.getPlayers()[0].kingdom.infrastructure.farms).toBe(initial+1);
+    expect(loaded.getProjects(p.id)).toHaveLength(0);
+    expect(loaded.getChronicle().some(e=>e.message.includes('nach 3 Monaten abgeschlossen'))).toBe(true);
+  });
+  it('waits for recruitment and resolves a saved campaign only after the march',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
+    Object.assign(k.resources,{gold:1000000,food:1000000});
+    const infantry=k.military.infantry;
+    expect(engine.recruitForPlayer(p.id,10)).toBe(true);expect(k.military.infantry).toBe(infantry);
+    for(let n=0;n<3;n++)await engine.advanceMonth();expect(k.military.infantry).toBe(infantry+10);
+    k.military.infantry=5000;
+    engine.launchCampaign(p.id,'raubritter');
+    expect(engine.getRivals(p.id)[0].subjugated).toBe(false);
+    expect(()=>engine.launchCampaign(p.id,'ostmark')).toThrow('bereits unterwegs');
+    await engine.advanceMonth();await engine.saveGame('march');
+    const loaded=new GameEngine({enableWiki:false});engines.push(loaded);await loaded.loadGame('march');
+    expect(loaded.getProjects(p.id)[0]).toMatchObject({kind:'campaign',remaining:2});
+    await loaded.advanceMonth();expect(loaded.getRivals(p.id)[0].subjugated).toBe(false);
+    await loaded.advanceMonth();expect(loaded.getRivals(p.id)[0].subjugated).toBe(true);
+    expect(loaded.getBattleReports(p.id)).toHaveLength(1);
+    expect(loaded.getRivalRelations(p.id)[0].relationType).toBe('vassal');
+  });
+  it('delays garrison improvements and hotseat attacks without charging completion again',async()=>{
+    const engine=new GameEngine({startingYear:1200,randomEvents:false,enableWiki:false,maxPlayers:2,enableMultiplayer:true});engines.push(engine);
+    const first=engine.addPlayer({name:'A',kingdomName:'A',gender:'other'}),second=engine.addPlayer({name:'B',kingdomName:'B',gender:'other'});
+    await engine.startGame();engine.pauseGame();
+    first.kingdom.resources.gold=1000000;first.kingdom.resources.food=1000000;first.kingdom.military.infantry=1000;
+    const training=first.kingdom.military.trainingLevel;
+    engine.improveGarrison(first.id,'training');expect(first.kingdom.military.trainingLevel).toBe(training);
+    expect(()=>engine.improveGarrison(first.id,'training')).toThrow('bereits');
+    engine.launchPlayerCampaign(first.id,second.id);
+    expect(()=>engine.launchPlayerCampaign(second.id,first.id)).toThrow('Nicht am Zug');
+    expect(engine.getBattleReports(first.id)).toHaveLength(0);
+    for(let n=0;n<2;n++)await engine.advanceMonth();
+    expect(first.kingdom.military.trainingLevel).toBeGreaterThanOrEqual(training+5);
+    expect(engine.getBattleReports(first.id)).toHaveLength(0);
+    await engine.advanceMonth();expect(engine.getBattleReports(first.id)).toHaveLength(1);
+  });
+  it('calculates a year month by month and stops a time journey on request',async()=>{
+    const engine=new GameEngine({startingYear:-1,campaignId:'frei',randomEvents:false,enableWiki:false});engines.push(engine);
+    const p=engine.addPlayer({name:'Zeit',kingdomName:'Probe',gender:'other'});await engine.startGame();engine.pauseGame();
+    p.kingdom.resources.gold=1000000;p.kingdom.resources.food=1000000;
+    const result=await engine.travelThroughTime(12);expect(result.completed).toBe(12);
+    expect(engine.getCurrentYear()).toBe(0);expect(engine.getCurrentMonth()).toBe(1);
+    const stop=engine.on('timeTravelProgress',({completed})=>{if(completed===4)engine.cancelTimeTravel();});
+    expect(await engine.travelThroughTime(1200)).toEqual({completed:4,reason:'Abgebrochen'});stop();
+    expect(engine.getGameState()).toBe(GameState.PAUSED);
+    await expect(engine.travelThroughTime(0)).rejects.toThrow('Wähle');
+  });
+  it('advances a funded peaceful century without bypassing construction or ageing',async()=>{
+    const engine=new GameEngine({startingYear:1100,campaignId:'frei',randomEvents:false,enableWiki:false});engines.push(engine);
+    const p=engine.addPlayer({name:'Langlauf',kingdomName:'Jahrhundert',gender:'other'});await engine.startGame();engine.pauseGame();
+    Object.assign(p.kingdom.resources,{gold:100000000,food:1000000,wood:1000000,stone:1000000});
+    p.kingdom.infrastructure.farms=100;p.kingdom.taxRate=.1;
+    const farms=p.kingdom.infrastructure.farms;await engine.buildForPlayer(p.id,'farms');
+    const prefs=engine.getAdministration(p.id);prefs.domains.character=true;engine.setAdministration(p.id,prefs);
+    const result=await engine.travelThroughTime(1200);
+    expect(result).toEqual({completed:1200,reason:'Ziel erreicht'});
+    expect(engine.getCurrentYear()).toBe(1200);expect(p.kingdom.infrastructure.farms).toBe(farms+1);
+    expect(engine.getCitizenSystem().getAllCitizens().some(c=>!c.isAlive)).toBe(true);
+    expect(engine.getCurrentCharacter(p.id)?.isAlive).toBe(true);
+    expect(Number.isFinite(p.kingdom.resources.gold)).toBe(true);
+  },60000);
+
   it('plays, researches, travels and reloads a Bronze Age realm with negative years', async () => {
     const engine = new GameEngine({startingYear:-1999,campaignId:'frei',randomEvents:true,enableWiki:false});
     engines.push(engine);
@@ -60,6 +134,8 @@ describe('Playable campaign integration', (): void => {
     expect(engine.getTechnologyOptions(player.id).some(item=>item.technology.id==='iron_working')).toBe(false);
     const farms = player.kingdom.infrastructure.farms;
     await engine.buildForPlayer(player.id,'farms');
+    expect(player.kingdom.infrastructure.farms).toBe(farms);
+    for(let i=0;i<3;i++)await engine.advanceMonth();
     expect(player.kingdom.infrastructure.farms).toBe(farms+1);
     player.kingdom.infrastructure.schools=5;
     engine.travelWorld(player.id,'rival:ostmark');
@@ -80,7 +156,7 @@ describe('Playable campaign integration', (): void => {
     await engine.saveGame('bronze');
     const loaded=new GameEngine({enableWiki:false}); engines.push(loaded); await loaded.loadGame('bronze');
     expect(loaded.getCurrentYear()).toBe(-1998);
-    expect(loaded.getTimeSystem().getFormattedDate()).toBe('1.1.1999 v. Chr.');
+    expect(loaded.getTimeSystem().getFormattedDate()).toBe('1.4.1999 v. Chr.');
     expect(loaded.getPlayers()[0].kingdom.foundingYear).toBe(-1999);
     expect(loaded.getExhibitionOptions(player.id).find(item=>item.milestone.id==='aegean-middle-bronze')?.held).toBe(true);
     expect(()=>loaded.sponsorExhibition(player.id,'aegean-middle-bronze')).toThrow('bereits');
@@ -628,8 +704,8 @@ describe('Playable campaign integration', (): void => {
     expect(await engine.buildForPlayer(ruler.id,'workshops')).toBe(true);
     expect(await engine.buildForPlayer(ruler.id,'roads')).toBe(true);
     expect(await engine.buildForPlayer(ruler.id,'roads')).toBe(true);
-    expect(engine.getCampaignChapterStatus(ruler.id).ready).toBe(true);
-    await engine.advanceMonth();
+    expect(engine.getCampaignChapterStatus(ruler.id).ready).toBe(false);
+    for(let i=0;i<engine.getConstructionMonths('workshops');i++)await engine.advanceMonth();
     expect(engine.getCampaignChapterStatus(ruler.id).index).toBe(1);
     await engine.saveGame('full-industry');
     const restored = new GameEngine({enableWiki:false});
@@ -940,6 +1016,8 @@ describe('Playable campaign integration', (): void => {
     for (const resource of ['gold', 'wood', 'stone', 'iron'] as const) ruler.kingdom.resources[resource] = 100000;
     const before = ruler.kingdom.infrastructure.schools;
     expect(await engine.buildForPlayer(ruler.id, 'schools')).toBe(true);
+    expect(ruler.kingdom.infrastructure.schools).toBe(before);
+    for(let i=0;i<engine.getConstructionMonths('schools');i++)await engine.advanceMonth();
     expect(ruler.kingdom.infrastructure.schools).toBe(before + 1);
     await expect(engine.buildForPlayer(ruler.id, 'not-a-building')).rejects.toThrow('Unbekanntes');
   });
@@ -991,7 +1069,8 @@ describe('Playable campaign integration', (): void => {
     engines.push(restored);
     await restored.loadGame('roundtrip');
     expect(restored.getPlayers()[0].kingdom.resources).toEqual(expectedResources);
-    expect(restored.getPlayers()[0].kingdom.infrastructure.farms).toBe(9);
+    expect(restored.getPlayers()[0].kingdom.infrastructure.farms).toBe(8);
+    expect(restored.getProjects(ruler.id)[0]).toMatchObject({target:'farms',remaining:2});
     expect(restored.getCitizenSystem().getAllCitizens().map((citizen: Citizen): string => citizen.id)).toEqual(citizenIds);
     const restoredRole = restored.getRoleSwitchingSystem().createSessionSnapshot(ruler.id);
     expect(restoredRole?.currentCitizenId).toBe(

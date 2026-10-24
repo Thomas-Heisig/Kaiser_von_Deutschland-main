@@ -36,7 +36,7 @@ node scripts/verify-release-assets.mjs
 npm run preview
 ```
 
-`npm run build` erstellt `dist/` mit den 15 MP3-Titeln, fünf Videos, Albumcovern, PWA-Icons und `dist/downloads/kaiser-von-deutschland-offline.zip`.
+`npm run build` erstellt `dist/` mit den 20 MP3-Titeln, fünf Videos, Albumcovern, PWA-Icons und `dist/downloads/kaiser-von-deutschland-offline.zip`.
 
 ## Im aktiven Hauptspiel verfügbar
 
@@ -48,7 +48,7 @@ npm run preview
 - Historisch begrenzte Bürgeraufträge mit Kosten, mehrmonatigem Fortschritt und Lebensläufen; im Spiel über **⚒ Bürgeraufträge** erreichbar.
 - Ratsdilemmata: Wiederkehrende Ereignisse merken sich den früheren Delegierten, wenn er lebt. Sonst wird nach fünf Sekunden ein zufälliger lebender Erwachsener **vorausgewählt**. Die eigentliche Entscheidung verlangt weiterhin Delegation durch den Spieler; Berufs- und Persönlichkeitsmerkmale beeinflussen sie.
 - Familien: reale Kinder bei Schwangerschaftsende, Eltern-Kind-Relationen, einfache Schwangerschaftsbedingungen und historisch angelehnte Vornamen. Komplexe Partnervermittlung, Erbschaften und lange Generationenbalance fehlen.
-- Soundtrack mit **15 MP3s**, Covergalerie, **fünf MP4-Videos**, alternativen Intros/Outros und optionalen Zwischensequenzen.
+- Soundtrack mit **20 MP3s**, Covergalerie, **fünf MP4-Videos**, alternativen Intros/Outros und optionalen Zwischensequenzen.
 - Service Worker, Installationsbutton und offline vorbereitbares ZIP. Auf HTTP im Heimnetz ist ZIP-Download möglich; PWA-/Service-Worker-Installation benötigt HTTPS oder localhost.
 
 Alle angegebenen Bereiche sind Teil der aktuellen Aufbaukampagne; die Reife einzelner Inhalte steht im [Status](docs/00-meta/status.md).

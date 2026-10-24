@@ -34,7 +34,13 @@ for(const filename of files){
    if(!valid)fail.push('invalid MP4 '+filename);
  }
 }
-if(files.filter(x=>x.endsWith('.mp3')).length!==15)fail.push('not 15 music tracks');
+const music=JSON.parse(await readFile('src/data/json/music-catalog.json','utf8'));
+if(files.filter(x=>x.endsWith('.mp3')).length!==music.tracks.length)fail.push('music catalog count mismatch');
+for(const track of music.tracks){
+  for(const name of ['music/'+track.filename,track.cover.replace(/^\//,'')]){
+    await requireFile(name);if(!files.includes(name))fail.push('missing offline catalog asset '+name);
+  }
+}
 if(files.filter(x=>x.endsWith('.mp4')).length!==5)fail.push('not 5 videos');
 const catalog=JSON.parse((await requireFile('video-catalog.json')).toString('utf8'));
 if(catalog.videos.length!==5)fail.push('video catalog count mismatch');

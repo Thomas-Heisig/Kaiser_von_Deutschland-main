@@ -387,6 +387,17 @@ dialog:not(.section-dialog):not(.settings-dialog):not(.paged-info) {max-height:9
 .report-card #report-news p { display:block; overflow:visible; -webkit-line-clamp:unset; font-size:.78rem; line-height:1.55; }
 .report-card #report-news li { font-size:.75rem; margin:.3em 0; }
 .report-card>.report-actions,.report-card>h2,.report-card>small { flex-shrink:0; }
+.realm-report [hidden] { display:none!important; }
+@media(min-width:901px) { .realm-report[data-guide=false] { grid-template-rows:auto repeat(2,minmax(0,1fr)) auto; } }
+#news-filter { min-height:26px; padding:3px; font-size:.65rem; }
+.report-news-heading { display:flex; align-items:center; justify-content:space-between; gap:4px; flex-shrink:0; }
+.report-news-heading select { width:76px; }
+@media(max-width:600px) { #report-news-date { display:none; } .report-card #report-news { min-height:2em; } }
+#hide-journey-guide { align-self:flex-end; min-height:24px; padding:3px 6px; font-size:.6rem; }
+.report-card #report-history-text { display:block; overflow:auto; -webkit-line-clamp:unset; min-height:0; flex:1; }
+[data-project-queue] li { margin:.7em 0; line-height:1.5; }
+[data-project-queue] progress { display:block; width:100%; margin-top:5px; }
+.time-journey-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
 .character-pagination { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .character-pagination button { font-size:.8rem; }
 .provision-action { padding:12px 0; border-top:1px solid var(--line); }

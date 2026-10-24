@@ -8,6 +8,11 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### Stabilisierung und Integration · 24.10.2026
 
+- [x] [Spielzeit und langfristige Risiken](docs/05-technical-architecture/REALM_PACING.md): gespeicherte Bau-/Militärvorhaben mit Kosten und Abschluss, echte 1/10/100-Jahre-Simulation, stärkere neue Grenzmächte, Lagerverluste und Flutschäden. Bekannte Nachbarn mit Zahlen, echte Geländebasis auch in der Siedlung, Meldungsfilter und abschaltbare Spielbegleitung.
+- [x] Geschichte-Lesezeitreise und sieben weitere belegte Kultur-/Kunst-/Architekturkarten (Karolinger und Bauhaus).
+- [x] [Fünf Vorzeit-Musiktitel](docs/05-technical-architecture/PREHISTORY_SOUNDTRACK.md): umbenannte MP3s mit eingebetteten Covern, 20 Titel insgesamt, Ancient Veil als instrumentales Startthema und rotierende Epochen-Playlist.
+- [~] Erster vollständiger 100-Jahre-Engine-Lauf mit Alterung, Nachfolge und Bauabschluss geprüft; weitere schwierige Langzeitpartien und Katastrophenbalance bleiben offen.
+
 - [x] [Charakterautomatik und Nachfolge](docs/05-technical-architecture/CITIZEN_LIFECYCLE.md): zugewiesene Personen mit Aufgabe/Status/Fortschritt sichtbar, fünf Charakterpläne, manuelle Monatsaktionen mit Vorrang. Automatische Nachbesetzung für Rollen, Hofämter und Bürgeraufträge; keine Doppelbelegung. Todesfälle und Übergaben in der Chronik, alte Spielstände und Hotseat geprüft.
 - [x] Dauerhaften Bedürfnisverfall korrigiert: Versorgung der Bürger an Reichsbedingungen gekoppelt, kalendarische Alterung, Haushaltsgründung und erwachsene Nachkommen. Zwei deterministische 60-Jahre-Läufe mit Zwischen-Save/Load und ein versorgter Zehnjahreslauf durch die Engine; keine pauschale Zehnjahres-Lebensgrenze mehr.
 - [x] Dauerhaft sichtbare Zufriedenheit, Stabilität, Bevölkerung und Nahrungsreichweite; lesbare, scrollbare Meldungen und strukturierte Chronik. Sechs Bürgerrollen je Seite, neue Bürgernamen nach Geburtsjahr. Historische Grenzen und Quellen: [Versorgung und Bedienbarkeit](docs/05-technical-architecture/REGIONAL_PROVISIONING.md).
@@ -71,7 +76,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [x] Echte URL mit HTTPS, HTTP 200/206 für MP3/MP4, korrektes Manifest, Scope und Service Worker gemessen.
 - [ ] PWA-Installation auf iPad/Safari, Android/Chrome und Windows/Edge sowie Offlinebetrieb mit Musik und Video im Flugmodus prüfen.
 - [ ] Vor öffentlicher Freigabe Impressum, Datenschutz, Musik-/Video- und Coverrechte, Urheber-/KI-Credits vervollständigen.
-- [x] Installationsbutton, PNG-App-Icons 192/512, Offline-ZIP, dynamischer Videokatalog sowie Release-Prüfung der 15 MP3 und 5 MP4 im Build.
+- [x] Installationsbutton, PNG-App-Icons 192/512, Offline-ZIP, dynamischer Videokatalog sowie Release-Prüfung der 20 MP3 und 5 MP4 im Build.
 - [x] CI Typecheck, Vitest, Build und Chromium-Smoke der aktuellen `main`-Version bestanden.
 
 ## P1 — Stabilität, Gameplay, Bürger und Generationen
@@ -163,7 +168,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 ## P2 — Spielerlebnis und Module
 
 - [ ] Historische Video-3/4/5-Inhalte nach tatsächlicher Sichtung epochengetreu benennen und verorten; Audio-/Video-Übergänge auf Geräten prüfen.
-- [ ] Hochauflösende Originalcover und vollständige Metadaten/Credits für 15 Musikstücke.
+- [~] Fünf neue Vorzeit-Cover, Dateinamen und Metadaten integriert. Hochauflösende Originalcover für die bisherigen 15 Titel und vollständige Urheber-/Produktionscredits bleiben offen.
 - [ ] WebGPU-Gerätetest (Modell, Lizenz, Download, Speicher, Inferenz), optionale Ollama-/Mini-KI-Reaktionen; KI bleibt Opt-in.
 - [~] Bürgeraufträge mit örtlicher Versorgung und Vertrauen verbunden; individuelle Familien, regionale Produktionsketten, Transporte und lokale Sicherheit noch offen.
 - [ ] Vorhandene Legacy-Module (Religion, Marine, Recht, Bildung, Lebensphasen, Tagesrhythmus, Stadt, Ökologie) einzeln im Standardspiel zugänglich machen, nur danach als spielbar markieren.

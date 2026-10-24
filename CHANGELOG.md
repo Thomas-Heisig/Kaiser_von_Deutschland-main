@@ -6,6 +6,11 @@
 
 ### Added
 
+- Fünf neue Vorzeit-Aufnahmen mit umbenannten Dateien, ID3-Titeln, eingebetteten Covern und neuer Galerie; Ancient Veil als instrumentales Startthema. Epochen-Playlists wechseln passende Titel ohne Neustart bei Monatswechsel.
+- Gespeicherte Bau-, Modernisierungs-, Rekrutierungs- und Feldzugzeiten, genaue Startkosten und Abschlussmeldungen. Echte Jahres-/Jahrzehnt-/Jahrhundertreisen mit Abbruch und Jahresautosaves.
+- Lagerkapazität, Überschussverderb, optionale Vorratskatastrophen und Feldschäden, stärkere neue Grenzmächte nach vollständiger Unterwerfung.
+- Reale Ganderkesee-Geländebasis und Gewässer auch in der Siedlung, sichtbare Rivalenwerte, filterbarer Lagebericht, gespeichertes Ausblenden der Spielbegleitung. Geschichte-Lesezeitreise und sieben institutionell belegte Karolinger-/Bauhaus-Karten.
+
 - Charakterautomatik mit Ausgewogen/Arbeiten/Studieren/Waffenübung/Dem Reich dienen und Vorrang manueller Monatsaktionen. Zugewiesene Bürger mit Namen, Aufgabe und Fortschritt; Familienübersicht und erwachsene Nachfolge. Automatische Nachbesetzung von Hofämtern und laufenden Bürgeraufträgen ohne erneute Kosten, Chronik und Altstandmigration.
 - Bedürfnisversorgung statt dauerhaftem Verfall, kalendarische Alterung, jährliche Haushaltsgründung und Berufseinstieg für erwachsenen Nachwuchs. Zwei deterministische 60-Jahre-Demografieläufe, zehn Jahre durch die Engine sowie Browserabläufe mit Monatsaktionen und Save/Load ergänzt. [Modell und Grenzen](docs/05-technical-architecture/CITIZEN_LIFECYCLE.md).
 - Regionale Versorgungsentscheidungen mit dauerhaften Speichern, zeitlich begrenzter Hilfe und tatsächlichen Abwanderungsfolgen; erfolgreiche Bürgeraufträge und Verwaltungsbudget angebunden. Hotseat, BCE und Save/Load getestet.

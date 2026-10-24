@@ -19,6 +19,22 @@ function group(id: string, from: number, to: number, place: string, sourceTitle:
 }
 
 export const ERA_KNOWLEDGE: readonly EraKnowledge[] = [
+  ...group('carolingian-workshops',768,900,'Fränkisches Reich; besonders Hof und Klöster','The Metropolitan Museum of Art – Carolingian Art',
+    'https://www.metmuseum.org/essays/carolingian-art',[
+      ['culture','Lesbare Schrift als Kulturpolitik','Die karolingische Minuskel erleichtert das Lesen und Abschreiben von Texten. Bildung und Schriftpflege werden am Hof und in Klöstern gefördert; daraus folgt noch keine allgemeine Alphabetisierung.'],
+      ['art','Kostbare Bücher und geschnitztes Elfenbein','Buchmalerei, Elfenbeintafeln und reich verzierte Einbände verbinden antike Bildvorbilder mit regionalen Gestaltungstraditionen. Viele dieser Werke entstehen für religiöse oder höfische Auftraggeber.'],
+      ['architecture','Aachen: Architektur als Herrschaftssprache','Die achteckige Pfalzkapelle greift auf römische und byzantinische Vorbilder zurück. Importierte Marmorteile und monumentale Formen unterstreichen den Anspruch des Hofes.']
+    ]),
+  ...group('bauhaus-building-school',1927,1933,'Dessau und Berlin; Bauhaus-Lehre','Bauhaus Kooperation – Baulehre',
+    'https://bauhauskooperation.de/wissen/das-bauhaus/lehre/unterricht/baulehre',[
+      ['architecture','Architektur wird ein eigenes Lehrgebiet','Obwohl das Bauen schon 1919 als Ziel genannt wurde, entsteht eine eigene Architekturabteilung erst 1927 in Dessau. Zuvor arbeiten Studierende an Projekten im privaten Büro von Walter Gropius mit.'],
+      ['culture','Vom Werkstattlernen zur Baulehre','Die Bauausbildung verbindet Gestaltung mit konkreten Entwurfsaufgaben. Die Einrichtung der Abteilung verändert das Lehrangebot der Schule; das Bauhaus ist keine über seine gesamte Geschichte unveränderte Institution.']
+    ]),
+  ...group('bauhaus-housing',1926,1933,'Dessau; konkrete Beispiele des Neuen Bauens','Deutsches Historisches Museum – Bauhaus',
+    'https://www.dhm.de/lemo/kapitel/weimarer-republik/kunst-und-kultur/bauhaus',[
+      ['everyday','Neue Häuser für den Alltag','1926 entsteht der erste Abschnitt der Siedlung Dessau-Törten mit 60 Häusern. Wohnungsbau wird zum Experimentierfeld neuer Gestaltung; das Beispiel steht nicht für die Wohnverhältnisse aller Menschen.'],
+      ['architecture','Licht, Glas und Werkstätten','Der verglaste Werkstättentrakt des Dessauer Bauhausgebäudes macht Helligkeit und Funktion sichtbar. Das Gebäude wird im Dezember 1926 bezogen und prägt die Wahrnehmung moderner Architektur.']
+    ],{fromMonth:12}),
   ...ART_STYLE_KNOWLEDGE,
   ...group('sigillata', 1, 300, 'Römische Provinzen; heutige archäologische Einordnung', 'Stadtarchäologie Wien – Was Sie schon immer über Terra Sigillata wissen wollten',
     'https://stadtarchaeologie.at/start/erleben/ausstellungen/tischgespraech/tischgespraech/', [

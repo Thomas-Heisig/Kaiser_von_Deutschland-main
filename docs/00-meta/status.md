@@ -2,7 +2,9 @@
 **Stand 24.10.2026 · Codebasis: main · Live unter https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/**
 
 ## Belegt
-- [Bürgerleben und Charakterautomatik](../05-technical-architecture/CITIZEN_LIFECYCLE.md): Versorgung statt dauerhaftem Bedürfnisverfall, Haushaltsgründung, fünf Charakterpläne und nachvollziehbare erwachsene Nachfolge. Zugewiesene Bürger sichtbar; automatische Hof-/Auftragsnachfolge erhält Aufgabenfortschritt. 60-Jahre-Demografie, Zehnjahres-Engine, Save/Load und Hotseat geprüft. Vollständige Suite: 328 bestanden, sieben vorhandene übersprungen.
+- [Spielzeit und Risiken](../05-technical-architecture/REALM_PACING.md): verzögerte Vorhaben, simulierte Jahre/Jahrzehnte/Jahrhunderte, Vorrats-/Feldschäden, stärkere Grenzmächte und reale Siedlungskarte. Erster finanzierter 100-Jahre-Lauf geprüft, keine allgemeine Balance-Freigabe.
+- [Vorzeit-Musik](../05-technical-architecture/PREHISTORY_SOUNDTRACK.md): fünf zusätzliche Aufnahmen und Cover, Ancient Veil als Startthema, vollständige Epochen-Playlist.
+- [Bürgerleben und Charakterautomatik](../05-technical-architecture/CITIZEN_LIFECYCLE.md): Versorgung statt dauerhaftem Bedürfnisverfall, Haushaltsgründung, fünf Charakterpläne und nachvollziehbare erwachsene Nachfolge. Zugewiesene Bürger sichtbar; automatische Hof-/Auftragsnachfolge erhält Aufgabenfortschritt. 60-Jahre-Demografie, Zehnjahres-Engine, Save/Load und Hotseat geprüft. Aktuelle vollständige Suite: 337 bestanden, sieben vorhandene übersprungen.
 - [Regionale Versorgung und Bedienbarkeit](../05-technical-architecture/REGIONAL_PROVISIONING.md): drei modellierte Versorgungsgebiete je Reich, bezahlte Hilfe, dauerhafte Speicher, tatsächliche Abwanderungsfolgen, Bürgeraufträge und budgetierte Automatik. Hotseat/BCE/Save/Load geprüft. Dauerhafte Zufriedenheits-/Stabilitätsanzeige, lesbare Chronik, sechs Bürgerrollen pro Seite und tragfähigerer Holzausbau; 317 Tests bestanden, sieben vorhandene übersprungen.
 - [Ganderkesee](../05-technical-architecture/GANDERKESEE.md): amtliches Gelände, echtes Gewässernetz und zeitabhängige Ortsmarken; sechs Verwaltungsbereiche mit Sicher/Normal/Gewagt, Kassenabschluss, direkte Steuern, Garnisonsentwicklung und zusätzliche zeitabhängige Projekte. Abhängigkeiten und offene Dependabot-PRs integriert.
 - [Frühstart ab 2000 v. Chr. und Geschichte & Zeitbild](../09-history-model/ZEITBILD.md): belegte Datierungen, Unsicherheitshinweise, regionale Kunst-/Kulturkarten, Monatsfilter und Save/Load vor der Zeitenwende. 20 historische Starts in Chromium geprüft; keine lückenlose Weltchronik und keine vollständige Regionalstil-Enzyklopädie.
@@ -13,7 +15,7 @@
 - Standardspiel `src/main.ts` → `KingdomGameUI` → `GameEngine`, Build mit Vite/TypeScript.
 - **Öffentlich spielbar via GitHub Pages** – HTTPS, PWA, Offline-Modus bestätigt.
 - Lokaler Hotseat (2–4), Siedlung, Wirtschaft, Forschung, Bürgeraufträge, Ratsdialoge, Krieg, Kultur, Musik-/Filmmenü.
-- 15 MP3- und fünf MP4-Dateien im Produktionsbuild, temporäre Cover, Browser-Download des ZIP; automatische Asset-Prüfung in CI.
+- 20 MP3- und fünf MP4-Dateien im Produktionsbuild, zugeordnete Cover, Browser-Download des ZIP; automatische Asset-Prüfung in CI.
 - Ratsdelegation und historisch begrenzte Bürgeraufträge; reale Geburten, einfache familiäre Schwangerschaftsbedingungen, historische Namenslisten. Langzeitdemografie nicht validiert.
 - **Echte Niederlagebedingungen** (Bankrott, Hungersnot, Anarchie) als monatliche Prüfung mit Erholungsrücksetzung und dauerhafter Festhaltung; Untergang pausiert das Spiel, schreibt die Chronik und öffnet die Niederlageseite. 12 Unit-Tests und 7 Engine-Integrationstests; Save/Load-Migration und Fehlalarmfreiheit belegt.
 - **Interaktive Tutorial-Kampagne** (Bauen → Handeln → Forschen → Reichsrat → Speichern) mit Fortschrittskarte, Navigation, Ressourcen-Hilfe, Überspringen und Save/Load-Persistenz; 11 Unit-Tests und 9 Engine-Integrationstests.

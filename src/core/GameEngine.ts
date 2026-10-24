@@ -1,4 +1,6 @@
 import { chooseCitizenCouncilOption } from './CitizenCouncilChoice';
+import { RealmProjects, constructionMonths, BUILD_NAMES, type RealmProject } from './RealmProjects';
+import { foodSecurity, processFoodSecurity } from './FoodSecurity';
 import { CivicMissionSystem, CIVIC_MISSIONS } from './CivicMissionSystem';
 // src/core/GameEngine.ts
 import { Player, PlayerCreationData } from './Player';
@@ -10,7 +12,7 @@ import { DEFAULT_START_LOCATION, startLocation, type StartLocation } from './Sta
 import { TreasuryLedger, validateTreasuryReport, type TreasuryReport } from './TreasuryLedger';
 import { socialCelebrations } from './SocialCelebrations';
 import { ADMIN_DOMAINS, ADMIN_LABELS, ADMIN_POLICIES, administrationBudget, defaultAdministration, validateAdministration, type AdministrationPreferences } from './Administration';
-import { developGarrison, garrisonDevelopment } from './GarrisonDevelopment';
+import { garrisonDevelopment } from './GarrisonDevelopment';
 import { RegionalProvisioning } from './RegionalProvisioning';
 import { citizenName } from './HistoricalNames';
 import { TitleSystem } from '../data/Titles';
@@ -142,6 +144,69 @@ export interface SaveMeta {
 }
 
 export class GameEngine {
+  private realmProjects=new RealmProjects();
+  private travellingTime=false;
+  private stopTimeTravel=false;
+  public getProjects(playerId:string){this.requirePlayer(playerId);return this.realmProjects.list(playerId);}
+  public getFoodSecurity(playerId:string){return foodSecurity(this.requirePlayer(playerId).kingdom);}
+  public getConstructionMonths(type:keyof KingdomInfrastructure){return constructionMonths(type,this.currentYear);}
+  public cancelTimeTravel():void {this.stopTimeTravel=true;}
+  public async travelThroughTime(months:number):Promise<{completed:number;reason:string}> {
+    if(![12,120,1200].includes(months))throw Error('Wähle ein Jahr, Jahrzehnt oder Jahrhundert.');
+    if(this.isHotseat())throw Error('Zeitsprünge sind im Hotseat nicht möglich; alle Spieler müssen ihren Zug erhalten.');
+    if(this.travellingTime||this.processingMonth)throw Error('Die Zeit wird bereits berechnet.');
+    this.pauseGame();this.travellingTime=true;this.stopTimeTravel=false;
+    let completed=0,reason='Ziel erreicht';
+    try {
+      for(;completed<months;) {
+        const player=this.getActivePlayer();
+        if(this.stopTimeTravel){reason='Abgebrochen';break;}
+        if(this.getPendingCouncilDecision(player.id)){reason='Der Reichsrat wartet auf eine Entscheidung';break;}
+        if(this.getPlayerDefeatReason(player.id)||this.getCampaignId()!=='frei'&&this.getCampaignChapterStatus(player.id).finished){reason='Kampagne beendet';break;}
+        await this.advanceMonth();completed++;
+        if(completed%12===0)await this.saveGame('autosave');
+        this.emit('timeTravelProgress',{completed,total:months});
+        await new Promise(resolve=>setTimeout(resolve,0));
+      }
+      this.recordChronicle(`Zeitreise: ${completed} von ${months} Monaten berechnet. ${reason}.`,this.getActivePlayer().id);
+      await this.saveGame('autosave');
+      return {completed,reason};
+    } finally {this.travellingTime=false;this.pauseGame();}
+  }
+  private projectMessage(playerId:string,message:string):void {this.recordChronicle(message,playerId);this.emit('projectEvent',{playerId,message});}
+  private addProject(playerId:string,kind:RealmProject['kind'],target:string,name:string,months:number,count=1,paid?:{gold:number;food?:number;wood?:number;stone?:number;iron?:number}):void {
+    this.realmProjects.add({playerId,kind,target,name,months,count,started:this.currentYear*12+this.currentMonth});
+    const names={gold:'Gold',food:'Nahrung',wood:'Holz',stone:'Stein',iron:'Eisen'};
+    const bill=paid?Object.entries(paid).filter(([,value])=>value>0).map(([key,value])=>`${value} ${names[key as keyof typeof names]}`).join(', '):'vereinbarte Ressourcen';
+    this.projectMessage(playerId,`${name} begonnen: ${months} Monate. Bezahlt: ${bill}. Wirkung erst bei Abschluss.`);
+  }
+  private processProjects(player:Player):void {
+    for(const job of this.realmProjects.advance(player.id,this.currentYear*12+this.currentMonth)) {
+      if(job.kind==='building')player.kingdom.completeConstruction(job.target as keyof KingdomInfrastructure,job.count);
+      if(job.kind==='modernization') {
+        const project=this.getModernizationOptions(player.id).find(o=>o.project.id===job.target)!.project;
+        applyModernization(project,player.kingdom);
+        this.modernizationCompleted.set(player.id,[...(this.modernizationCompleted.get(player.id)??[]),job.target]);
+      }
+      if(job.kind==='recruitment'){player.kingdom.military[job.target as 'infantry'|'archers'|'cavalry']+=job.count;player.kingdom.military.morale=Math.min(100,player.kingdom.military.morale+job.count*.1);}
+      if(job.kind==='garrison') {
+        const field=job.target==='training'?'trainingLevel':'equipmentQuality';
+        player.kingdom.military[field]=Math.min(100,player.kingdom.military[field]+5);
+      }
+      if(job.kind==='duel') {
+        if(!this.players.has(job.target)||CampaignWarfareSystem.fieldSoldiers(player.kingdom)<20){this.projectMessage(player.id,job.name+' abgebrochen: Ziel oder Heer nicht verfügbar.');continue;}
+        this.resolvePlayerCampaign(player.id,job.target,true);
+      }
+      if(job.kind==='campaign') {
+        if(CampaignWarfareSystem.fieldSoldiers(player.kingdom)<20||this.getRivalTreaties(player.id).some(t=>t.parties.includes(job.target))||!this.getRivals(player.id).some(r=>r.id===job.target&&!r.subjugated)) {
+          this.projectMessage(player.id,`${job.name} abgebrochen: Heer nicht einsatzfähig oder inzwischen Friedensvertrag. Aufmarschkosten verbraucht.`);continue;
+        }
+        this.resolveRivalCampaign(player.id,job.target,true);
+      }
+      this.projectMessage(player.id,`${job.name} nach ${job.months} Monaten abgeschlossen.`);
+      if(job.kind==='building')this.emit('buildingConstructed',{playerId:player.id,building:job.target});
+    }
+  }
   private players: Map<string, Player> = new Map();
   private currentYear: number;
   private gameState: GameState;
@@ -256,12 +321,18 @@ export class GameEngine {
     this.recordChronicle('Verwaltung: '+ADMIN_POLICIES[preferences.policy].label+'; delegiert: '+ADMIN_DOMAINS.filter(d=>preferences.domains[d]).map(d=>ADMIN_LABELS[d]).join(', '),playerId);
   }
   public getAdministrationBudget(playerId:string) {return administrationBudget(this.requirePlayer(playerId).kingdom,this.getAdministration(playerId).policy);}
-  public getGarrisonDevelopment(playerId:string) {return garrisonDevelopment(this.requirePlayer(playerId).kingdom,this.currentYear);}
+  public getGarrisonDevelopment(playerId:string) {return garrisonDevelopment(this.requirePlayer(playerId).kingdom,this.currentYear).map(p=>({...p,available:p.available&&!this.realmProjects.busy(playerId,'garrison',p.id)&&this.realmProjects.list(playerId).length<12}));}
   public improveGarrison(playerId:string,id:string):string {
     const player=this.requirePlayer(playerId);
     if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
-    const message=developGarrison(player.kingdom,this.currentYear,id);
-    this.recordChronicle(message,playerId);return message;
+    return this.improveGarrisonFor(player,id);
+  }
+  private improveGarrisonFor(player:Player,id:string):string {
+    const option=this.getGarrisonDevelopment(player.id).find(p=>p.id===id&&p.available);
+    if(!option)throw Error('Garnisonsausbau nicht möglich oder bereits unterwegs.');
+    for(const [key,cost] of Object.entries(option.cost))player.kingdom.resources[key as keyof typeof option.cost]-=cost;
+    this.addProject(player.id,'garrison',id,option.name,2,1,option.cost);
+    return option.name+' beauftragt: 2 Monate, danach bis zu +5 '+(id==='training'?'Ausbildung':'Ausrüstung')+'.';
   }
   private treasuryAudit = new Map<string,TreasuryLedger>();
   public getTreasuryReport(playerId:string):TreasuryReport|null {
@@ -472,6 +543,8 @@ export class GameEngine {
       if(!owned)blockers.push('Zuerst den zugehörigen Gebäudebezirk errichten.');
       if (!researched.isResearched(project.requiredTechnology)) blockers.push('Erfordert Forschung: ' + project.requiredTechnology);
       if (completed.includes(project.id)) blockers.push('Bereits umgesetzt');
+      if(this.realmProjects.busy(playerId,'modernization',project.id))blockers.push('Bereits im Bau');
+      if(this.realmProjects.list(playerId).length>=12)blockers.push('Zwölf Vorhaben laufen bereits');
       for (const resource of ['gold','wood','stone','iron'] as const)
         if (player.kingdom.resources[resource] < project.cost[resource]) blockers.push(resource + ' fehlt');
       return {project,completed:completed.includes(project.id),canStart:blockers.length===0,blockers,
@@ -491,10 +564,9 @@ export class GameEngine {
     if (!item.canStart) throw new Error(item.blockers.join(' · '));
     for (const res of ['gold','wood','stone','iron'] as const)
       player.kingdom.resources[res] -= item.project.cost[res];
-    applyModernization(item.project,player.kingdom);
-    this.modernizationCompleted.set(playerId,[...(this.modernizationCompleted.get(playerId)??[]),item.project.id]);
-    const message = item.project.name + ' abgeschlossen: ' + item.project.effect + ' · Kosten: ' + item.project.cost.gold + ' Gold.';
-    this.emit('modernizationCompleted',{playerId,message});
+    const months=item.project.kind==='construction'?12:6;
+    this.addProject(playerId,'modernization',projectId,item.project.name,months,1,item.project.cost);
+    const message=item.project.name+' beauftragt: '+months+' Monate bis zum Abschluss.';
     return message;
   }
 
@@ -733,6 +805,7 @@ export class GameEngine {
   }
 
   public resumeGame(): void {
+    if(this.travellingTime)return;
     if (this.getCampaignId() !== 'frei' && this.getPlayers().some(player =>
       this.isPlayerDefeated(player.id) || this.getCampaignChapterStatus(player.id).finished)) return;
     if (this.gameState === GameState.PAUSED && !this.isHotseat()) {
@@ -767,7 +840,7 @@ export class GameEngine {
     // Only checkpoint completed months, after releasing the processing lock.
     // Do not interrupt the game if the browser's persistent storage is unavailable.
     try {
-      await this.saveGame('autosave');
+      if(!this.travellingTime)await this.saveGame('autosave');
     } catch (error) {
       this.emit('autosaveError', { message: error instanceof Error ? error.message : String(error) });
     }
@@ -882,6 +955,13 @@ export class GameEngine {
       
       this.emit('yearAdvanced', { year: this.currentYear });
       this.emitEpochChange();
+      for(const player of this.players.values()) {
+        const fresh=this.warfare.expandFrontier(player.id,this.currentYear);
+        if(fresh.length) {
+          this.initializeRivalDiplomacy(player.id);this.requireStrategyWorld(player.id);
+          this.projectMessage(player.id,'Jenseits der befriedeten Grenze treten drei stärkere Mächte auf: '+fresh.map(r=>r.name+' ('+r.soldiers+' Soldaten)').join(', ')+'. Bestehende Vasallen bleiben erhalten.');
+        }
+      }
     }
 
     // Informative history follows its recorded month and never mutates the realm.
@@ -1004,6 +1084,7 @@ export class GameEngine {
   }
 
   private async processPlayerMonth(player: Player): Promise<void> {
+    this.processProjects(player);
     const forecast=player.kingdom.getMonthlyBalance();
     player.kingdom.processMonth();
     this.treasuryCheckpoint(player,`Produktion ${forecast.production.gold}, Steuern ${forecast.taxes}, Unterhalt ${forecast.consumption.gold}`);
@@ -1014,6 +1095,7 @@ export class GameEngine {
       player.kingdom.resources[resource] += bonus[resource];
     }
     this.treasuryCheckpoint(player,'Forschungsbedingte Mehrproduktion');
+    for(const message of processFoodSecurity(player.kingdom,this.config.randomEvents))this.projectMessage(player.id,message);
     const debtPayment = this.requireWarFinance(player.id).processMonthlyPayments(player.kingdom);
     this.treasuryCheckpoint(player,'Darlehen: Tilgung und Zinsen');
     if (debtPayment.cannotAfford) this.emit('financeEvent', { playerId: player.id,
@@ -1032,6 +1114,11 @@ export class GameEngine {
         protectedByTreaty: (rivalId: string): boolean => this.hasRivalTruce(player.id, rivalId) });
     if (raid) {
       const diplomacy = this.requireRivalDiplomacy(player.id);
+      if(raid.rivalId) {
+        this.requireStrategyWorld(player.id).discover('rival:'+raid.rivalId);
+        const relation=diplomacy.getRelation(raid.rivalId);
+        if(relation){relation.relationshipValue=Math.min(-40,relation.relationshipValue);relation.relationType='hostile';}
+      }
       const contracts = this.getRivalTreaties(player.id).filter(t=>raid.rivalId && t.parties.includes(raid.rivalId));
       if (contracts.length) {
         diplomacy.breakTreaty(contracts[0].id);
@@ -1040,6 +1127,7 @@ export class GameEngine {
         this.recordChronicle(message,player.id);
         this.emit('diplomacyEvent',{playerId:player.id,message,recorded:true});
       }
+      this.recordChronicle(raid.summary, player.id);
       this.emit('battleResolved', { report: raid });
     }
     this.treasuryCheckpoint(player,'Überfälle und Kriegsfolgen');
@@ -1141,6 +1229,7 @@ export class GameEngine {
       this.siegeTargets.delete(playerId);
       this.courtAssistants.removePlayer(playerId);
       this.civicMissions.removePlayer(playerId);
+      this.realmProjects.removePlayer(playerId);
       this.administration.delete(playerId);
       this.regionalProvisioning.delete(playerId);
       this.treasuryReports.delete(playerId);
@@ -1161,61 +1250,34 @@ export class GameEngine {
     this.emit('taxRateChanged', { playerId, taxRate: clampedRate });
   }
 
-  public async buildForPlayer(playerId: string, type: string): Promise<boolean> {
-    const player = this.players.get(playerId);
-    if (!player) throw new Error('Spieler nicht gefunden');
-
-    let success = false;
-    
-    // Map UI building keys to Kingdom.infrastructure keys
-    switch (type) {
-      case 'market':
-        success = player.kingdom.buildMarket();
-        break;
-      case 'farm':
-        success = player.kingdom.buildFarm();
-        break;
-      case 'mill':
-        success = player.kingdom.buildMill();
-        break;
-      case 'mine':
-        success = player.kingdom.buildStructure('mines');
-        break;
-      case 'barracks':
-        success = player.kingdom.buildStructure('barracks');
-        break;
-      case 'walls':
-        success = player.kingdom.buildStructure('walls');
-        break;
-      case 'workshop':
-      case 'workshops':
-        success = player.kingdom.buildStructure('workshops');
-        break;
-      default:
-        if (Object.prototype.hasOwnProperty.call(player.kingdom.infrastructure, type)) {
-          success = player.kingdom.buildStructure(type as keyof KingdomInfrastructure);
-        } else {
-          throw new Error(`Unbekanntes Gebäude: ${type}`);
-        }
-        break;
-    }
-
-    if (success) {
-      this.emit('buildingConstructed', { playerId, building: type });
-      this.markTutorialStep(playerId, 'build');
-    }
-
-    return success;
+  public async buildForPlayer(playerId:string,type:string):Promise<boolean> {
+    const player=this.requirePlayer(playerId);
+    const aliases:Record<string,keyof KingdomInfrastructure>={market:'markets',farm:'farms',mill:'workshops',mine:'mines',workshop:'workshops'};
+    const key=aliases[type]??type as keyof KingdomInfrastructure;
+    if(!Object.hasOwn(BUILD_NAMES,key))throw Error('Unbekanntes Gebäude: '+type);
+    const cost=player.kingdom.getBuildingData(key);
+    if(!cost)throw Error('Unbekanntes Gebäude: '+type);
+    if(this.realmProjects.list(playerId).length>=12)return false;
+    const bill={gold:cost.cost,wood:cost.woodCost??0,stone:cost.stoneCost??0,iron:cost.ironCost??0};
+    for(const resource of ['gold','wood','stone','iron'] as const)if(player.kingdom.resources[resource]<bill[resource])return false;
+    for(const resource of ['gold','wood','stone','iron'] as const)player.kingdom.resources[resource]-=bill[resource];
+    this.addProject(playerId,'building',key,BUILD_NAMES[key],constructionMonths(key,this.currentYear),1,bill);
+    this.markTutorialStep(playerId,'build');return true;
   }
 
   public recruitForPlayer(playerId: string, count: number, type: 'infantry' | 'cavalry' | 'archers' = 'infantry'): boolean {
     const player = this.players.get(playerId);
     if (!player) throw new Error('Spieler nicht gefunden');
 
+    if(this.realmProjects.list(playerId).length>=12)return false;
+    const before={...player.kingdom.resources},morale=player.kingdom.military.morale;
     const success = player.kingdom.recruitSoldiers(count, type);
     
     if (success) {
-      this.emit('militaryRecruited', { playerId, count });
+      player.kingdom.military[type]-=count;
+      player.kingdom.military.morale=morale;
+      this.addProject(playerId,'recruitment',type,count+' Rekruten ausbilden',type==='cavalry'?6:3,count,
+        {gold:before.gold-player.kingdom.resources.gold,food:before.food-player.kingdom.resources.food,wood:before.wood-player.kingdom.resources.wood,iron:before.iron-player.kingdom.resources.iron});
     }
 
     return success;
@@ -1400,6 +1462,7 @@ export class GameEngine {
       courtAssistants: this.courtAssistants.serialize(),
       culturalExhibitions: Array.from(this.culturalExhibitions),
       modernizationCompleted: Array.from(this.modernizationCompleted),
+      realmProjects:this.realmProjects.serialize(),
       civicMissions: this.civicMissions.serialize(),
       chronicle: this.getChronicle(),
       treasuryReports: Object.fromEntries(this.treasuryReports),
@@ -1456,6 +1519,10 @@ export class GameEngine {
         (saveData.version !== undefined && saveData.version !== 2)) {
       throw new Error('Der Spielstand ist beschädigt oder inkompatibel.');
     }
+    const restoredProjects=new RealmProjects();
+    restoredProjects.restore(saveData.realmProjects,saveData.players.map((p:{id:string})=>p.id));
+    for(const job of restoredProjects.serialize())if(job.kind==='building'&&!Object.hasOwn(BUILD_NAMES,job.target)||job.kind==='recruitment'&&!['infantry','archers','cavalry'].includes(job.target)||
+      job.kind==='modernization'&&!MODERNIZATION_PROJECTS.some(p=>p.id===job.target)||job.kind==='campaign'&&!saveData.warfare?.rivals?.some((r:RivalRealm)=>r.id===job.target&&r.playerId===job.playerId)||job.kind==='garrison'&&!['training','equipment'].includes(job.target)||job.kind==='duel'&&(!saveData.players.some((p:{id:string})=>p.id===job.target)||job.target===job.playerId))throw Error('Unbekanntes Vorhaben.');
     const restoredLocation = startLocation(saveData.config.startLocationId);
     const restoredAdministration=new Map<string,AdministrationPreferences>();
     if(saveData.administration!==undefined) {
@@ -1664,6 +1731,7 @@ export class GameEngine {
     if (saveData.dynamicGameView) {
       this.dynamicGameView.loadSnapshot(saveData.dynamicGameView);
     }
+    this.realmProjects=restoredProjects;
     this.timeSystem.setDate(this.currentYear, this.currentMonth);
     this.timeSystem.pause();
     for(const player of this.players.values()) {
@@ -1808,6 +1876,7 @@ export class GameEngine {
    * @returns Nothing.
    */
   public dispose(): void {
+    this.cancelTimeTravel();
     if (this._tickHandle) clearTimeout(this._tickHandle);
     this._tickHandle = null;
     this.gameState = GameState.PAUSED;
@@ -1996,7 +2065,12 @@ export class GameEngine {
 
   public getRivalRelations(playerId: string) {
     this.requirePlayer(playerId);
-    return this.requireRivalDiplomacy(playerId).getAllRelations();
+    return this.requireRivalDiplomacy(playerId).getAllRelations().map(relation=>{
+      const rival=this.getRivals(playerId).find(r=>r.id===relation.kingdomId);
+      if(rival?.subjugated)relation.relationType='vassal';
+      if(rival)relation.kingdomName=rival.name;
+      return relation;
+    });
   }
 
   public getRivalMissions(playerId: string) {
@@ -2120,6 +2194,7 @@ export class GameEngine {
       startYear: this.currentYear, duration: 1, cost: price
     });
     const message = `Gesandtschaft nach ${rival.name} aufgebrochen (350 Gold).`;
+    this.requireStrategyWorld(playerId).discover('rival:'+rivalId);
     this.emit('diplomacyEvent', { playerId, message });
     return message;
   }
@@ -2180,6 +2255,7 @@ export class GameEngine {
       this.strategyWorlds.set(playerId,world);
     }
     world.sync(this.getRivals(playerId).map(r=>r.id));
+    for(const rival of this.getRivals(playerId))if(rival.subjugated||['raubritter','ostmark','nordland'].includes(rival.id))world.discover('rival:'+rival.id);
     return world;
   }
 
@@ -2364,7 +2440,7 @@ export class GameEngine {
       attack: CampaignWarfareSystem.armyPower(player.kingdom, modifiers, this.currentYear),
       defense: CampaignWarfareSystem.defensePower(player.kingdom, modifiers, this.currentYear),
       cost: CampaignWarfareSystem.campaignCost(player.kingdom),
-      canCampaign: this.warfare.canCampaign(playerId, this.currentYear * 12 + this.currentMonth),
+      canCampaign: !this.realmProjects.busy(playerId,'campaign')&&!this.realmProjects.busy(playerId,'duel')&&this.warfare.canCampaign(playerId, this.currentYear * 12 + this.currentMonth),
       commanderBonus: modifiers.commanderBonus ?? 0
     };
   }
@@ -2395,14 +2471,37 @@ export class GameEngine {
    * @returns Battle report.
    * @throws Error if supplies, soldiers or the monthly campaign limit prevent the attack.
    */
-  public attackRival(playerId: string, rivalId: string): BattleReport {
-    if (this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
+  public launchCampaign(playerId:string,rivalId:string):string {
+    const player=this.requirePlayer(playerId);
+    if(this.isHotseat()&&this.getActivePlayer().id!==playerId)throw Error('Nicht am Zug.');
+    if(this.hasRivalTruce(playerId,rivalId)||this.getRivalTreaties(playerId).some(t=>t.parties.includes(rivalId)))throw Error('Zuerst den Vertrag mit diesem Nachbarn beenden.');
+    const rival=this.getRivals(playerId).find(r=>r.id===rivalId&&!r.subjugated);
+    if(!rival)throw Error('Kein verfügbares Feldzugsziel.');
+    if(this.realmProjects.busy(playerId,'campaign')||this.realmProjects.busy(playerId,'duel'))throw Error('Ein Feldzug ist bereits unterwegs.');
+    if(this.realmProjects.list(playerId).length>=12)throw Error('Zwölf Vorhaben laufen bereits.');
+    const cost=CampaignWarfareSystem.campaignCost(player.kingdom);
+    if(CampaignWarfareSystem.fieldSoldiers(player.kingdom)<20)throw Error('Mindestens 20 einsatzfähige Soldaten erforderlich.');
+    if(player.kingdom.resources.gold<cost.gold||player.kingdom.resources.food<cost.food)throw Error('Nicht genügend Nachschub.');
+    player.kingdom.resources.gold-=cost.gold;player.kingdom.resources.food-=cost.food;
+    const relation=this.requireRivalDiplomacy(playerId).getRelation(rivalId);
+    if(relation){relation.relationshipValue=-60;relation.relationType='war';relation.trust=0;}
+    this.requireStrategyWorld(playerId).discover('rival:'+rivalId);
+    const months=3+Math.max(0,Math.ceil((rival.fortification-1)*3));
+    this.addProject(playerId,'campaign',rivalId,'Feldzug gegen '+rival.name,months,1,cost);
+    return `Feldzug aufgebrochen: ${months} Monate Aufmarsch und Kampf. ${cost.gold} Gold und ${cost.food} Nahrung bezahlt; laufender Heeresunterhalt bleibt bestehen.`;
+  }
+
+  public attackRival(playerId:string,rivalId:string):BattleReport {return this.resolveRivalCampaign(playerId,rivalId);}
+  private resolveRivalCampaign(playerId: string, rivalId: string,prepaid=false): BattleReport {
+    if (!prepaid&&this.isHotseat() && this.getActivePlayer().id !== playerId) throw new Error('Nicht am Zug.');
     if (this.hasRivalTruce(playerId, rivalId)) throw new Error('Ein Nichtangriffspakt verbietet diesen Feldzug.');
     if (this.getRivalTreaties(playerId).some(t => t.parties.includes(rivalId)))
       throw new Error('Beende zuerst die Verträge mit diesem Nachbarn im diplomatischen Hof.');
     const player = this.requirePlayer(playerId);
     const report = this.warfare.attackRival(playerId, player.kingdom, rivalId,
-      { year: this.currentYear, month: this.currentMonth }, this.getCommanderModifiers(playerId));
+      { year: this.currentYear, month: this.currentMonth }, this.getCommanderModifiers(playerId),prepaid);
+    this.requireStrategyWorld(playerId).discover('rival:'+rivalId);
+    this.recordChronicle(report.summary,playerId);
     if (report.attackerWon) player.updateStats({ prestige: 5 });
     this.emit('battleResolved', { report });
     return report;
@@ -2415,15 +2514,29 @@ export class GameEngine {
    * @returns Battle report.
    * @throws Error for invalid targets or missing supplies.
    */
-  public attackPlayer(attackerId: string, defenderId: string): BattleReport {
-    if (this.isHotseat() && this.getActivePlayer().id !== attackerId) throw new Error('Nicht am Zug.');
+  public launchPlayerCampaign(attackerId:string,defenderId:string):string {
+    const attacker=this.requirePlayer(attackerId),defender=this.requirePlayer(defenderId);
+    if(attackerId===defenderId)throw Error('Ein Reich kann sich nicht selbst angreifen.');
+    if(this.isHotseat()&&this.getActivePlayer().id!==attackerId)throw Error('Nicht am Zug.');
+    if(!this.getArmyOverview(attackerId).canCampaign||this.getProjects(attackerId).length>=12)throw Error('Ein Feldzug läuft bereits oder alle Vorhabenplätze sind belegt.');
+    const cost=CampaignWarfareSystem.campaignCost(attacker.kingdom);
+    if(CampaignWarfareSystem.fieldSoldiers(attacker.kingdom)<20||attacker.kingdom.resources.gold<cost.gold||attacker.kingdom.resources.food<cost.food)throw Error('Heer oder Nachschub fehlen.');
+    attacker.kingdom.resources.gold-=cost.gold;attacker.kingdom.resources.food-=cost.food;
+    this.addProject(attackerId,'duel',defenderId,'Feldzug gegen '+defender.kingdom.name,3,1,cost);
+    return 'Feldzug aufgebrochen: Aufmarsch und Kampf dauern 3 Monate.';
+  }
+  public attackPlayer(attackerId:string,defenderId:string):BattleReport {return this.resolvePlayerCampaign(attackerId,defenderId);}
+  private resolvePlayerCampaign(attackerId: string, defenderId: string,prepaid=false): BattleReport {
+    if (!prepaid&&this.isHotseat() && this.getActivePlayer().id !== attackerId) throw new Error('Nicht am Zug.');
     const attacker = this.requirePlayer(attackerId);
     const defender = this.requirePlayer(defenderId);
     const report = this.warfare.attackPlayer(
       { id: attackerId, kingdom: attacker.kingdom }, { id: defenderId, kingdom: defender.kingdom },
       { year: this.currentYear, month: this.currentMonth },
-      { attacker: this.getCommanderModifiers(attackerId), defender: this.getCommanderModifiers(defenderId) }
+      { attacker: this.getCommanderModifiers(attackerId), defender: this.getCommanderModifiers(defenderId) },prepaid
     );
+    this.recordChronicle(report.summary, attackerId);
+    this.recordChronicle(report.summary, defenderId);
     this.emit('battleResolved', { report });
     return report;
   }
@@ -2564,7 +2677,7 @@ export class GameEngine {
       if(region&&option)await action(region.name+': '+option.name,()=>
         this.requireRegionalProvisioning(player.id).act(region.id,option.id,kingdom,this.currentYear*12+this.currentMonth));
     }
-    if(domains.construction) {
+    if(domains.construction&&this.realmProjects.list(player.id).length<12) {
       const option=this.getModernizationOptions(player.id).find(o=>o.visible&&o.canStart&&canSpend(o.project.cost));
       if(option)await action(option.project.name,()=>this.launchModernizationFor(player,option.project.id));
       else {
@@ -2582,7 +2695,7 @@ export class GameEngine {
     }
     if(domains.military) {
       const option=this.getGarrisonDevelopment(player.id).find(p=>p.available&&canSpend(p.cost));
-      if(option)await action(option.name,()=>developGarrison(kingdom,this.currentYear,option.id));
+      if(option)await action(option.name,()=>this.improveGarrisonFor(player,option.id));
     }
     if(domains.culture&&kingdom.happiness<85) {
       const option=this.getFestivalOptions(player.id).find(o=>!o.alreadyHeld&&o.affordable&&
