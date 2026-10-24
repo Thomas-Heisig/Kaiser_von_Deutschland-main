@@ -897,6 +897,13 @@ export class KingdomGameUI {
           setTimeout(() => this.showCampaignComplete(true), 1500);
         }
       }),
+      engine.on('campaignDefeat', (detail: { playerId: string; reason: 'bankruptcy' | 'famine' | 'anarchy' }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        this.showGameAction('☠ Untergang des Reiches', `Dein Reich ist untergegangen: ${detail.reason === 'bankruptcy' ? 'Bankrott' : detail.reason === 'famine' ? 'Hungersnot' : 'Anarchie'}.`, 'raid');
+        this.audio.playEffect('battle');
+        // Nach kurzer Verzögerung die Niederlageseite anzeigen
+        setTimeout(() => this.showCampaignComplete(false, detail.reason), 1500);
+      }),
       engine.on('modernizationCompleted', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id !== detail.playerId) return;
         this.record(detail.message);
@@ -1120,7 +1127,7 @@ export class KingdomGameUI {
   }
 
   /** Zeigt eine Vollbild-Sieg- oder Niederlageseite mit Statistik und Optionen. */
-  private showCampaignComplete(won: boolean): void {
+  private showCampaignComplete(won: boolean, defeatReason?: 'bankruptcy' | 'famine' | 'anarchy'): void {
     const player = this.requirePlayer();
     const engine = this.requireEngine();
     const kingdom = player.kingdom;
@@ -1134,6 +1141,14 @@ export class KingdomGameUI {
     const infra = kingdom.infrastructure;
     const buildings = (Object.keys(infra) as Array<keyof typeof infra>).reduce((a, k) => a + (typeof infra[k] === 'number' ? (infra[k] as number) : 0), 0);
 
+    const defeatText: Record<'bankruptcy' | 'famine' | 'anarchy', string> = {
+      bankruptcy: 'Bankrott – dein Reich führt kein Gold mehr und die Kassen sind leer.',
+      famine: 'Hungersnot – die Felder tragen nicht, und das Volk hungert.',
+      anarchy: 'Anarchie – die Zufriedenheit brach zusammen und das Volk steht auf.'
+    };
+    const defeatDetail = defeatReason ? defeatText[defeatReason]
+      : 'Dein Reich konnte sich nicht behaupten. Versuche eine neue Strategie.';
+
     const dialog = document.createElement('dialog');
     dialog.className = 'campaign-result-dialog';
     dialog.innerHTML = `
@@ -1142,7 +1157,7 @@ export class KingdomGameUI {
         <h2>${won ? 'Kampagne gewonnen!' : 'Kampagne verloren'}</h2>
         <p class="result-subtitle">${won
           ? 'Alle Kapitel wurden erfolgreich abgeschlossen. Dein Reich blüht!'
-          : 'Dein Reich konnte sich nicht behaupten. Versuche eine neue Strategie.'}</p>
+          : defeatDetail}</p>
         <div class="result-stats">
           <div class="stat"><span class="stat-label">Jahr</span><span class="stat-value">${year}</span></div>
           <div class="stat"><span class="stat-label">Monat</span><span class="stat-value">${month}</span></div>
@@ -1164,6 +1179,8 @@ export class KingdomGameUI {
     dialog.querySelector('[data-result-continue]')?.addEventListener('click', () => {
       dialog.close();
       dialog.remove();
+      // Nach einer Niederlage war das Spiel pausiert; Sandbox-Fortsetzung setzt es fort.
+      engine.resumeGame();
       this.notify('♛ Du spielst im Sandbox-Modus weiter – es gibt keine weiteren Kampagnenziele.');
     });
     dialog.querySelector('[data-result-restart]')?.addEventListener('click', () => {

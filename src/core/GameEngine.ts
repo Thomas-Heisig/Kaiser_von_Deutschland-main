@@ -56,6 +56,7 @@ import localforage from 'localforage';
 import { encodeSave, decodeSave } from './SaveCodec';
 import { CAMPAIGNS, campaignGoals, CampaignId } from './CampaignCatalog';
 import { chapterStatus, CampaignChapterStatus } from './CampaignChapters';
+import { CampaignDefeatSystem, DEFEAT_TITLES, DefeatReason } from './CampaignDefeatSystem';
 import { CourtAssistantRegistry, COURT_OFFICES, CourtOffice, AssistantMode } from './CourtAssistantRegistry';
 import { MODERNIZATION_PROJECTS, applyModernization } from './ModernizationProjects';
 import { epochForYear, milestonesInYear, milestonesThrough } from './WorldHistoryCatalog';
@@ -202,6 +203,7 @@ export class GameEngine {
   private warFinanceByPlayer = new Map<string, WarFinancingSystem>();
   private warFinanceUsed = new Map<string, number>();
   private campaignChapters = new Map<string, number>();
+  private defeatSystem = new CampaignDefeatSystem();
   private borderWatch = new Map<string, number>();
   private siegeTargets = new Map<string, string>();
   private courtAssistants = new CourtAssistantRegistry();
@@ -729,7 +731,43 @@ export class GameEngine {
       player.kingdom.currentSeason = seasons[Math.floor((this.currentMonth % 12) / 3)];
     }
     for (const player of this.players.values()) this.completeCampaignChapter(player);
+    this.checkCampaignDefeat();
     this.emit('monthAdvanced', { month: this.currentMonth, year: this.currentYear });
+  }
+
+  /**
+   * Prüft nach jedem Monat die echten Niederlagebedingungen (Bankrott,
+   * Hungersnot, Anarchie). Ein Untergang pausiert das Spiel, schreibt die
+   * Chronik und feuert `campaignDefeat`, damit die UI die Niederlageseite zeigt.
+   * Ein bereits untergangenes Reich wird nicht erneut gemeldet.
+   */
+  private checkCampaignDefeat(): void {
+    if (this.getCampaignId() === 'frei') return;
+    for (const player of this.players.values()) {
+      if (this.defeatSystem.isDefeated(player.id)) continue;
+      const reason = this.defeatSystem.checkDefeat(
+        player.id,
+        player.kingdom.resources.gold,
+        player.kingdom.resources.food,
+        player.kingdom.happiness
+      );
+      if (!reason) continue;
+      const message = `Untergang: ${DEFEAT_TITLES[reason]} – das Reich ${player.kingdom.name} konnte sich nicht halten.`;
+      this.recordChronicle(message, player.id);
+      this.emit('campaignDefeat', { playerId: player.id, reason });
+      if (!this.isHotseat()) this.pauseGame();
+      break;
+    }
+  }
+
+  /** Ist der Spieler endgültig untergegangen (Bankrott, Hungersnot oder Anarchie)? */
+  public isPlayerDefeated(playerId: string): boolean {
+    return this.defeatSystem.isDefeated(playerId);
+  }
+
+  /** Liefert den festgehaltenen Untergangsgrund eines Spielers oder `null`. */
+  public getPlayerDefeatReason(playerId: string): DefeatReason | null {
+    return this.defeatSystem.getDefeatReason(playerId);
   }
 
   private async processPlayerMonth(player: Player): Promise<void> {
@@ -828,6 +866,7 @@ export class GameEngine {
       this.warFinanceByPlayer.delete(playerId);
       this.warFinanceUsed.delete(playerId);
       this.campaignChapters.delete(playerId);
+      this.defeatSystem.removePlayer(playerId);
       this.borderWatch.delete(playerId);
       this.siegeWarfareSystem.abandonSiege('siege-' + playerId);
       this.siegeTargets.delete(playerId);
@@ -1074,6 +1113,7 @@ export class GameEngine {
       warFinanceByPlayer: Object.fromEntries(Array.from(this.warFinanceByPlayer, ([id, finance]) => [id, finance.serialize()])),
       warFinanceUsed: Array.from(this.warFinanceUsed),
       campaignChapters: Array.from(this.campaignChapters),
+      defeat: this.defeatSystem.serialize(),
       borderWatch: Array.from(this.borderWatch),
       siegeTargets: Array.from(this.siegeTargets),
       siegeWarfare: this.siegeWarfareSystem.serialize(),
@@ -1221,6 +1261,10 @@ export class GameEngine {
         throw new Error('Ungültiger Kampagnenkapitelstand im Spielstand.');
       }
       this.campaignChapters = new Map(saveData.campaignChapters);
+    }
+    // Defeat state is optional for backward compatibility with pre-defeat saves.
+    if (saveData.defeat !== undefined) {
+      this.defeatSystem.deserialize(saveData.defeat);
     }
     for (const player of restoredPlayers) {
       const finance = new WarFinancingSystem();

@@ -4,7 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const workflow = readFileSync(new URL('../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8');
+// Normalize CRLF (Windows checkouts) to LF so line-based parsing is platform-stable.
+const workflow = readFileSync(new URL('../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8')
+  .replace(/\r\n/g, '\n');
 const checkStep = workflow.split('      - name: Check GitHub Pages availability\n')[1]
   .split('      - name: Configure GitHub Pages\n')[0];
 const checkScript = checkStep.split('        run: |\n')[1]
@@ -48,7 +50,10 @@ function runCheck(httpStatus: string, curlExit: number = 0): {
   }
 }
 
-describe('GitHub Pages deployment availability', () => {
+// The availability check script is executed through bash, which only the CI runner (ubuntu-latest) provides.
+const isUnixLike = process.platform === 'linux' || process.platform === 'darwin';
+
+describe.skipIf(!isUnixLike)('GitHub Pages deployment availability', () => {
   it('publishes when Pages is already configured', () => {
     const result = runCheck('200');
     expect(result.status).toBe(0);
@@ -77,7 +82,9 @@ describe('GitHub Pages deployment availability', () => {
     expect(result.status).toBe(7);
     expect(result.output).toBe('');
   });
+});
 
+describe('deploy-pages workflow structure', () => {
   it('gates every publishing action, but not the fallback artifact, on Pages availability', () => {
     for (const action of ['configure-pages@v5', 'upload-pages-artifact@v3', 'deploy-pages@v4']) {
       expect(workflow).toContain(
