@@ -57,6 +57,7 @@ import { encodeSave, decodeSave } from './SaveCodec';
 import { CAMPAIGNS, campaignGoals, CampaignId } from './CampaignCatalog';
 import { chapterStatus, CampaignChapterStatus } from './CampaignChapters';
 import { CampaignDefeatSystem, DEFEAT_TITLES, DefeatReason } from './CampaignDefeatSystem';
+import { TutorialSystem, TutorialStepId } from './TutorialSystem';
 import { CourtAssistantRegistry, COURT_OFFICES, CourtOffice, AssistantMode } from './CourtAssistantRegistry';
 import { MODERNIZATION_PROJECTS, applyModernization } from './ModernizationProjects';
 import { epochForYear, milestonesInYear, milestonesThrough } from './WorldHistoryCatalog';
@@ -115,6 +116,8 @@ export interface GameConfig {
   enableOllama?: boolean;
   ollamaUrl?: string;
   enableWiki?: boolean;
+  /** Aktiviert die interaktive Tutorial-Kampagne (Bauen → Handeln → Forschen → Reichsrat → Speichern). */
+  enableTutorial?: boolean;
 }
 
 /** Recent campaign messages are part of the game save, not only the open UI session. */
@@ -204,6 +207,7 @@ export class GameEngine {
   private warFinanceUsed = new Map<string, number>();
   private campaignChapters = new Map<string, number>();
   private defeatSystem = new CampaignDefeatSystem();
+  private tutorialSystem = new TutorialSystem();
   private borderWatch = new Map<string, number>();
   private siegeTargets = new Map<string, string>();
   private courtAssistants = new CourtAssistantRegistry();
@@ -468,6 +472,17 @@ export class GameEngine {
     this.gameState = GameState.RUNNING;
     this.timeSystem.resume();
     this.emit('gameStateChanged', { state: this.gameState });
+
+    // Initialisiert die interaktive Tutorial-Kampagne, falls gewünscht.
+    if (this.config.enableTutorial) {
+      this.tutorialSystem.activate();
+      // Startguthaben für den ersten Schritt: Bauernhof (250 Gold, 500 Holz)
+      // oder Straße (150 Gold, 300 Holz) bleiben erreichbar.
+      const player = this.getActivePlayer();
+      player.kingdom.resources.gold += 800;
+      player.kingdom.resources.wood += 1500;
+      this.emit('tutorialStarted', { playerId: player.id });
+    }
 
     // Initialize life simulation for the first player (v2.6.0)
     this.initializeLifeSimulation();
@@ -770,6 +785,57 @@ export class GameEngine {
     return this.defeatSystem.getDefeatReason(playerId);
   }
 
+  /**
+   * Markiert einen Tutorial-Schritt als erledigt (falls aktiv und korrekt
+   * sequenziert) und feuert `tutorialStep` bzw. `tutorialCompleted`.
+   * @param playerId Spieler, der die Aktion ausgeführt hat.
+   * @param stepId Der abzuschließende Schritt.
+   */
+  private markTutorialStep(playerId: string, stepId: TutorialStepId): void {
+    const completed = this.tutorialSystem.markStep(stepId);
+    if (!completed) return;
+    this.emit('tutorialStep', { playerId, step: completed });
+    if (this.tutorialSystem.isCompleted()) {
+      this.emit('tutorialCompleted', { playerId });
+    }
+  }
+
+  /** Läuft die interaktive Tutorial-Kampagne gerade? */
+  public isTutorialActive(): boolean {
+    return this.tutorialSystem.isEnabled();
+  }
+
+  /** Liefert den aktuellen Tutorial-Schritt oder `null`. */
+  public getTutorialStep() {
+    return this.tutorialSystem.getCurrentStep();
+  }
+
+  /** Liefert den Tutorial-Fortschritt (erledigt/gesamt). */
+  public getTutorialProgress() {
+    return this.tutorialSystem.getProgress();
+  }
+
+  /**
+   * Ruft für den aktuellen Tutorial-Schritt „Reichsrat" eine feste,
+   * bedingungslose Ratsangelegenheit auf, damit der Spieler sie entscheiden
+   * kann. Ohne laufendes Tutorial oder ohne offenen Schritt tut nichts.
+   * @param playerId Der Herrscher, für den der Rat einberufen wird.
+   */
+  public ensureTutorialCouncil(playerId: string): void {
+    const player = this.players.get(playerId);
+    if (!player) return;
+    if (this.tutorialSystem.getCurrentStep()?.id !== 'council') return;
+    if (this.council.getPending(playerId)) return;
+    const decision = this.council.issueForTutorial(player);
+    if (decision) this.emit('councilDecision', { playerId, title: decision.title });
+  }
+
+  /** Überspringt das laufende Tutorial. */
+  public skipTutorial(): void {
+    this.tutorialSystem.skip();
+    this.emit('tutorialSkipped', {});
+  }
+
   private async processPlayerMonth(player: Player): Promise<void> {
     player.kingdom.processMonth();
     this.processCampaignSiege(player);
@@ -930,6 +996,7 @@ export class GameEngine {
 
     if (success) {
       this.emit('buildingConstructed', { playerId, building: type });
+      this.markTutorialStep(playerId, 'build');
     }
 
     return success;
@@ -1087,7 +1154,7 @@ export class GameEngine {
   }
 
   // Speicherfunktionen
-  public async saveGame(slot: string = 'default'): Promise<void> {
+  public async saveGame(slot: string = 'default', manual: boolean = false): Promise<void> {
     if (this.processingMonth) throw new Error('Bitte den laufenden Monat abwarten.');
     const saveData = {
       version: 2,
@@ -1114,6 +1181,7 @@ export class GameEngine {
       warFinanceUsed: Array.from(this.warFinanceUsed),
       campaignChapters: Array.from(this.campaignChapters),
       defeat: this.defeatSystem.serialize(),
+      tutorial: this.tutorialSystem.serialize(),
       borderWatch: Array.from(this.borderWatch),
       siegeTargets: Array.from(this.siegeTargets),
       siegeWarfare: this.siegeWarfareSystem.serialize(),
@@ -1149,6 +1217,11 @@ export class GameEngine {
     }
     
     await localforage.setItem('kaiser-ii-saves-index', index);
+
+    // Ein manuelles Speichern zählt als Tutorial-Schritt, der Autosave nicht.
+    if (manual) {
+      for (const player of this.players.values()) this.markTutorialStep(player.id, 'save');
+    }
   }
 
   public async loadGame(slot: string = 'default'): Promise<void> {
@@ -1265,6 +1338,10 @@ export class GameEngine {
     // Defeat state is optional for backward compatibility with pre-defeat saves.
     if (saveData.defeat !== undefined) {
       this.defeatSystem.deserialize(saveData.defeat);
+    }
+    // Tutorial state is optional for backward compatibility with pre-tutorial saves.
+    if (saveData.tutorial !== undefined) {
+      this.tutorialSystem.deserialize(saveData.tutorial);
     }
     for (const player of restoredPlayers) {
       const finance = new WarFinancingSystem();
@@ -1383,6 +1460,7 @@ export class GameEngine {
     }
 
     this.emit('tradeCompleted', { playerId, resource, amount, direction, price });
+    this.markTutorialStep(playerId, 'trade');
     return true;
   }
 
@@ -1455,6 +1533,7 @@ export class GameEngine {
       throw new Error('Das Forschungsprojekt konnte nicht gestartet werden.');
     }
     this.emit('researchStarted', { playerId, technology: option.technology });
+    this.markTutorialStep(playerId, 'research');
     return option.technology;
   }
 
@@ -2268,6 +2347,7 @@ export class GameEngine {
       description: 'Ratsentscheidung: ' + outcome.message });
     if (citizen.lifeEvents.length > 100) citizen.lifeEvents.splice(1, citizen.lifeEvents.length - 100);
     this.emit('councilResolved', { playerId, outcome });
+    this.markTutorialStep(playerId, 'council');
     return outcome;
   }
 
@@ -2303,6 +2383,7 @@ export class GameEngine {
     }
     const outcome = this.council.resolve(player, choiceId, this.currentYear, this.currentMonth);
     this.emit('councilResolved', { playerId, outcome });
+    this.markTutorialStep(playerId, 'council');
     return outcome;
   }
 

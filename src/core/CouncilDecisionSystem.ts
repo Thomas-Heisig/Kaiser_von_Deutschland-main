@@ -312,6 +312,26 @@ export class CouncilDecisionSystem {
     return choice;
   }
 
+  /**
+   * Stellt für die interaktive Tutorial-Kampagne eine feste, bedingungslose
+   * Ratsangelegenheit zur Verfügung („Feuer im Dorf" – immer verfügbar,
+   * ohne Zufall und ohne Cooldown). Liefert `null`, wenn der Rat bereits
+   * eine Angelegenheit bearbeitet.
+   * @param player Der Herrscher, für den der Rat einberufen wird.
+   * @returns Die Tutorial-Entscheidung oder `null` bei bereits offenem Rat.
+   */
+  public issueForTutorial(player: Player): CouncilDecision | null {
+    if (this.pending.has(player.id)) return null;
+    const decision = COUNCIL_DECISIONS.find((entry) => entry.id === 'village_fire');
+    if (!decision) return null;
+    const tick = player.kingdom.currentYear * 12 + (player.kingdom.currentSeason === 'winter' ? 1 :
+      player.kingdom.currentSeason === 'spring' ? 4 : player.kingdom.currentSeason === 'summer' ? 7 : 10);
+    this.pending.set(player.id, { decisionId: decision.id, issuedAt: tick });
+    this.lastTriggered.set(player.id, tick);
+    this.lastDecision.set(player.id, decision.id);
+    return decision;
+  }
+
   public resolve(player: Player, choiceId: string, year: number, month: number, delegate?: { id: string; name: string }): CouncilHistoryEntry {
     const decision = this.getPending(player.id);
     if (!decision) throw new Error('Zurzeit liegt keine Ratsentscheidung vor.');

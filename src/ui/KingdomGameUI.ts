@@ -496,6 +496,7 @@ export class KingdomGameUI {
               <option value="3">Anspruchsvoll – knappe Reserven</option>
             </select></label>
             <label class="checkbox"><input type="checkbox" name="events" checked> Zufällige Ereignisse zulassen</label>
+            <label class="checkbox"><input type="checkbox" name="tutorial" id="tutorial-toggle" checked> Interaktives Tutorial (Bauen · Handeln · Forschen · Reichsrat · Speichern)</label>
             <button type="submit" class="primary wide">Herrschaft beginnen <span>→</span></button>
           </form>
           <div class="continue-row"><button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen öffnen</button><span>Anzeige, Musik, Filme, KI und Installation</span></div>
@@ -563,7 +564,7 @@ export class KingdomGameUI {
         if (new Set(players.map((entry: NewPlayer): string => entry.kingdomName.toLowerCase())).size !== players.length) {
           throw new Error('Jedes Reich braucht einen eigenen Namen.');
         }
-        await this.createGame(players, Number(data.get('difficulty')), data.has('events'), String(data.get('campaign') ?? 'aufbau') as CampaignId, Number(data.get('startYear') ?? 1200));
+        await this.createGame(players, Number(data.get('difficulty')), data.has('events'), String(data.get('campaign') ?? 'aufbau') as CampaignId, Number(data.get('startYear') ?? 1200), data.has('tutorial'));
       });
     });
     this.root.querySelector('#continue')?.addEventListener('click', (): void => {
@@ -597,9 +598,9 @@ export class KingdomGameUI {
     this.player = undefined;
   }
 
-  private async createGame(players: NewPlayer[], difficulty: number, randomEvents: boolean, campaignId: CampaignId = 'aufbau', startingYear = 1200): Promise<void> {
+  private async createGame(players: NewPlayer[], difficulty: number, randomEvents: boolean, campaignId: CampaignId = 'aufbau', startingYear = 1200, enableTutorial = false): Promise<void> {
     await this.replaceEngine(new GameEngine({
-      startingYear, difficulty, gameSpeed: 0.25, randomEvents, campaignId, enableWiki: false
+      startingYear, difficulty, gameSpeed: 0.25, randomEvents, campaignId, enableWiki: false, enableTutorial
     }));
     const engine = this.requireEngine();
     for (const entry of players) {
@@ -725,6 +726,17 @@ export class KingdomGameUI {
             <section id="panel" class="content-panel" aria-label="Verwaltung"></section>
           </main>
           <aside class="council">
+            <section class="council-card tutorial-card" id="tutorial-card" hidden aria-label="Interaktives Tutorial">
+              <p class="eyebrow">DEIN TUTORIAL</p>
+              <h2 id="tutorial-step-title">Deine ersten Schritte</h2>
+              <p id="tutorial-step-description" class="muted"></p>
+              <progress id="tutorial-progress" max="5" aria-label="Tutorial-Fortschritt"></progress>
+              <p id="tutorial-help" class="tutorial-help" hidden></p>
+              <div class="tutorial-actions">
+                <button id="tutorial-go" class="primary">Los geht’s →</button>
+                <button id="tutorial-skip" class="secondary">Überspringen</button>
+              </div>
+            </section>
             <section class="council-card"><p class="eyebrow">DER REICHSRAT</p><h2>Ein weiser Rat</h2>
               <div class="advisor-seal" aria-hidden="true">♙</div><p id="advice"></p>
               <button data-view="economy" class="text-button">Zur Monatsbilanz →</button></section>
@@ -744,6 +756,8 @@ export class KingdomGameUI {
         <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
       </div>`;
     this.bindJukeboxControls();
+    this.bindTutorialControls();
+    this.renderTutorial();
     const sectionDialog = this.root.querySelector<HTMLDialogElement>('#section-dialog');
     sectionDialog?.addEventListener('click', (event) => {
       if (event.target === sectionDialog) sectionDialog.close();
@@ -904,6 +918,30 @@ export class KingdomGameUI {
         // Nach kurzer Verzögerung die Niederlageseite anzeigen
         setTimeout(() => this.showCampaignComplete(false, detail.reason), 1500);
       }),
+      engine.on('tutorialStarted', (detail: { playerId: string }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        this.notify('📖 Tutorial gestartet: Führe die fünf Schritte aus, um deine Herrschaft kennenzulernen.');
+        this.renderTutorial();
+      }),
+      engine.on('tutorialStep', (detail: { playerId: string; step: string }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        const step = engine.getTutorialStep();
+        this.record(step ? `Tutorial: Schritt „${detail.step}“ erledigt. Weiter mit „${step.title}“.` : 'Tutorial: Schritt erledigt.');
+        this.showGameAction('📖 Tutorial-Fortschritt', step ? `Weiter: ${step.title} – ${step.description}` : 'Alle Schritte erledigt!', 'science');
+        this.audio.playEffect('success');
+        this.renderTutorial();
+      }),
+      engine.on('tutorialCompleted', (detail: { playerId: string }): void => {
+        if (this.player?.id !== detail.playerId) return;
+        this.record('Tutorial abgeschlossen: Bauen, Handeln, Forschen, Reichsrat und Speichern gemeistert.');
+        this.showGameAction('📖 Tutorial abgeschlossen', 'Du kennst jetzt die Kernschleife deiner Herrschaft. Viel Erfolg!', 'science');
+        this.audio.playEffect('success');
+        this.renderTutorial();
+      }),
+      engine.on('tutorialSkipped', (): void => {
+        this.notify('Tutorial übersprungen. Du findest die Spielhilfe jederzeit in der Seitenleiste.');
+        this.renderTutorial();
+      }),
       engine.on('modernizationCompleted', (detail: { playerId: string; message: string }): void => {
         if (this.player?.id !== detail.playerId) return;
         this.record(detail.message);
@@ -980,6 +1018,57 @@ export class KingdomGameUI {
         data-fallback-district="${d.type}" title="${escape(d.name)} ausbauen"><span aria-hidden="true">${STRUCTURES[d.type].symbol}</span>
         <span>${escape(d.name)}</span><strong>${format(this.player!.kingdom.infrastructure[d.type])}</strong></button>`).join('')}</div>
       <p>Jedes Gebäude ist auswählbar und führt zur echten Bauverwaltung.</p></div>`;
+  }
+
+  /** Aktualisiert die Tutorial-Karte: aktuellen Schritt, Fortschritt und Hilfe. */
+  private renderTutorial(): void {
+    const card = this.root.querySelector<HTMLElement>('#tutorial-card');
+    if (!card) return;
+    const engine = this.engine;
+    const step = engine?.getTutorialStep() ?? null;
+    if (!step) {
+      card.hidden = true;
+      return;
+    }
+    card.hidden = false;
+    const progress = engine!.getTutorialProgress();
+    const title = this.root.querySelector<HTMLElement>('#tutorial-step-title');
+    const description = this.root.querySelector<HTMLElement>('#tutorial-step-description');
+    const help = this.root.querySelector<HTMLElement>('#tutorial-help');
+    const bar = this.root.querySelector<HTMLProgressElement>('#tutorial-progress');
+    if (title) title.textContent = `${progress.done + 1} von ${progress.total}: ${step.title}`;
+    if (description) description.textContent = step.description;
+    if (help) {
+      help.hidden = false;
+      help.textContent = '💡 ' + step.help;
+    }
+    if (bar) bar.value = progress.done;
+    const goButton = this.root.querySelector<HTMLButtonElement>('#tutorial-go');
+    if (goButton) goButton.textContent = `Zu „${step.title}“ →`;
+  }
+
+  /** Bindet die Tutorial-Buttons (Navigation zum Schritt und Überspringen). */
+  private bindTutorialControls(): void {
+    const goButton = this.root.querySelector<HTMLButtonElement>('#tutorial-go');
+    const skipButton = this.root.querySelector<HTMLButtonElement>('#tutorial-skip');
+    goButton?.addEventListener('click', (): void => {
+      const engine = this.requireEngine();
+      const step = engine.getTutorialStep();
+      if (!step) return;
+      if (step.id === 'council') {
+        // Stellt sicher, dass eine Ratsangelegenheit offen ist, und öffnet den Rat.
+        engine.ensureTutorialCouncil(this.requirePlayer().id);
+        if (engine.getPendingCouncilDecision(this.requirePlayer().id)) {
+          this.showCouncilDialog();
+          return;
+        }
+      }
+      this.navigate(step.view as View);
+    });
+    skipButton?.addEventListener('click', (): void => {
+      this.requireEngine().skipTutorial();
+      this.renderTutorial();
+    });
   }
 
   /** Modal choices are bound to the same authoritative council engine as the full panel. */
@@ -2094,7 +2183,7 @@ export class KingdomGameUI {
       const wasRunning = engine.getGameState() === GameState.RUNNING;
       engine.pauseGame();
       try {
-        await engine.saveGame('campaign');
+        await engine.saveGame('campaign', true);
         this.saves = await engine.listSaves();
         this.notify('Herrschaft gespeichert.');
       } finally {
