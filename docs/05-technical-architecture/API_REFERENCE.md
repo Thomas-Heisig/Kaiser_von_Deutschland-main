@@ -85,6 +85,7 @@ und bietet die Geschwindigkeitsmultiplikatoren 1, 2 und 4 über `getTimeSystem()
 
 ```typescript
 setTaxRate(playerId: string, rate: number): void
+getTaxPlan(playerId: string, rate: number): TaxPlan
 getBuildPlan(playerId: string, type: string): BuildPlan
 buildForPlayer(playerId: string, type: string): Promise<boolean>
 getRecruitPlan(playerId: string, count: number, type: 'infantry' | 'archers' | 'cavalry'): RecruitPlan
@@ -104,6 +105,12 @@ Rekrutenzahlen sind positive ganze Zahlen. Ungültige Eingaben werfen Fehler;
 fehlende Mittel liefern `false`, ohne Teilkosten abzubuchen. Bauaktionen
 akzeptieren die Infrastruktur-Schlüssel sowie die vorhandenen Singular-Aliase.
 Der Steuersatz ist ein endlicher Wert und wird auf 0–0,5 begrenzt.
+
+`getTaxPlan()` prognostiziert Ertrag und Zufriedenheitswirkung eines Steuersatzes
+mit denselben Formeln, die `collectTaxes()` und `processMonth()` anwenden; `rate`
+wird wie in `setTaxRate()` auf 0–`MAX_TAX_RATE` begrenzt und `clamped` markiert
+eine Korrektur. Die Angaben sind Erwartungen: Ernte, Ereignisse und Zufriedenheit
+verändern die tatsächlichen Einnahmen.
 
 `getBuildPlan()` und `getRecruitPlan()` sind die verbindliche Vorschau: Sie
 liefern `bill` (exakte Kosten), `months` (Dauer) sowie `blockers` mit konkreten,

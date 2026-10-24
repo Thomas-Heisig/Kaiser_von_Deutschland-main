@@ -113,6 +113,27 @@ const formatResearch = (value: number): string =>
 /** Upper bound on simultaneously running realm projects. Shared by preview and execution. */
 export const MAX_REALM_PROJECTS = 12;
 
+/** Highest selectable tax rate. Shared by the slider, the preview and `setTaxRate`. */
+export const MAX_TAX_RATE = 0.5;
+
+/** Projected effect of a tax rate, using the same formulas as the monthly tick. */
+export interface TaxPlan {
+  /** Rate actually applied after clamping. */
+  rate: number;
+  /** Whether the requested rate had to be clamped. */
+  clamped: boolean;
+  /** Expected revenue per year before collection efficiency. */
+  yearlyRevenue: number;
+  /** Expected revenue per month after collection efficiency. */
+  monthlyRevenue: number;
+  /** Happiness change applied once per year by `collectTaxes`. */
+  yearlyHappiness: number;
+  /** Happiness change applied each month by `processMonth`. */
+  monthlyHappiness: number;
+  /** Currently configured rate, for comparison. */
+  currentRate: number;
+}
+
 /** Resources a building bill can draw on, in display order. */
 export const BILL_RESOURCES = ['gold', 'wood', 'stone', 'iron'] as const;
 
@@ -1292,12 +1313,39 @@ export class GameEngine {
     return existed;
   }
 
+  /**
+   * Projects the effect of a tax rate using the same formulas the monthly tick applies.
+   * Preview and simulation share these rules, so the shown figures match what happens.
+   * @param playerId Player whose realm is taxed.
+   * @param rate Desired tax rate (0–0.5); values outside are clamped like `setTaxRate`.
+   * @returns Clamped rate, expected yearly and monthly revenue, and mood effects.
+   */
+  public getTaxPlan(playerId: string, rate: number): TaxPlan {
+    const player = this.requirePlayer(playerId);
+    const kingdom = player.kingdom;
+    const clampedRate = Math.max(0, Math.min(MAX_TAX_RATE, rate));
+    const baseRevenue = kingdom.calculateTaxRevenue();
+    const perRate = kingdom.taxRate > 0 ? baseRevenue / kingdom.taxRate : 0;
+    const projected = Math.floor(perRate * clampedRate);
+    const efficiency = kingdom.calculateTaxEfficiency();
+    return {
+      rate: clampedRate,
+      clamped: clampedRate !== rate,
+      yearlyRevenue: projected,
+      monthlyRevenue: Math.floor(projected * efficiency / 12),
+      // `collectTaxes` applies this once per year; `processMonth` applies the drift.
+      yearlyHappiness: -Math.floor(clampedRate * 20),
+      monthlyHappiness: (0.15 - clampedRate) * 4,
+      currentRate: kingdom.taxRate
+    };
+  }
+
   public setTaxRate(playerId: string, rate: number): void {
     const player = this.players.get(playerId);
     if (!player) throw new Error('Spieler nicht gefunden');
 
     if (!Number.isFinite(rate)) throw new RangeError('Der Steuersatz muss eine endliche Zahl sein.');
-    const clampedRate = Math.max(0, Math.min(0.5, rate));
+    const clampedRate = Math.max(0, Math.min(MAX_TAX_RATE, rate));
     player.kingdom.taxRate = clampedRate;
     
     this.emit('taxRateChanged', { playerId, taxRate: clampedRate });

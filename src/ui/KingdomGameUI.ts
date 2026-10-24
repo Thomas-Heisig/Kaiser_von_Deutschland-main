@@ -5,7 +5,7 @@ import { researchEffectDescriptions } from '../core/ScienceImpact';
 import { ADMIN_DOMAINS, ADMIN_LABELS, ADMIN_POLICIES, CHARACTER_PLANS, type CharacterPlan, type AdministrationDomain, type AdministrationPolicy } from '../core/Administration';
 import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
 import {
-  CampaignGoal, CharacterAction, GameEngine, GameState, MarketResource, SaveMeta
+  CampaignGoal, CharacterAction, GameEngine, GameState, MarketResource, MAX_TAX_RATE, SaveMeta
 } from '../core/GameEngine';
 import {
   BattleReport, CampaignWarfareSystem, MIN_CAMPAIGN_SOLDIERS, RivalRealm
@@ -81,6 +81,55 @@ const STRUCTURES: Record<keyof KingdomInfrastructure, StructureInfo> = {
 const RESOURCE_NAMES: Record<MarketResource | 'gold', string> = {
   gold: 'Gold', food: 'Nahrung', wood: 'Holz', stone: 'Stein', iron: 'Eisen'
 };
+
+/**
+ * Belegte Einordnung von Abgaben nach Zeitraum.
+ * Nur Einträge mit Fachquelle; ohne Beleg bleibt die Ansicht bewusst leer.
+ * `evidence` trennt gesicherte Angaben von Näherungen.
+ */
+interface TaxHistoryNote {
+  from: number;
+  to: number;
+  period: string;
+  text: string;
+  evidence: string;
+  sourceTitle: string;
+  sourceUrl: string;
+}
+const TAX_HISTORY: readonly TaxHistoryNote[] = [
+  {
+    from: 843, to: 1499,
+    period: 'Früh- und Hochmittelalter',
+    text: 'Abgaben waren vielschichtig: Der Zehnt als kirchliche Abgabe betrug dem Namen nach ein Zehntel des Ertrags, hinzu kamen grundherrliche Renten, Dienste und Gebühren. Reichssteuern wie der „Römer Monat" wurden bei Fürsten und Städten erhoben, nicht unmittelbar bei Bauern.',
+    evidence: 'Näherung: Der Zehnt ist als Zehntel belegt, die Gesamtlast schwankt regional und zeitlich stark; belastbare Durchschnittssätze fehlen. Die Forschung nennt für weltliche Abgaben häufig 15–30 % und mehr des Ertrags.',
+    sourceTitle: 'Routledge Handbook of Public Taxation in Medieval Europe',
+    sourceUrl: 'https://www.routledge.com/Routledge-Handbook-of-Public-Taxation-in-Medieval-Europe/Monsalvo-Antuna-Fernandez-Gallardo-Jara-Fuente-Carvajal-de-la-Vega-Menjot/p/book/9780815368567'
+  },
+  {
+    from: 1500, to: 1806,
+    period: 'Frühe Neuzeit (Reich bis 1806)',
+    text: 'Das Reich blieb steuerlich dezentral. Reichssteuern wurden über die Reichsmatrikel auf die Stände umgelegt; die eigentliche Besteuerung lag bei den Territorien. Es gab keinen einheitlichen Satz für das ganze Reich.',
+    evidence: 'Näherung: Die Matrikelveranlagung ist belegt, konkrete Sätze unterscheiden sich je Territorium und Jahrzehnt erheblich.',
+    sourceTitle: 'Römer Monat – Erhebung über die Reichsmatrikel',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Roman_Month'
+  },
+  {
+    from: 1871, to: 1918,
+    period: 'Deutsches Kaiserreich',
+    text: 'Preußen führte mit der Miquelschen Steuerreform zum 1. Januar 1892 eine moderne, progressive Einkommensteuer ein; das Gesetz datiert vom 24. Juni 1891 und ersetzte die Klassensteuer von 1820. Ein Freibetrag von 900 Mark blieb steuerfrei.',
+    evidence: 'Belegt: Einkommensteuergesetz vom 24. Juni 1891, Inkrafttreten 1. Januar 1892. Die Angabe bezieht sich auf Preußen, nicht auf das gesamte Reich.',
+    sourceTitle: 'Einkommensteuergesetz 1891 (Miquelsche Steuerreform)',
+    sourceUrl: 'https://de.wikipedia.org/wiki/Einkommensteuer_(Deutschland)#Geschichte'
+  },
+  {
+    from: 1919, to: 9999,
+    period: 'Moderne',
+    text: 'Mit der Weimarer Verfassung von 1919 wurde die Besteuerung reichsweit vereinheitlicht; die Finanzhoheit lag nun beim Reich. Seither ist die Einkommensteuer das zentrale Instrument.',
+    evidence: 'Belegt: Weimarer Reichsverfassung vom 11. August 1919 (Finanz- und Steuerhoheit des Reichs).',
+    sourceTitle: 'Weimarer Verfassung 1919',
+    sourceUrl: 'https://de.wikipedia.org/wiki/Weimarer_Verfassung'
+  }
+] as const;
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
   'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const NUMBER = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
@@ -1890,6 +1939,51 @@ ${body}
     return `<section class="build-card" data-food-security><h3>Vorräte schützen</h3><p>Geschützte Kapazität: ${format(supply.capacity)} Nahrung · ungeschützt: ${format(supply.exposed)}.</p><p>Erwarteter Verderb dieses Bestands: ${format(supply.spoilage)} pro Monat. Ein Speicher schützt weitere 6.000 Nahrung. Bei aktivierten Zufallsereignissen: ${(supply.risk*100).toFixed(1)} % monatliches Risiko zusätzlicher Vorrats- oder Feldschäden; Speicher mindern deren Ausmaß.</p><button data-open="build">Speicher bauen</button></section>`;
   }
 
+  /**
+   * Beschreibt die erwartete Wirkung eines Steuersatzes aus der gemeinsamen
+   * Engine-Vorschau. Zahlen sind Erwartungen, keine Garantien: Ernte, Ereignisse
+   * und Zufriedenheit verändern die tatsächlichen Einnahmen.
+   * @param rate Steuersatz als Anteil (0–0,5).
+   * @returns Ein Satz mit Ertrag und Zufriedenheitswirkung.
+   */
+  private taxPreviewText(rate: number): string {
+    const plan = this.requireEngine().getTaxPlan(this.requirePlayer().id, rate);
+    const mood = plan.monthlyHappiness >= 0
+      ? `+${plan.monthlyHappiness.toFixed(1)} Zufriedenheit pro Monat`
+      : `${plan.monthlyHappiness.toFixed(1)} Zufriedenheit pro Monat`;
+    return `Erwartet: ${format(plan.monthlyRevenue)} Gold pro Monat · ${mood} · ${plan.yearlyHappiness} zum Jahresabschluss.`;
+  }
+
+  /**
+   * Zeigt die historische Einordnung der Steuer für die aktuelle Epoche.
+   * Die Erklärung ist freiwillig vertiefbar und blockiert keinen Spielablauf.
+   * Spielregel und belegte Geschichte bleiben ausdrücklich getrennt.
+   */
+  private renderTaxHistory(): string {
+    const engine = this.requireEngine();
+    const year = engine.getCurrentYear();
+    const note = TAX_HISTORY.find(entry => year >= entry.from && year <= entry.to) ?? null;
+    const context = engine.getHistoricalContext(this.requirePlayer().id);
+    const epochName = context.epoch?.name ?? null;
+    const evidence = context.epochEvidence === 'belegt' ? 'Epochengrenzen belegt'
+      : context.epochEvidence === 'naeherung' ? 'Epochengrenzen genähert'
+      : 'Epochengrenzen ungeprüft';
+    if (!note) {
+      return `<section class="build-card" data-tax-history><h3>Steuer in deiner Zeit</h3>
+        <p class="muted">Für das Jahr ${formatYear(year)} ist keine belastbare Angabe zu Abgaben hinterlegt.
+        Der Steuersatz bleibt eine Spielregel ohne historische Entsprechung.</p></section>`;
+    }
+    return `<section class="build-card" data-tax-history><h3>Steuer in deiner Zeit</h3>
+      <p>${escape(note.text)}</p>
+      <p class="muted">Spielregel: Der Regler setzt einen einheitlichen Satz für das ganze Reich.
+      Die tatsächliche Last im Spiel ist eine Vereinfachung und keine historische Berechnung.</p>
+      <p class="muted">Einordnung: ${escape(note.period)} · ${escape(evidence)}${epochName && epochName !== note.period ? ` · ${escape(epochName)}` : ''}</p>
+      <details><summary>Quelle und Einordnung anzeigen</summary>
+        <p class="muted">${escape(note.evidence)}</p>
+        <a href="${escape(note.sourceUrl)}" target="_blank" rel="noopener noreferrer">${escape(note.sourceTitle)} ↗</a>
+      </details></section>`;
+  }
+
   private renderProjects(kind:'construction'|'modernization'):string {
     const options=this.requireEngine().getModernizationOptions(this.requirePlayer().id)
       .filter(o=>o.visible&&(o.project.kind??'modernization')===kind);
@@ -2028,9 +2122,11 @@ ${body}
             }).join('')}</tbody></table><p class="muted">Gold-Eingang enthält ${format(balance.taxes)} Steuern
               und ${format(tradeIncome)} Routeneinkommen.</p>
           <div class="tax-form"><label for="tax-rate">Steuersatz · <output id="tax-value">${Math.round(kingdom.taxRate*100)} %</output>
-            <input id="tax-rate" name="tax" type="range" min="0" max="50" step="1" value="${Math.round(kingdom.taxRate*100)}"></label>
-            <small>Wirkt sofort. 0–50 %; kein Bestätigen nötig.</small></div>
-          <p class="muted">Über 15 % sinkt die Zufriedenheit monatlich, darunter erholt sie sich.</p></section>
+            <input id="tax-rate" name="tax" type="range" min="0" max="${Math.round(MAX_TAX_RATE*100)}" step="1" value="${Math.round(kingdom.taxRate*100)}"
+              aria-describedby="tax-preview"></label>
+            <small>Wirkt sofort. 0–${Math.round(MAX_TAX_RATE*100)} %; kein Bestätigen nötig.</small>
+            <p id="tax-preview" class="cost" role="status">${this.taxPreviewText(kingdom.taxRate)}</p></div>
+          ${this.renderTaxHistory()}</section>
           ${this.renderFoodSecurity()}<section><h3>Holzversorgung</h3><p>Waldflächen und Werkstätten liefern Holz. Aktuell ${format(balance.production.wood)} Eingang und ${format(balance.consumption.wood)} Verbrauch pro Monat; im Winter steigt der Heizbedarf.</p>
             <p>Eine zusätzliche Werkstatt liefert derzeit +${kingdom.getWorkshopWoodGain()} Holz/Monat vor Forschungsboni. Bei leeren Vorräten kannst du Holz am Markt zukaufen.</p><button data-open="build">Holzgewinnung ausbauen</button>
             <h3>Markthandel</h3><p class="muted">Sofortiger Austausch. Einkauf mit 20 % Aufschlag,
@@ -2718,10 +2814,19 @@ ${body}
     });
     const taxSlider=panel.querySelector<HTMLInputElement>('#tax-rate');
     taxSlider?.addEventListener('input',()=>{
-      this.requireEngine().setTaxRate(this.requirePlayer().id,Number(taxSlider.value)/100);
+      const rate=Number(taxSlider.value)/100;
+      this.requireEngine().setTaxRate(this.requirePlayer().id,rate);
       const output=panel.querySelector('#tax-value'); if(output)output.textContent=taxSlider.value+' %';
+      const preview=panel.querySelector('#tax-preview');
+      if(preview)preview.textContent=this.taxPreviewText(rate);
     });
-    taxSlider?.addEventListener('change',()=>{this.record(`Steuersatz auf ${taxSlider.value} % festgelegt.`);this.refresh();});
+    taxSlider?.addEventListener('change',()=>{
+      const rate=Number(taxSlider.value)/100;
+      const plan=this.requireEngine().getTaxPlan(this.requirePlayer().id,rate);
+      const mood=plan.monthlyHappiness>=0?'steigt':'sinkt';
+      this.record(`Steuersatz auf ${Math.round(plan.rate*100)} % festgelegt. Erwartet: ${format(plan.monthlyRevenue)} Gold pro Monat; Zufriedenheit ${mood}.`);
+      this.refresh();
+    });
     const tradeForm = panel.querySelector<HTMLFormElement>('#trade-form');
     if (tradeForm) {
       const updateQuote = (): void => {

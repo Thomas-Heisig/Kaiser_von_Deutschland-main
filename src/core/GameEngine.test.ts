@@ -106,6 +106,37 @@ describe('Playable campaign integration', (): void => {
     expect(plan.blockers.join(' ')).toContain('Bauern fehlen');
     expect(engine.recruitForPlayer(p.id,10,'cavalry')).toBe(false);
   });
+  it('projects the tax effect with the same formulas the monthly tick applies',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0];
+    // A higher rate must yield more gold and cost more happiness; the preview
+    // and the tick use the same formulas, so the signs must agree.
+    const low=engine.getTaxPlan(p.id,0.10),high=engine.getTaxPlan(p.id,0.40);
+    expect(high.monthlyRevenue).toBeGreaterThan(low.monthlyRevenue);
+    expect(high.yearlyHappiness).toBeLessThan(low.yearlyHappiness);
+    expect(high.monthlyHappiness).toBeLessThan(low.monthlyHappiness);
+    // 15 % is the neutral point of the monthly mood drift.
+    expect(engine.getTaxPlan(p.id,0.15).monthlyHappiness).toBeCloseTo(0,5);
+  });
+  it('clamps the tax rate to the allowed range and flags it',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0];
+    expect(engine.getTaxPlan(p.id,0.9).rate).toBe(0.5);
+    expect(engine.getTaxPlan(p.id,0.9).clamped).toBe(true);
+    expect(engine.getTaxPlan(p.id,-0.2).rate).toBe(0);
+    expect(engine.getTaxPlan(p.id,-0.2).clamped).toBe(true);
+    expect(engine.getTaxPlan(p.id,0.2).clamped).toBe(false);
+    engine.setTaxRate(p.id,0.9);
+    expect(p.kingdom.taxRate).toBe(0.5);
+  });
+  it('keeps the tax preview consistent with the actual monthly revenue',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
+    engine.setTaxRate(p.id,0.20);
+    const plan=engine.getTaxPlan(p.id,0.20);
+    const gold=k.resources.gold;
+    await engine.advanceMonth();
+    // The balance shown in the economy table uses the same tax projection.
+    expect(k.getMonthlyBalance().taxes).toBe(plan.monthlyRevenue);
+    expect(k.resources.gold).not.toBe(gold);
+  });
   it('keeps the full project queue blocking after a save and load',async()=>{
     const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
     Object.assign(k.resources,{gold:1000000,wood:1000000,stone:1000000,iron:1000000});

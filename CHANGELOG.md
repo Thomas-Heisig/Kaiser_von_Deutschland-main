@@ -13,6 +13,9 @@
 - Rekrutierungskosten liegen als `RECRUITMENT_COSTS` in `src/core/Kingdom.ts` an einer Stelle; Vorschau und `recruitSoldiers()` können nicht mehr auseinanderlaufen.
 - Projektstatus-Dialog: doppelte Rückgabetyp-Angabe in `src/ui/FeatureStatus.ts` behoben, die `npm run check` und den Testlauf unterbrach.
 
+- **Steuerentscheidung mit Vorschau und historischer Einordnung.** `GameEngine.getTaxPlan()` prognostiziert Monats- und Jahresertrag sowie die Zufriedenheitswirkung mit denselben Formeln, die der Monatslauf anwendet; der Regler zeigt die erwarteten Werte live an. `MAX_TAX_RATE` ist die gemeinsame Obergrenze für Regler, Vorschau und `setTaxRate()`. Drei Tests belegen die Übereinstimmung von Vorschau und Monatsbilanz.
+- **Historische Einordnung der Steuer nach Epoche** (`src/ui/KingdomGameUI.ts`, `TAX_HISTORY`): belegte Angaben zu Zehnt und grundherrlichen Abgaben (Früh-/Hochmittelalter), Reichsmatrikel (Frühe Neuzeit), Miquelscher Steuerreform 1891/92 (Kaiserreich) und Reichsfinanzhoheit ab 1919. Jeder Eintrag nennt Zeitraum, Evidenzgrad und Quelle; die Vertiefung ist eingeklappt und blockiert keinen Ablauf. Vor 843 erscheint ein ausdrücklicher Hinweis auf fehlende Belege statt einer erfundenen Angabe. Spielregel und belegte Geschichte sind im Text getrennt.
+
 ### Added
 
 - Fünf neue Vorzeit-Aufnahmen mit umbenannten Dateien, ID3-Titeln, eingebetteten Covern und neuer Galerie; Ancient Veil als instrumentales Startthema. Epochen-Playlists wechseln passende Titel ohne Neustart bei Monatswechsel.

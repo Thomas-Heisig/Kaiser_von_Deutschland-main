@@ -736,7 +736,7 @@ export class Kingdom {
   /**
    * Berechnet Steuereffizienz
    */
-  private calculateTaxEfficiency(): number {
+  public calculateTaxEfficiency(): number {
     const baseEfficiency = 0.8;
     const roadsBonus = Math.min(0.3, this.infrastructure.roads * 0.05);
     const stabilityBonus = this.stats.stability * 0.005;
