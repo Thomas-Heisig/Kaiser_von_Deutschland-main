@@ -6,7 +6,6 @@ import {
   CAMERA_ZOOM_MAX,
   CAMERA_ZOOM_MIN,
   levelForSlider,
-  MapRegionLabel,
   MapRegionResult,
   MapZoomLevel,
   sliderToZoom,
@@ -668,6 +667,7 @@ export class KingdomMap {
       void this.loadReliefTexture();
     }
     this.app.canvas.dataset.zoomLevel = level;
+    this.fit();
   }
 
   /**
@@ -837,6 +837,23 @@ export class KingdomMap {
     // On phones the old 1350px reference shrank the entire settlement to a blur.
     // Fit to a narrower, usable map window; retain normal desktop framing.
     const mobile = this.app.screen.width < 760;
+    if (this.zoomLevel === 'zentraleuropa') {
+      // Eigene Einpassung für die Reliefkarte (960 × 660).
+      // Wenig Slider-Zoom bedeutet Übersicht → Karte füllt die Fläche;
+      // mehr Zoom vergrößert sie für Details. Die Dorf-Referenz (1350 × 850)
+      // würde die Reliefkarte klein und versetzt darstellen.
+      const mapWidth = 960;
+      const mapHeight = 660;
+      const fitScale = Math.min(this.app.screen.width / mapWidth, this.app.screen.height / mapHeight);
+      const scale = fitScale * (0.85 + this.zoom * 0.35);
+      this.world.scale.set(scale);
+      this.world.position.set(
+        (this.app.screen.width - mapWidth * scale) / 2 + this.offset.x,
+        (this.app.screen.height - mapHeight * scale) / 2 + this.offset.y
+      );
+      this.app.renderer.render(this.app.stage);
+      return;
+    }
     const scale = (this.mapScope === 'world'
       ? Math.min(this.app.screen.width / 1500, this.app.screen.height / 1150)
       : mobile
