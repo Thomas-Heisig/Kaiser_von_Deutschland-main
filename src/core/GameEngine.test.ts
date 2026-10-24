@@ -50,6 +50,62 @@ describe('Playable campaign integration', (): void => {
     return engine;
   };
 
+  it('reports the same reason for a blocked build in the preview and in the execution',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
+    k.resources.gold=0;k.resources.wood=0;k.resources.stone=0;k.resources.iron=0;
+    const plan=engine.getBuildPlan(p.id,'farms');
+    expect(plan.canStart).toBe(false);
+    expect(plan.blockers.length).toBeGreaterThan(0);
+    const before=k.infrastructure.farms;
+    expect(await engine.buildForPlayer(p.id,'farms')).toBe(false);
+    expect(k.infrastructure.farms).toBe(before);
+    expect(engine.getProjects(p.id)).toHaveLength(0);
+  });
+  it('names the missing amount in the build preview',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
+    k.resources.gold=0;k.resources.wood=99999;k.resources.stone=99999;k.resources.iron=99999;
+    const plan=engine.getBuildPlan(p.id,'farms');
+    expect(plan.canStart).toBe(false);
+    expect(plan.blockers.join(' ')).toContain('1.200');
+    expect(plan.blockers.join(' ')).toContain('Gold');
+  });
+  it('blames the full project queue instead of missing resources',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
+    Object.assign(k.resources,{gold:1000000,wood:1000000,stone:1000000,iron:1000000});
+    // Fill the queue through the public API, then the next build must be refused
+    // for that reason alone, even though every resource is plentiful.
+    for(let n=0;n<12;n++)expect(await engine.buildForPlayer(p.id,'roads')).toBe(true);
+    const plan=engine.getBuildPlan(p.id,'farms');
+    expect(plan.canStart).toBe(false);
+    expect(plan.blockers).toEqual(['12 Vorhaben laufen bereits']);
+    expect(await engine.buildForPlayer(p.id,'farms')).toBe(false);
+  });
+  it('maps building aliases and rejects unknown buildings in the preview',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0];
+    expect(engine.getBuildPlan(p.id,'farm').key).toBe('farms');
+    expect(()=>engine.getBuildPlan(p.id,'flugplatz')).toThrow(/Unbekanntes Gebäude/);
+  });
+  it('keeps the recruit preview identical to the actual recruitment cost',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
+    Object.assign(k.resources,{gold:1000000,food:1000000,wood:1000000,iron:1000000});
+    k.population.peasants=1000;
+    for(const type of ['infantry','archers','cavalry'] as const) {
+      const plan=engine.getRecruitPlan(p.id,10,type);
+      expect(plan.canStart).toBe(true);
+      const before={...k.resources};
+      expect(engine.recruitForPlayer(p.id,10,type)).toBe(true);
+      for(const resource of ['gold','food','wood','iron'] as const)
+        expect(before[resource]-k.resources[resource]).toBe(plan.bill[resource]);
+    }
+  });
+  it('names missing peasants and resources in the recruit preview',async()=>{
+    const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
+    k.resources.gold=0;k.resources.food=0;k.population.peasants=0;
+    const plan=engine.getRecruitPlan(p.id,10,'cavalry');
+    expect(plan.canStart).toBe(false);
+    expect(plan.blockers.join(' ')).toContain('Bauern fehlen');
+    expect(engine.recruitForPlayer(p.id,10,'cavalry')).toBe(false);
+  });
   it('finances construction once, persists remaining time and delays all building effects',async()=>{
     const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;
     const initial=k.infrastructure.farms,gold=k.resources.gold,food=k.resources.food;
