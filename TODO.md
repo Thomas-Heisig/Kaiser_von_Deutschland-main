@@ -8,12 +8,13 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### P1a – durchgängiger Kampagnenablauf (vor neuen Großsystemen)
 
-- [~] Industrie-Kampagne jetzt als vollständiger Bau-/Forschungs-/Save-Load-/Sieg-Test abgedeckt; fünfjährige Stabilitätsprüfung für endliche Ressourcen- und Bevölkerungswerte ergänzt. Kapitel-Startbalance für Industrie/Wiederaufbau und Siegstatusanzeige korrigiert; vollständigen Kampagnendurchlauf von Beginn bis Sieg/Niederlage einschließlich Monatswechsel, Zufallsereignissen, Speichern/Laden und Schlusswertung automatisieren. Vorhandene Kapitelziele/Belohnungen sind nur Teilabdeckung.
+- [~] Industrie-Kampagne jetzt als vollständiger Bau-/Forschungs-/Save-Load-/Sieg-Test abgedeckt; fünfjährige Stabilitätsprüfung für endliche Ressourcen- und Bevölkerungswerte ergänzt. Kapitel-Startbalance für Industrie/Wiederaufbau und Siegstatusanzeige korrigiert; echte Niederlagebedingungen (Bankrott/Hungersnot/Anarchie) sind jetzt implementiert und automatisiert geprüft. Offen bleibt der vollständige Kampagnendurchlauf von Beginn bis Sieg/Niederlage einschließlich Zufallsereignissen und Schlusswertung als einziger End-to-End-Lauf.
 - [~] Monatsproduktion und Prognose für Sommer-/Winterernte und Holz korrigiert; saisonalen Verlauf in Regressionstest überprüft. Mehrjährige deterministische Balancing-Läufe mit Gold, Nahrung, Forschung, Bevölkerungs- und Stabilitätswerten sowie Kampagnenschwellen protokollieren und Grenzwerte verbessern.
 - [ ] Kopplung zwischen Ratsbeschlüssen, Handel, Forschung, Kultur, Diplomatie und Rivalenentwicklung in messbaren Integrationstests nachweisen.
 - [ ] Interaktive Tutorial-Kampagne mit Schritten Bauen → Handeln → Forschen → Reichsrat → Speichern und Hilfen bei fehlenden Ressourcen anbieten.
 - [x] Chronikeinträge der aktiven Herrschaft im Spielstand begrenzt auf 100 Einträge dauerhaft sichern; Altstände ohne Chronik bleiben ladbar; Test für Speichern/Laden ergänzt.
-- [ ] Sieg-/Niederlageseite, Wiederholung, Sandbox-Fortsetzung und Schlussstatistik UI-seitig abnehmen (die bisherige Erfolgsmeldung ist kein vollständiger Kampagnenabschluss).
+- [x] **Echte Niederlagebedingungen** (Bankrott, Hungersnot, Anarchie) als monatliche Prüfung mit aufeinanderfolgenden Monaten, Erholungsrücksetzung und dauerhafter Festhaltung; Untergang pausiert das Spiel, schreibt die Chronik und öffnet die Niederlageseite. Schwellen liegen über Minimum-Werten gesunder Läufe und sind konfigurierbar. Unit-Tests (12) und Engine-Integrationstests (Bankrott/Hungersnot/Anarchie, kein Doppelabbruch, Save/Load-Migration, kein Fehlalarm bei gesundem Reich) ergänzt; Altstände ohne Defeat-Daten bleiben ladbar.
+- [ ] Sieg-/Niederlageseite, Wiederholung, Sandbox-Fortsetzung und Schlussstatistik UI-seitig abnehmen (Sieg- und Niederlageseite existieren jetzt und werden von der Engine geöffnet; manuelle Endgeräteabnahme und vollständiger Kampagnenabschluss mit Zufallsereignissen stehen aus).
 
 ### P1b – danach Strategie und reaktive Gegner
 

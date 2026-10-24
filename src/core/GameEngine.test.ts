@@ -715,4 +715,114 @@ describe('Playable campaign integration', (): void => {
     expect(restored.getActivePlayer().id).toBe(second.id);
     expect(restored.getRivals(first.id)).toHaveLength(3);
   });
+
+  describe('real defeat conditions (bankruptcy, famine, anarchy)', (): void => {
+    it('does not defeat a healthy realm over a full year', async (): Promise<void> => {
+      const engine = await campaign();
+      const player = engine.getPlayers()[0];
+      for (let month = 0; month < 12; month++) {
+        await engine.advanceMonth();
+        expect(engine.isPlayerDefeated(player.id)).toBe(false);
+      }
+      expect(engine.getPlayerDefeatReason(player.id)).toBeNull();
+    });
+
+    it('declares bankruptcy after three months without gold and pauses the game', async (): Promise<void> => {
+      const engine = await campaign();
+      const player = engine.getPlayers()[0];
+      const k = player.kingdom;
+      const defeats: Array<{ reason: string }> = [];
+      engine.on('campaignDefeat', (detail: { playerId: string; reason: string }): void => {
+        defeats.push({ reason: detail.reason });
+      });
+      // Gold bleibt drei Monate auf null, Nahrung/Zufriedenheit gesund.
+      for (let month = 0; month < 3; month++) {
+        k.resources.gold = 0;
+        k.resources.food = 20000;
+        k.happiness = 60;
+        await engine.advanceMonth();
+      }
+      expect(engine.isPlayerDefeated(player.id)).toBe(true);
+      expect(engine.getPlayerDefeatReason(player.id)).toBe('bankruptcy');
+      expect(defeats).toEqual([{ reason: 'bankruptcy' }]);
+      expect(engine.getGameState()).toBe(GameState.PAUSED);
+    });
+
+    it('declares famine after two months without food', async (): Promise<void> => {
+      const engine = await campaign();
+      const player = engine.getPlayers()[0];
+      const k = player.kingdom;
+      k.infrastructure.farms = 0;
+      for (let month = 0; month < 2; month++) {
+        k.resources.food = 0;
+        k.resources.gold = 20000;
+        k.happiness = 60;
+        await engine.advanceMonth();
+      }
+      expect(engine.isPlayerDefeated(player.id)).toBe(true);
+      expect(engine.getPlayerDefeatReason(player.id)).toBe('famine');
+    });
+
+    it('declares anarchy after six months of collapsed happiness', async (): Promise<void> => {
+      const engine = await campaign();
+      const player = engine.getPlayers()[0];
+      const k = player.kingdom;
+      for (let month = 0; month < 6; month++) {
+        k.resources.gold = 20000;
+        k.resources.food = 20000;
+        k.happiness = 0;
+        await engine.advanceMonth();
+      }
+      expect(engine.isPlayerDefeated(player.id)).toBe(true);
+      expect(engine.getPlayerDefeatReason(player.id)).toBe('anarchy');
+    });
+
+    it('never re-fires a defeat and records it in the chronicle', async (): Promise<void> => {
+      const engine = await campaign();
+      const player = engine.getPlayers()[0];
+      const k = player.kingdom;
+      let fired = 0;
+      engine.on('campaignDefeat', (): void => { fired += 1; });
+      for (let month = 0; month < 5; month++) {
+        k.resources.gold = 0;
+        k.resources.food = 20000;
+        k.happiness = 60;
+        await engine.advanceMonth();
+      }
+      expect(fired).toBe(1);
+      expect(engine.getChronicle().some((entry) => entry.message.includes('Bankrott'))).toBe(true);
+    });
+
+    it('persists the defeat state across a save/load round-trip', async (): Promise<void> => {
+      const engine = await campaign();
+      const player = engine.getPlayers()[0];
+      const k = player.kingdom;
+      for (let month = 0; month < 3; month++) {
+        k.resources.gold = 0;
+        k.resources.food = 20000;
+        k.happiness = 60;
+        await engine.advanceMonth();
+      }
+      expect(engine.isPlayerDefeated(player.id)).toBe(true);
+      await engine.saveGame('defeat-save');
+      const restored = new GameEngine({ enableWiki: false });
+      engines.push(restored);
+      await restored.loadGame('defeat-save');
+      expect(restored.isPlayerDefeated(player.id)).toBe(true);
+      expect(restored.getPlayerDefeatReason(player.id)).toBe('bankruptcy');
+    });
+
+    it('loads a pre-defeat save without a defeat state safely', async (): Promise<void> => {
+      const engine = await campaign();
+      const player = engine.getPlayers()[0];
+      await engine.advanceMonth();
+      await engine.saveGame('pre-defeat');
+      expect(engine.isPlayerDefeated(player.id)).toBe(false);
+      const restored = new GameEngine({ enableWiki: false });
+      engines.push(restored);
+      await restored.loadGame('pre-defeat');
+      expect(restored.isPlayerDefeated(player.id)).toBe(false);
+      expect(restored.getPlayerDefeatReason(player.id)).toBeNull();
+    });
+  });
 });
