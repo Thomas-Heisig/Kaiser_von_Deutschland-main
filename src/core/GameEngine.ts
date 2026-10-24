@@ -61,6 +61,7 @@ import { TutorialSystem, TutorialStepId } from './TutorialSystem';
 import { CourtAssistantRegistry, COURT_OFFICES, CourtOffice, AssistantMode } from './CourtAssistantRegistry';
 import { MODERNIZATION_PROJECTS, applyModernization } from './ModernizationProjects';
 import { epochForYear, milestonesInYear, milestonesThrough } from './WorldHistoryCatalog';
+import { buildHistoricalContext, HistoricalContext, historicalEpochFor } from './HistoricalContext';
 import { applyScienceDiscovery, researchImpact, researchProductionBonus } from './ScienceImpact';
 import { KingdomInfrastructure } from './Kingdom';
 import { BattleReport, CampaignWarfareSystem, PowerModifiers, RivalRealm } from './CampaignWarfareSystem';
@@ -452,6 +453,57 @@ export class GameEngine {
   }
   public getCurrentEpoch(): string { return epochForYear(this.currentYear); }
 
+  /**
+   * Historischer Kontext des aktuellen Spieljahres für einen Spieler.
+   *
+   * Liefert Epoche, Referenzsystem und historische Würde samt Evidenzgrad.
+   * Wo keine belastbare Zuordnung existiert, bleiben die Felder `null` – es
+   * werden keine Grenzen oder Titel erfunden.
+   *
+   * @param playerId Spieler, dessen Rang die Würde bestimmt.
+   * @returns Eingeordneter, evidenzgekennzeichneter Kontext.
+   * @throws Error, wenn der Spieler nicht existiert.
+   */
+  public getHistoricalContext(playerId: string): HistoricalContext {
+    const player = this.requirePlayer(playerId);
+    return buildHistoricalContext(this.currentYear, player.title.rank);
+  }
+
+  /**
+   * Liefert nur die historische Herrscherwürde (z. B. „Römisch-deutscher Kaiser").
+   *
+   * Getrennt von {@link getHistoricalContext}, weil die Oberfläche die Würde
+   * häufig ohne den vollständigen Kontext anzeigt.
+   *
+   * @param playerId Spieler.
+   * @returns Amt oder `null`, wenn keine Entsprechung belegt ist.
+   */
+  public getRulerDignity(playerId: string) {
+    return this.getHistoricalContext(playerId).rulerDignity;
+  }
+
+  /**
+   * Meldet einen Epochenwechsel des historischen Modells.
+   *
+   * Vergleicht die Epoche des Vorjahres mit der des aktuellen Jahres. Nur wenn
+   * sich die **belegte** Epoche ändert, wird `historicalEpochChanged` gefeuert –
+   * die Oberfläche kann dann Einordnung und Herrscherwürde neu darstellen.
+   * Epochen mit ungeprüften Grenzen lösen bewusst kein Ereignis aus.
+   */
+  private emitEpochChange(): void {
+    const previous = historicalEpochFor(this.currentYear - 1);
+    const current = historicalEpochFor(this.currentYear);
+    if (!previous || !current || previous.id === current.id) return;
+    this.emit('historicalEpochChanged', {
+      year: this.currentYear,
+      epochId: current.id,
+      epochName: current.name,
+      evidence: current.evidence,
+      previousEpochId: previous.id
+    });
+    this.recordChronicle(`Neue Epoche: ${current.name} (ab ${this.currentYear}).`);
+  }
+
   public getCurrentYear(): number {
     return this.currentYear;
   }
@@ -731,6 +783,7 @@ export class GameEngine {
         this.emit('historyMilestone', { milestone });
       }
       this.emit('yearAdvanced', { year: this.currentYear });
+      this.emitEpochChange();
     }
 
     this.timeSystem.setDate(this.currentYear, this.currentMonth);

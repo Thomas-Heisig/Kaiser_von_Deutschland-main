@@ -628,7 +628,7 @@ export class KingdomGameUI {
         <header class="topbar">
           <a href="#" class="brand" aria-label="Zur Reichsübersicht"><span class="brand-seal">♜</span>
             <span>KAISER<small>VON DEUTSCHLAND</small></span></a>
-          <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span></div>
+          <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span><small id="ruler-dignity" class="ruler-dignity"></small></div>
           <div class="header-actions">
             <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog" aria-label="Informationen zur Epoche"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
             <button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen</button>
@@ -1358,7 +1358,21 @@ export class KingdomGameUI {
       if (bar) bar.value = value;
     }
     setText('date', this.date());
-    setText('era-label', this.engine.getCurrentEpoch().toUpperCase() + ' · ALTERNATIVE GESCHICHTE');
+    // Historischer Kontext: belegte Epoche mit Evidenzgrad und Herrscherwürde.
+    // Weicht die Modell-Epoche von der Kampagnen-Epoche ab, wird das offengelegt
+    // statt eine scheinbar exakte Zuordnung zu behaupten.
+    const historical = this.engine.getHistoricalContext(this.player.id);
+    const campaignEpoch = this.engine.getCurrentEpoch();
+    const evidenceNote = historical.epochEvidence === 'belegt' ? ''
+      : historical.epochEvidence === 'naeherung' ? ' · Grenzen genähert'
+        : ' · Grenzen ungeprüft';
+    const epochLabel = historical.epoch && historical.epoch.name !== campaignEpoch
+      ? `${campaignEpoch.toUpperCase()} · HISTORISCH: ${historical.epoch.name.toUpperCase()}${evidenceNote.toUpperCase()}`
+      : `${campaignEpoch.toUpperCase()}${evidenceNote.toUpperCase()} · ALTERNATIVE GESCHICHTE`;
+    setText('era-label', epochLabel);
+    setText('ruler-dignity', historical.rulerDignity
+      ? `Historische Würde: ${historical.rulerDignity.name}`
+      : 'Historische Würde: nicht belegt');
     const currentEraYear = this.engine.getCurrentYear();
     const eras: readonly [number, string][] = [[1200, 'Hochmittelalter: Städte, Herrschaften und Handelswege wachsen.'], [1400, 'Spätmittelalter: Zünfte, Handel und gesellschaftlicher Wandel.'], [1500, 'Renaissance und Reformation.'], [1600, 'Konfessionelle Konflikte und territoriale Veränderungen.'], [1750, 'Aufklärung und wissenschaftliche Reformen.'], [1820, 'Industrialisierung und veränderte Verkehrswege.'], [1890, 'Großindustrie und Elektrifizierung.'], [1945, 'Nachkriegszeit und Wiederaufbau.'], [1970, 'Elektronik und moderne Gesellschaft.'], [2000, 'Digitalzeitalter und globale Vernetzung.']];
     setText('epoch-title', this.engine.getCurrentEpoch() + ' · ' + currentEraYear);
