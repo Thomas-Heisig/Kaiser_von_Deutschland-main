@@ -81,27 +81,62 @@ export interface MapRegionResult {
 }
 
 /**
- * Schematische Positionen der Regionen (Prozent der Kartenfläche).
- *
- * Diese Anordnung ist **illustrativ**: Sie ordnet die Kulturräume grob nach
- * ihrer ungefähren Lage zueinander (Norden oben, Süden unten), behauptet aber
- * keinen Grenzverlauf und keine exakte Geografie.
+ * Geografischer Ausschnitt der Relief-Textur (siehe
+ * `scripts/build-relief-texture.py`). Regionsnamen und Textur teilen sich
+ * exakt diese Fläche, damit Namen und Relief zusammenpassen.
  */
-const REGION_POSITIONS: Readonly<Record<string, { x: number; y: number }>> = {
-  sachsen: { x: 55, y: 26 },
-  westfalen: { x: 32, y: 30 },
-  hansestaedte: { x: 52, y: 12 },
-  rheinland: { x: 24, y: 45 },
-  hessen: { x: 42, y: 44 },
-  thueringen: { x: 57, y: 42 },
-  franken: { x: 48, y: 57 },
-  schwaben: { x: 38, y: 70 },
-  bayern: { x: 62, y: 70 },
-  baden: { x: 28, y: 70 },
-  wurttemberg: { x: 34, y: 78 },
-  preussen: { x: 78, y: 22 },
-  schlesien: { x: 80, y: 50 }
+export const RELIEF_BOUNDS = {
+  west: 3,
+  east: 19,
+  south: 45,
+  north: 56
+} as const;
+
+/**
+ * Dokumentierte Zentren der Kulturräume (Breite/Länge).
+ *
+ * Grundlage sind die Koordinaten bekannter Städte des jeweiligen Raums –
+ * **keine** erfundenen Grenzverläufe. Die Auswahl ist bewusst grob: Ein
+ * Kulturraum hat kein Zentrum im geometrischen Sinn; der Punkt markiert
+ * lediglich einen belegten namengebenden Ort.
+ *
+ * Beispiele: Lübeck (Hanse), Köln (Rheinland), Nürnberg (Franken),
+ * München (Bayern), Breslau (Schlesien), Berlin (preußisches Kernland).
+ */
+const REGION_CENTERS: Readonly<Record<string, { lat: number; lon: number }>> = {
+  // Norddeutschland
+  hansestaedte: { lat: 53.87, lon: 10.69 },  // Lübeck
+  westfalen: { lat: 51.96, lon: 7.63 },      // Münster
+  sachsen: { lat: 51.34, lon: 12.37 },       // Leipzig
+  preussen: { lat: 52.52, lon: 13.40 },      // Berlin (preußisches Kernland)
+  // Mitte
+  rheinland: { lat: 50.94, lon: 6.96 },      // Köln
+  hessen: { lat: 50.11, lon: 8.68 },         // Frankfurt am Main
+  thueringen: { lat: 50.98, lon: 11.03 },    // Erfurt
+  franken: { lat: 49.45, lon: 11.08 },       // Nürnberg
+  // Südwesten
+  baden: { lat: 49.01, lon: 8.40 },          // Karlsruhe
+  wurttemberg: { lat: 48.78, lon: 9.18 },    // Stuttgart
+  schwaben: { lat: 48.37, lon: 10.90 },      // Augsburg
+  // Südosten
+  bayern: { lat: 48.14, lon: 11.58 },        // München
+  schlesien: { lat: 51.11, lon: 17.03 }      // Breslau
 };
+
+/**
+ * Rechnet Koordinaten in Prozent der Texturfläche um.
+ *
+ * @param lat Breitengrad.
+ * @param lon Längengrad.
+ * @returns Position in Prozent (0–100); kann außerhalb liegen, wenn der Punkt
+ *   nicht im Ausschnitt liegt – dann ist die Region nicht darstellbar.
+ */
+export function geoToPercent(lat: number, lon: number): { xPercent: number; yPercent: number } {
+  return {
+    xPercent: ((lon - RELIEF_BOUNDS.west) / (RELIEF_BOUNDS.east - RELIEF_BOUNDS.west)) * 100,
+    yPercent: ((RELIEF_BOUNDS.north - lat) / (RELIEF_BOUNDS.north - RELIEF_BOUNDS.south)) * 100
+  };
+}
 
 /**
  * Filtert Regionen, die für eine Epoche gezeigt werden dürfen.
@@ -156,14 +191,18 @@ export function regionsForMap(year: number): MapRegionResult {
   const filtered = filterRegionsForEpoch(REGIONS, epoch.id);
   const labels: MapRegionLabel[] = [];
   for (const region of filtered) {
-    const position = REGION_POSITIONS[region.id];
-    // Regionen ohne definierte Position werden bewusst nicht geraten.
-    if (!position) continue;
+    const center = REGION_CENTERS[region.id];
+    // Regionen ohne belegten Mittelpunkt werden bewusst nicht geraten.
+    if (!center) continue;
+    const position = geoToPercent(center.lat, center.lon);
+    // Punkte außerhalb des Texturausschnitts sind nicht darstellbar.
+    if (position.xPercent < 0 || position.xPercent > 100 ||
+        position.yPercent < 0 || position.yPercent > 100) continue;
     labels.push({
       id: region.id,
       name: region.name,
-      xPercent: position.x,
-      yPercent: position.y,
+      xPercent: position.xPercent,
+      yPercent: position.yPercent,
       evidence: region.evidence
     });
   }
@@ -181,7 +220,7 @@ export function regionsForMap(year: number): MapRegionResult {
     labels,
     epochName: epoch.name,
     evidence: epoch.evidence,
-    message: `${epoch.name}${approximated ? ' · Regionen schematisch, Grenzverläufe nicht belegt' : ''}`
+    message: `${epoch.name} · Relief: Natural Earth (Public Domain) · Regionen nach belegten Ortszentren, Grenzverläufe nicht dargestellt${approximated ? ' · Zuordnung genähert' : ''}`
   };
 }
 

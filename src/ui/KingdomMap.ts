@@ -56,6 +56,10 @@ export class KingdomMap {
   private readonly regionLayer = new Container();
   private zoomLevel: MapZoomLevel = 'dorf';
   private regionResult?: MapRegionResult;
+  /** Relief-Textur der Ebene „Zentraleuropa" (Natural Earth, Public Domain). */
+  private reliefTexture?: Texture;
+  private reliefLoading = false;
+  private readonly reliefLayer = new Container();
 
   private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
     if (this.destroyed || document.hidden) return;
@@ -123,6 +127,8 @@ export class KingdomMap {
     this.world.addChild(this.animation);
     // Additive Overlay-Ebene: niemals Teil der Simulation, nur Darstellung.
     this.regionLayer.visible = false;
+    this.reliefLayer.visible = false;
+    this.world.addChild(this.reliefLayer);
     this.world.addChild(this.regionLayer);
     for (let i = 0; i < 5; i++) {
       const marker = new Container();
@@ -660,56 +666,104 @@ export class KingdomMap {
   }
 
   /**
+   * Lädt die Relief-Textur der Ebene „Zentraleuropa".
+   *
+   * Quelle: Natural Earth 1:50m Shaded Relief, Public Domain. Das Laden ist
+   * fehlertolerant: Schlägt es fehl, bleibt die Regionsansicht ohne Relief
+   * bedienbar (nur Punkte und Namen).
+   */
+  private async loadReliefTexture(): Promise<void> {
+    if (this.reliefTexture || this.reliefLoading || this.destroyed) return;
+    this.reliefLoading = true;
+    try {
+      const base = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? '/';
+      const url = `${base}maps/relief-central-europe.webp`;
+      const texture = await Assets.load<Texture>(url);
+      if (this.destroyed) return;
+      this.reliefTexture = texture;
+      this.app.canvas.dataset.reliefLoaded = 'true';
+      this.drawRegionLayer();
+    } catch (error) {
+      console.warn('Relief-Textur nicht verfügbar; Regionsansicht bleibt ohne Relief.', error);
+      this.app.canvas.dataset.reliefLoaded = 'false';
+    } finally {
+      this.reliefLoading = false;
+    }
+  }
+
+  /**
    * Zeichnet die schematischen Regionsnamen.
    *
-   * Bewusst ohne Grenzlinien: Nur Beschriftung, Positionspunkt und eine
-   * Legende, die die Schematik ausdrücklich benennt.
+   * Bewusst ohne Grenzlinien: Relief als Hintergrund, Punkt und Name je Region,
+   * dazu eine Legende, die Quelle und Schematik ausdrücklich benennt.
    */
   private drawRegionLayer(): void {
     for (const child of this.regionLayer.removeChildren()) child.destroy({ children: true });
+    for (const child of this.reliefLayer.removeChildren()) child.destroy({ children: true });
     const result = this.regionResult;
-    const width = 1000;
-    const height = 700;
-    // Zurückhaltender Hintergrund: keine Landmasse, keine Grenze – nur Fläche.
-    const backdrop = new Graphics();
-    backdrop.roundRect(0, 0, width, height, 18).fill({ color: 0x16241f, alpha: 0.55 });
-    this.regionLayer.addChild(backdrop);
+    const width = 960;
+    const height = 660;
+
+    // Relief als Hintergrund – physische Geografie, keine politische Grenze.
+    if (this.reliefTexture) {
+      const sprite = new Sprite(this.reliefTexture);
+      sprite.width = width;
+      sprite.height = height;
+      // Zurückhaltend abdunkeln, damit Namen lesbar bleiben.
+      sprite.tint = 0xa8b8b0;
+      this.reliefLayer.addChild(sprite);
+    } else {
+      const backdrop = new Graphics();
+      backdrop.roundRect(0, 0, width, height, 14).fill({ color: 0x1d2e28, alpha: 0.85 });
+      this.reliefLayer.addChild(backdrop);
+    }
+    this.reliefLayer.addChild(new Graphics()
+      .roundRect(0, 0, width, height, 14).stroke({ color: 0x6b8270, width: 2, alpha: 0.7 }));
+
     if (!result || result.labels.length === 0) {
       const empty = new Text({
         text: result?.message ?? 'Keine Regionsdaten geladen.',
-        style: { fontFamily: 'Georgia', fontSize: 22, fill: 0xd8cfa8, align: 'center', wordWrap: true, wordWrapWidth: width - 120 }
+        style: { fontFamily: 'Georgia', fontSize: 22, fill: 0xf0e6c8, align: 'center', wordWrap: true, wordWrapWidth: width - 120 }
       });
       empty.anchor.set(0.5);
       empty.position.set(width / 2, height / 2);
       this.regionLayer.addChild(empty);
       return;
     }
-    const labels: MapRegionLabel[] = result.labels;
-    for (const label of labels) {
+
+    for (const label of result.labels) {
       const x = (label.xPercent / 100) * width;
       const y = (label.yPercent / 100) * height;
       const marker = new Container();
       marker.position.set(x, y);
-      // Punkt statt Fläche: markiert einen Bezugspunkt, keine Ausdehnung.
+      // Punkt statt Fläche: markiert einen belegten Ortsbezug, keine Ausdehnung.
       marker.addChild(new Graphics()
-        .circle(0, 0, 5).fill({ color: 0xd8b96f, alpha: 0.9 })
-        .circle(0, 0, 11).stroke({ color: 0xd8b96f, width: 1, alpha: 0.35 }));
+        .circle(0, 0, 4).fill({ color: 0xffffff, alpha: 0.95 })
+        .circle(0, 0, 8).stroke({ color: 0x2b3f36, width: 2, alpha: 0.8 }));
       const text = new Text({
         text: label.name,
-        style: { fontFamily: 'Georgia', fontSize: 19, fill: 0xfff0c9, align: 'center' }
+        style: {
+          fontFamily: 'Georgia', fontSize: 17, fill: 0xffffff, align: 'center',
+          stroke: { color: 0x1b2820, width: 3 }, fontWeight: '600'
+        }
       });
       text.anchor.set(0.5);
-      text.position.set(0, -24);
+      text.position.set(0, -20);
       marker.addChild(text);
       this.regionLayer.addChild(marker);
     }
+
     const legend = new Text({
       text: result.message,
-      style: { fontFamily: 'Segoe UI', fontSize: 13, fill: 0xc9c3a4, align: 'left', wordWrap: true, wordWrapWidth: width - 60 }
+      style: {
+        fontFamily: 'Segoe UI', fontSize: 12, fill: 0xe8e2c8, align: 'left',
+        wordWrap: true, wordWrapWidth: width - 60,
+        stroke: { color: 0x1b2820, width: 3 }
+      }
     });
-    legend.position.set(30, height - 44);
+    legend.position.set(24, height - 42);
     this.regionLayer.addChild(legend);
-    this.app.canvas.dataset.regionCount = String(labels.length);
+    this.app.canvas.dataset.regionCount = String(result.labels.length);
   }
 
   /** Neighboring realms are geographic illustrations, not claims of historical borders. */
