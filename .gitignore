@@ -20,6 +20,8 @@ pnpm-debug.log*
 # Testing
 coverage/
 .playwright-mcp/
+.browser-tools/
+smoke-*.png
 
 # Env files
 .env

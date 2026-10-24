@@ -793,6 +793,7 @@ export class KingdomGameUI {
     const mapScopeSelect = this.root.querySelector<HTMLSelectElement>('#map-scope');
     mapScopeSelect?.addEventListener('change', () => {
       this.map?.setMapScope(mapScopeSelect.value === 'world' ? 'world' : 'home');
+      this.updateZoomHint();
     });
     const mapStyleSelect = this.root.querySelector<HTMLSelectElement>('#map-style');
     if (mapStyleSelect) {
@@ -917,16 +918,14 @@ export class KingdomGameUI {
         this.showGameAction(detail.final ? '♛ Kampagne abgeschlossen!' : '♜ Neues Kapitel!', message, 'science');
         this.audio.playEffect('success');
         if (detail.final) {
-          // Nach kurzer Verzögerung die Siegseite anzeigen
-          setTimeout(() => this.showCampaignComplete(true), 1500);
+          this.showCampaignComplete(true);
         }
       }),
       engine.on('campaignDefeat', (detail: { playerId: string; reason: 'bankruptcy' | 'famine' | 'anarchy' }): void => {
         if (this.player?.id !== detail.playerId) return;
         this.showGameAction('☠ Untergang des Reiches', `Dein Reich ist untergegangen: ${detail.reason === 'bankruptcy' ? 'Bankrott' : detail.reason === 'famine' ? 'Hungersnot' : 'Anarchie'}.`, 'raid');
         this.audio.playEffect('battle');
-        // Nach kurzer Verzögerung die Niederlageseite anzeigen
-        setTimeout(() => this.showCampaignComplete(false, detail.reason), 1500);
+        this.showCampaignComplete(false, detail.reason);
       }),
       engine.on('yearAdvanced', (): void => this.refresh()),
       engine.on('historicalEpochChanged', (detail: { epochName: string; year: number; evidence: string }): void => {
@@ -994,6 +993,7 @@ export class KingdomGameUI {
       try {
         const { KingdomMap } = await import('./KingdomMap');
         this.map = new KingdomMap();
+        this.regionYear = undefined;
         await this.map.initialize(host, (type: keyof KingdomInfrastructure): void => {
           this.selected = type;
           this.navigate('build');
@@ -1023,6 +1023,14 @@ export class KingdomGameUI {
         console.warn('Interaktive 2D-Fallbackansicht verwendet:', error);
       }
     }
+    this.restoreCampaignResult();
+  }
+
+  private restoreCampaignResult(): void {
+    if (!this.engine || !this.player || this.engine.getCampaignId() === 'frei') return;
+    const reason = this.engine.getPlayerDefeatReason(this.player.id);
+    if (reason) this.showCampaignComplete(false, reason);
+    else if (this.engine.getCampaignChapterStatus(this.player.id).finished) this.showCampaignComplete(true);
   }
 
   /** Browser/WebGL-independent 2D building tiles, backed by actual infrastructure counts. */
@@ -1236,6 +1244,8 @@ export class KingdomGameUI {
   private showCampaignComplete(won: boolean, defeatReason?: 'bankruptcy' | 'famine' | 'anarchy'): void {
     const player = this.requirePlayer();
     const engine = this.requireEngine();
+    engine.pauseGame();
+    this.root.querySelector('.campaign-result-dialog')?.remove();
     const kingdom = player.kingdom;
     const goals = engine.getCampaignGoals(player.id);
     const completedGoals = goals.filter((g: CampaignGoal) => g.done).length;
@@ -1274,34 +1284,32 @@ export class KingdomGameUI {
           <div class="stat"><span class="stat-label">Ziele erfüllt</span><span class="stat-value">${completedGoals}/${goals.length}</span></div>
         </div>
         <div class="result-actions">
-          <button class="primary" data-result-continue>🌍 Weiterspielen (Sandbox)</button>
+          <button class="primary" data-result-continue>🌍 ${engine.isHotseat() ? 'Partie für alle als Sandbox fortsetzen' : 'Weiterspielen (Sandbox)'}</button>
           <button data-result-restart>🔄 Neu beginnen</button>
           <button data-result-menu>🏠 Zum Hauptmenü</button>
         </div>
       </div>`;
-    document.body.appendChild(dialog);
+    this.root.appendChild(dialog);
     dialog.showModal();
 
     dialog.querySelector('[data-result-continue]')?.addEventListener('click', () => {
-      dialog.close();
-      dialog.remove();
-      // Nach einer Niederlage war das Spiel pausiert; Sandbox-Fortsetzung setzt es fort.
-      engine.resumeGame();
-      this.notify('♛ Du spielst im Sandbox-Modus weiter – es gibt keine weiteren Kampagnenziele.');
+      void this.run(async () => {
+        engine.continueAsSandbox();
+        dialog.close();
+        dialog.remove();
+        await engine.saveGame('autosave');
+        this.notify('Du spielst im Sandbox-Modus weiter – es gibt keine weiteren Kampagnenziele.');
+      });
     });
     dialog.querySelector('[data-result-restart]')?.addEventListener('click', () => {
       dialog.close();
       dialog.remove();
-      location.reload();
+      void this.run(() => this.exitToMenu());
     });
     dialog.querySelector('[data-result-menu]')?.addEventListener('click', () => {
       dialog.close();
       dialog.remove();
-      // Engine zurücksetzen und zum Hauptmenü
-      this.engine = undefined;
-      this.player = undefined;
-      this.view = 'overview';
-      this.navigate('overview');
+      void this.run(() => this.exitToMenu());
     });
     dialog.addEventListener('close', () => dialog.remove());
   }
@@ -2253,6 +2261,8 @@ export class KingdomGameUI {
   /** Aktualisiert Ebenenbezeichnung und Legende unter dem Slider. */
   private updateZoomHint(): void {
     if (!this.map) return;
+    const slider = this.root.querySelector<HTMLInputElement>('#zoom-slider');
+    if (slider) slider.value = String(this.map.getZoomSlider());
     const level = this.map.getZoomLevel();
     const label = this.root.querySelector<HTMLElement>('#zoom-level-label');
     if (label) label.textContent = level === 'dorf' ? 'Ebene: Dorf (16 Bezirke)' : 'Ebene: Zentraleuropa';
@@ -2306,6 +2316,8 @@ export class KingdomGameUI {
       if (!this.saves.length) throw new Error('Noch kein Spielstand vorhanden. Zuerst speichern.');
       await engine.loadGame(this.saves[0].slot);
       this.player = engine.getActivePlayer();
+      this.journal = engine.getChronicle();
+      this.restoreCampaignResult();
       this.record('Gespeicherte Herrschaft wiederhergestellt.');
       this.notify(engine.isHotseat()
         ? `Spielstand geladen. ${this.player.name} ist am Zug.` : 'Spielstand geladen. Die Zeit ist pausiert.');

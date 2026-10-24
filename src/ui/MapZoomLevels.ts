@@ -287,7 +287,7 @@ export function stepSlider(slider: number, direction: 1 | -1): number {
  * Verhalten (keine Ebenen, kein Slider).
  */
 export function isZoomLevelsEnabled(): boolean {
-  const raw = (import.meta as { env?: Record<string, string | undefined> }).env?.VITE_MAP_ZOOM_LEVELS;
+  const raw = import.meta.env.VITE_MAP_ZOOM_LEVELS;
   if (raw === undefined) return true;
   const normalized = raw.trim().toLowerCase();
   return normalized !== 'false' && normalized !== '0' && normalized !== 'off';

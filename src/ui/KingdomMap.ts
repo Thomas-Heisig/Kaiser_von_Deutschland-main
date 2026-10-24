@@ -5,6 +5,7 @@ import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistri
 import {
   CAMERA_ZOOM_MAX,
   CAMERA_ZOOM_MIN,
+  isZoomLevelsEnabled,
   levelForSlider,
   MapRegionResult,
   MapZoomLevel,
@@ -175,7 +176,7 @@ export class KingdomMap {
       }
     });
     canvas.addEventListener('pointerup', (event: PointerEvent): void => {
-      if (drag && !drag.moved) {
+      if (drag && !drag.moved && this.zoomLevel === 'dorf' && this.mapScope === 'home') {
         const rect = canvas.getBoundingClientRect();
         const x = (event.clientX - rect.left - this.world.x) / this.world.scale.x;
         const y = (event.clientY - rect.top - this.world.y) / this.world.scale.y;
@@ -445,6 +446,7 @@ export class KingdomMap {
     }
     this.world.addChild(visual);
     this.actionVisual = visual;
+    visual.visible = this.zoomLevel === 'dorf';
     this.actionStart = performance.now();
     if (this.actionTroops.length && !document.hidden) this.app.ticker.start();
     this.fit();
@@ -461,7 +463,7 @@ export class KingdomMap {
   /** Enable bounded ambient movement, without changing the game simulation. */
   public setMotion(enabled: boolean): void {
     this.motionEnabled = enabled && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.animation.visible = this.motionEnabled;
+    this.animation.visible = this.motionEnabled && this.zoomLevel === 'dorf' && this.mapScope === 'home';
     if (this.motionEnabled && !document.hidden) this.app.ticker.start();
     else if (!this.actionVisual) this.app.ticker.stop();
     if (this.initialized) this.fit();
@@ -592,6 +594,7 @@ export class KingdomMap {
    * @returns Nothing.
    */
   public changeZoom(change: number): void {
+    if (!Number.isFinite(change) || this.destroyed) return;
     this.zoom = change === 0 ? 1 : Math.max(CAMERA_ZOOM_MIN, Math.min(CAMERA_ZOOM_MAX, this.zoom + change));
     if (change === 0) this.offset = { x: 0, y: 0 };
     this.syncLevelFromZoom();
@@ -610,8 +613,9 @@ export class KingdomMap {
    * @returns Nothing.
    */
   public setZoomSlider(slider: number): void {
+    if (this.destroyed) return;
     this.zoom = sliderToZoom(slider);
-    this.applyLevel(levelForSlider(slider, this.zoomLevel));
+    this.syncLevelFromZoom();
     this.fit();
   }
 
@@ -631,8 +635,10 @@ export class KingdomMap {
    * @returns Nothing.
    */
   public setHistoricalRegions(result: MapRegionResult): void {
+    if (this.destroyed) return;
     this.regionResult = result;
     this.drawRegionLayer();
+    this.fit();
   }
 
   /** Legende der Regionsansicht für die Oberfläche (nie leer). */
@@ -650,20 +656,23 @@ export class KingdomMap {
    * in der Regionsansicht, nicht dauerhaft.
    */
   private applyLevel(level: MapZoomLevel): void {
-    if (this.zoomLevel === level && this.regionLayer.children.length > 0) {
-      this.regionLayer.visible = level === 'zentraleuropa';
-      this.reliefLayer.visible = level === 'zentraleuropa';
-      return;
-    }
+    if (this.destroyed) return;
+    if (!isZoomLevelsEnabled()) level = 'dorf';
+    const changed = this.zoomLevel !== level;
     this.zoomLevel = level;
     const village = level === 'dorf';
     this.settlements.visible = village && this.mapScope === 'home';
-    this.retroScenery.visible = village && this.mapScope === 'home' && this.projection === 'isometric';
-    this.neighbors.visible = true;
+    // Legacy thumbnail scatter was retired in favor of the connected landscape.
+    // Scope/zoom changes must not resurrect those opaque preview tiles.
+    this.retroScenery.visible = false;
+    this.neighbors.visible = village;
+    this.animation.visible = village && this.mapScope === 'home' && this.motionEnabled;
+    this.atmosphere.visible = village;
+    if (this.actionVisual) this.actionVisual.visible = village;
     this.regionLayer.visible = !village;
     this.reliefLayer.visible = !village;
     if (!village) {
-      this.drawRegionLayer();
+      if (changed || this.regionLayer.children.length === 0) this.drawRegionLayer();
       void this.loadReliefTexture();
     }
     this.app.canvas.dataset.zoomLevel = level;
@@ -688,7 +697,9 @@ export class KingdomMap {
       this.reliefTexture = texture;
       this.app.canvas.dataset.reliefLoaded = 'true';
       this.drawRegionLayer();
+      this.fit();
     } catch (error) {
+      if (this.destroyed) return;
       console.warn('Relief-Textur nicht verfügbar; Regionsansicht bleibt ohne Relief.', error);
       this.app.canvas.dataset.reliefLoaded = 'false';
     } finally {
@@ -703,6 +714,8 @@ export class KingdomMap {
    * dazu eine Legende, die Quelle und Schematik ausdrücklich benennt.
    */
   private drawRegionLayer(): void {
+    if (this.destroyed) return;
+    this.app.canvas.dataset.regionCount = String(this.regionResult?.labels.length ?? 0);
     for (const child of this.regionLayer.removeChildren()) child.destroy({ children: true });
     for (const child of this.reliefLayer.removeChildren()) child.destroy({ children: true });
     const result = this.regionResult;
@@ -827,7 +840,6 @@ export class KingdomMap {
     this.zoom = 1;
     this.offset = { x: 0, y: 0 };
     // Die Zoom-Ebene wird über das bestehende Verhalten gelegt, nicht ersetzt.
-    this.zoomLevel = 'dorf';
     this.applyLevel('dorf');
     this.fit();
   }
@@ -967,6 +979,7 @@ export class KingdomMap {
    * @returns Nothing.
    */
   public dispose(): void {
+    if (this.destroyed) return;
     window.clearTimeout(this.actionTimer);
     this.actionTroops = [];
     this.actionVisual = undefined;
@@ -975,8 +988,7 @@ export class KingdomMap {
     document.removeEventListener('visibilitychange', this.visibility);
     if (this.initialized) this.app.ticker.remove(this.animatedTicker);
     if (this.initialized) this.app.destroy(true, { children: true });
-    for (const child of this.regionLayer.removeChildren()) child.destroy({ children: true });
-    for (const child of this.reliefLayer.removeChildren()) child.destroy({ children: true });
+    else this.world.destroy({ children: true });
     this.reliefTexture = undefined;
   }
 }

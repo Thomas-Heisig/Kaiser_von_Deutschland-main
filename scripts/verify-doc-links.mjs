@@ -1,5 +1,5 @@
 import { access, readFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, relative, isAbsolute, sep } from 'node:path';
 
 const files=['README.md','TODO.md','CHANGELOG.md','docs/INDEX.md','docs/00-meta/status.md','docs/00-meta/roadmap.md','docs/00-meta/backlog-from-readme.md'];
 const root=process.cwd();const misses=[];
@@ -13,7 +13,8 @@ for(const file of files){
   const url=match[1].trim();
   if(/^(https?:|mailto:|#)/i.test(url))continue;
   const dest=resolve(root,dirname(file),decodeURIComponent(url));
-  if(!dest.startsWith(root+'/')&&dest!==root){misses.push(file+': path escapes repository: '+url);continue;}
+  const local=relative(root,dest);
+  if(local==='..'||local.startsWith('..'+sep)||isAbsolute(local)){misses.push(file+': path escapes repository: '+url);continue;}
   try{await access(dest);}catch{misses.push(file+' → '+url);}
  }
 }
