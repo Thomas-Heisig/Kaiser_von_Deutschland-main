@@ -30,10 +30,13 @@ jobs:
         run: |
           node scripts/browser-smoke.mjs
           node scripts/atlas-smoke.mjs
+          node scripts/report-smoke.mjs
       - name: Save screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: browser-smoke-shots
-          path: smoke-*.png
+          path: |
+            smoke-*.png
+            .temp/report-*.png
           if-no-files-found: ignore

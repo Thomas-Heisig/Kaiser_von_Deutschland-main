@@ -1,6 +1,8 @@
 import { chromium } from '../.browser-tools/node_modules/playwright/index.mjs';
 import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
 
+await mkdir('.temp', {recursive:true});
 const browser = await chromium.launch({headless:true});
 const base = process.env.SMOKE_URL || 'http://127.0.0.1:4173/';
 const errors = [];
