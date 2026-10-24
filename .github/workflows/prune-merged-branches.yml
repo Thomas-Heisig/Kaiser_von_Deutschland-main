@@ -12,6 +12,10 @@ permissions:
   contents: write
   pull-requests: read
 
+concurrency:
+  group: prune-integrated-branches
+  cancel-in-progress: false
+
 jobs:
   prune:
     runs-on: ubuntu-latest
@@ -53,10 +57,19 @@ jobs:
               }
               if (!safe) {preserved.push(name);continue;}
               try {
+                const current = await github.rest.git.getRef({owner,repo,ref:`heads/${name}`});
+                if (current.data.object.sha !== branch.commit.sha) {preserved.push(name);continue;}
                 await github.rest.git.deleteRef({owner,repo,ref:`heads/${name}`});
                 deleted++;
                 core.info(`Deleted integrated branch: ${name}`);
               } catch(error) {
+                // Dependabot can remove its merged ref between listing and deletion.
+                if (error.status === 404 || error.status === 422) {
+                  try { await github.rest.git.getRef({owner,repo,ref:`heads/${name}`}); }
+                  catch (check) {
+                    if (check.status === 404) { core.info(`Already removed: ${name}`); continue; }
+                  }
+                }
                 failures.push(`${name}: ${error.message}`);
                 core.warning(`Could not delete ${name}: ${error.message}`);
               }
