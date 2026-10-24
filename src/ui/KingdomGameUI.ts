@@ -20,6 +20,7 @@ import { GameAmbience, Soundscape } from './GameAmbience';
 import type { HistoryKind } from '../core/WorldHistoryCatalog';
 import { HelpSystem } from './HelpSystem';
 import { isZoomLevelsEnabled, regionsForMap, stepSlider } from './MapZoomLevels';
+import { deskMarkup, eraPresentation } from './EraPresentation';
 
 type View = 'civic' | 'modernization' | 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
 interface JournalEntry { date: string; message: string }
@@ -199,7 +200,7 @@ export class KingdomGameUI {
           <button type="button" id="offline-save" class="primary">↓ Spiel im Browser speichern</button>
           <p id="offline-status" role="status">Offline-Paket noch nicht überprüft.</p>
 </section>
-<div class="settings-footer"><button type="button" id="settings-done" class="primary">Fertig</button></div>
+<div class="settings-footer"><button type="button" data-settings-page="-1" aria-label="Vorherige Einstellungsseite">←</button><button type="button" data-settings-page="1" aria-label="Nächste Einstellungsseite">Weiter →</button><button type="button" id="settings-done" class="primary">Fertig</button></div>
 </dialog>
 `;
   }
@@ -229,6 +230,7 @@ export class KingdomGameUI {
       }
       this.root.querySelectorAll<HTMLElement>('[data-settings-panel]').forEach(panel => {
         panel.hidden = panel.dataset.settingsPanel !== key;
+        panel.scrollTop = 0;
       });
     };
     for (const [index, tab] of tabs.entries()) {
@@ -243,6 +245,12 @@ export class KingdomGameUI {
       });
     }
     selectTab('display');
+    this.root.querySelectorAll<HTMLButtonElement>('[data-settings-page]').forEach(button => {
+      button.onclick = () => {
+        const panel = this.root.querySelector<HTMLElement>('[data-settings-panel]:not([hidden])');
+        if (panel) panel.scrollTop += Number(button.dataset.settingsPage) * Math.max(1, panel.clientHeight - 48);
+      };
+    });
     const mapSetting = this.root.querySelector<HTMLSelectElement>('#setting-map-style');
     if (mapSetting) {
       mapSetting.value = this.mapStyle;
@@ -447,13 +455,14 @@ export class KingdomGameUI {
           <button type="button" id="intro-skip" class="intro-skip">Intro überspringen →</button>
         </div>
         <div class="welcome-art" aria-hidden="true">
-          <div class="seal">♜</div><div class="horizon"></div>
+          <div class="seal" data-presentation-tool>✒</div><div class="horizon"></div>
+          <span class="welcome-era" data-presentation-desk>Schreibstube</span>
           <p>Ein Land. Deine Entscheidungen.<br>Eine Geschichte, die du schreibst.</p>
         </div>
         <section class="welcome-content" aria-labelledby="game-title">
           <p class="eyebrow">DIE KÖNIGREICHSSIMULATION</p>
           <h1 id="game-title">Kaiser von<br><em>Deutschland</em></h1>
-          <p class="lead">Aus einem kleinen Lehen wird ein blühendes Reich.
+          <p class="lead" data-presentation-intro>Aus einem kleinen Lehen wird ein blühendes Reich.
             Sorge für dein Volk, lenke den Handel und baue deine Herrschaft auf.</p>
           <div class="scenario"><span class="scenario-icon">♜</span><div>
             <strong id="start-era-summary">Mittelalter · 1200</strong>
@@ -505,7 +514,7 @@ export class KingdomGameUI {
           <div class="continue-row"><button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen öffnen</button><span>Anzeige, Musik, Filme, KI und Installation</span></div>
           <div class="continue-row"><button id="continue" class="secondary">Spielstand fortsetzen</button>
             <span>Lokaler Spielstand im Browser</span></div>
-          <p class="menu-note">Version: 2026-10-17 · Musikoptionen nach Spielstart</p>
+          <p class="menu-note">ATLAS · Ausgabe 24.10.2026</p>
           <p class="menu-note">Startet pausiert · Ohne Anmeldung · Hotseat: alle Spieler an einem Gerät, Zug um Zug</p>
           <p id="notice" role="status" aria-live="polite"></p>
         </section>
@@ -514,12 +523,43 @@ export class KingdomGameUI {
       </main>`;
     this.bindSettingsControls();
     this.bindIntro();
+    const form = this.root.querySelector<HTMLFormElement>('#new-game');
+    if (form) {
+      const pagination = document.createElement('div');
+      pagination.className = 'menu-pagination';
+      pagination.innerHTML = '<button type="button" aria-label="Vorherige Einstellungen">←</button><span>1 · Welt & Epoche</span><button type="button" aria-label="Weitere Einstellungen">Weiter →</button>';
+      form.before(pagination);
+      let page = 0;
+      const showPage = () => {
+        const items = Array.from(form.children).filter((el): el is HTMLElement => el instanceof HTMLElement && (el.tagName === 'LABEL' || el.tagName === 'FIELDSET'));
+        const available = items.filter(el => !(el instanceof HTMLFieldSetElement && el.disabled));
+        page = Math.max(0, Math.min(page, Math.ceil(available.length / 2) - 1));
+        items.forEach(el => { el.hidden = true; });
+        available.slice(page * 2, page * 2 + 2).forEach(el => { el.hidden = false; });
+        pagination.querySelector('span')!.textContent = `${page + 1} / ${Math.ceil(available.length / 2)} · ${page === 0 ? 'Welt & Epoche' : 'Deine Herrschaft'}`;
+        const buttons = pagination.querySelectorAll('button');
+        buttons[0].disabled = page === 0;
+        buttons[1].disabled = (page + 1) * 2 >= available.length;
+      };
+      const buttons = pagination.querySelectorAll('button');
+      buttons[0].onclick = () => { page--; showPage(); };
+      buttons[1].onclick = () => { page++; showPage(); };
+      form.addEventListener('change', () => queueMicrotask(showPage));
+      form.addEventListener('invalid', event => {
+        const target = event.target as HTMLElement;
+        const available = Array.from(form.children).filter(el => (el.tagName === 'LABEL' || el.tagName === 'FIELDSET') && !(el instanceof HTMLFieldSetElement && el.disabled));
+        const index = available.findIndex(el => el.contains(target));
+        if (index >= 0) { page = Math.floor(index / 2); showPage(); }
+      }, true);
+      showPage();
+    }
     void this.refreshCinematicClips();
     this.root.querySelector('#opening-toggle')?.addEventListener('click', () => void this.toggleOpeningMusic());
     const campaignSelect = this.root.querySelector<HTMLSelectElement>('#campaign-select');
     const startYearSelect = this.root.querySelector<HTMLSelectElement>('#start-year');
     const updateStartSummary = (): void => {
       const year = Number(startYearSelect?.value ?? 1200);
+      this.applyEraPresentation(year);
       const available = campaignsForYear(year);
       if (campaignSelect) {
         const current = campaignSelect.value;
@@ -632,7 +672,7 @@ export class KingdomGameUI {
           <a href="#" class="brand" aria-label="Zur Reichsübersicht"><span class="brand-seal">♜</span>
             <span>KAISER<small>VON DEUTSCHLAND</small></span></a>
           <div class="realm-heading"><strong id="realm-name"></strong><span id="ruler-name"></span><small id="ruler-dignity" class="ruler-dignity"></small></div>
-          <div class="header-actions">
+          <div class="header-actions"><button type="button" id="briefing-open" aria-haspopup="dialog">Auftrag</button>
             <button type="button" id="epoch-info-toggle" class="epoch-info-button" aria-haspopup="dialog" aria-label="Informationen zur Epoche"><span id="music-era-label">Jahr 1200</span> ⓘ</button>
             <button type="button" id="settings-open" class="secondary" aria-haspopup="dialog">⚙ Einstellungen</button>
             <button data-action="save" class="secondary">Speichern</button>
@@ -643,7 +683,7 @@ export class KingdomGameUI {
           <strong>🎼 Original-Soundtrack · 15 Titel</strong><select data-jukebox-select aria-label="Musiktitel wählen"></select>
           <div class="jukebox-nowplaying"><img data-jukebox-cover src="${import.meta.env.BASE_URL}covers/zeit-vergeht.webp" alt="Aktuelles Titelcover"><div><strong data-jukebox-title>Original-Soundtrack</strong><small data-jukebox-description>15 historische und thematische Aufnahmen</small></div></div>
           <div class="playlist-toolbar"><label>Wiedergabe <select id="playlist-mode"><option value="era">Nach Epoche</option><option value="sequential">Reihenfolge</option><option value="shuffle">Zufällig</option></select></label><label>Wiederholen <select id="playlist-repeat"><option value="all">Alle</option><option value="one">Titel</option><option value="off">Aus</option></select></label></div>
-          <details class="playlist-covers"><summary>Alle 15 Titelcover anzeigen</summary><div class="jukebox-gallery" data-jukebox-gallery aria-label="Alle Titelcover"></div></details>
+          <details class="playlist-covers"><summary>Alle 15 Titelcover anzeigen</summary><div class="jukebox-gallery" data-jukebox-gallery aria-label="Alle Titelcover"></div><div class="cover-pagination"><button type="button" data-cover-page="-1" aria-label="Vorherige Cover">←</button><span data-cover-page-label>1 / 5</span><button type="button" data-cover-page="1" aria-label="Weitere Cover">→</button></div></details>
           <a data-jukebox-download class="jukebox-download" href="#" download>↓ Titel herunterladen</a>
           <p data-jukebox-status role="status"></p>
         </section></details>
@@ -657,9 +697,15 @@ export class KingdomGameUI {
         <div class="game-layout">
             <section class="map-card" aria-label="Interaktive Siedlungsübersicht mit angrenzenden Reichen">
               <div id="kingdom-map" class="map-host" role="group" aria-label="Zentrierte Siedlungskarte – Gebäude auf der Karte auswählen"></div>
+              ${deskMarkup()}
+              <div class="atlas-navigation" aria-label="Kartenebene wählen">
+                <button type="button" data-map-level="schreibtisch">01 · Schreibtisch</button>
+                <button type="button" data-map-level="zentraleuropa">02 · Landkarte</button>
+                <button type="button" data-map-level="dorf">03 · Siedlung</button>
+              </div>
               <div class="map-hud" aria-label="Kartenwerkzeuge">
                 <div class="map-hud-top">
-                  <div class="map-heading"><span class="eyebrow">DEIN LEHEN</span><h2>Land & Leute</h2>
+                  <div class="map-heading"><span class="eyebrow" data-presentation-realm>DEIN LEHEN</span><h2>Land & Leute</h2>
                     <span id="settlement-season"></span></div>
                   <div class="settlement-controls" aria-label="Kartendarstellung und Bezirksfilter">
                     <label>Weltkarte <select id="map-scope" aria-label="Heimat oder Weltkarte wählen">
@@ -686,7 +732,7 @@ export class KingdomGameUI {
                     <label class="zoom-slider" id="zoom-slider-wrap" hidden>
                       <span class="zoom-slider-label" id="zoom-level-label">Ebene: Dorf</span>
                       <input type="range" id="zoom-slider" min="0" max="100" step="2" value="100"
-                        aria-label="Kartenzoom: Dorf bis Zentraleuropa" aria-describedby="zoom-hint">
+                        aria-label="Kartenzoom: Schreibtisch, Landkarte und Siedlung" aria-describedby="zoom-hint">
                       <span id="zoom-hint" class="zoom-hint" role="status" aria-live="polite"></span>
                     </label>
                   </div>
@@ -694,6 +740,7 @@ export class KingdomGameUI {
               </div>
             </section>
           <aside class="sidebar">
+            <label class="compact-navigation">Verwaltung<select id="view-select" aria-label="Spielbereich wählen"><option value="" disabled selected>Bereich wählen …</option></select></label>
             <p class="eyebrow nav-label">DEINE HERRSCHAFT</p>
             <nav aria-label="Spielbereiche">
               ${([
@@ -758,13 +805,44 @@ export class KingdomGameUI {
           </aside>
         </div>
         <footer class="game-footer">© 2026 Thomas Heisig · Kaiser von Deutschland · <button type="button" id="legal-open" class="legal-link">Urheberrecht · KI · Datenschutz</button><span id="footer-keys"></span></footer>
-        <dialog id="section-dialog" class="section-dialog" aria-label="Spielbereich"><div class="section-dialog-head"><strong id="section-dialog-title">Verwaltung</strong><button type="button" id="section-dialog-close" aria-label="Bereich schließen">✕</button></div><div id="section-dialog-body"></div></dialog>
+        <dialog id="briefing-dialog" class="section-dialog" aria-label="Auftrag und Reichszustand"><div class="section-dialog-head"><strong>Auftrag & Reichszustand</strong><button type="button" data-close-dialog="briefing-dialog" aria-label="Auftrag schließen">✕</button></div><div id="briefing-body" class="paged-body"></div><div class="panel-pagination"><button type="button" data-page-step="-1">← Zurück</button><span>Auftrag & Rat</span><button type="button" data-page-step="1">Weiter →</button></div></dialog><dialog id="section-dialog" class="section-dialog" aria-label="Spielbereich"><div class="section-dialog-head"><strong id="section-dialog-title">Verwaltung</strong><button type="button" id="section-dialog-close" aria-label="Bereich schließen">✕</button></div><div id="section-dialog-body"></div><div class="panel-pagination"><button type="button" id="panel-prev" aria-label="Vorherige Seite">← Zurück</button><span id="panel-page" role="status">Seite 1</span><button type="button" id="panel-next" aria-label="Nächste Seite">Weiter →</button></div></dialog>
         ${this.settingsDialogMarkup()}
         ${this.filmDialogMarkup()}
          <dialog id="epoch-dialog" class="info-dialog" aria-labelledby="epoch-title"><h2 id="epoch-title">Epoche</h2><p id="epoch-description"></p><p class="muted">Historische Einordnung; alternative Geschichte.</p><button type="button" data-close-dialog="epoch-dialog">Schließen</button></dialog>
-        <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
+        <dialog id="legal-dialog" class="info-dialog" aria-labelledby="legal-title"><h2 id="legal-title">Impressum, Urheberrecht und KI</h2><p><strong>Projekt:</strong> Thomas Heisig · Kaiser von Deutschland.</p><p><strong>Kartografie:</strong> Natural Earth II und Natural Earth Rivers, Public Domain. Vereinfachte heutige Landschaft; historische Ortsbezüge ohne rekonstruierte Staatsgrenzen.</p><p><strong>Software:</strong> MIT-Lizenz gemäß LICENSE. Rechte Dritter bleiben unberührt.</p><p><strong>Musik und Videos:</strong> Eigene Projektmedien mit gesonderten Nutzungsrechten. Die MIT-Softwarelizenz gilt nicht pauschal für die Medien.</p><p><strong>KI:</strong> KI-gestützte Werkzeuge wurden bei der Programmierung, Musik- und Bildgestaltung verwendet. Konkrete Titelcredits sind noch zu ergänzen.</p><p><strong>Datenschutz:</strong> Spielstände und eigene Audioimporte werden lokal im Browser gespeichert; Webhosting kann technische Zugriffslogs verarbeiten.</p><p><strong>Verantwortlich:</strong> Thomas Heisig. Vollständige Impressums- und Kontaktangaben müssen vor einer öffentlichen Veröffentlichung ergänzt werden.</p><button type="button" data-close-dialog="legal-dialog">Schließen</button></dialog>
       </div>`;
     this.bindJukeboxControls();
+    const navigation = this.root.querySelector<HTMLSelectElement>('#view-select');
+    this.root.querySelectorAll<HTMLButtonElement>('.sidebar nav [data-view]').forEach(button => {
+      const option = document.createElement('option');
+      option.value = button.dataset.view ?? 'overview';
+      option.textContent = button.textContent;
+      navigation?.append(option);
+    });
+    navigation?.addEventListener('change', () => this.navigate(navigation.value as View));
+    this.root.querySelectorAll<HTMLButtonElement>('[data-map-level]').forEach(button => {
+      button.addEventListener('click', () => {
+        this.map?.setZoomSlider(button.dataset.mapLevel === 'schreibtisch' ? 0 : button.dataset.mapLevel === 'zentraleuropa' ? 28 : 40);
+        this.updateZoomHint();
+      });
+    });
+    for (const [id, direction] of [['panel-prev', -1], ['panel-next', 1]] as const) {
+      this.root.querySelector('#' + id)?.addEventListener('click', () => {
+        const body = this.root.querySelector<HTMLElement>('#section-dialog-body');
+        if (!body) return;
+        body.scrollTop += direction * Math.max(1, body.clientHeight - 64);
+        this.updatePanelPagination();
+      });
+    }
+    const briefing = this.root.querySelector<HTMLDialogElement>('#briefing-dialog');
+    const briefingBody = this.root.querySelector<HTMLElement>('#briefing-body');
+    const council = this.root.querySelector<HTMLElement>('.game-layout>.council');
+    const health = this.root.querySelector<HTMLElement>('.realm-health');
+    if (briefingBody && council && health) briefingBody.append(health, council);
+    this.root.querySelector('#briefing-open')?.addEventListener('click', () => briefing?.showModal());
+    briefing?.querySelectorAll<HTMLButtonElement>('[data-page-step]').forEach(button => {
+      button.onclick = () => { if (briefingBody) briefingBody.scrollTop += Number(button.dataset.pageStep) * Math.max(1, briefingBody.clientHeight - 48); };
+    });
     this.bindTutorialControls();
     this.renderTutorial();
     const sectionDialog = this.root.querySelector<HTMLDialogElement>('#section-dialog');
@@ -772,6 +850,8 @@ export class KingdomGameUI {
       if (event.target === sectionDialog) sectionDialog.close();
     });
     sectionDialog?.addEventListener('close', () => {
+      if (sectionDialog.open) return;
+      if (navigation) navigation.value = '';
       const panel = this.root.querySelector<HTMLElement>('#panel');
       const workspace = this.root.querySelector<HTMLElement>('.workspace');
       if (panel && workspace) workspace.append(panel);
@@ -811,6 +891,7 @@ export class KingdomGameUI {
     this.bindSettingsControls();
     this.root.querySelector('#epoch-info-toggle')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#epoch-dialog')?.showModal());
     this.root.querySelector('#legal-open')?.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#legal-dialog')?.showModal());
+    this.root.querySelectorAll<HTMLDialogElement>('.info-dialog:not(.settings-dialog)').forEach(dialog => this.paginateInfoDialog(dialog));
     this.root.querySelectorAll<HTMLButtonElement>('[data-close-dialog]').forEach(button => button.addEventListener('click', () => this.root.querySelector<HTMLDialogElement>('#' + button.dataset.closeDialog)?.close()));
     this.root.querySelector('.brand')?.addEventListener('click', (event: Event): void => {
       event.preventDefault();
@@ -1003,6 +1084,7 @@ export class KingdomGameUI {
         });
         this.map.setMotion(this.motionEnabled);
         this.map.setProjection(this.mapStyle);
+        if (isZoomLevelsEnabled()) this.map.setZoomSlider(0);
         this.refresh();
       } catch (error) {
         console.error('Karte konnte nicht gestartet werden:', error);
@@ -1218,6 +1300,7 @@ export class KingdomGameUI {
     later.textContent = 'Später im Reichsrat entscheiden';
     later.addEventListener('click', () => dialog.close());
     dialog.append(heading, story, choices, delegation, later);
+    this.paginateInfoDialog(dialog);
     dialog.addEventListener('close', () => { this.cancelCouncilSelectionTimer(); if (this.councilDialog === dialog) this.councilDialog = undefined; dialog.remove(); });
     this.root.append(dialog);
     this.councilDialog = dialog;
@@ -1315,17 +1398,12 @@ export class KingdomGameUI {
   }
 
   private navigate(view: View): void {
+    this.root.querySelector<HTMLDialogElement>('#briefing-dialog')?.close();
     this.view = view;
+    const selection = this.root.querySelector<HTMLSelectElement>('#view-select');
+    if (selection) selection.value = view;
     const popup = this.root.querySelector<HTMLDialogElement>('#section-dialog');
     const panel = this.root.querySelector<HTMLElement>('#panel');
-    if (view === 'overview') {
-      popup?.close();
-      const workspace = this.root.querySelector<HTMLElement>('.workspace');
-      if (panel && workspace && !workspace.contains(panel)) workspace.append(panel);
-      this.renderPanel();
-      this.refresh();
-      return;
-    }
     if (popup && panel) {
       if (!popup.open) popup.showModal();
       const title = this.root.querySelector<HTMLElement>('#section-dialog-title');
@@ -1334,12 +1412,52 @@ export class KingdomGameUI {
       this.renderPanel();
       const body = this.root.querySelector<HTMLElement>('#section-dialog-body');
       body?.replaceChildren(panel);
+      if (body) body.scrollTop = 0;
+      const pageLabel = this.root.querySelector('#panel-page');
+      if (pageLabel) pageLabel.textContent = 'Seite 1';
       popup.scrollTop = 0;
       this.refresh();
+      requestAnimationFrame(() => this.updatePanelPagination());
       return;
     }
     this.renderPanel();
     this.refresh();
+  }
+
+  private updatePanelPagination(): void {
+    const body = this.root.querySelector<HTMLElement>('#section-dialog-body');
+    if (!body || body.clientHeight === 0) return;
+    const step = Math.max(1, body.clientHeight - 64);
+    const maximum = Math.max(0, body.scrollHeight - body.clientHeight);
+    const pages = Math.ceil(maximum / step) + 1;
+    const current = body.scrollTop >= maximum - 1 ? pages : Math.floor(body.scrollTop / step) + 1;
+    const label = this.root.querySelector('#panel-page');
+    if (label) label.textContent = `Seite ${current} / ${pages}`;
+    const previous = this.root.querySelector<HTMLButtonElement>('#panel-prev');
+    const next = this.root.querySelector<HTMLButtonElement>('#panel-next');
+    if (previous) previous.disabled = body.scrollTop < 1;
+    if (next) next.disabled = body.scrollTop >= maximum - 1;
+  }
+
+  /** Long explanations remain readable without moving the page or hiding the close action. */
+  private paginateInfoDialog(dialog: HTMLDialogElement): void {
+    const heading = dialog.firstElementChild;
+    const close = dialog.lastElementChild;
+    if (!heading || !(close instanceof HTMLButtonElement)) return;
+    const body = document.createElement('div');
+    body.className = 'dialog-page-body';
+    for (const child of Array.from(dialog.children)) if (child !== heading && child !== close) body.append(child);
+    const footer = document.createElement('div');
+    footer.className = 'dialog-page-footer';
+    for (const [text, direction] of [['← Zurück', -1], ['Weiter →', 1]] as const) {
+      const button = document.createElement('button');
+      button.type = 'button'; button.textContent = text;
+      button.onclick = () => { body.scrollTop += direction * Math.max(1, body.clientHeight - 64); };
+      footer.append(button);
+    }
+    footer.append(close);
+    dialog.classList.add('paged-info');
+    dialog.append(body, footer);
   }
 
   private refresh(): void {
@@ -1347,6 +1465,7 @@ export class KingdomGameUI {
     const hotseat = this.engine.isHotseat();
     if (hotseat) this.player = this.engine.getActivePlayer();
     if (!this.player) return;
+    this.applyEraPresentation(this.engine.getCurrentYear());
     const kingdom = this.player.kingdom;
     const balance = kingdom.getMonthlyBalance();
     const trade = this.engine.getTradeNetworkStats(this.player).monthlyIncome;
@@ -1490,6 +1609,24 @@ export class KingdomGameUI {
     setText('music-era-label', this.engine.getCurrentEpoch() + ' · ' + musicContext.year);
     const panel = this.root.querySelector('#panel');
     if (!panel?.contains(document.activeElement)) this.renderPanel();
+  }
+
+  private applyEraPresentation(year: number): void {
+    const era = eraPresentation(year);
+    document.documentElement.dataset.era = era.id;
+    const values: Record<string, string> = { desk: era.desk, motto: era.title, tool: era.tool, object: era.object, material: era.material, year: String(year), realm: era.realm,
+      intro: year >= 1945 ? 'Gestalte dein Land zwischen Wiederaufbau, Gesellschaft und technologischem Wandel. Jede Entscheidung schreibt Geschichte.' : year >= 1800 ? 'Lenke dein Reich durch Industrialisierung und gesellschaftlichen Wandel. Baue Städte, Handel und neue Infrastruktur auf.' : year >= 1500 ? 'Neue Handelswege, Wissen und Macht verändern die Welt. Gestalte die Zukunft deiner Herrschaft.' : 'Aus einem kleinen Lehen wird ein blühendes Reich. Sorge für dein Volk, lenke den Handel und baue deine Herrschaft auf.' };
+    for (const [key, value] of Object.entries(values)) {
+      this.root.querySelectorAll<HTMLElement>('[data-presentation-' + key + ']').forEach(el => { el.textContent = value; });
+    }
+    const labels: Record<string, string> = { court: era.court, council: era.council, war: era.war };
+    for (const [view, text] of Object.entries(labels)) {
+      this.root.querySelectorAll<HTMLButtonElement>('.sidebar nav [data-view="' + view + '"]').forEach(button => {
+        if (button.lastChild?.nodeType === Node.TEXT_NODE) button.lastChild.textContent = text;
+      });
+      const option = this.root.querySelector<HTMLOptionElement>('#view-select option[value="' + view + '"]');
+      if (option) option.textContent = text;
+    }
   }
 
   private renderPanel(): void {
@@ -2218,6 +2355,7 @@ export class KingdomGameUI {
     if (!wrap || !slider) return;
     if (!isZoomLevelsEnabled()) {
       wrap.hidden = true;
+      this.root.querySelector<HTMLElement>('.atlas-navigation')?.setAttribute('hidden', '');
       return;
     }
     wrap.hidden = false;
@@ -2264,11 +2402,13 @@ export class KingdomGameUI {
     const slider = this.root.querySelector<HTMLInputElement>('#zoom-slider');
     if (slider) slider.value = String(this.map.getZoomSlider());
     const level = this.map.getZoomLevel();
+    this.root.querySelector('.map-card')?.setAttribute('data-level', level);
+    this.root.querySelectorAll<HTMLElement>('[data-map-level]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mapLevel === level)));
     const label = this.root.querySelector<HTMLElement>('#zoom-level-label');
-    if (label) label.textContent = level === 'dorf' ? 'Ebene: Dorf (16 Bezirke)' : 'Ebene: Zentraleuropa';
+    if (label) label.textContent = level === 'dorf' ? 'Siedlung · 16 Bezirke' : level === 'schreibtisch' ? 'Dein Schreibtisch' : 'Zentraleuropa · Flüsse & Landschaft';
     const hint = this.root.querySelector<HTMLElement>('#zoom-hint');
     if (!hint) return;
-    if (level === 'dorf') {
+    if (level !== 'zentraleuropa') {
       hint.hidden = true;
       hint.textContent = '';
       return;
@@ -2792,6 +2932,19 @@ export class KingdomGameUI {
 
   private bindJukeboxControls(): void {
     this.updateJukeboxStatus();
+    let coverPage = 0;
+    const showCoverPage = () => {
+      const covers = Array.from(this.root.querySelectorAll<HTMLElement>('.cover-card'));
+      const pages = Math.max(1, Math.ceil(covers.length / 3));
+      coverPage = Math.max(0, Math.min(coverPage, pages - 1));
+      covers.forEach((cover, index) => { cover.hidden = Math.floor(index / 3) !== coverPage; });
+      const label = this.root.querySelector('[data-cover-page-label]');
+      if (label) label.textContent = (coverPage + 1) + ' / ' + pages;
+    };
+    this.root.querySelectorAll<HTMLButtonElement>('[data-cover-page]').forEach(button => {
+      button.onclick = () => { coverPage += Number(button.dataset.coverPage); showCoverPage(); };
+    });
+    showCoverPage();
     const mode = this.root.querySelector<HTMLSelectElement>('#playlist-mode');
     const repeat = this.root.querySelector<HTMLSelectElement>('#playlist-repeat');
     if (mode) {

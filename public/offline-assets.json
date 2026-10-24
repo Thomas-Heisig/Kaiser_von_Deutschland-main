@@ -35,7 +35,8 @@
     "video/intro-original.mp4",
     "video/Video 3.mp4",
     "video/Video 4.mp4",
-    "video/Video 5.mp4"
+    "video/Video 5.mp4",
+    "maps/landscape-central-europe.webp"
   ],
   "note": "Aktiver Browsercache kann vom Betriebssystem bei Platzmangel gelöscht werden."
 }

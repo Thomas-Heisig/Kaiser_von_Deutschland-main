@@ -1,6 +1,7 @@
 import { KingdomGameUI } from './ui/KingdomGameUI';
 import { setupInstallButtons } from './ui/PwaInstall';
 import '/styles/kingdom.css';
+import '/styles/atlas.css';
 
 const root = document.getElementById('app');
 if (!root) throw new Error('Der Spielcontainer fehlt.');

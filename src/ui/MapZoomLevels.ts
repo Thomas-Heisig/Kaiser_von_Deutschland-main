@@ -5,13 +5,14 @@
  * Schwellen, das Slider-Mapping und der Regionsabruf ohne Browser testbar
  * bleiben. `KingdomMap` konsumiert es nur.
  *
- * Ebenen (bewusst nur zwei in diesem Schritt):
+ * Ebenen:
+ *  - `schreibtisch`  – virtueller Schreibtisch der aktuellen Epoche
  *  - `dorf`         – die bestehenden 16 Bezirke (unverändert)
  *  - `zentraleuropa` – schematische Regionsnamen ohne Grenzlinien
  *
  * Grundsätze:
  *  - Keine erfundenen Grenzen: Es werden ausschließlich Namen und Positionen
- *    geliefert, niemals Polygone oder Linien.
+ *    geliefert, niemals politische Grenzpolygone oder Grenzlinien.
  *  - Keine Behauptung bei fehlender Quelle: Regionen mit Evidenzgrad
  *    `nicht_verifiziert` werden ausgefiltert, nicht stillschweigend gezeigt.
  *
@@ -23,7 +24,7 @@ import { EvidenceLevel, HistoricalRegion, PolityCatalog } from '../history/Polit
 import { REGIONS } from '../history/PolityData';
 
 /** Sichtbare Kartenebene. */
-export type MapZoomLevel = 'dorf' | 'zentraleuropa';
+export type MapZoomLevel = 'schreibtisch' | 'dorf' | 'zentraleuropa';
 
 /** Slider-Grenzen (HTML `<input type="range">`). */
 export const SLIDER_MIN = 0;
@@ -55,9 +56,8 @@ export interface MapRegionLabel {
   id: string;
   name: string;
   /**
-   * Schematische Position in Prozent der Kartenfläche (0–100).
-   * Bewusst **keine** Geokoordinaten: Die Anordnung ist illustrativ,
-   * nicht kartografisch.
+   * Position des dokumentierten Ortsbezugs in Prozent der Kartenfläche
+   * (0–100), aus WGS84-Koordinaten abgeleitet; keine Gebietsausdehnung.
    */
   xPercent: number;
   yPercent: number;
@@ -82,7 +82,7 @@ export interface MapRegionResult {
 
 /**
  * Geografischer Ausschnitt der Relief-Textur (siehe
- * `scripts/build-relief-texture.py`). Regionsnamen und Textur teilen sich
+ * `scripts/build-landscape.mjs`). Regionsnamen und Textur teilen sich
  * exakt diese Fläche, damit Namen und Relief zusammenpassen.
  */
 export const RELIEF_BOUNDS = {
@@ -220,7 +220,7 @@ export function regionsForMap(year: number): MapRegionResult {
     labels,
     epochName: epoch.name,
     evidence: epoch.evidence,
-    message: `${epoch.name} · Relief: Natural Earth (Public Domain) · Regionen nach belegten Ortszentren, Grenzverläufe nicht dargestellt${approximated ? ' · Zuordnung genähert' : ''}`
+    message: `${epoch.name} · Landschaft & Flüsse: Natural Earth (Public Domain) · Ortsbezüge, keine Staatsgrenzen${approximated ? ' · Zuordnung genähert' : ''}`
   };
 }
 
@@ -262,6 +262,8 @@ export function zoomToSlider(zoom: number): number {
  */
 export function levelForSlider(slider: number, current: MapZoomLevel): MapZoomLevel {
   const clamped = Math.max(SLIDER_MIN, Math.min(SLIDER_MAX, slider));
+  if (clamped < 12) return 'schreibtisch';
+  if (current === 'schreibtisch') return clamped >= 40 ? 'dorf' : clamped >= 18 ? 'zentraleuropa' : current;
   if (current === 'dorf' && clamped < LEVEL_THRESHOLDS.toRegion) return 'zentraleuropa';
   if (current === 'zentraleuropa' && clamped >= LEVEL_THRESHOLDS.toVillage) return 'dorf';
   return current;

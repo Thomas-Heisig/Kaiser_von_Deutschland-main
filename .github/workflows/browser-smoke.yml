@@ -27,7 +27,9 @@ jobs:
           cat /tmp/kaiser-vite.log
           exit 1
       - name: Browser checks
-        run: node scripts/browser-smoke.mjs
+        run: |
+          node scripts/browser-smoke.mjs
+          node scripts/atlas-smoke.mjs
       - name: Save screenshots
         if: always()
         uses: actions/upload-artifact@v4
