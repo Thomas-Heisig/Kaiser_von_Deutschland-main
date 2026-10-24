@@ -36,6 +36,7 @@ describe('map lifecycle and view transitions', () => {
     map.setMapScope('home');
     expect(map.settlements.visible).toBe(true);
     expect(map.animation.visible).toBe(true);
+    expect(map.retroScenery.visible).toBe(false);
     expect(map.app.canvas.dataset.zoomLevel).toBe('dorf');
     expect(map.getZoomSlider()).toBe(40);
     expect(map.offset).toEqual({ x: 0, y: 0 });

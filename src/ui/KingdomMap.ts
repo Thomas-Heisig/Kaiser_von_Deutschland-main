@@ -662,7 +662,9 @@ export class KingdomMap {
     this.zoomLevel = level;
     const village = level === 'dorf';
     this.settlements.visible = village && this.mapScope === 'home';
-    this.retroScenery.visible = village && this.mapScope === 'home' && this.projection === 'isometric';
+    // Legacy thumbnail scatter was retired in favor of the connected landscape.
+    // Scope/zoom changes must not resurrect those opaque preview tiles.
+    this.retroScenery.visible = false;
     this.neighbors.visible = village;
     this.animation.visible = village && this.mapScope === 'home' && this.motionEnabled;
     this.atmosphere.visible = village;
