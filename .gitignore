@@ -6,6 +6,9 @@ build/
 dist/
 out/
 
+# Generated PWA icons (created by scripts/generate-pwa-icons.mjs during build)
+public/icons/
+
 # Logs
 logs/
 *.log
