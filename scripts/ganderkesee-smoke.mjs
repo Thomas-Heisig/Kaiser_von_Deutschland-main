@@ -8,7 +8,7 @@ try {
     const page=await browser.newPage({viewport:{width,height},reducedMotion:'reduce',hasTouch:width<500});
     page.on('pageerror',e=>failures.push(e.message));
     page.setDefaultTimeout(15000);
-    await page.goto('http://127.0.0.1:4173/');await page.locator('#intro-skip').click();
+    await page.goto(process.env.KAISER_TEST_URL??'http://127.0.0.1:4173/');await page.locator('#intro-skip').click();
     await page.locator('#start-year').selectOption(String(year));
     if(!(await page.locator('#start-campaign-summary').innerText()).includes('Ganderkesee'))throw Error('Start place missing');
     await page.getByRole('button',{name:/Herrschaft beginnen/}).click();

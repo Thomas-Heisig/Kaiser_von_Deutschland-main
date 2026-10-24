@@ -8,6 +8,8 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### Stabilisierung und Integration · 24.10.2026
 
+- [x] Dependabot-PRs #100–#105 integriert: PixiJS 8.22, SQL.js 1.15, UUID 14.0.3, TypeScript 7, Vite 8, Vitest 5 und aktuelle Actions. Node mindestens 22.12, CI auf Node 22; Typen explizit und bisherige Browserziele beibehalten. Produktionsbuild, vollständige Tests und Browser-Smokes geprüft.
+
 - [x] [Ganderkesee als Startregion](docs/05-technical-architecture/GANDERKESEE.md): amtliches Gelände, echtes Gewässernetz, maßstäbliche Karte und zeitabhängige Ortsmarken mit Quellen. Weitere Startorte benötigen noch Kartenpakete.
 - [x] Popups per Rad/Touch scrollen, Audio im Header, Ressourcenbestand in Wirtschaft, direkter Steuerregler und persistente Handelsauswahl.
 - [x] Sechs delegierbare Bereiche mit Sicher/Normal/Gewagt, gemeinsamem Monatsbudget und Zuschauer-Voreinstellung; Speicherung und BCE-Bürgeraufträge geprüft.

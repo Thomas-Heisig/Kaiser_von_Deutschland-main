@@ -4,7 +4,7 @@ import { readdirSync } from 'node:fs';
 import type { Plugin } from 'vite';
 
 function cinemaCatalog(): { videos: Array<{ id: string; title: string; url: string }> } {
-  const directory = path.resolve(__dirname, 'public/video');
+  const directory = path.resolve(import.meta.dirname, 'public/video');
   const videos = readdirSync(directory).filter(name => /\.(mp4|webm|m4v)$/i.test(name))
     .sort((a,b) => a.localeCompare(b,'de')).map(name => {
       const title = name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
@@ -36,11 +36,11 @@ export default defineConfig({
   plugins: [offlineBuildAssets()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@core': path.resolve(__dirname, './src/core'),
-      '@ui': path.resolve(__dirname, './src/ui'),
-      '@data': path.resolve(__dirname, './src/data'),
-      '@utils': path.resolve(__dirname, './src/utils')
+      '@': path.resolve(import.meta.dirname, './src'),
+      '@core': path.resolve(import.meta.dirname, './src/core'),
+      '@ui': path.resolve(import.meta.dirname, './src/ui'),
+      '@data': path.resolve(import.meta.dirname, './src/data'),
+      '@utils': path.resolve(import.meta.dirname, './src/utils')
     }
   },
   server: {
@@ -52,10 +52,11 @@ export default defineConfig({
     open: false
   },
   build: {
+    target: ['chrome107', 'edge107', 'firefox104', 'safari16'],
     outDir: 'dist',
     sourcemap: true,
     rollupOptions: {
-      input: { spiel: path.resolve(__dirname, 'index.html'), werkstatt: path.resolve(__dirname, 'workshop-prototype.html') },
+      input: { spiel: path.resolve(import.meta.dirname, 'index.html'), werkstatt: path.resolve(import.meta.dirname, 'workshop-prototype.html') },
       output: {
         manualChunks(id: string): string | undefined {
           if (id.includes('node_modules') && (id.includes('pixi.js') || id.includes('@pixi'))) {
