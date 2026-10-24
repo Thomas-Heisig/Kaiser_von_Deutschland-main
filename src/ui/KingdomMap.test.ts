@@ -11,6 +11,7 @@ function mapFixture() {
     app: { canvas: { dataset: {} }, ticker: { remove: vi.fn() }, destroy: vi.fn() },
     fit: vi.fn(), drawRegionLayer: vi.fn(), loadReliefTexture: vi.fn(),
     observer: { disconnect: vi.fn() }
+    , renderedBuildings: { dispose: vi.fn() }
   });
   for (const name of ['settlements', 'retroScenery', 'neighbors', 'animation',
     'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer']) {

@@ -10,6 +10,13 @@ if(!index.includes(base+'assets/'))fail.push('compiled script/style asset base w
 const manifest=JSON.parse((await requireFile('manifest.webmanifest')).toString('utf8'));
 for(const entry of manifest.icons??[]){if(entry.type==='image/png'){const image=await requireFile(entry.src);if(image.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')fail.push('invalid PNG '+entry.src)}}
 const files=JSON.parse((await requireFile('offline-assets.json')).toString('utf8')).files;
+for(let page=0;page<6;page++){
+ const name=`assets/kenney/buildings/districts-v1-${page}.webp`;
+ const data=await requireFile(name);
+ if(data.subarray(8,12).toString()!=='WEBP')fail.push('invalid GLB atlas '+name);
+}
+const buildings=JSON.parse((await requireFile('assets/kenney/buildings/provenance.json')).toString('utf8'));
+if(buildings.frames?.length!==24)fail.push('GLB building provenance incomplete');
 for(const filename of files){
  const data=await requireFile(filename);
  if(filename.endsWith('.mp3')&&data.length){

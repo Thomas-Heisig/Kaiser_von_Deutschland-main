@@ -77,6 +77,8 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ## Grafikkarte – aktive Entscheidung: Kenney Retro (18.10.2026)
 
+- [x] PR #93 vervollständigt: 24 texturierte GLB-Kompositionen aus den vorhandenen Kenney-CC0-Originalpaketen als sechs WebP-Atlanten gerendert, Rebuild-Skript und Herkunfts-Hashes eingecheckt. Hauptspiel lädt alle 24 Frames; Antikenpartien verwenden weiterhin frühe Darstellungen. Geräteabnahme und freie Bebauung bleiben offen.
+
 - [x] **Retro Fantasy + Retro Textures Fantasy** für das Mittelalter, **Retro Urban** für spätere Epochen verbindlich; Sketch Town ist nur Reserve, nicht zweite parallele Richtung ([Renderer](docs/05-technical-architecture/RENDERER.md)).
 - [x] PR #67: geprüfte Kenney-CC0-Vorschaugrafiken in kompaktem Atlas, isolierter PixiJS-Prototyp und Browser-Smoke mit realem Atlasladecheck in `main` integriert.
 - [x] Prototyp-Baseline bewusst eingefroren: 144 Kacheln, 1 modular angedeutetes Gebäude, 1 Licht, 24 Rauchpartikel, 30-FPS-Limit. **Preview-Sprites ≠ fertig vorgerendertes GLB-Gebäude.**

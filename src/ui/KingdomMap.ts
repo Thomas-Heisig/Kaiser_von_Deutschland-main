@@ -1,5 +1,6 @@
 import { Application, Assets, Container, Graphics, Text, Sprite, Texture, Rectangle } from 'pixi.js';
 import { Kingdom, KingdomInfrastructure } from '../core/Kingdom';
+import { BUILDING_RENDER_VERSION, RenderedBuildingLibrary } from './RenderedBuildingLibrary';
 import type { RivalRealm } from '../core/CampaignWarfareSystem';
 import { StrategyWorld, type StrategyWorldSnapshot } from '../core/StrategyWorld';
 import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature, earlyBuildingName } from './SettlementSceneModel';
@@ -20,6 +21,8 @@ import {
  */
 export class KingdomMap {
   private readonly app = new Application();
+  private readonly renderedBuildings = new RenderedBuildingLibrary();
+  private visibleGlbDistricts = 0;
   private readonly world = new Container();
   private readonly settlements = new Container();
   private readonly retroScenery = new Container();
@@ -214,6 +217,14 @@ export class KingdomMap {
     this.fit();
     this.app.ticker.stop();
     void this.loadRetroAssets();
+    this.app.canvas.dataset.buildingRendererVersion=BUILDING_RENDER_VERSION;
+    this.app.canvas.dataset.buildingFramesLoaded='0';
+    void this.renderedBuildings.load(import.meta.env.BASE_URL, () => {
+      if(this.destroyed)return;
+      this.app.canvas.dataset.buildingFramesLoaded=String(this.renderedBuildings.count);
+      this.lastSignature='';
+      if(this.retroContext){ const {kingdom,selected,completed,year,rivals}=this.retroContext; this.update(kingdom,selected,completed,year,rivals); }
+    });
   }
 
   /** Lightweight, license-checked Kenney visual assets; leaves simulation unchanged. */
@@ -540,6 +551,7 @@ export class KingdomMap {
     if (signature + epochStyle + year === this.lastSignature) return;
     this.lastSignature = signature + epochStyle + year;
     this.chimneys.length = 0;
+    this.visibleGlbDistricts=0;
     this.drawNeighbors(rivals);
     this.drawAtmosphere(kingdom.currentSeason, epochStyle);
     for (const child of this.settlements.removeChildren()) child.destroy({ children: true });
@@ -556,7 +568,9 @@ export class KingdomMap {
           width: selected === location.type ? 2 : 1, alpha: selected === location.type ? 1 : 0.35
         });
       group.addChild(ground);
-      if (this.drawRetroDistrict(group, location.type, count, epochStyle)) {
+      const hasRenderedBuilding = this.projection === 'isometric' && this.renderedBuildings.draw(group,location.type,count,year);
+      if(hasRenderedBuilding){ this.visibleGlbDistricts += 1; }
+      else if (this.drawRetroDistrict(group, location.type, count, epochStyle)) {
         // Visual-only retro representation. Interaction still uses fixed coordinates.
       } else if ((modernization || epochStyle === 'modern' || epochStyle === 'industrial') && count > 0 && location.type !== 'farms' && location.type !== 'roads' && location.type !== 'ports' && location.type !== 'walls') {
         group.addChild(new Graphics().roundRect(-29, -62, 58, 42, 5)
@@ -625,6 +639,8 @@ export class KingdomMap {
       group.addChild(label);
       this.settlements.addChild(group);
     }
+    this.app.canvas.dataset.renderedDistricts=String(this.visibleGlbDistricts);
+    this.app.canvas.dataset.buildingFramesLoaded=String(this.renderedBuildings.count);
     const eraText = epochStyle === 'modern' ? 'Moderne' : epochStyle === 'industrial'
       ? 'Industrialisierung' : epochStyle === 'renaissance' ? 'Neuzeit' : epochStyle === 'bronze' ? 'Bronzezeit' : epochStyle === 'ancient' ? 'Antike' : 'Mittelalter';
     const badge = new Text({text: eraText + ' · ' + formatYear(year), style: {fontFamily: 'Georgia',
@@ -1088,6 +1104,7 @@ export class KingdomMap {
     this.actionTroops = [];
     this.actionVisual = undefined;
     this.destroyed = true;
+    this.renderedBuildings.dispose();
     this.observer?.disconnect();
     document.removeEventListener('visibilitychange', this.visibility);
     if (this.initialized) this.app.ticker.remove(this.animatedTicker);
