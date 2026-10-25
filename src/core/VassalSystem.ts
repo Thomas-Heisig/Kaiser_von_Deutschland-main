@@ -54,6 +54,16 @@ export interface VassalState {
   sinceYear: number;
 }
 
+/** Verständlicher Grund für eine ausgebliebene Abgabe. */
+export function failureLabel(failure: TributeFailure): string {
+  switch (failure) {
+    case 'empty_treasury': return 'Schatzkammer erschöpft';
+    case 'disloyal': return 'Loyalität zu gering';
+    case 'contested': return 'Herrschaft umkämpft';
+    default: return 'keine';
+  }
+}
+
 /** Epochenpassender Begriff für die Abgabe. */
 export function tributeLabel(year: number): string {
   if (year < 500) return 'Abgabe';

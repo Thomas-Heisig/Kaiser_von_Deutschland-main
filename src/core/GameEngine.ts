@@ -16,7 +16,9 @@ import { garrisonDevelopment } from './GarrisonDevelopment';
 import { RegionalProvisioning } from './RegionalProvisioning';
 import { citizenName } from './HistoricalNames';
 import { isPlaceholderName, isPlaceholderSurname } from './NameCatalog';
-import { VassalSystem, type VassalState } from './VassalSystem';
+import {
+  VassalSystem, annexationCost, auxiliaryUpkeep, failureLabel, type TributeFailure
+} from './VassalSystem';
 import { TitleSystem } from '../data/Titles';
 import { PolicySystem } from './PolicySystem';
 import { OllamaService } from './OllamaService';
