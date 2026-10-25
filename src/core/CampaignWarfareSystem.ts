@@ -457,6 +457,61 @@ export class CampaignWarfareSystem {
   }
 
   /**
+   * Führt eine geprüfte Zustandsänderung an einem Nachbarn aus.
+   * Einzige Schreibschnittstelle für Vasallenbuchungen, damit `getRivals`
+   * weiterhin Kopien liefern kann.
+   * @param playerId Spieler.
+   * @param rivalId Stabile ID.
+   * @param change Veränderung am gespeicherten Nachbarn.
+   * @returns true, wenn der Nachbar gefunden wurde.
+   */
+  public mutateRival(playerId: string, rivalId: string, change: (rival: RivalRealm) => void): boolean {
+    const rival = this.rivals.find(entry => entry.playerId === playerId && entry.id === rivalId);
+    if (!rival) return false;
+    change(rival);
+    return true;
+  }
+
+  /**
+   * Monatlicher Unterhalt der gegnerischen Truppen.
+   *
+   * Gegner zahlen denselben Grundregeln folgend wie der Spieler: Soldaten
+   * kosten Gold und Nahrung. Die gegnerische Wirtschaft ist vereinfacht, aber
+   * beschränkt — Truppen sind nie kostenlos. Bei Zahlungsmangel sinkt die
+   * Schlagkraft abgestuft, statt sofort zu verschwinden. Bestände werden nicht
+   * monatlich zurückgesetzt; neue Gegner erhalten einmalige Anfangsbestände.
+   *
+   * @returns Bericht je Nachbar mit Kosten, Zahlung und erklärter Folge.
+   */
+  public payUpkeep(): RivalUpkeep[] {
+    const report: RivalUpkeep[] = [];
+    for (const rival of this.rivals) {
+      const cost = CampaignWarfareSystem.upkeepFor(rival.soldiers);
+      const paid = Math.min(rival.loot, cost.gold);
+      rival.loot -= paid;
+      const shortfall = cost.gold - paid;
+      let consequence = 'keine';
+      if (shortfall > 0) {
+        // Graded, explained consequence: no sudden loss of the whole army.
+        const loss = Math.ceil(rival.soldiers * (shortfall / Math.max(1, cost.gold)) * 0.1);
+        rival.soldiers = Math.max(0, rival.soldiers - loss);
+        rival.fortification = Math.max(0.7, rival.fortification - 0.01);
+        consequence = `${loss} Soldaten entlassen (Sold ausgeblieben) · Befestigung sinkt`;
+      }
+      report.push({
+        rivalId: rival.id, playerId: rival.playerId, name: rival.name,
+        soldiers: rival.soldiers, cost, paid, shortfall, consequence
+      });
+    }
+    return report;
+  }
+
+  /** Unterhaltssatz je Soldat und Monat (Gold und Nahrung). */
+  public static upkeepFor(soldiers: number): { gold: number; food: number } {
+    return { gold: Math.ceil(soldiers * 0.5), food: Math.ceil(soldiers * 0.25) };
+  }
+
+  /**
    * Ergänzt neue Nachbarn jenseits einer befriedeten Grenze.
    *
    * Kriterien statt Zufall: Es wird nur ergänzt, wenn **alle** bisherigen
