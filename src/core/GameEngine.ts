@@ -16,6 +16,7 @@ import { garrisonDevelopment } from './GarrisonDevelopment';
 import { RegionalProvisioning } from './RegionalProvisioning';
 import { citizenName } from './HistoricalNames';
 import { isPlaceholderName, isPlaceholderSurname } from './NameCatalog';
+import { VassalSystem, type VassalState } from './VassalSystem';
 import { TitleSystem } from '../data/Titles';
 import { PolicySystem } from './PolicySystem';
 import { OllamaService } from './OllamaService';
@@ -380,6 +381,8 @@ export class GameEngine {
   private warFinanceUsed = new Map<string, number>();
   private campaignChapters = new Map<string, number>();
   private defeatSystem = new CampaignDefeatSystem();
+  /** Unterworfene Akteure: eingegliedertes Gebiet und Vasallen. */
+  private vassals = new VassalSystem();
   private tutorialSystem = new TutorialSystem();
   private borderWatch = new Map<string, number>();
   private siegeTargets = new Map<string, string>();
@@ -1198,6 +1201,16 @@ export class GameEngine {
     this.treasuryCheckpoint(player,'Darlehen: Tilgung und Zinsen');
     if (debtPayment.cannotAfford) this.emit('financeEvent', { playerId: player.id,
       message: 'Eine Kriegsdarlehensrate konnte nicht bezahlt werden.' });
+
+    // Subject realms pay their dues before raids are resolved this month.
+    this.processVassals(player);
+    // Rivals pay upkeep too; their troops are never free.
+    const rivalUpkeep = this.warfare.payUpkeep();
+    for (const entry of rivalUpkeep) {
+      if (entry.shortfall > 0 && entry.playerId === player.id) {
+        this.projectMessage(player.id, `${entry.name}: ${entry.consequence}.`);
+      }
+    }
 
     // Border watch is consumed by the very next month, with or without a raid.
     const watch = this.borderWatch.get(player.id) ?? 0;
@@ -3890,6 +3903,82 @@ export class GameEngine {
   /**
    * Process career changes and social mobility (v2.1.5)
    */
+  /**
+   * Monatliche Abgaben, Hilfstruppen und Loyalität unterworfener Akteure.
+   *
+   * Buchungsgrundsatz: Der Vasall zahlt aus seinem eigenen Vermögen (Abbuchung
+   * beim Nachbarn), der Oberherr erhält genau diesen Betrag. Es entsteht kein
+   * Geld aus dem Nichts, und Zahlungen werden nicht doppelt gebucht — der
+   * bisherige pauschale Beute-Anteil wird hier ersetzt.
+   *
+   * Eingegliedertes Gebiet liefert Einnahmen und Bevölkerung, kostet aber
+   * Verwaltung; ein Vasall zahlt Abgaben und stellt Hilfstruppen, deren
+   * Unterhalt er selbst trägt.
+   */
+  private processVassals(player: Player): void {
+    const states = this.vassals.forPlayer(player.id);
+    if (!states.length) return;
+    let income = 0;
+    let administration = 0;
+    const failures: string[] = [];
+    for (const state of states) {
+      const rival = this.warfare.getRivals(player.id).find(entry => entry.id === state.rivalId);
+      if (!rival) continue;
+      if (state.status === 'annexed') {
+        // Direct rule: revenue and people, but administration must be paid.
+        income += state.agreedTribute;
+        administration += annexationCost(rival.settlers);
+        this.vassals.mutateVassal(player.id, state.rivalId, current => {
+          current.paidThisMonth = state.agreedTribute;
+          current.lastFailure = 'none';
+        });
+        continue;
+      }
+      // Vassal: pays from its own treasury, so the payment is real.
+      let paid = 0;
+      let failure: TributeFailure = 'none';
+      if (state.loyalty < 25) {
+        failure = 'disloyal';
+      } else {
+        this.warfare.mutateRival(player.id, state.rivalId, entry => {
+          paid = Math.min(entry.loot, state.agreedTribute);
+          entry.loot -= paid;
+        });
+        if (paid < state.agreedTribute) failure = 'empty_treasury';
+      }
+      income += paid;
+      const upkeep = auxiliaryUpkeep(state.auxiliarySoldiers);
+      // Auxiliaries are paid by the vassal, not by the overlord.
+      this.warfare.mutateRival(player.id, state.rivalId, entry => {
+        const borne = Math.min(entry.loot, upkeep.gold);
+        entry.loot -= borne;
+        if (borne < upkeep.gold) failure = failure === 'none' ? 'empty_treasury' : failure;
+      });
+      const shortfall = state.agreedTribute - paid;
+      this.vassals.mutateVassal(player.id, state.rivalId, current => {
+        current.paidThisMonth = paid;
+        current.lastFailure = failure;
+        if (shortfall > 0) {
+          current.arrears += shortfall;
+          current.missedMonths += 1;
+          current.loyalty = Math.max(0, current.loyalty - 3);
+        } else {
+          current.missedMonths = 0;
+          current.loyalty = Math.min(100, current.loyalty + 1);
+        }
+      });
+      if (shortfall > 0) {
+        failures.push(`${rival.name}: ${shortfall} Gold ausgeblieben (${failureLabel(failure)})`);
+      }
+    }
+    if (income > 0) player.kingdom.resources.gold += income;
+    if (administration > 0) player.kingdom.resources.gold -= administration;
+    this.treasuryCheckpoint(player, 'Unterworfene Gebiete: Abgaben und Verwaltung');
+    if (failures.length) {
+      this.projectMessage(player.id, 'Ausgebliebene Abgaben: ' + failures.join(' · ') + '.');
+    }
+  }
+
   private processCareerChanges(): void {
     const population = this.citizenSystem.getPopulation();
     if (population === 0) return;

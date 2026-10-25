@@ -33,6 +33,18 @@ export interface RivalDevelopment {
   message: string;
 }
 
+/** Monatlicher Unterhalt eines Gegners mit erklärter Folge bei Mangel. */
+export interface RivalUpkeep {
+  rivalId: string;
+  playerId: string;
+  name: string;
+  soldiers: number;
+  cost: { gold: number; food: number };
+  paid: number;
+  shortfall: number;
+  consequence: string;
+}
+
 /** Opponents retain recognizable strategies instead of simply gaining generic resources. */
 export const rivalPersonality = (id: string): RivalPersonality =>
   id === 'raubritter' ? 'raider' : id === 'ostmark' ? 'fortifier' : 'merchant';
