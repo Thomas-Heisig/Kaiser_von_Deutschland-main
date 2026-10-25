@@ -1,4 +1,5 @@
 import { doctrineForYear, rivalIdentity } from './HistoricalGameplay';
+import { defenseBreakdown, type DefenseBreakdown } from './GarrisonModel';
 import { rivalReaction, type RealmProgress } from './RivalStrategy';
 // src/core/CampaignWarfareSystem.ts
 import type { Kingdom } from './Kingdom';
@@ -204,8 +205,32 @@ export class CampaignWarfareSystem {
    * @returns Effective defensive power.
    */
   public static defensePower(kingdom: Kingdom, modifiers: PowerModifiers = {}, year: number = 1200): number {
-    const fortification = 1 + Math.min(1, kingdom.infrastructure.walls * 0.15 + kingdom.infrastructure.castles * 0.25) * doctrineForYear(year).fortificationFactor;
-    return Math.round(CampaignWarfareSystem.armyPower(kingdom, modifiers, year) * fortification);
+    // One shared basis for preview and resolution: garrison manning, supply and
+    // per-site fortification instead of a flat global multiplier.
+    const breakdown = CampaignWarfareSystem.defenseBreakdown(kingdom, modifiers, year);
+    return breakdown.total;
+  }
+
+  /**
+   * Verteidigung mit Aufschlüsselung. Vorschau und Kampfauflösung nutzen
+   * dieselbe Berechnung.
+   * @param kingdom Verteidigendes Reich.
+   * @param modifiers Optionaler Feldherrenbonus.
+   * @param year Jahr für die Epochendoktrin.
+   * @param supplyRatio Anteil gedeckter Versorgung (0–1).
+   * @param damage Schadensanteil an den Anlagen (0–1).
+   * @returns Aufschlüsselung mit Gesamtwert und Hinweisen.
+   */
+  public static defenseBreakdown(
+    kingdom: Kingdom, modifiers: PowerModifiers = {}, year: number = 1200,
+    supplyRatio = 1, damage = 0
+  ): DefenseBreakdown {
+    const troops = CampaignWarfareSystem.armyPower(kingdom, modifiers, year);
+    const doctrine = doctrineForYear(year);
+    const result = defenseBreakdown(kingdom, troops, supplyRatio, damage);
+    // Doctrine still shapes how strongly fortification counts in each era.
+    const scaled = Math.round(result.total * doctrine.fortificationFactor);
+    return { ...result, total: scaled };
   }
 
   /**

@@ -2245,10 +2245,28 @@ ${body}
         }).join('')}</div>
         <p class="muted tip">Mit deiner Garnison ziehst du unter „Feldzüge“ gegen rivalisierende Nachbarn.
           Kasernen, Ausbildung und Ausrüstung erhöhen die Kampfkraft, Mauern und Burgen die Verteidigung.</p>
-        <h3>Ausbildung und Modernisierung</h3><div class="build-grid">${this.engine.getGarrisonDevelopment(this.player.id).map(p=>`
-          <article class="build-card"><h3>${escape(p.name)}</h3><p>+${p.gain} ${p.field==='trainingLevel'?'Ausbildung':'Ausrüstung'} (höchstens 100)</p>
+        <h3>Ausbildung und Modernisierung</h3><div class="build-grid">${this.engine.getGarrisonDevelopment(this.player.id).map(p=>{
+          const current = p.field === 'trainingLevel' ? kingdom.military.trainingLevel : kingdom.military.equipmentQuality;
+          const fieldLabel = p.field === 'trainingLevel' ? 'Ausbildung' : 'Ausrüstung';
+          const missing = (['gold','food','wood','iron'] as const)
+            .filter(key => p.cost[key] > kingdom.resources[key])
+            .map(key => `${format(p.cost[key] - kingdom.resources[key])} ${RESOURCE_NAMES[key]}`);
+          const blockers: string[] = [...missing];
+          if (kingdom.military.infantry + kingdom.military.archers + kingdom.military.cavalry <= 0)
+            blockers.unshift('Keine Soldaten in der Garnison');
+          if (current >= 100) blockers.unshift(`${fieldLabel} bereits vollständig`);
+          if (!p.available && !blockers.length) blockers.unshift('Ein gleichartiges Vorhaben läuft bereits');
+          const canStart = p.available && blockers.length === 0;
+          return `<article class="build-card"><h3>${escape(p.name)}</h3>
+          <p>${fieldLabel} ${format(current)} von 100 · nach Abschluss +${p.gain} (höchstens 100)</p>
           <p class="cost">${format(p.cost.gold)} Gold · ${format(p.cost.food)} Nahrung · ${format(p.cost.wood)} Holz · ${format(p.cost.iron)} Eisen</p>
-          <button data-garrison="${p.id}" ${p.available?'':'disabled'}>Garnison verbessern</button></article>`).join('')}</div>
+          <p class="muted">Dauer: 2 Monate. Kosten werden beim Beginn bezahlt.</p>
+          ${canStart ? '' : `<p class="muted">Nicht möglich: ${escape(blockers.join(', '))}</p>`}
+          <button data-garrison="${p.id}" ${canStart ? '' : 'disabled'}
+            aria-label="${escape(p.name)}: ${fieldLabel} um ${p.gain} verbessern${
+              canStart ? '' : ` · nicht möglich: ${escape(blockers.join(', '))}`}"
+          >${canStart ? 'Garnison verbessern' : `Nicht möglich: ${escape(blockers.join(', '))}`}</button></article>`;
+        }).join('')}</div>
         <div class="quick-actions"><button data-open="war" class="primary">Zum Kriegsrat →</button></div>`;
     } else if (this.view === 'culture') {
       const events = this.engine.getFestivalOptions(this.player.id);
