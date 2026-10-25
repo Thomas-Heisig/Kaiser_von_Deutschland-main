@@ -19,6 +19,7 @@ import { isPlaceholderName, isPlaceholderSurname } from './NameCatalog';
 import {
   VassalSystem, annexationCost, auxiliaryUpkeep, failureLabel, type TributeFailure
 } from './VassalSystem';
+import { garrisonCapacity, garrisonSoldiers, supplyRatio, type DefenseBreakdown } from './GarrisonModel';
 import { TitleSystem } from '../data/Titles';
 import { PolicySystem } from './PolicySystem';
 import { OllamaService } from './OllamaService';
@@ -2668,6 +2669,26 @@ export class GameEngine {
   }
 
   /**
+   * Verteidigungsaufschlüsselung für die Anzeige.
+   *
+   * Verwendet **dieselben Eingaben** wie die Kampfauflösung: gleicher
+   * Feldherrenbonus, gleiches Jahr, gleicher Versorgungsanteil aus
+   * `supplyRatio`. Damit stimmen Vorschau und Ergebnis überein.
+   *
+   * @param playerId Spieler.
+   * @returns Aufschlüsselung mit Truppen, Befestigungen und Abzügen.
+   */
+  public getDefenseBreakdown(playerId: string): DefenseBreakdown {
+    const player = this.requirePlayer(playerId);
+    return CampaignWarfareSystem.defenseBreakdown(
+      player.kingdom,
+      this.getCommanderModifiers(playerId),
+      this.currentYear,
+      supplyRatio(player.kingdom)
+    );
+  }
+
+  /**
    * Victory chance of a planned attack.
    * @param playerId Attacker.
    * @param target Rival id or another player's id.
@@ -2855,6 +2876,46 @@ export class GameEngine {
     }
   }
 
+  /**
+   * Garnisonsautomatik innerhalb der bestehenden Verwaltungsautomatik.
+   *
+   * Reihenfolge mit Begründung:
+   *  1. **Besetzung ergänzen** — eine unbesetzte Befestigung verteidigt kaum.
+   *  2. **Ausbildung/Ausrüstung** — erst danach lohnt Qualität.
+   * Vor jeder Maßnahme werden laufende Vorhaben, Budgetgrenze, Mindestreserven
+   * und die künftigen Unterhaltskosten geprüft. Es entstehen keine kostenlosen
+   * Soldaten und keine doppelten Aufträge.
+   *
+   * @param player Spieler.
+   * @param canSpend Budgetprüfung der Verwaltungsautomatik.
+   * @param action Ausführender Hüllaufruf mit Protokollierung.
+   * @returns Nichts.
+   */
+  private async runGarrisonAutomation(
+    player: Player,
+    canSpend: (cost: { gold?: number; food?: number; wood?: number; stone?: number; iron?: number },
+      foodEmergency?: boolean) => boolean,
+    action: (label: string, operation: () => unknown | Promise<unknown>) => Promise<void>
+  ): Promise<void> {
+    const kingdom = player.kingdom;
+    const soldiers = garrisonSoldiers(kingdom);
+    const capacity = garrisonCapacity(kingdom);
+    // A garrison below its capacity cannot use its fortifications fully.
+    if (soldiers < capacity) {
+      const plan = this.getRecruitPlan(player.id, 10, 'infantry');
+      const upkeep = CampaignWarfareSystem.upkeepFor(soldiers + 10);
+      const affordable = canSpend(plan.bill)
+        && kingdom.resources.gold - plan.bill.gold >= upkeep.gold * 2
+        && kingdom.population.peasants >= 10;
+      if (affordable) {
+        await action('Garnison auffüllen', () => this.recruitForPlayer(player.id, 10, 'infantry'));
+        return;
+      }
+    }
+    const option = this.getGarrisonDevelopment(player.id).find(p => p.available && canSpend(p.cost));
+    if (option) await action(option.name, () => this.improveGarrisonFor(player, option.id));
+  }
+
   private async processAdministration(player:Player):Promise<void> {
     const preferences=this.getAdministration(player.id),domains=preferences.domains;
     if(!ADMIN_DOMAINS.some(d=>domains[d]))return;
@@ -2915,10 +2976,7 @@ export class GameEngine {
         .sort((a,b)=>a.technology.cost.research-b.technology.cost.research)[0];
       if(option)await action('Forschung: '+option.technology.name,()=>this.startResearch(player.id,option.technology.id));
     }
-    if(domains.military) {
-      const option=this.getGarrisonDevelopment(player.id).find(p=>p.available&&canSpend(p.cost));
-      if(option)await action(option.name,()=>this.improveGarrisonFor(player,option.id));
-    }
+    if(domains.military) await this.runGarrisonAutomation(player,canSpend,action);
     if(domains.culture&&kingdom.happiness<85) {
       const option=this.getFestivalOptions(player.id).find(o=>!o.alreadyHeld&&o.affordable&&
         canSpend({gold:o.event.effects.goldCost??0,food:o.event.effects.foodConsumption??0}));

@@ -680,9 +680,26 @@ export class Kingdom {
   /**
    * Berechnet Nahrungsverbrauch
    */
+  /**
+   * Nahrungsbedarf pro Jahr in Versorgungseinheiten.
+   *
+   * Zwei getrennte, klar benannte Verbraucher:
+   *  - **Zivilbevölkerung**: `population.soldiers` sind die in der
+   *    Bevölkerungsstatistik geführten Wehrpflichtigen; sie essen als Teil der
+   *    Bevölkerung.
+   *  - **Feldheer**: die tatsächlich unter Waffen stehenden Truppen aus
+   *    `military`. Sie werden **zusätzlich** versorgt, weil sie nicht Teil der
+   *    zivilen Zählung sind.
+   *
+   * Beide werden addiert, aber nie doppelt gezählt: `population.soldiers` und
+   * `military` sind getrennte Größen. Ein größerer Vorrat erhöht den Bedarf
+   * nicht — der Bedarf hängt ausschließlich an Personen, nicht am Bestand.
+   *
+   * @returns Bedarf in Versorgungseinheiten pro Jahr.
+   */
   public calculateFoodConsumption(): number {
     const { peasants, soldiers, nobles, merchants, clergy, artisans, scholars } = this.population;
-    
+
     const consumptionRates = {
       peasants: 2.5,
       soldiers: 4,
@@ -692,15 +709,34 @@ export class Kingdom {
       artisans: 3.5,
       scholars: 3
     };
-    
-    return Math.floor(
+
+    const civilian =
       peasants * consumptionRates.peasants +
       soldiers * consumptionRates.soldiers +
       nobles * consumptionRates.nobles +
       merchants * consumptionRates.merchants +
       clergy * consumptionRates.clergy +
       artisans * consumptionRates.artisans +
-      scholars * consumptionRates.scholars
+      scholars * consumptionRates.scholars;
+
+    // Field army: fed in addition, since it is not part of the civil count.
+    const field = this.militaryFoodConsumption();
+    return Math.floor(civilian + field);
+  }
+
+  /**
+   * Nahrungsbedarf des Feldheeres pro Jahr in Versorgungseinheiten.
+   * Infanterie, Bogenschützen, Reiterei, Belagerungsgerät und Marine.
+   * @returns Bedarf in Versorgungseinheiten pro Jahr.
+   */
+  public militaryFoodConsumption(): number {
+    const rates = { infantry: 6, archers: 6, cavalry: 9, siege: 12, navy: 6 };
+    return (
+      this.military.infantry * rates.infantry +
+      this.military.archers * rates.archers +
+      this.military.cavalry * rates.cavalry +
+      this.military.siege * rates.siege +
+      this.military.navy * rates.navy
     );
   }
 
@@ -928,30 +964,44 @@ export class Kingdom {
     return Math.floor(baseConsumption * winterMultiplier);
   }
 
-  private calculateGoldConsumption(): number {
-    const militaryUpkeep = (
+  /**
+   * Aufgeschlüsselter Goldunterhalt pro Jahr.
+   * Getrennt nach Heer, Gebäuden und Gehältern, damit die Wirtschaftsansicht
+   * jede Ausgabe einzeln ausweisen kann.
+   * @returns Einzelposten und Summe in Goldeinheiten pro Jahr.
+   */
+  public goldUpkeepParts(): {
+    military: number; infrastructure: number; salaries: number; total: number;
+  } {
+    const military = (
       this.military.infantry * 1 +
       this.military.cavalry * 3 +
       this.military.archers * 2 +
       this.military.siege * 10 +
       this.military.navy * 5
     );
-    
-    const infrastructureUpkeep = (
+    const infrastructure = (
       this.infrastructure.markets * 25 +
       this.infrastructure.barracks * 40 +
       this.infrastructure.castles * 100 +
       this.infrastructure.hospitals * 35 +
       this.infrastructure.schools * 20
     );
-    
-    const officialSalaries = (
+    const salaries = (
       this.population.nobles * 10 +
       this.population.clergy * 5 +
       this.population.scholars * 8
     );
-    
-    return Math.floor(militaryUpkeep + infrastructureUpkeep + officialSalaries);
+    return {
+      military,
+      infrastructure,
+      salaries,
+      total: Math.floor(military + infrastructure + salaries)
+    };
+  }
+
+  private calculateGoldConsumption(): number {
+    return this.goldUpkeepParts().total;
   }
 
   private updatePopulation(yearFraction: number = 1): void {

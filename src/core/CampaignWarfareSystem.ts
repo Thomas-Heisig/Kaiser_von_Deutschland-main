@@ -1,5 +1,5 @@
 import { doctrineForYear, rivalIdentity } from './HistoricalGameplay';
-import { defenseBreakdown, type DefenseBreakdown } from './GarrisonModel';
+import { defenseBreakdown, supplyRatio, type DefenseBreakdown } from './GarrisonModel';
 import { rivalReaction, type RealmProgress } from './RivalStrategy';
 // src/core/CampaignWarfareSystem.ts
 import type { Kingdom } from './Kingdom';
@@ -402,7 +402,10 @@ export class CampaignWarfareSystem {
     if (!hostile.length || this.random() >= MONTHLY_RAID_CHANCE) return undefined;
     const raider = hostile[Math.min(hostile.length - 1, Math.floor(this.random() * hostile.length))];
     const raidPower = Math.round(CampaignWarfareSystem.rivalPower(raider, date.year) * 0.4 / raider.fortification);
-    const defense = CampaignWarfareSystem.defensePower(kingdom, options.modifiers, date.year);
+    // Same inputs as the UI preview: commander bonus, year and supply ratio.
+    const supply = supplyRatio(kingdom);
+    const defense = CampaignWarfareSystem.defenseBreakdown(
+      kingdom, options.modifiers, date.year, supply).total;
     const raiderChance = CampaignWarfareSystem.victoryChance(raidPower, defense);
     const raiderWon = this.random() < raiderChance;
     const defenderLosses = this.applyCasualties(kingdom, raiderWon ? 0.12 : 0.04,
@@ -412,12 +415,19 @@ export class CampaignWarfareSystem {
     let plunder = 0;
     let summary: string;
     if (raiderWon) {
-      plunder = Math.floor(kingdom.resources.gold * 0.1);
-      kingdom.resources.gold -= plunder;
-      kingdom.resources.food = Math.floor(kingdom.resources.food * 0.9);
+      // Raid losses are derived, not a flat share of the stock:
+      //  - carry capacity of the raiding party,
+      //  - how much the local defence could still protect,
+      //  - and the stock that is actually reachable.
+      const loss = CampaignWarfareSystem.raidSpoils(kingdom, raider, defense, raidPower);
+      plunder = loss.stolenGold;
+      kingdom.resources.gold -= loss.stolenGold + loss.destroyedGold;
+      kingdom.resources.food -= loss.stolenFood + loss.destroyedFood;
+      raider.loot += loss.stolenGold;
       kingdom.happiness = Math.max(0, kingdom.happiness - 5);
-      summary = `${raider.name} überfällt dein Reich und raubt ${plunder} Gold sowie Vorräte. ` +
-        'Mauern, Burgen und eine stärkere Garnison schützen besser.';
+      summary = `${raider.name} überfällt dein Reich: ${loss.stolenGold} Gold und ${loss.stolenFood} Nahrung geraubt, `
+        + `${loss.destroyedGold} Gold und ${loss.destroyedFood} Nahrung zerstört (Verteidigung ${defense}, Angreifer ${raidPower}). `
+        + 'Mauern, Burgen und eine besetzte Garnison verringern den Verlust.';
     } else {
       kingdom.military.morale = Math.min(100, kingdom.military.morale + 4);
       summary = `Deine Garnison schlägt einen Überfall von ${raider.name} zurück.`;
@@ -534,6 +544,46 @@ export class CampaignWarfareSystem {
   /** Unterhaltssatz je Soldat und Monat (Gold und Nahrung). */
   public static upkeepFor(soldiers: number): { gold: number; food: number } {
     return { gold: Math.ceil(soldiers * 0.5), food: Math.ceil(soldiers * 0.25) };
+  }
+
+  /**
+   * Beute und Zerstörung eines erfolgreichen Überfalls.
+   *
+   * Herleitung (keine pauschalen Vorratsprozente):
+   *  1. **Tragfähigkeit**: Die Angreifer können nur mitnehmen, was ihre
+   *     Truppe tragen kann — abgeleitet aus ihrer Soldatenstärke.
+   *  2. **Schutz der Verteidigung**: Eine wirksame örtliche Verteidigung
+   *     verringert den Anteil, der überhaupt erreicht wird.
+   *  3. **Erreichbarer Bestand**: Es wird nie mehr entnommen, als vorhanden ist.
+   *
+   * Geraubtes geht an den Angreifer (dessen Schatzkammer ist modelliert),
+   * Zerstörtes wird separat als Verlust ausgewiesen.
+   *
+   * @param kingdom Überfallenes Reich.
+   * @param raider Angreifender Nachbar.
+   * @param defense Wirksame Verteidigung des Verteidigers.
+   * @param raidPower Stärke des Überfalls.
+   * @returns Geraubte und zerstörte Mengen, begrenzt auf den Bestand.
+   */
+  public static raidSpoils(
+    kingdom: Kingdom, raider: RivalRealm, defense: number, raidPower: number
+  ): { stolenGold: number; stolenFood: number; destroyedGold: number; destroyedFood: number } {
+    // 1. Carry capacity: each raider carries a limited load of supplies.
+    const carry = Math.max(20, raider.soldiers * 2);
+    // 2. Local defence shields part of the stores; stronger defence, less loss.
+    const protection = defense <= 0 ? 0 : Math.min(0.75, defense / (defense + raidPower));
+    const reachable = 1 - protection;
+    const goldTarget = Math.floor(kingdom.resources.gold * 0.1 * reachable);
+    const foodTarget = Math.floor(carry * reachable);
+    // 3. Never more than what is actually there.
+    const stolenGold = Math.max(0, Math.min(kingdom.resources.gold, Math.min(goldTarget, carry)));
+    const remainingGold = kingdom.resources.gold - stolenGold;
+    const destroyedGold = Math.max(0, Math.min(remainingGold, Math.floor(stolenGold * 0.1)));
+    const stolenFood = Math.max(0, Math.min(kingdom.resources.food, foodTarget));
+    const remainingFood = kingdom.resources.food - stolenFood;
+    // Spoilage during the raid is a share of what could not be carried off.
+    const destroyedFood = Math.max(0, Math.min(remainingFood, Math.floor(stolenFood * 0.25)));
+    return { stolenGold, stolenFood, destroyedGold, destroyedFood };
   }
 
   /**

@@ -1926,6 +1926,36 @@ ${body}
   }
 
   /**
+   * Verteidigungsaufschlüsselung. Verwendet dieselbe Berechnung wie die
+   * Kampfauflösung; unsichere Ausgänge werden als Chance, nicht als Sieg
+   * dargestellt.
+   */
+  private renderDefenseBreakdown(): string {
+    const breakdown = this.engine!.getDefenseBreakdown(this.player!.id);
+    const kingdom = this.player!.kingdom;
+    const soldiers = kingdom.military.infantry + kingdom.military.archers + kingdom.military.cavalry;
+    const parts = kingdom.goldUpkeepParts();
+    return `<section class="build-card" data-defense-breakdown aria-label="Verteidigungsaufschlüsselung">
+      <h3>Verteidigung</h3>
+      <dl class="stat-list">
+        <div><dt>Truppen (mit Ausbildung &amp; Ausrüstung)</dt><dd>${format(breakdown.troops)}</dd></div>
+        <div><dt>Zugewiesene Soldaten</dt><dd>${format(soldiers)}</dd></div>
+        <div><dt>Befestigung</dt><dd>+${(breakdown.fortification * 100).toFixed(1)} %</dd></div>
+        <div><dt>Abzug Versorgung</dt><dd>−${(breakdown.supplyPenalty * 100).toFixed(1)} %</dd></div>
+        <div><dt>Abzug Schäden</dt><dd>−${(breakdown.wearPenalty * 100).toFixed(1)} %</dd></div>
+        <div><dt>Wirksame Verteidigung</dt><dd>${format(breakdown.total)}</dd></div>
+      </dl>
+      ${breakdown.sites.length ? `<ul class="project-list">${breakdown.sites.map(site =>
+        `<li><strong>${escape(site.label)} × ${site.count}</strong> · +${(site.contribution * 100).toFixed(1)} %
+         <span class="muted">${escape(site.role)}</span></li>`).join('')}</ul>`
+        : '<p class="muted">Keine Befestigungen vorhanden.</p>'}
+      <p class="muted">Unterhalt: ${format(parts.military)} Gold und ${format(
+        Math.round(kingdom.militaryFoodConsumption() / 12))} Nahrung pro Monat für das Heer.</p>
+      ${breakdown.notes.length ? `<p class="muted">${breakdown.notes.map(escape).join(' · ')}</p>` : ''}
+    </section>`;
+  }
+
+  /**
    * Laufende Vorhaben mit stabiler Außenhöhe.
    *
    * Das Feld wächst nicht mit der Eintragszahl, damit darunterliegende Bereiche
@@ -3135,7 +3165,7 @@ ${body}
             percent(report.victoryChance)} · Verluste ${format(report.attackerLosses)} / ${
             format(report.defenderLosses)}${report.plunder ? ` · Beute ${format(report.plunder)} Gold` : ''}</small></div></li>`;
     }).join('');
-    return this.renderOngoingProjects()+`<p class="muted"><strong>${escape(doctrine.label)}</strong> · ${escape(doctrine.context)}</p><div class="summary-grid war-summary">
+    return this.renderOngoingProjects()+this.renderDefenseBreakdown()+`<p class="muted"><strong>${escape(doctrine.label)}</strong> · ${escape(doctrine.context)}</p><div class="summary-grid war-summary">
         <article><span>Feldheer</span><strong>${format(army.soldiers)}</strong><small>Soldaten</small></article>
         <article><span>Angriff</span><strong>${format(army.attack)}</strong><small>inkl. ${
           percent(army.commanderBonus)} Feldherrenbonus</small></article>

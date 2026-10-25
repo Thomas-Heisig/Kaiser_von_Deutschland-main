@@ -51,6 +51,23 @@ export interface DefenseBreakdown {
   notes: string[];
 }
 
+/**
+ * Anteil der gedeckten Nahrungsversorgung (0–1).
+ *
+ * Einzige Definition für Anzeige und Kampfauflösung, damit beide dieselbe
+ * Eingabe verwenden. Abgeleitet aus Bestand plus laufender Erzeugung gegen den
+ * Monatsbedarf — nicht aus dem Vorrat allein.
+ *
+ * @param kingdom Reich.
+ * @returns Anteil der gedeckten Versorgung.
+ */
+export function supplyRatio(kingdom: Kingdom): number {
+  const balance = kingdom.getMonthlyBalance();
+  const need = balance.consumption.food;
+  if (need <= 0) return 1;
+  return Math.max(0, Math.min(1, (kingdom.resources.food + balance.production.food) / need));
+}
+
 /** Soldaten im Feld (alle Truppenteile). */
 export function garrisonSoldiers(kingdom: Kingdom): number {
   return kingdom.military.infantry + kingdom.military.archers + kingdom.military.cavalry;
@@ -119,9 +136,10 @@ export function defenseBreakdown(
     { kind: 'barracks', count: kingdom.infrastructure.barracks, label: 'Wachlager',
       role: 'Örtliche Sicherung, Bereitschaft und Aufklärung.',
       contribution: barracks }
-  ].filter(site => site.count > 0);
+  ] satisfies FortificationSite[];
+  const active = sites.filter(site => site.count > 0);
 
-  const fortification = sites.reduce((sum, site) => sum + site.contribution, 0);
+  const fortification = active.reduce((sum, site) => sum + site.contribution, 0);
   const supplyPenalty = Math.max(0, Math.min(0.5, (1 - Math.max(0, Math.min(1, supplyRatio))) * 0.5));
   const wearPenalty = Math.max(0, Math.min(0.4, Math.max(0, Math.min(1, damage)) * 0.4));
 
@@ -129,11 +147,11 @@ export function defenseBreakdown(
   else if (manning < 0.5) notes.push(`Garnison nur zu ${Math.round(manning * 100)} % besetzt (${soldiers} von ${capacity} Plätzen).`);
   if (supplyPenalty > 0) notes.push(`Versorgung unvollständig: Abzug ${Math.round(supplyPenalty * 100)} %.`);
   if (wearPenalty > 0) notes.push(`Anlagen beschädigt: Abzug ${Math.round(wearPenalty * 100)} %.`);
-  if (!sites.length) notes.push('Keine Befestigungen vorhanden.');
+  if (!active.length) notes.push('Keine Befestigungen vorhanden.');
 
   const multiplier = 1 + fortification;
   const total = Math.round(troopPower * multiplier * (1 - supplyPenalty) * (1 - wearPenalty));
-  return { troops: Math.round(troopPower), fortification, supplyPenalty, wearPenalty, total, sites, notes };
+  return { troops: Math.round(troopPower), fortification, supplyPenalty, wearPenalty, total, sites: active, notes };
 }
 
 /**
