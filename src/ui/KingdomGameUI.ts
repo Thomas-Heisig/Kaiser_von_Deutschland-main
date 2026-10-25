@@ -5,7 +5,7 @@ import { researchEffectDescriptions } from '../core/ScienceImpact';
 import { ADMIN_DOMAINS, ADMIN_LABELS, ADMIN_POLICIES, CHARACTER_PLANS, type CharacterPlan, type AdministrationDomain, type AdministrationPolicy } from '../core/Administration';
 import { CouncilAdvisor, readAdvisorConfig, saveAdvisorConfig, type AdvisorBackend } from '../core/CouncilAdvisor';
 import {
-  CampaignGoal, CharacterAction, GameEngine, GameState, MarketResource, MAX_TAX_RATE, SaveMeta
+  CampaignGoal, CharacterAction, GameEngine, GameState, MarketResource, MAX_TAX_RATE, MAX_REALM_PROJECTS, SaveMeta
 } from '../core/GameEngine';
 import {
   BattleReport, CampaignWarfareSystem, MIN_CAMPAIGN_SOLDIERS, RivalRealm
@@ -1925,9 +1925,18 @@ ${body}
       ${domains.length>1?'<div class="quick-actions"><button data-administration-preset="watch">Zuschauen · alles delegieren</button><button data-administration-preset="manual">Alles selbst entscheiden</button></div><p class="muted">Zuschauen aktiviert auch automatische Ereignisentscheidungen. Mit „Fortsetzen“ läuft die Zeit; einzelne Bereiche kannst du jederzeit wieder übernehmen.</p>':''}</section>`;
   }
 
+  /**
+   * Laufende Vorhaben mit stabiler Außenhöhe.
+   *
+   * Das Feld wächst nicht mit der Eintragszahl, damit darunterliegende Bereiche
+   * beim Hinzufügen oder Abschluss nicht springen. Bei vielen Einträgen wird
+   * innerhalb gescrollt; der leere Zustand behält dieselbe Höhe.
+   */
   private renderOngoingProjects():string {
     const jobs=this.requireEngine().getProjects(this.requirePlayer().id);
-    return `<section class="build-card" data-project-queue><h3>Laufende Vorhaben (${jobs.length}/12)</h3>${jobs.length?'<ul>'+jobs.map(j=>`<li><strong>${escape(j.name)}</strong> · noch ${j.remaining} von ${j.months} Monaten<progress value="${j.months-j.remaining}" max="${j.months}"></progress></li>`).join('')+'</ul>':'<p>Keine Vorhaben im Bau, in Ausbildung oder im Aufmarsch.</p>'}</section>`;
+    const items=jobs.length?'<ul class="project-list">'+jobs.map(j=>`<li><strong>${escape(j.name)}</strong> · noch ${j.remaining} von ${j.months} Monaten<progress value="${j.months-j.remaining}" max="${j.months}"></progress></li>`).join('')+'</ul>'
+      :'<p class="project-empty">Keine Vorhaben im Bau, in Ausbildung oder im Aufmarsch.</p>';
+    return `<section class="build-card project-queue" data-project-queue><h3>Laufende Vorhaben (${jobs.length}/${MAX_REALM_PROJECTS})</h3>${items}</section>`;
   }
   private renderTimeJourney():string {
     return `<section class="build-card"><h3>Durch die Zeit reisen</h3><p>Jeder Monat wird vollständig berechnet. Versorgung, Alterung, Bau und Gegner laufen weiter. Hält bei Ratsentscheidungen und Kampagnenende an. Automatik kannst du in der Hofverwaltung einstellen.</p><div class="time-journey-actions">${[[12,'1 Jahr'],[120,'1 Jahrzehnt'],[1200,'1 Jahrhundert']].map(([n,label])=>`<button data-time-travel="${n}" ${this.requireEngine().isHotseat()?'disabled':''}>${label} →</button>`).join('')}<button data-time-stop>Reise anhalten</button></div><p id="time-travel-progress" role="status"></p></section>`;
