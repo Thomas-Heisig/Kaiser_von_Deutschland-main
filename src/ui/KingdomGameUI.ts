@@ -1248,8 +1248,9 @@ ${body}
         // have none and keep the default framing.
         const restoredCamera = this.engine?.getMapCamera() ?? undefined;
         this.map.setCameraState(restoredCamera);
-        this.root.setAttribute('data-debug-camera', JSON.stringify(restoredCamera ?? null));
         this.cameraRestored = true;
+        // Every later camera move is mirrored into the engine for saving.
+        this.map.setCameraListener(state => this.syncMapCamera(state));
         this.updateMapStage();
         this.refresh();
       } catch (error) {
@@ -2919,6 +2920,17 @@ ${body}
     // Only write back after the saved camera was applied, so a refresh that runs
     // before the map exists cannot overwrite it with the default.
     if (this.cameraRestored && this.engine) this.engine.setMapCamera(this.map.getCameraState());
+  }
+
+  /** Meldet jede Kamerabewegung an die Engine, damit ein Speichern sie erfasst. */
+  private syncMapCamera(state: { zoom: number; x: number; y: number }): void {
+    if (!this.cameraRestored || !this.engine) return;
+    this.engine.setMapCamera(state);
+    const label = this.root.querySelector<HTMLElement>('#map-stage');
+    if (label && this.map) {
+      const bar = this.map.getScaleBar();
+      label.textContent = `${this.map.getStage()} · Maßstab ${bar.label}`;
+    }
   }
 
   private async action(action: string): Promise<void> {

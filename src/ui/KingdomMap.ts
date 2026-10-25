@@ -93,6 +93,7 @@ export class KingdomMap {
   private localLoading = false;
   private localLoadFailed = false;
   private onLandmark?: () => void;
+  private onCameraChange?: (state: CameraState) => void;
   private readonly reliefLayer = new Container();
   /** Bildschirmfeste Overlays: Maßstabsbalken und Stufenbezeichnung. */
   private readonly scaleLayer = new Container();
@@ -750,8 +751,10 @@ export class KingdomMap {
     const previous = this.zoom;
     const next = clampZoom(previous * factor);
     if (next === previous) return;
-    const ax = anchorX ?? this.app.screen.width / 2;
-    const ay = anchorY ?? this.app.screen.height / 2;
+    const width = this.app.screen?.width ?? 0;
+    const height = this.app.screen?.height ?? 0;
+    const ax = anchorX ?? width / 2;
+    const ay = anchorY ?? height / 2;
     // Keep the anchored world point fixed while the scale changes.
     const ratio = next / previous;
     this.offset.x = ax - (ax - this.offset.x) * ratio;
@@ -1175,9 +1178,8 @@ export class KingdomMap {
   public setMapScope(scope: 'home' | 'world'): void {
     this.mapScope = scope;
     this.app.canvas.dataset.mapScope = scope;
-    this.zoom = 1;
+    // A continuous camera keeps its zoom; switching scope is not a new view.
     this.offset = { x: 0, y: 0 };
-    // Die Zoom-Ebene wird über das bestehende Verhalten gelegt, nicht ersetzt.
     this.applyLevel('dorf');
     this.fit();
   }
@@ -1275,6 +1277,11 @@ export class KingdomMap {
     this.app.renderer.render(this.app.stage);
   }
 
+  /** Optionaler Rückruf nach jeder Kamerabewegung (Persistenz in der Engine). */
+  public setCameraListener(listener: ((state: CameraState) => void) | undefined): void {
+    this.onCameraChange = listener;
+  }
+
   /** Aktualisiert Maßstabsbalken und Datenattribute nach jeder Kamerabewegung. */
   private publishScale(screenScale: number): void {
     this.drawScaleBar();
@@ -1283,6 +1290,7 @@ export class KingdomMap {
     canvas.dataset.mapStage = stageForZoom(this.zoom);
     canvas.dataset.metresPerPixel = screenScale > 0
       ? (METRES_PER_BASE_PIXEL / screenScale).toFixed(3) : '0';
+    this.onCameraChange?.(this.getCameraState());
   }
 
   /**

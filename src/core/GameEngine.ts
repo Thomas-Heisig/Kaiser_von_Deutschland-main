@@ -1055,7 +1055,9 @@ export class GameEngine {
         const fresh=this.warfare.expandFrontier(player.id,this.currentYear);
         if(fresh.length) {
           this.initializeRivalDiplomacy(player.id);this.requireStrategyWorld(player.id);
-          this.projectMessage(player.id,'Jenseits der befriedeten Grenze treten drei stärkere Mächte auf: '+fresh.map(r=>r.name+' ('+r.soldiers+' Soldaten)').join(', ')+'. Bestehende Vasallen bleiben erhalten.');
+          const reason=CampaignWarfareSystem.frontierReason(fresh);
+          this.projectMessage(player.id,`${reason} Bestehende Vasallen und Verträge bleiben erhalten: `
+            +fresh.map(r=>`${r.name} (${r.soldiers} Soldaten)`).join(', ')+'.');
         }
       }
     }

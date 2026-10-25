@@ -430,19 +430,67 @@ export class CampaignWarfareSystem {
     return news;
   }
 
-  /** New fictional neighbours beyond a pacified frontier; defeated realms remain vassals. */
+  /**
+   * Markiert einen Nachbarn als unterworfen (Vasall).
+   * Wirkt auf den gespeicherten Zustand, nicht auf eine Kopie.
+   * @param playerId Spieler.
+   * @param rivalId Stabiler Nachbar-Schlüssel, nicht der Anzeigename.
+   * @returns true, wenn der Nachbar gefunden und markiert wurde.
+   */
+  public subjugateRival(playerId: string, rivalId: string): boolean {
+    const rival = this.rivals.find(entry => entry.playerId === playerId && entry.id === rivalId);
+    if (!rival) return false;
+    rival.subjugated = true;
+    return true;
+  }
+
+  /**
+   * Ergänzt neue Nachbarn jenseits einer befriedeten Grenze.
+   *
+   * Kriterien statt Zufall: Es wird nur ergänzt, wenn **alle** bisherigen
+   * Nachbarn unterworfen sind und für die aktuelle Generation noch keine
+   * Akteure existieren. Dadurch entstehen beim wiederholten Laden oder bei
+   * mehreren Monatswechseln keine Duplikate, und Eroberungen sowie Verträge
+   * bleiben erhalten. Alle Akteure werden über stabile IDs verwaltet.
+   *
+   * @param playerId Spieler.
+   * @param year Aktuelles Jahr; bestimmt Benennung und Einordnung.
+   * @returns Neu hinzugefügte Nachbarn (leer, wenn kein Anlass besteht).
+   */
   public expandFrontier(playerId:string,year:number):RivalRealm[] {
     const previous=this.rivals.filter(r=>r.playerId===playerId);
     if(!previous.length||previous.some(r=>!r.subjugated))return [];
     const generation=Math.max(...previous.map(r=>r.generation??0))+1;
+    // Idempotence: this generation already exists, so nothing is added again.
+    if(this.rivals.some(r=>r.playerId===playerId&&r.generation===generation))return [];
     const base=Math.min(100000,Math.ceil(Math.max(...previous.map(r=>r.baseSoldiers??r.soldiers),1100)*1.25));
-    const label=year<500?'Bund':year<1800?'Grenzherrschaft':'Regionalmacht';
-    const fresh=[0,1,2].map(i=>({id:`frontier-${generation}-${i}`,name:`${label} ${generation} · ${['West','Nord','Ost'][i]}`,
-      description:'Neue, fiktive Macht jenseits der befriedeten Grenze. Keine historische Staatsgrenze.',playerId,
+    // Period-appropriate collective names; no modern state projected backwards.
+    const label=year<500?'Bund':year<900?'Stammesbund':year<1500?'Grenzherrschaft'
+      :year<1800?'Territorium':'Regionalmacht';
+    const directions=['West','Nord','Ost'] as const;
+    const fresh: RivalRealm[] = directions.map((direction, i) => ({
+      id:`frontier-${playerId}-${generation}-${i}`,
+      name:`${label} ${generation} · ${direction}`,
+      description:'Neue, fiktive Macht jenseits der befriedeten Grenze. Spielmodell, keine historische Staatsgrenze.',
+      playerId,
       soldiers:Math.ceil(base*(1+i*.25)),baseSoldiers:Math.ceil(base*(1+i*.25)),generation,
-      fortification:Math.min(1.8,1.15+generation*.05+i*.1),loot:Math.min(50000,5000+generation*1500+i*2000),
+      fortification:Math.min(1.8,1.15+generation*.05+i*.1),
+      loot:Math.min(50000,5000+generation*1500+i*2000),
       settlers:500+generation*100,subjugated:false}));
-    this.rivals.push(...fresh);return fresh.map(r=>({...r}));
+    this.rivals.push(...fresh);
+    return fresh.map(r=>({...r}));
+  }
+
+  /**
+   * Begründung für neu hinzugekommene Nachbarn (für die Chronik).
+   * @param fresh Neu erzeugte Nachbarn aus {@link expandFrontier}.
+   * @returns Ein Satz mit nachvollziehbarer Ursache, oder `null`.
+   */
+  public static frontierReason(fresh: readonly RivalRealm[]): string | null {
+    if (!fresh.length) return null;
+    return `Nach der Befriedung der bisherigen Grenze treten weiter entfernte Mächte auf: `
+      + fresh.map(r => r.name).join(', ')
+      + '. Sie sind ein Spielmodell und keine belegte historische Grenzziehung.';
   }
 
   /**
