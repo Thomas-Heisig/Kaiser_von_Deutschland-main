@@ -29,7 +29,7 @@ import { groupFeaturesByStatus } from './FeatureStatus';
 import { allNameSets, EVIDENCE_LABELS } from '../core/NameCatalog';
 import { ADDITIONAL_START_YEARS, START_EPOCHS, epochForStartYear } from '../core/StartEpochs';
 import { AUTHENTICITY_NOTE, GENERIC_COVER } from './MusicJukebox';
-import { isZoomLevelsEnabled, regionsForMap, stepSlider } from './MapZoomLevels';
+import { isZoomLevelsEnabled, regionsForMap } from './MapZoomLevels';
 import { deskMarkup, eraPresentation } from './EraPresentation';
 
 type View = 'civic' | 'modernization' | 'history' | 'court' | 'world' | 'intelligence' | 'culture' | 'diplomacy' | 'council' | 'overview' | 'build' | 'economy' | 'research' | 'military' | 'war' | 'character' | 'chronicle' | 'help';
@@ -150,6 +150,8 @@ export class KingdomGameUI {
   private engine?: GameEngine;
   private player?: Player;
   private map?: KingdomMap;
+  /** Erst nach dem Anwenden des gespeicherten Kamerazustands darf zurückgeschrieben werden. */
+  private cameraRestored = false;
   private view: View = 'overview';
   private focusedRivalId?: string;
   private selected: keyof KingdomInfrastructure = 'farms';
@@ -728,6 +730,8 @@ ${body}
     window.clearTimeout(this.actionBannerTimer);
     this.map?.dispose();
     this.map = undefined;
+    // A new engine means the saved camera still has to be applied to the new map.
+    this.cameraRestored = false;
     this.cancelCouncilSelectionTimer();
     this.councilDialog?.close();
     this.councilDialog?.remove();
@@ -799,45 +803,20 @@ ${body}
             <section class="map-card" aria-label="Interaktive Siedlungsübersicht mit angrenzenden Reichen">
               <div id="kingdom-map" class="map-host" role="group" aria-label="Zentrierte Siedlungskarte – Gebäude auf der Karte auswählen"></div>
               ${deskMarkup()}
-              <div class="atlas-navigation" aria-label="Kartenebene wählen">
-                <button type="button" data-map-level="schreibtisch">01 · Schreibtisch</button>
-                <button type="button" data-map-level="zentraleuropa">02 · Landkarte</button>
-                <button type="button" data-map-level="dorf">03 · Siedlung</button>
-                <button type="button" id="local-map-info" aria-label="Ganderkesee: Ortsgeschichte und Kartenquellen">ⓘ</button>
+              <div class="map-controls" role="group" aria-label="Kartensteuerung">
+                <button type="button" data-map-control="center" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">⌖</button>
+                <button type="button" data-map-control="north" aria-label="Karte nach Norden ausrichten" title="Nach Norden ausrichten">↑</button>
+                <button type="button" data-map-control="in" aria-label="Karte vergrößern" title="Vergrößern">+</button>
+                <button type="button" data-map-control="out" aria-label="Karte verkleinern" title="Verkleinern">−</button>
               </div>
               <div class="map-hud" aria-label="Kartenwerkzeuge">
                 <div class="map-hud-top">
                   <div class="map-heading"><span class="eyebrow" data-presentation-realm>DEIN LEHEN</span><h2>Ganderkesee</h2>
                     <span id="settlement-season"></span></div>
-                  <div class="settlement-controls" aria-label="Kartendarstellung und Bezirksfilter">
-                    <label>Weltkarte <select id="map-scope" aria-label="Heimat oder Weltkarte wählen">
-                      <option value="home">Ganderkesee · Heimat</option>
-                      <option value="world">Welt · Nachbarreiche</option>
-                    </select></label>
-                    <label>Kartenansicht <select id="map-style" aria-label="Kartenansicht wählen">
-                      <option value="flat">2D · Draufsicht</option>
-                      <option value="isometric">3D-Look · isometrisch</option>
-                    </select></label>
-                    <label>Bezirke <select id="settlement-filter" aria-label="Bezirke filtern">
-                      <option value="alle">Alle 16 Bezirke</option>
-                      <option value="versorgung">Versorgung</option><option value="stadt">Stadt</option>
-                      <option value="bildung">Bildung</option><option value="wehr">Verteidigung</option>
-                    </select></label>
-                  </div>
                 </div>
                 <div class="map-hud-bottom">
                   <div id="settlement-details" class="settlement-details" role="status" aria-live="polite"></div>
-                  <div class="map-tools" role="group" aria-label="Karte bewegen, zoomen und zentrieren">
-                    <button type="button" data-zoom="-0.2" aria-label="Karte verkleinern">−</button>
-                    <button type="button" data-zoom="0" aria-label="Karte zentrieren">⌖ Zentrieren</button>
-                    <button type="button" data-zoom="0.2" aria-label="Karte vergrößern">+</button>
-                    <label class="zoom-slider" id="zoom-slider-wrap" hidden>
-                      <span class="zoom-slider-label" id="zoom-level-label">Ebene: Dorf</span>
-                      <input type="range" id="zoom-slider" min="0" max="100" step="2" value="100"
-                        aria-label="Kartenzoom: Schreibtisch, Landkarte und Siedlung" aria-describedby="zoom-hint">
-                      <span id="zoom-hint" class="zoom-hint" role="status" aria-live="polite"></span>
-                    </label>
-                  </div>
+                  <p id="map-stage" class="map-stage" role="status" aria-live="polite"></p>
                 </div>
               </div>
             </section>
@@ -945,10 +924,14 @@ ${body}
       navigation?.append(option);
     });
     navigation?.addEventListener('change', () => this.navigate(navigation.value as View));
-    this.root.querySelectorAll<HTMLButtonElement>('[data-map-level]').forEach(button => {
+    this.root.querySelectorAll<HTMLButtonElement>('[data-map-control]').forEach(button => {
       button.addEventListener('click', () => {
-        this.map?.setZoomSlider(button.dataset.mapLevel === 'schreibtisch' ? 0 : button.dataset.mapLevel === 'zentraleuropa' ? 28 : 40);
-        this.updateZoomHint();
+        const control = button.dataset.mapControl;
+        if (control === 'center') this.map?.centerOnHome();
+        else if (control === 'north') this.map?.faceNorth();
+        else if (control === 'in') this.map?.changeZoom(0.2);
+        else if (control === 'out') this.map?.changeZoom(-0.2);
+        this.updateMapStage();
       });
     });
     const musicPanel=this.root.querySelector('#game-music-settings');
@@ -1018,7 +1001,7 @@ ${body}
     const mapScopeSelect = this.root.querySelector<HTMLSelectElement>('#map-scope');
     mapScopeSelect?.addEventListener('change', () => {
       this.map?.setMapScope(mapScopeSelect.value === 'world' ? 'world' : 'home');
-      this.updateZoomHint();
+      this.updateMapStage();
     });
     const mapStyleSelect = this.root.querySelector<HTMLSelectElement>('#map-style');
     if (mapStyleSelect) {
@@ -1049,10 +1032,16 @@ ${body}
     this.root.querySelectorAll<HTMLButtonElement>('[data-action]').forEach((button: HTMLButtonElement): void => {
       button.addEventListener('click', (): void => { void this.run(() => this.action(button.dataset.action ?? '')); });
     });
-    this.root.querySelectorAll<HTMLButtonElement>('[data-zoom]').forEach((button: HTMLButtonElement): void => {
-      button.addEventListener('click', (): void => this.applyZoomStep(Number(button.dataset.zoom)));
+    this.root.querySelectorAll<HTMLButtonElement>('[data-map-control]').forEach((button: HTMLButtonElement): void => {
+      button.addEventListener('click', (): void => {
+        const control = button.dataset.mapControl;
+        if (control === 'center') this.map?.centerOnHome();
+        else if (control === 'north') this.map?.faceNorth();
+        else if (control === 'in') this.map?.changeZoom(0.2);
+        else if (control === 'out') this.map?.changeZoom(-0.2);
+        this.updateMapStage();
+      });
     });
-    this.bindZoomSlider();
     this.root.querySelector<HTMLSelectElement>('#speed')?.addEventListener('change', (event: Event): void => {
       const target = event.target;
       if (target instanceof HTMLSelectElement) engine.getTimeSystem().setSpeed(Number(target.value));
@@ -1255,7 +1244,13 @@ ${body}
         this.map.setMotion(this.motionEnabled);
         this.map.setLandmarkAction(() => { this.historyTopic='local'; this.navigate('history'); });
         this.map.setProjection(this.mapStyle);
-        if (isZoomLevelsEnabled()) this.map.setZoomSlider(0);
+        // Restore the saved camera so the view survives a reload; legacy saves
+        // have none and keep the default framing.
+        const restoredCamera = this.engine?.getMapCamera() ?? undefined;
+        this.map.setCameraState(restoredCamera);
+        this.root.setAttribute('data-debug-camera', JSON.stringify(restoredCamera ?? null));
+        this.cameraRestored = true;
+        this.updateMapStage();
         this.refresh();
       } catch (error) {
         console.error('Karte konnte nicht gestartet werden:', error);
@@ -1830,10 +1825,12 @@ ${body}
       button.setAttribute('aria-current', button.dataset.view === this.view ? 'page' : 'false');
     });
     const details = this.root.querySelector('#settlement-details');
+    // Building counts come from the real kingdom state, never from a copy.
+    // The "Bezirk ausbauen" action lives in the build view, not here.
     const district = SETTLEMENT_DISTRICTS.find(d => d.type === this.selected);
     if (details && district) details.innerHTML = `<strong>${escape(earlyBuildingName(district.type, this.engine.getCurrentYear(), district.name))}</strong> ·
-      ${format(kingdom.infrastructure[district.type])} Gebäude
-      <button data-open-district class="secondary">Bezirk ausbauen →</button>`;
+      ${format(kingdom.infrastructure[district.type])} gebaut
+      <button data-open="build" class="secondary">Bauvorhaben →</button>`;
     setText('settlement-season', SEASON_LABELS[kingdom.currentSeason] + ' · ' + this.engine.getCurrentEpoch());
     this.renderMapFallback();
     this.map?.setStrategyWorld(this.engine.getStrategyWorld(this.player.id), Object.fromEntries(
@@ -1850,7 +1847,7 @@ ${body}
         this.regionYear = year;
         this.map.setHistoricalRegions(regionsForMap(year));
       }
-      this.updateZoomHint();
+      this.updateMapStage();
     }
     const scene: Soundscape = this.view === 'war' ? 'battle' :
       this.view === 'culture' ? 'culture' :
@@ -2696,7 +2693,7 @@ ${body}
         const scope=this.root.querySelector<HTMLSelectElement>('#map-scope');
         if(scope)scope.value='world';
         this.map?.focusWorldRegion(button.dataset.worldFocus!);
-        this.updateZoomHint();
+        this.updateMapStage();
       };
     });
     panel.querySelectorAll<HTMLButtonElement>('[data-world-diplomacy]').forEach(button=>{
@@ -2906,72 +2903,22 @@ ${body}
    * Ohne aktives Feature-Flag bleibt der Slider ausgeblendet und die Karte
    * verhält sich wie bisher.
    */
-  private bindZoomSlider(): void {
-    const wrap = this.root.querySelector<HTMLElement>('#zoom-slider-wrap');
-    const slider = this.root.querySelector<HTMLInputElement>('#zoom-slider');
-    if (!wrap || !slider) return;
-    if (!isZoomLevelsEnabled()) {
-      wrap.hidden = true;
-      this.root.querySelector<HTMLElement>('.atlas-navigation')?.setAttribute('hidden', '');
-      return;
-    }
-    wrap.hidden = false;
-    slider.value = String(this.map?.getZoomSlider() ?? 100);
-    slider.addEventListener('input', (): void => {
-      this.applyZoomSlider(Number(slider.value));
-    });
-    this.updateZoomHint();
-  }
-
-  /** Wendet einen Slider-Wert auf die Karte an und aktualisiert Hinweis und Ebene. */
-  private applyZoomSlider(value: number): void {
-    if (!this.map) return;
-    this.map.setZoomSlider(value);
-    this.updateZoomHint();
-  }
-
   /**
-   * Behandelt die bestehenden „+"/„−"/„Zentrieren"-Buttons.
+   * Zeigt die aktuelle Detailstufe und den Maßstab an.
    *
-   * Bei aktivem Slider wird der Schritt über den Slider-Wert gerechnet, damit
-   * beide Bedienwege denselben Zustand teilen. `0` bleibt „zentrieren".
+   * Die Stufen sind dieselbe Ansicht in verschiedenen Zoomstufen, keine
+   * getrennten Karten; daher gibt es keine Modusauswahl mehr.
    */
-  private applyZoomStep(change: number): void {
+  private updateMapStage(): void {
     if (!this.map) return;
-    if (change === 0) {
-      this.map.changeZoom(0);
-      this.updateZoomHint();
-      return;
-    }
-    if (!isZoomLevelsEnabled()) {
-      this.map.changeZoom(change);
-      return;
-    }
-    const next = stepSlider(this.map.getZoomSlider(), change > 0 ? 1 : -1);
-    this.applyZoomSlider(next);
-    const slider = this.root.querySelector<HTMLInputElement>('#zoom-slider');
-    if (slider) slider.value = String(next);
-  }
-
-  /** Aktualisiert Ebenenbezeichnung und Legende unter dem Slider. */
-  private updateZoomHint(): void {
-    if (!this.map) return;
-    const slider = this.root.querySelector<HTMLInputElement>('#zoom-slider');
-    if (slider) slider.value = String(this.map.getZoomSlider());
-    const level = this.map.getZoomLevel();
-    this.root.querySelector('.map-card')?.setAttribute('data-level', level);
-    this.root.querySelectorAll<HTMLElement>('[data-map-level]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mapLevel === level)));
-    const label = this.root.querySelector<HTMLElement>('#zoom-level-label');
-    if (label) label.textContent = level === 'dorf' ? 'Aufbauplan · 16 Bezirke' : level === 'schreibtisch' ? 'Dein Schreibtisch' : 'Ganderkesee · Geest & Bäche';
-    const hint = this.root.querySelector<HTMLElement>('#zoom-hint');
-    if (!hint) return;
-    if (level !== 'zentraleuropa') {
-      hint.hidden = true;
-      hint.textContent = '';
-      return;
-    }
-    hint.hidden = false;
-    hint.textContent = this.map.getRegionLegend();
+    const stage = this.map.getStage();
+    const bar = this.map.getScaleBar();
+    const label = this.root.querySelector<HTMLElement>('#map-stage');
+    if (label) label.textContent = `${stage} · Maßstab ${bar.label}`;
+    this.root.querySelector('.map-card')?.setAttribute('data-stage', stage);
+    // Only write back after the saved camera was applied, so a refresh that runs
+    // before the map exists cannot overwrite it with the default.
+    if (this.cameraRestored && this.engine) this.engine.setMapCamera(this.map.getCameraState());
   }
 
   private async action(action: string): Promise<void> {

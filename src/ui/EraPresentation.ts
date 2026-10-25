@@ -13,10 +13,10 @@ export function deskMarkup() {
   return `<div class="desk-scene" aria-label="Virtueller Schreibtisch">
     <div class="desk-light" aria-hidden="true"></div>
     <div class="desk-caption"><span class="eyebrow" data-presentation-desk>Schreibstube</span><h2 data-presentation-motto>Land, Flüsse und Herrschaft</h2><p>Die Welt liegt vor dir.</p></div>
-    <button type="button" class="desk-map" data-map-level="zentraleuropa" aria-label="Landkarte entfalten"><span class="paper-heading">CENTRAL EUROPA <small data-presentation-year>1200</small></span><span class="paper-landscape"></span><span class="paper-footer"><span data-presentation-material>Karte auf Pergament</span><strong>Karte entfalten ↗</strong></span></button>
+    <button type="button" class="desk-map" data-map-control="out" aria-label="Karte entfalten: herauszoomen"><span class="paper-heading">CENTRAL EUROPA <small data-presentation-year>1200</small></span><span class="paper-landscape"></span><span class="paper-footer"><span data-presentation-material>Karte auf Pergament</span><strong>Karte entfalten ↗</strong></span></button>
     <div class="desk-compass" aria-hidden="true"><span>N</span>✥</div>
     <button type="button" class="desk-ledger" data-view="chronicle"><span data-presentation-tool>✒</span><strong data-presentation-object>Urkunden & Chroniken</strong><small>Chronik öffnen →</small></button>
     <div class="desk-seal" aria-hidden="true">K</div>
-    <div class="desk-instruction">SCHREIBTISCH <span>→</span> LANDKARTE <span>→</span> SIEDLUNG</div>
+    <div class="desk-instruction">SCHREIBTISCH <span>→</span> BEHAUSUNG <span>→</span> SIEDLUNG <span>→</span> REGION <span>→</span> EUROPA</div>
   </div>`;
 }

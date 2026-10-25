@@ -147,6 +147,22 @@ describe('Playable campaign integration', (): void => {
     const again=new GameEngine({enableWiki:false});engines.push(again);await again.loadGame('legacy-names-2');
     expect(again.getCitizenSystem().getCitizen(victim.id)!.firstName).toBe(once);
   });
+  it('keeps the map camera across a save and load',async()=>{
+    const engine=await campaign();
+    expect(engine.getMapCamera()).toBeNull();
+    engine.setMapCamera({zoom:0.0873,x:12,y:-30});
+    expect(engine.getMapCamera()).toEqual({zoom:0.0873,x:12,y:-30});
+    await engine.saveGame('camera');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);await restored.loadGame('camera');
+    expect(restored.getMapCamera()).toEqual({zoom:0.0873,x:12,y:-30});
+  });
+  it('ignores incomplete or legacy camera values',async()=>{
+    const engine=await campaign();
+    engine.setMapCamera(null);
+    expect(engine.getMapCamera()).toBeNull();
+    engine.setMapCamera({zoom:Number.NaN,x:0,y:0});
+    expect(engine.getMapCamera()).toBeNull();
+  });
   it('projects the tax effect with the same formulas the monthly tick applies',async()=>{
     const engine=await campaign(),p=engine.getPlayers()[0];
     // A higher rate must yield more gold and cost more happiness; the preview

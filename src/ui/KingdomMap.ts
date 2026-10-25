@@ -8,8 +8,6 @@ import { formatYear } from '../core/HistoricalCalendar';
 import { startLocation, LOCAL_MAP_NOTE } from '../core/StartLocations';
 import { drawLocalMap, validateLocalMap, type LocalMapData } from './LocalMap';
 import {
-  CAMERA_ZOOM_MAX,
-  CAMERA_ZOOM_MIN,
   isZoomLevelsEnabled,
   levelForSlider,
   MapRegionResult,
@@ -17,6 +15,22 @@ import {
   sliderToZoom,
   zoomToSlider
 } from './MapZoomLevels';
+import { METRES_PER_BASE_PIXEL, clampZoom, scaleBar, stageForZoom } from './MapScale';
+
+/**
+ * Feste Verankerung der eigenen Behausung in der Siedlung (Basispixel).
+ *
+ * Der Schreibtisch ist dieser Behausung räumlich zugeordnet: Beim Hineinzoomen
+ * bleibt die Kamera auf diesem Punkt, es wird keine getrennte Ansicht geöffnet.
+ */
+export const DWELLING_ANCHOR = { x: 500, y: 310 } as const;
+
+/** Kamerazustand, der gespeichert und wiederhergestellt wird. */
+export interface CameraState {
+  zoom: number;
+  x: number;
+  y: number;
+}
 
 /**
  * PixiJS settlement overview. Counts represent infrastructure, not geographic claims.
@@ -80,6 +94,8 @@ export class KingdomMap {
   private localLoadFailed = false;
   private onLandmark?: () => void;
   private readonly reliefLayer = new Container();
+  /** Bildschirmfeste Overlays: Maßstabsbalken und Stufenbezeichnung. */
+  private readonly scaleLayer = new Container();
 
   private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
     if (this.destroyed || document.hidden) return;
@@ -152,6 +168,8 @@ export class KingdomMap {
     this.reliefLayer.visible = false;
     this.world.addChild(this.reliefLayer);
     this.world.addChild(this.regionLayer);
+    // Screen-fixed: never transformed with the world, so labels stay readable.
+    this.app.stage.addChild(this.scaleLayer);
     for (let i = 0; i < 5; i++) {
       const marker = new Container();
       marker.addChild(new Graphics().circle(0, 0, 3).fill({ color: 0xf0d89f, alpha: 0.75 }));
@@ -178,7 +196,24 @@ export class KingdomMap {
       this.fit();
     });
     this.observer.observe(host);
+    // One shared pointer map: a single pointer pans, two pointers pinch-zoom.
+    // This keeps desk → Europe in one continuous camera instead of mode jumps.
+    const pointers = new Map<number, { x: number; y: number }>();
     let drag: { x: number; y: number; moved: boolean } | undefined;
+    let pinch: { distance: number } | undefined;
+    const pinchCentre = (): { x: number; y: number } => {
+      const points = [...pointers.values()];
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: points.reduce((sum, p) => sum + p.x, 0) / points.length - rect.left,
+        y: points.reduce((sum, p) => sum + p.y, 0) / points.length - rect.top
+      };
+    };
+    const pinchDistance = (): number => {
+      const points = [...pointers.values()];
+      if (points.length < 2) return 0;
+      return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+    };
     const canvas = this.app.canvas;
     canvas.addEventListener('keydown', (event: KeyboardEvent): void => {
       const directions: Record<string, [number, number]> = {ArrowLeft:[40,0],ArrowRight:[-40,0],ArrowUp:[0,40],ArrowDown:[0,-40]};
@@ -189,15 +224,38 @@ export class KingdomMap {
         this.fit();
       } else if (event.key === 'Home') {
         event.preventDefault();
-        this.offset = {x:0,y:0};
-        this.fit();
+        this.centerOnHome();
       }
     });
+    canvas.addEventListener('wheel', (event: WheelEvent): void => {
+      event.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      // Anchored at the cursor so the point under the pointer stays put.
+      const step = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+      this.zoomBy(step, event.clientX - rect.left, event.clientY - rect.top);
+    }, { passive: false });
     canvas.addEventListener('pointerdown', (event: PointerEvent): void => {
-      drag = { x: event.clientX, y: event.clientY, moved: false };
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       canvas.setPointerCapture(event.pointerId);
+      if (pointers.size === 1) {
+        drag = { x: event.clientX, y: event.clientY, moved: false };
+      } else if (pointers.size === 2) {
+        drag = undefined;
+        pinch = { distance: pinchDistance() };
+      }
     });
     canvas.addEventListener('pointermove', (event: PointerEvent): void => {
+      if (!pointers.has(event.pointerId)) return;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pointers.size >= 2 && pinch) {
+        const distance = pinchDistance();
+        if (pinch.distance > 0 && distance > 0) {
+          const centre = pinchCentre();
+          this.zoomBy(distance / pinch.distance, centre.x, centre.y);
+        }
+        pinch.distance = distance;
+        return;
+      }
       if (!drag) return;
       const dx = event.clientX - drag.x;
       const dy = event.clientY - drag.y;
@@ -210,6 +268,11 @@ export class KingdomMap {
         this.fit();
       }
     });
+    const endPointer = (event: PointerEvent): void => {
+      pointers.delete(event.pointerId);
+      if (pointers.size < 2) pinch = undefined;
+      if (pointers.size === 0) drag = undefined;
+    };
     canvas.addEventListener('pointerup', (event: PointerEvent): void => {
       if (drag && !drag.moved && this.zoomLevel === 'dorf' && this.mapScope === 'home') {
         const rect = canvas.getBoundingClientRect();
@@ -218,9 +281,9 @@ export class KingdomMap {
         const location = visibleDistricts(this.districtFilter).find((place: SettlementDistrict) => Math.hypot(place.x - x, place.y - y) < 47);
         if (location) onSelect(location.type);
       }
-      drag = undefined;
+      endPointer(event);
     });
-    canvas.addEventListener('pointercancel', (): void => { drag = undefined; });
+    canvas.addEventListener('pointercancel', (event: PointerEvent): void => { endPointer(event); });
     this.fit();
     this.app.ticker.stop();
     void this.loadRetroAssets();
@@ -650,6 +713,17 @@ export class KingdomMap {
     }
     this.app.canvas.dataset.renderedDistricts=String(this.visibleGlbDistricts);
     this.app.canvas.dataset.buildingFramesLoaded=String(this.renderedBuildings.count);
+    // Total from the same infrastructure state the districts use; no copy.
+    const totalBuildings = visibleDistricts(this.districtFilter)
+      .reduce((sum, place) => sum + (kingdom.infrastructure[place.type] ?? 0), 0);
+    this.app.canvas.dataset.settlementBuildings = String(totalBuildings);
+    const summary = new Text({
+      text: `${totalBuildings} Gebäude`,
+      style: { fontFamily: 'Georgia', fontSize: 22, fill: 0xf4e6c5,
+        stroke: { color: 0x2b2318, width: 3 } }
+    });
+    summary.position.set(38, 58);
+    this.settlements.addChild(summary);
     const eraText = epochStyle === 'modern' ? 'Moderne' : epochStyle === 'industrial'
       ? 'Industrialisierung' : epochStyle === 'renaissance' ? 'Neuzeit' : epochStyle === 'bronze' ? 'Bronzezeit' : epochStyle === 'ancient' ? 'Antike' : 'Mittelalter';
     const badge = new Text({text: eraText + ' · ' + formatYear(year), style: {fontFamily: 'Georgia',
@@ -660,21 +734,117 @@ export class KingdomMap {
   }
 
   /**
+   * Ändert den Zoom um einen Faktor, optional am Bildschirmpunkt verankert.
+   *
+   * Der Punkt unter dem Mauszeiger beziehungsweise zwischen den Fingern bleibt
+   * dabei liegen; ohne Angabe wird um die Bildschirmmitte gezoomt. Es gibt
+   * keinen Sprung zu einer anderen Ansicht.
+   *
+   * @param factor Multiplikator (>1 vergrößert, <1 verkleinert).
+   * @param anchorX Bildschirm-x des Verankerungspunkts.
+   * @param anchorY Bildschirm-y des Verankerungspunkts.
+   * @returns Nothing.
+   */
+  public zoomBy(factor: number, anchorX?: number, anchorY?: number): void {
+    if (this.destroyed || !Number.isFinite(factor) || factor <= 0) return;
+    const previous = this.zoom;
+    const next = clampZoom(previous * factor);
+    if (next === previous) return;
+    const ax = anchorX ?? this.app.screen.width / 2;
+    const ay = anchorY ?? this.app.screen.height / 2;
+    // Keep the anchored world point fixed while the scale changes.
+    const ratio = next / previous;
+    this.offset.x = ax - (ax - this.offset.x) * ratio;
+    this.offset.y = ay - (ay - this.offset.y) * ratio;
+    this.zoom = next;
+    this.syncLevelFromZoom();
+    this.fit();
+  }
+
+  /** Setzt den Zoom direkt (kontinuierlich, kein Moduswechsel). */
+  public setZoom(zoom: number): void {
+    if (this.destroyed) return;
+    this.zoom = clampZoom(zoom);
+    this.syncLevelFromZoom();
+    this.fit();
+  }
+
+  /** Aktueller Zoom. */
+  public getZoom(): number {
+    return this.zoom;
+  }
+
+  /** Bezeichnung der Detailstufe (dieselbe Ansicht, keine getrennte Karte). */
+  public getStage(): string {
+    return stageForZoom(this.zoom);
+  }
+
+  /** Maßstabsbalken für die aktuelle Ansicht. */
+  public getScaleBar(): { metres: number; label: string } {
+    return scaleBar(this.zoom);
+  }
+
+  /** Meter je Bildschirmpixel in der aktuellen Ansicht. */
+  public getMetresPerScreenPixel(): number {
+    const screenScale = this.effectiveScreenScale();
+    return screenScale > 0 ? METRES_PER_BASE_PIXEL / screenScale : 0;
+  }
+
+  /** Tatsächliche Bildschirmskalierung der Welt (Basispixel → Bildschirmpixel). */
+  private effectiveScreenScale(): number {
+    return this.world.scale.x || 0;
+  }
+
+  /** Kamerazustand zum Speichern. */
+  public getCameraState(): CameraState {
+    return { zoom: this.zoom, x: this.offset.x, y: this.offset.y };
+  }
+
+  /**
+   * Stellt einen gespeicherten Kamerazustand wieder her.
+   * Veraltete Moduswerte werden ignoriert, nicht wieder eingeführt.
+   */
+  public setCameraState(state: Partial<CameraState> | undefined | null): void {
+    if (this.destroyed || !state) return;
+    if (Number.isFinite(state.zoom)) this.zoom = clampZoom(state.zoom as number);
+    if (Number.isFinite(state.x)) this.offset.x = state.x as number;
+    if (Number.isFinite(state.y)) this.offset.y = state.y as number;
+    this.syncLevelFromZoom();
+    this.fit();
+  }
+
+  /**
+   * Zentriert die Ansicht auf den eigenen Standort.
+   * Verändert nur den Kartenausschnitt, nicht die Spielposition.
+   */
+  public centerOnHome(): void {
+    if (this.destroyed) return;
+    this.offset = { x: 0, y: 0 };
+    this.fit();
+  }
+
+  /** Setzt die Kartenrotation zurück (Ansicht nach Norden ausrichten). */
+  public faceNorth(): void {
+    if (this.destroyed) return;
+    this.world.rotation = 0;
+    this.fit();
+  }
+
+  /** Ist die Ansicht nach Norden ausgerichtet? */
+  public isNorthUp(): boolean {
+    return this.world.rotation === 0;
+  }
+
+  /**
    * Adjusts zoom or resets the map position.
-   *
-   * Der Bereich wurde für die Zoom-Ebenen auf {@link CAMERA_ZOOM_MIN} bis
-   * {@link CAMERA_ZOOM_MAX} erweitert; die Ebenenumschaltung selbst erfolgt
-   * über {@link setZoomSlider}.
-   *
    * @param change Zoom increment; zero resets the view.
    * @returns Nothing.
    */
   public changeZoom(change: number): void {
     if (!Number.isFinite(change) || this.destroyed) return;
-    this.zoom = change === 0 ? 1 : Math.max(CAMERA_ZOOM_MIN, Math.min(CAMERA_ZOOM_MAX, this.zoom + change));
-    if (change === 0) this.offset = { x: 0, y: 0 };
-    this.syncLevelFromZoom();
-    this.fit();
+    if (change === 0) { this.centerOnHome(); return; }
+    // Multiplicative stepping keeps the feel even across the whole range.
+    this.zoomBy(change > 0 ? 1.35 : 1 / 1.35);
   }
 
   /** Aktuelle Zoom-Ebene (nur Darstellung, keine Simulation). */
@@ -762,10 +932,11 @@ export class KingdomMap {
     if (this.destroyed) return;
     if (!isZoomLevelsEnabled()) level = 'dorf';
     const changed = this.zoomLevel !== level;
-    if (changed) this.offset = { x: 0, y: 0 };
+    // No pan reset on level change: the camera must stay continuous across
+    // detail stages, otherwise zooming would jump the view.
     this.zoomLevel = level;
     const village = level === 'dorf';
-    this.world.visible = level !== 'schreibtisch';
+    this.world.visible = true;
     this.settlements.visible = village && this.mapScope === 'home';
     this.settlementTerrain.visible=village&&this.mapScope==='home';
     // Legacy thumbnail scatter was retired in favor of the connected landscape.
@@ -782,8 +953,34 @@ export class KingdomMap {
       if (changed || this.regionLayer.children.length === 0) this.drawRegionLayer();
       void this.loadReliefTexture();
     }
+    this.applyDetailFade();
     this.app.canvas.dataset.zoomLevel = level;
     this.fit();
+  }
+
+  /**
+   * Blendet Inhalte abhängig vom Zoom ein oder aus.
+   *
+   * Die Übergänge sind gestaffelt statt an einer harten Schwelle, damit beim
+   * Zoomen nichts flackert. Gebäude verschwinden beim Herauszoomen, statt als
+   * übergroße Häuser über der Region zu liegen.
+   */
+  private applyDetailFade(): void {
+    if (this.destroyed) return;
+    const zoom = this.zoom;
+    // Buildings: visible up close, hidden when a house would span a region.
+    const buildingsVisible = zoom >= 0.35;
+    this.settlements.visible = buildingsVisible && this.mapScope === 'home';
+    this.settlementTerrain.visible = buildingsVisible && this.mapScope === 'home';
+    this.animation.visible = buildingsVisible && this.mapScope === 'home' && this.motionEnabled;
+    // Neighbours and relief appear once the settlement no longer fills the view.
+    const wide = zoom < 0.9;
+    this.neighbors.visible = wide;
+    this.worldMarker.visible = wide && this.mapScope === 'world';
+    this.regionLayer.visible = zoom < 0.16;
+    this.reliefLayer.visible = zoom < 0.16;
+    if (this.regionLayer.visible && this.regionLayer.children.length === 0) this.drawRegionLayer();
+    if (this.reliefLayer.visible) void this.loadReliefTexture();
   }
 
   /**
@@ -1000,6 +1197,37 @@ export class KingdomMap {
     this.app.canvas.focus();
   }
 
+  /**
+   * Zeichnet den Maßstabsbalken und die Stufenbezeichnung.
+   *
+   * Beides ist bewusst bildschirmgroß: Beschriftungen und Symbole skalieren
+   * nicht mit der Geometrie. Die Balkenlänge wird aus dem gemeinsamen Maßstab
+   * berechnet und passt daher zum jeweiligen Ausschnitt.
+   */
+  private drawScaleBar(): void {
+    if (this.destroyed) return;
+    for (const child of this.scaleLayer.removeChildren()) child.destroy({ children: true });
+    const bar = scaleBar(this.zoom);
+    const screenScale = this.effectiveScreenScale();
+    if (screenScale <= 0) return;
+    // Bar length in screen pixels follows the same metre basis as the geometry.
+    const widthPx = Math.max(24, (bar.metres / METRES_PER_BASE_PIXEL) * screenScale);
+    const x = 16, y = this.app.screen.height - 34;
+    const line = new Graphics()
+      .moveTo(x, y).lineTo(x + widthPx, y)
+      .moveTo(x, y - 5).lineTo(x, y + 5)
+      .moveTo(x + widthPx, y - 5).lineTo(x + widthPx, y + 5)
+      .stroke({ color: 0x2c2418, width: 2.5 });
+    this.scaleLayer.addChild(line);
+    const caption = new Text({
+      text: `${bar.label} · ${stageForZoom(this.zoom)}`,
+      style: { fontFamily: 'Segoe UI', fontSize: 13, fill: 0x2c2418,
+        stroke: { color: 0xf3ecd9, width: 3 } }
+    });
+    caption.position.set(x, y - 22);
+    this.scaleLayer.addChild(caption);
+  }
+
   private fit(): void {
     if (!this.initialized || this.destroyed) return;
     // On phones the old 1350px reference shrank the entire settlement to a blur.
@@ -1019,6 +1247,7 @@ export class KingdomMap {
         (this.app.screen.width - mapWidth * scale) / 2 + this.offset.x,
         (this.app.screen.height - mapHeight * scale) / 2 + 25 + this.offset.y
       );
+      this.publishScale(scale);
       this.app.renderer.render(this.app.stage);
       return;
     }
@@ -1030,6 +1259,7 @@ export class KingdomMap {
       this.world.scale.set(scale);
       this.world.position.set(this.app.screen.width/2-(minX+maxX)/2*scale+this.offset.x,
         this.app.screen.height/2+16-(minY+maxY)/2*scale+this.offset.y);
+      this.publishScale(scale);
       this.app.renderer.render(this.app.stage);
       return;
     }
@@ -1041,7 +1271,18 @@ export class KingdomMap {
       this.app.screen.width / 2 - 500 * scale + this.offset.x,
       (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2) - 310 * scale + this.offset.y
     );
+    this.publishScale(scale);
     this.app.renderer.render(this.app.stage);
+  }
+
+  /** Aktualisiert Maßstabsbalken und Datenattribute nach jeder Kamerabewegung. */
+  private publishScale(screenScale: number): void {
+    this.drawScaleBar();
+    const canvas = this.app.canvas;
+    canvas.dataset.mapZoom = this.zoom.toFixed(4);
+    canvas.dataset.mapStage = stageForZoom(this.zoom);
+    canvas.dataset.metresPerPixel = screenScale > 0
+      ? (METRES_PER_BASE_PIXEL / screenScale).toFixed(3) : '0';
   }
 
   /**

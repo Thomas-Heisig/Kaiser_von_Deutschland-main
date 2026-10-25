@@ -350,6 +350,27 @@ export class GameEngine {
   private processingMonth: boolean = false;
   private warfare: CampaignWarfareSystem = new CampaignWarfareSystem((): number => Math.random());
   private turnIndex: number = 0;
+
+  /**
+   * Kamerazustand der Kartenansicht (Zoom und Versatz).
+   * Reine Darstellung: wird gespeichert, damit die Ansicht nach dem Laden
+   * erhalten bleibt. Veraltete Moduswerte werden beim Laden verworfen.
+   */
+  private mapCamera: { zoom: number; x: number; y: number } | null = null;
+
+  /** Speichert den Kamerazustand der Karte. */
+  public setMapCamera(state: { zoom: number; x: number; y: number } | null): void {
+    if (!state || !Number.isFinite(state.zoom) || !Number.isFinite(state.x) || !Number.isFinite(state.y)) {
+      this.mapCamera = null;
+      return;
+    }
+    this.mapCamera = { zoom: state.zoom, x: state.x, y: state.y };
+  }
+
+  /** Liefert den gespeicherten Kamerazustand oder `null`. */
+  public getMapCamera(): { zoom: number; x: number; y: number } | null {
+    return this.mapCamera ? { ...this.mapCamera } : null;
+  }
   private technologySystems: Map<string, PlayerTechnologySystem> = new Map();
   private council: CouncilDecisionSystem = new CouncilDecisionSystem();
   private strategyWorlds = new Map<string, StrategyWorld>();
@@ -1623,6 +1644,7 @@ export class GameEngine {
       roleSwitchingSessions: this.getRoleSwitchingSnapshots(),
       timeSystem: this.timeSystem.createSnapshot(),
       dynamicGameView: this.dynamicGameView.createSnapshot(),
+      mapCamera: this.mapCamera,
       warfare: this.warfare.serialize(),
       council: this.council.serialize(),
       strategyWorlds: Object.fromEntries(Array.from(this.strategyWorlds,([id,world])=>[id,world.serialize()])),
@@ -1912,6 +1934,8 @@ export class GameEngine {
     if (saveData.dynamicGameView) {
       this.dynamicGameView.loadSnapshot(saveData.dynamicGameView);
     }
+    // Legacy saves carry no camera; a stale zoom level is deliberately not restored.
+    this.setMapCamera(saveData.mapCamera ?? null);
     this.realmProjects=restoredProjects;
     this.timeSystem.setDate(this.currentYear, this.currentMonth);
     this.timeSystem.pause();

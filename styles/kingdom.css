@@ -962,6 +962,53 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
   background:#29483a;
   color:#f6ebce;
 }
+/* Kompakte Kartensteuerung oben rechts. Kein separates Bedienfeld. */
+.kingdom-app .game-layout>.map-card .map-controls {
+  position:absolute;
+  top:12px;
+  right:12px;
+  z-index:6;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  pointer-events:auto;
+}
+.kingdom-app .game-layout>.map-card .map-controls button {
+  width:38px;
+  height:38px;
+  min-width:38px;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1rem;
+  line-height:1;
+  border-radius:9px;
+  border:1px solid #94ac80;
+  background:#162c25f2;
+  color:#fff6d7;
+  cursor:pointer;
+  box-shadow:0 4px 14px #06100b99;
+}
+.kingdom-app .game-layout>.map-card .map-controls button:hover { background:#24483a; }
+.kingdom-app .game-layout>.map-card .map-controls button:focus-visible {
+  outline:3px solid #f5d084;
+  outline-offset:2px;
+}
+.kingdom-app .game-layout>.map-card .map-stage {
+  margin:0;
+  font-size:.72rem;
+  letter-spacing:.05em;
+  color:#e8dfc0;
+  opacity:.85;
+}
+@media(max-width:760px){
+  .kingdom-app .game-layout>.map-card .map-controls { top:8px; right:8px; gap:5px; }
+  .kingdom-app .game-layout>.map-card .map-controls button {
+    width:44px; height:44px; min-width:44px; min-height:44px; font-size:1.1rem;
+  }
+}
+
 .kingdom-app .game-layout>.map-card .settlement-controls {
   border:0;
   border-radius:0;
