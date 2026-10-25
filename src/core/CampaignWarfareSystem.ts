@@ -17,6 +17,10 @@ export interface RivalRealm {
   soldiers: number;
   fortification: number;
   loot: number;
+  /** Nahrungsvorrat des Gegners für die monatliche Unterhaltsbuchung. */
+  food: number;
+  /** Monat (Jahr*12+Monat) der letzten Unterhaltsabrechnung; null = noch nie abgerechnet. */
+  lastUpkeepMonth: number | null;
   settlers: number;
   subjugated: boolean;
   /** Owning player for per-player rival state (each human player has own neighbours). */
@@ -41,8 +45,14 @@ export interface RivalUpkeep {
   name: string;
   soldiers: number;
   cost: { gold: number; food: number };
+  /** Tatsächlich gezahltes Gold. */
   paid: number;
+  /** Nicht gedeckter Goldbedarf. */
   shortfall: number;
+  /** Tatsächlich verfütterte Nahrung. */
+  paidFood: number;
+  /** Nicht gedeckter Nahrungsbedarf. */
+  foodShortfall: number;
   consequence: string;
 }
 
@@ -68,6 +78,12 @@ export interface BattleReport {
   summary: string;
   /** Players affected by this report. */
   playerIds: string[];
+  /**
+   * Strukturierte Beute nur für Überfälle (kind === 'raid'). Geraubtes ist beim
+   * Angreifer angekommen, Zerstörtes ist endgültig verloren. Die Summen
+   * erklären den Bestandswechsel: vorher − gestohlen − zerstört = nachher.
+   */
+  spoils?: { stolenGold: number; destroyedGold: number; stolenFood: number; destroyedFood: number };
 }
 
 /** Serializable state of the warfare system. */
@@ -90,17 +106,17 @@ const RIVAL_TEMPLATES: ReadonlyArray<Omit<RivalRealm, 'playerId' | 'subjugated'>
   {
     id: 'raubritter', name: 'Raubritter vom Schwarzwald',
     description: 'Eine Bande gepanzerter Reiter, die Handelswege und Dörfer plündert.',
-    soldiers: 110, fortification: 1, loot: 1500, settlers: 150
+    soldiers: 110, fortification: 1, loot: 1500, settlers: 150, food: 300, lastUpkeepMonth: null
   },
   {
     id: 'ostmark', name: 'Grafschaft Ostmark',
     description: 'Ein ehrgeiziger Graf mit befestigten Grenzburgen.',
-    soldiers: 420, fortification: 1.2, loot: 4500, settlers: 700
+    soldiers: 420, fortification: 1.2, loot: 4500, settlers: 700, food: 900, lastUpkeepMonth: null
   },
   {
     id: 'nordland', name: 'Herzogtum Nordland',
     description: 'Der mächtigste Nachbar. Seine Unterwerfung sichert dir die Vorherrschaft.',
-    soldiers: 1100, fortification: 1.4, loot: 10000, settlers: 1600
+    soldiers: 1100, fortification: 1.4, loot: 10000, settlers: 1600, food: 2400, lastUpkeepMonth: null
   }
 ];
 
@@ -353,7 +369,9 @@ export class CampaignWarfareSystem {
     this.lastCampaignMonth.set(attacker.id, monthIndex);
 
     const attackerPower = CampaignWarfareSystem.armyPower(attacker.kingdom, modifiers.attacker, date.year);
-    const defenderPower = CampaignWarfareSystem.defensePower(defender.kingdom, modifiers.defender, date.year);
+    // The defender's real state, not an idealised full-supply default.
+    const defenderPower = CampaignWarfareSystem.defenseBreakdown(
+      defender.kingdom, modifiers.defender, date.year, supplyRatio(defender.kingdom)).total;
     const chance = CampaignWarfareSystem.victoryChance(attackerPower, defenderPower);
     const won = this.random() < chance;
     const attackerSoldiers = CampaignWarfareSystem.fieldSoldiers(attacker.kingdom);
@@ -412,6 +430,9 @@ export class CampaignWarfareSystem {
       CampaignWarfareSystem.fieldSoldiers(kingdom));
     const raiderLosses = Math.round(raider.soldiers * (raiderWon ? 0.05 : 0.15));
     raider.soldiers = Math.max(0, raider.soldiers - raiderLosses);
+    const loss = raiderWon
+      ? CampaignWarfareSystem.raidSpoils(kingdom, raider, defense, raidPower)
+      : { stolenGold: 0, stolenFood: 0, destroyedGold: 0, destroyedFood: 0 };
     let plunder = 0;
     let summary: string;
     if (raiderWon) {
@@ -419,10 +440,11 @@ export class CampaignWarfareSystem {
       //  - carry capacity of the raiding party,
       //  - how much the local defence could still protect,
       //  - and the stock that is actually reachable.
-      const loss = CampaignWarfareSystem.raidSpoils(kingdom, raider, defense, raidPower);
       plunder = loss.stolenGold;
       kingdom.resources.gold -= loss.stolenGold + loss.destroyedGold;
       kingdom.resources.food -= loss.stolenFood + loss.destroyedFood;
+      // Stolen food arrives at the raider's stores; destroyed food is gone.
+      raider.food += loss.stolenFood;
       raider.loot += loss.stolenGold;
       kingdom.happiness = Math.max(0, kingdom.happiness - 5);
       summary = `${raider.name} überfällt dein Reich: ${loss.stolenGold} Gold und ${loss.stolenFood} Nahrung geraubt, `
@@ -436,7 +458,8 @@ export class CampaignWarfareSystem {
     return this.addReport({
       year: date.year, month: date.month, kind: 'raid', rivalId: raider.id, attacker: rivalIdentity(raider.id,date.year)?.name ?? raider.name, defender: kingdom.name,
       attackerPower: raidPower, defenderPower: defense, victoryChance: raiderChance, attackerWon: raiderWon,
-      attackerLosses: raiderLosses, defenderLosses, plunder, summary, playerIds: [playerId]
+      attackerLosses: raiderLosses, defenderLosses, plunder, summary, playerIds: [playerId],
+      spoils: { stolenGold: loss.stolenGold, destroyedGold: loss.destroyedGold, stolenFood: loss.stolenFood, destroyedFood: loss.destroyedFood }
     });
   }
 
@@ -512,19 +535,36 @@ export class CampaignWarfareSystem {
    *
    * Gegner zahlen denselben Grundregeln folgend wie der Spieler: Soldaten
    * kosten Gold und Nahrung. Die gegnerische Wirtschaft ist vereinfacht, aber
-   * beschränkt — Truppen sind nie kostenlos. Bei Zahlungsmangel sinkt die
-   * Schlagkraft abgestuft, statt sofort zu verschwinden. Bestände werden nicht
-   * monatlich zurückgesetzt; neue Gegner erhalten einmalige Anfangsbestände.
+   * beschränkt — Truppen sind nie kostenlos. Die Sätze sind gegnerspezifisch
+   * ({@link upkeepFor}) und nicht identisch mit den realen Folgekosten des
+   * Spielers; das ist eine dokumentierte Vereinfachung des Gegnermodells.
+   * Bei Zahlungsmangel sinkt die Schlagkraft abgestuft, statt sofort zu
+   * verschwinden. Bestände werden nicht monatlich zurückgesetzt; neue Gegner
+   * erhalten einmalige Anfangsbestände.
    *
+   * Jeder Gegner wird pro Spielmonat genau einmal abgerechnet: Bei angegebenem
+   * `monthIndex` wird der Abrechnungsmonat gespeichert und ein bereits im
+   * selben Monat abgerechneter Gegner übersprungen. So verhindert der Aufruf
+   * Doppelbuchungen im Hotseat (mehrere Spieler verarbeiten denselben Monat)
+   * und beim mehrfachen Laden eines Spielstands. Ohne `monthIndex` wird
+   * abgerechnet, ohne den Abrechnungsmonat zu prüfen oder zu setzen.
+   *
+   * @param monthIndex Aktuelle Zeit als Jahr*12+Monat; steuert die Abrechnung
+   *   exakt einmal je Monat.
    * @returns Bericht je Nachbar mit Kosten, Zahlung und erklärter Folge.
    */
-  public payUpkeep(): RivalUpkeep[] {
+  public payUpkeep(monthIndex?: number): RivalUpkeep[] {
     const report: RivalUpkeep[] = [];
     for (const rival of this.rivals) {
+      // Exactly one billing per game month, across all callers (hotseat, reloaded saves).
+      if (monthIndex !== undefined && rival.lastUpkeepMonth === monthIndex) continue;
       const cost = CampaignWarfareSystem.upkeepFor(rival.soldiers);
-      const paid = Math.min(rival.loot, cost.gold);
-      rival.loot -= paid;
-      const shortfall = cost.gold - paid;
+      const paidGold = Math.min(rival.loot, cost.gold);
+      rival.loot -= paidGold;
+      const paidFood = Math.min(rival.food, cost.food);
+      rival.food -= paidFood;
+      const shortfall = cost.gold - paidGold;
+      const foodShortfall = cost.food - paidFood;
       let consequence = 'keine';
       if (shortfall > 0) {
         // Graded, explained consequence: no sudden loss of the whole army.
@@ -533,9 +573,19 @@ export class CampaignWarfareSystem {
         rival.fortification = Math.max(0.7, rival.fortification - 0.01);
         consequence = `${loss} Soldaten entlassen (Sold ausgeblieben) · Befestigung sinkt`;
       }
+      if (foodShortfall > 0) {
+        // Separate, honest consequence for unfed troops: desertion, no pay issue.
+        const loss = Math.ceil(rival.soldiers * (foodShortfall / Math.max(1, cost.food)) * 0.1);
+        rival.soldiers = Math.max(0, rival.soldiers - loss);
+        consequence = consequence === 'keine'
+          ? `${loss} Soldaten desertieren (Verpflegung mangelhaft)`
+          : `${consequence} · ${loss} Soldaten desertieren (Verpflegung mangelhaft)`;
+      }
+      if (monthIndex !== undefined) rival.lastUpkeepMonth = monthIndex;
       report.push({
         rivalId: rival.id, playerId: rival.playerId, name: rival.name,
-        soldiers: rival.soldiers, cost, paid, shortfall, consequence
+        soldiers: rival.soldiers, cost, paid: paidGold, shortfall,
+        paidFood, foodShortfall, consequence
       });
     }
     return report;
@@ -618,6 +668,7 @@ export class CampaignWarfareSystem {
       soldiers:Math.ceil(base*(1+i*.25)),baseSoldiers:Math.ceil(base*(1+i*.25)),generation,
       fortification:Math.min(1.8,1.15+generation*.05+i*.1),
       loot:Math.min(50000,5000+generation*1500+i*2000),
+      food:Math.min(50000,1200+generation*400+i*300),lastUpkeepMonth:null,
       settlers:500+generation*100,subjugated:false}));
     this.rivals.push(...fresh);
     return fresh.map(r=>({...r}));
@@ -682,7 +733,14 @@ export class CampaignWarfareSystem {
         throw new Error('Beschädigte Kriegsdaten im Spielstand.');
       }
     }
-    this.rivals = snapshot.rivals.map((rival: RivalRealm): RivalRealm => ({ ...rival }));
+    this.rivals = snapshot.rivals.map((rival: RivalRealm): RivalRealm => ({
+      ...rival,
+      // Migration für alte Spielstände: fehlende Felder nachrüsten, ohne
+      // bestehende Zustände zu verfälschen. lastUpkeepMonth bleibt bei
+      // Nachbarn aus alten Saves zunächst unberechnet (null = noch nie).
+      food: Number.isFinite(rival.food) ? rival.food : 0,
+      lastUpkeepMonth: rival.lastUpkeepMonth ?? null
+    }));
     this.reports = snapshot.reports.map((report: BattleReport): BattleReport => ({ ...report }));
     this.lastCampaignMonth = new Map(Object.entries(snapshot.lastCampaignMonth ?? {}));
     this.reportCounter = Number.isSafeInteger(snapshot.reportCounter) ? snapshot.reportCounter : this.reports.length;

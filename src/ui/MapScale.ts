@@ -50,6 +50,8 @@ export const ZOOM_MAX = 6;
 export const ZOOM_DWELLING = 4;
 /** Zoomstufe, bei der die Siedlung als Ganzes sichtbar ist. */
 export const ZOOM_SETTLEMENT = 1;
+/** Zoomstufe, bei der die nähere Umgebung der Siedlung sichtbar wird. */
+export const ZOOM_SURROUNDINGS = 0.55;
 /** Zoomstufe, bei der die Region sichtbar wird. */
 export const ZOOM_REGION = 0.25;
 /** Zoomstufe, bei der Europa sichtbar wird. */
@@ -128,6 +130,7 @@ export function stageForZoom(zoom: number): string {
   if (zoom >= ZOOM_DWELLING) return 'Schreibtisch';
   if (zoom >= 2) return 'Behausung';
   if (zoom >= ZOOM_SETTLEMENT) return 'Siedlung';
+  if (zoom >= ZOOM_SURROUNDINGS) return 'Umgebung';
   if (zoom >= ZOOM_REGION) return 'Region';
   if (zoom >= ZOOM_EUROPE) return 'Herrschaftsraum';
   return 'Europa';

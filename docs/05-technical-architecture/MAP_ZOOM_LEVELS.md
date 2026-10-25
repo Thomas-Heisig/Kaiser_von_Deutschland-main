@@ -1,154 +1,125 @@
-# Karten-Zoom-Ebenen — Architektur
+# Karten-Zoom: Ein durchgehender Zoomweg mit korrekten Größen
 
-**Stand:** 24.10.2026 · **Status:** Schreibtisch, Relief/Flüsse und Siedlung im Hauptspiel
+**Stand:** 29.01.2026 · **Status:** Kontinuierlicher Zoom Schreibtisch → Europa implementiert · Ich-Perspektive als separate, optionale
+Nahansicht geplant (siehe [RENDERER.md](RENDERER.md))
 
-Ein umschaltbares Zoom-System mit drei Ebenen und gleichwertigen Bedienelementen.
+Ein **durchgehender Zoomweg** statt unabhängiger Ansichten: Alle Stufen — Schreibtisch, Behausung, Siedlung, Umgebung, Region,
+Herrschaftsraum und Europa — sind **dieselbe Ansicht in verschiedenen Zoomstufen**, nicht getrennte Karten. Damit Gebäude,
+Abstände und Beschriftungen zusammenpassen, rechnet alles über dieselbe Kette:
+
+```
+Weltmeter  →  Basispixel (Siedlungsmaßstab)  →  Bildschirmpixel (Kamera-Zoom)
+```
+
 Die Simulation bleibt unberührt: Die Karte **liest** nur.
 
 ---
 
-## 1. Ebenen
+## 1. Maßstabskette
 
-| Ebene | Inhalt | Quelle | Status |
-| --- | --- | --- | --- |
-| **L0 „Schreibtisch"** | Epochenabhängiger virtueller Schreibtisch, Einstieg bei Zoom 0 | `KingdomGameUI` | Implementiert |
-| **L1 „Dorf"** | Die 16 bestehenden Bezirke | `SettlementSceneModel.ts` (unverändert) | Vollständig |
-| **L3 „Zentraleuropa"** | Relief, sichtbare Flüsse, belegte Regionsnamen und Legende | Natural Earth, `REGIONS` + `HistoricalContext` | Implementiert; keine historischen Grenzpolygone |
+| Größe | Wert | Quelle |
+| --- | --- | --- |
+| Siedlungsbasis | 960 × 672 px | `MapScale.BASE_WIDTH` / `BASE_HEIGHT` |
+| Entsprechung | 20 × 14 km (EPSG:25832, UTM 32N) | Kartendaten Ganderkesee |
+| Meter je Basispixel | 20.000 / 960 ≈ 20,83 m | `METRES_PER_BASE_PIXEL` — **einzige** Geometrieumrechnung |
+| Kamerazoom | 0,02 – 6 (kontinuierlich) | `MapScale.ZOOM_MIN` / `ZOOM_MAX`, `clampZoom` |
 
-**Noch offen:** separate Nahregion und reale Geräteabnahme. Die zusätzliche Nachbaransicht mit Reisen und Regionsfokus wird in [Strategiewelt](STRATEGY_WORLD.md) beschrieben.
+`zoom = 1` zeigt die Siedlung in natürlicher Größe; kleinere Werte zoomen nach Europa heraus, größere zum Schreibtisch hinein.
+`pixelsPerMetre(zoom)`, `metresToBase()` und `baseToMetres()` sind die einzige Umrechnung zwischen Weltmetern und Basispixeln.
 
 ---
 
-## 2. Zoom-Steuerung
+## 2. Die sieben Detailstufen
 
-Drei gleichwertige Bedienwege, ein gemeinsamer Zustand:
+| Stufe | ab Zoom | Sichtbar |
+| --- | --- | --- |
+| Schreibtisch | ≥ 4 | Epochenabhängiger virtueller Schreibtisch (Einstieg bei Zoom 0) |
+| Behausung | ≥ 2 | Eigene Behausung als Ganzes; Symbolgrößen, keine Grundrisse |
+| Siedlung | ≥ 1 | Die 16 Bezirke (`SettlementSceneModel`) |
+| Umgebung | ≥ 0,55 | Nachbarorte, Verbundlandschaft |
+| Region | ≥ 0,25 | Relief, Flüsse, belegte Regionsnamen |
+| Herrschaftsraum | ≥ 0,03 | Regionspunkte, keine Grenzpolygone |
+| Europa | < 0,03 | Ganze Karte |
+
+Namensgebung zentral in `MapScale.stageForZoom(zoom)`. Es gibt **keine Hysterese** wie im früheren 3-Ebenen-Slider-System:
+die Stufen sind reine Beschriftung über einem kontinuierlichen Zoom, ein Flackern ist ausgeschlossen, weil nichts umgeschaltet
+wird. Alle Zoomstufen teilen sich einen Kamerazustand `{ zoom, x, y }` (`KingdomMap.CameraState`) — es gibt keinen
+stufenabhängigen Offset.
+
+---
+
+## 3. Bedienung
 
 | Element | Verhalten |
 | --- | --- |
-| `<input type="range" id="zoom-slider">` | 0–100, primäre Steuerung, tastaturbedienbar |
-| Buttons `data-zoom="0.2"` / `"-0.2"` | Schritt von **6** Slider-Einheiten |
-| Button `data-zoom="0"` | Zentriert (Offset zurück, Zoom 1) |
+| Buttons `data-map-control` (`center`, `north`, `in`, `out`) | Zentrieren, Ausrichten, Plus, Minus — oben rechts über der Karte |
+| Scrollrad über der Canvas | Zoom zum Zeiger |
+| Ziehen mit Maus/Zeiger | Verschiebt die Karte |
+| `<input type="range" id="zoom-slider">` | **Legacy:** Kein Markup mehr erzeugt diesen Slider. `levelForSlider`/`zoomToSlider` bleiben als reine Utility-Funktionen für Tests bestehen. |
 
-Zusätzlich weiterhin: **Ziehen** mit der Maus/Zeiger verschiebt die Karte.
-
-### Slider → Kamera (logarithmisch)
-
-```
-zoom = 0.4 * (4.0 / 0.4)^(slider / 100)
-```
-
-Gleichmäßiges Zoom-Gefühl: jeder Slider-Schritt wirkt gleich stark. Die
-Umkehrfunktion `zoomToSlider` hält Slider und Kamera synchron, wenn über die
-Buttons oder `changeZoom` gezoomt wird. Der Kamera-Bereich wurde von
-**0.8–2.2** auf **0.4–4.0** erweitert.
+Der frühere logarithmische Slider (`0.4 * (4.0/0.4)^(slider/100)`) ist **kein** Bedienelement mehr; sein Bereich (0,4–4,0)
+deckte den heutigen Bereich (0,02–6) nicht ab. `KingdomMap.setZoomSlider` ist eine leere Kompatibilitätsmethode.
 
 ---
 
-## 3. Ebenenschwellen mit Hysterese
+## 4. Größenkorrektheit und bewusste Vereinfachungen
 
-| Wechsel | Schwelle |
-| --- | --- |
-| Dorf → Zentraleuropa | Slider **< 35** |
-| Zentraleuropa → Dorf | Slider **≥ 40** |
+**Ehrliche Grenzen (bewusst so, nicht als Mangel versteckt):**
 
-Die Lücke (35–39) verhindert Flackern, wenn der Slider auf einem Grenzwert
-steht. Beide Werte liegen in `LEVEL_THRESHOLDS` und sind getestet.
+| Vereinfachung | Konsequenz | Warum akzeptabel |
+| --- | --- | --- |
+| **Skalenkette mit einem Meter-Faktor** | X- und Y-Achse nutzen denselben Faktor (20,83 m/px). `METRES_PER_BASE_PIXEL_Y` existiert als Dokumentation, wird aber **nicht** separat gerechnet. | Abweichung < 0,1 %, messbar irrelevant. |
+| **Scale-Bar-Schrittauswahl** | `scaleBar()` wählt aus 1-2-5-Schritten (1 m … 1.000 km) die kleinste ≥ Zielgröße. Kein stufenabhängiges Raster. | Für einen Maßstab genug; exakte Teilung wäre Kosmetik. |
+| **Detail-Fade statt Stufenlogik** | Sichtbarkeit der Layer hängt **direkt** am Zoom: Gebäude ≥ 0,35, Nachbarn < 0,9, Region/Relief < 0,16. Kein Umschalten, kein Flackern. | Übergänge sind gestaffelt, nicht hart. |
+| **Symbolische Gebäude-Footprints** | Gebäude ≥ Zoom 0,35 als Sprites fester Symbolgröße — **keine** vermessenen Grundrisse. Symbole dürfen bildschirmgroß bleiben; Grundflächen nicht. | Der Siedlungsplan ist ein Spielmodell, keine Vermessung. |
+| **`stageForZoom`-Namenslücke** | Die Stufen sind reine Beschriftung. Es gibt keine Validierung, dass „Behausung" bei Zoom ≥ 2 wirklich ein Haus zeigt — die Symbolgröße ist willkürlich gewählt. | Beschriftung ist konsistent, Inhalt ist Spielmodell. |
+| **ResizeObserver-Refit** | `KingdomMap` registriert einen `ResizeObserver`, der bei Containergrößenänderung Canvas-Auflösung (bis `devicePixelRatio`, max. 2) und Kamera anpasst. Fokus/Zoom bleiben erhalten. | Verhindert Verzerrung; exaktes Wiedereinpassen ist nicht möglich, wenn das Fenster kleiner wird. |
+| **`longitudeStretch` ohne Anwendung** | Die Mercator-Streckung ist exportiert, aber für Europa **nicht** in die Zeichenroutine integriert. | Europa ist Schematik mit Maßstab, keine Kartografie. |
 
----
+**Was NICHT behauptet wird:**
 
-## 4. Keine erfundenen Grenzen — technisch erzwungen
-
-Die Regionsansicht zeichnet **ausschließlich**:
-
-- einen **Punkt** je Region (Bezugspunkt, keine Ausdehnung),
-- den **Namen** darüber,
-- eine **Legende** mit dem Hinweis „Regionen schematisch, Grenzverläufe nicht
-  belegt".
-
-Es gibt **keine** Polygone, keine Linien, keine Flächeneinfärbung. Tests
-prüfen, dass die gelieferten Daten keine Felder wie `polygon`, `path`,
-`boundary` oder `geometry` enthalten.
-
-### Positionsangaben
-
-Die Positionen sind **Prozent der Kartenfläche** (`xPercent`/`yPercent`),
-bewusst **keine** Geokoordinaten. Die Anordnung ordnet Kulturräume grob
-nach ihrer Lage zueinander (Norden oben), behauptet aber keine Kartografie.
-Regionen ohne hinterlegte Position werden **nicht geraten** und entfallen.
+- Regionenpositionen sind **Ortsreferenzen** (Prozent der Kartenfläche, `xPercent`/`yPercent`), **keine Geokoordinaten** und
+  **keine Gebietsgrenzen**. Die Regionsansicht zeichnet nur Punkte, Namen und eine Legende mit dem Hinweis „Regionen schematisch,
+  Grenzverläufe nicht belegt". Es gibt **keine** Polygone, Linien oder Flächeneinfärbung. Tests prüfen, dass die gelieferten
+  Daten keine Felder wie `polygon`, `path`, `boundary` oder `geometry` enthalten.
+- Moderne Geodaten (Natural Earth Relief) werden **nicht** als Beleg historischer Bebauung ausgegeben; sie sind Hintergrundtextur.
+- Fehlende Nahbereichsdetails sind **modellierte Spielwelt**, nicht belegte Historie. Kennzeichnung über `LOCAL_MAP_NOTE`
+  (`StartLocations.ts`).
 
 ---
 
-## 5. Umgang mit fehlender Quelle (`null`-Fälle)
+## 5. `null`-Fälle und fehlende Daten
 
 | Fall | Verhalten |
 | --- | --- |
-| Jahr mit `nicht_verifiziert`-Epoche (z. B. 700) | `labels: []`, `epochName: null`, Text: „Keine belegte Region für dieses Jahr – die Epoche ist nicht verifiziert." |
-| Region mit `evidence: 'nicht_verifiziert'` (z. B. `germanien`) | Wird **immer** ausgefiltert, erscheint nie auf der Karte |
-| Unbekannte Epochen-ID | `filterRegionsForEpoch` liefert `[]` — nichts wird behauptet |
-| Epoche ohne verortbare Region | Definierter Hinweistext statt Ausnahme |
-
-In allen Fällen bleibt die Karte bedienbar; es gibt keinen Fehlerzustand.
-
----
-
-## 6. Feature-Flag
-
-`VITE_MAP_ZOOM_LEVELS` — **standardmäßig aktiv**.
-
-| Wert | Wirkung |
-| --- | --- |
-| nicht gesetzt | Ebenen aktiv |
-| `false`, `0`, `off` | Slider ausgeblendet, `changeZoom` wie bisher (0.4–4.0) |
-
-Geprüft in `isZoomLevelsEnabled()`. Damit ist der Umbau ohne Codeänderung
-rückrollbar.
+| Heimatkarte nicht ladbar | `drawRegionLayer()` + `fit()` als Fallback; Warnung in der Konsole |
+| Region ohne hinterlegte Position | Wird **nicht geraten** und entfällt |
+| Epoche ohne verifizierte Region | Definierter Hinweistext statt Ausnahme; Karte bleibt bedienbar |
+| `nicht_verifiziert`-Regionen | Werden immer ausgefiltert, erscheinen nie auf der Karte |
+| Kartendaten fehlen in der Regionsansicht | Expliziter Hinweis „Kartendaten fehlen" statt erfundener Geografie |
 
 ---
 
-## 7. Dateien
+## 6. Dateien
 
 | Datei | Rolle |
 | --- | --- |
-| `src/ui/MapZoomLevels.ts` | **Reine Logik** — Slider-Mapping, Schwellen, Regionsabruf. Kein PixiJS, kein DOM → testbar |
-| `src/ui/MapZoomLevels.test.ts` | 22 Tests |
-| `src/ui/KingdomMap.ts` | Additiver `regionLayer`, `setZoomSlider`, `setHistoricalRegions`, `applyLevel` |
-| `src/ui/KingdomGameUI.ts` | Slider-Markup, `bindZoomSlider`, `applyZoomStep`, `updateZoomHint`, Jahresabruf in `refresh` |
-| `styles/kingdom.css` | `.zoom-slider`, `.zoom-hint` (responsiv) |
+| `src/ui/MapScale.ts` | **Reine Logik** — Skalenkette, Stufenbenennung, Klemmung, Maßstab, Distanzformatierung. Kein PixiJS, kein DOM → testbar |
+| `src/ui/MapScale.test.ts` | 36 Tests (Skalenkette, Stufen, Klemmung, Scale-Bar, Mercator-Faktor) |
+| `src/ui/KingdomMap.ts` | PixiJS-Renderer — Kamera, Layer-Sichtbarkeiten, Detail-Fade, ResizeObserver |
+| `src/ui/KingdomGameUI.ts` | Integration — Karten-Init, Kamera-Sync (`syncMapCamera`), Stufen-Label (`updateMapStage`), Steuerbuttons |
+| `styles/kingdom.css` | `.map-card` füllt den zentralen Bereich (`position:absolute; inset:0`), `.map-hud`, `.map-tools` |
 
-**Architekturentscheidung:** Die Schwellen- und Mapping-Logik liegt bewusst
-**außerhalb** von `KingdomMap`. Der PixiJS-Renderer ist in Unit-Tests nicht
-instanziierbar; die Logik wäre dort ungetestet geblieben.
-
----
-
-## 8. Tests
-
-| Bereich | Geprüft |
-| --- | --- |
-| Slider-Mapping | Enden, Monotonie, Klemmen, Roundtrip, `NaN` |
-| Buttons | Schrittweite, Grenzen, `NaN`-Erholung |
-| Schwellen | Wechsel beide Richtungen, Hysterese-Band, Ordnung |
-| Regionsabruf | gültiges Jahr, Platzhalter nie sichtbar, `null`-Fallback, Epochenfilter, keine Geometriefelder |
-| Filter | unverifizierte Regionen raus, epochenunabhängige rein, fremde Epoche raus, unbekannte Epoche → `[]` |
-
-Ergebnis: `npm run check` ✅ · `npx vitest run` ✅ **256 Tests** (7 übersprungen:
-bash-abhängige CI-Deploy-Tests unter Windows) · `npm run build` ✅
+**Architektur:** Die Skalen- und Stufenlogik liegt bewusst **außerhalb** von `KingdomMap`. Der PixiJS-Renderer ist in Unit-Tests
+nicht instanziierbar; die Logik wäre dort ungetestet geblieben.
 
 ---
 
-## 9. Offene Punkte / Schritt 4
+## 7. Tests und offene Punkte
 
-1. **Echte Relief-Textur.** Vorschlag: Natural Earth 1:50m Shaded Relief
-   (Public Domain) als PNG, zugeschnitten auf Zentraleuropa, als PixiJS-Textur
-   unter `regionLayer`. Braucht Lizenzprüfung, Zuschnitt und eigene
-   Performancetests auf Mobilgeräten.
-2. **Kameraführung in L3.** Aktuell gilt die bestehende `fit()`-Skalierung.
-   Für eine echte Karte wären eigenes Pan/Zoom-Fenster und Begrenzung sinnvoll.
-3. **L2 Nahregion** (`SettlementExpansion`-Adapter) — eigene Siedlungen.
-4. **L0 Tisch** — atmosphärischer Einstieg.
-5. **Geräteabnahme.** Slider und Ebenenwechsel sind bisher nur automatisiert
-   getestet (Chromium unter Windows), **nicht** auf iPad/iPhone.
-6. **Barrierefreiheit.** Slider ist tastaturbedienbar; ob der Ebenenwechsel
-   für Screenreader ausreichend angekündigt wird (`aria-live` im Hinweis),
-   ist **nicht** mit echten Screenreadern geprüft.
-7. **Regionspositionen** sind illustrativ und nicht geografisch validiert.
+**Automatisiert:** `npm run check` ✅ · `npx vitest run src/ui/MapScale.test.ts` ✅ 10 Tests · `npm run build` ✅
+
+1. **`longitudeStretch` ist exportiert, aber ungenutzt.** Entweder in die Europa-Zeichnung integrieren oder entfernen.
+2. **Geräteabnahme:** Zoomverhalten nur Chromium/Windows geprüft, nicht iPad/iPhone.
+3. **Barrierefreiheit:** Steuerbuttons sind tastaturbedienbar; Stufenwechsel werden nicht per `aria-live` angekündigt.
+4. **Ich-Perspektive:** Separate Nahansicht am DWELLING_ANCHOR — Umfang und Grenzen siehe [RENDERER.md](RENDERER.md).

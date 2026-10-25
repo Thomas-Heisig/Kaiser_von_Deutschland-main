@@ -19,7 +19,7 @@ import { isPlaceholderName, isPlaceholderSurname } from './NameCatalog';
 import {
   VassalSystem, annexationCost, auxiliaryUpkeep, failureLabel, type TributeFailure
 } from './VassalSystem';
-import { garrisonCapacity, garrisonSoldiers, supplyRatio, type DefenseBreakdown } from './GarrisonModel';
+import { garrisonCapacity, garrisonSoldiers, garrisonFoodNeed, garrisonGoldUpkeep, supplyRatio, type DefenseBreakdown } from './GarrisonModel';
 import { TitleSystem } from '../data/Titles';
 import { PolicySystem } from './PolicySystem';
 import { OllamaService } from './OllamaService';
@@ -1207,10 +1207,14 @@ export class GameEngine {
 
     // Subject realms pay their dues before raids are resolved this month.
     this.processVassals(player);
-    // Rivals pay upkeep too; their troops are never free.
-    const rivalUpkeep = this.warfare.payUpkeep();
+    // Rivals pay upkeep too; their troops are never free. monthIndex bills each
+    // rival exactly once per game month, even across hotseat players.
+    const rivalUpkeep = this.warfare.payUpkeep(this.currentYear * 12 + this.currentMonth);
     for (const entry of rivalUpkeep) {
-      if (entry.shortfall > 0 && entry.playerId === player.id) {
+      if (entry.playerId !== player.id) continue;
+      // Gold- und Nahrungsmangel werden getrennt und vollständig gemeldet;
+      // consequence fasst beide Folgen bereits zusammen.
+      if (entry.shortfall > 0 || entry.foodShortfall > 0) {
         this.projectMessage(player.id, `${entry.name}: ${entry.consequence}.`);
       }
     }
@@ -2661,7 +2665,9 @@ export class GameEngine {
     return {
       soldiers: CampaignWarfareSystem.fieldSoldiers(player.kingdom),
       attack: CampaignWarfareSystem.armyPower(player.kingdom, modifiers, this.currentYear),
-      defense: CampaignWarfareSystem.defensePower(player.kingdom, modifiers, this.currentYear),
+      // Same basis as the combat resolution: real supply ratio, not a full-supply default.
+      defense: CampaignWarfareSystem.defenseBreakdown(
+        player.kingdom, modifiers, this.currentYear, supplyRatio(player.kingdom)).total,
       cost: CampaignWarfareSystem.campaignCost(player.kingdom),
       canCampaign: !this.realmProjects.busy(playerId,'campaign')&&!this.realmProjects.busy(playerId,'duel')&&this.warfare.canCampaign(playerId, this.currentYear * 12 + this.currentMonth),
       commanderBonus: modifiers.commanderBonus ?? 0
@@ -2699,8 +2705,11 @@ export class GameEngine {
     const attack = CampaignWarfareSystem.armyPower(player.kingdom, this.getCommanderModifiers(playerId), this.currentYear);
     const opponent = this.players.get(target);
     if (opponent) {
+      // Same basis as attackPlayer: real defender supply, not a full-supply default.
       return CampaignWarfareSystem.victoryChance(attack,
-        CampaignWarfareSystem.defensePower(opponent.kingdom, this.getCommanderModifiers(target), this.currentYear));
+        CampaignWarfareSystem.defenseBreakdown(
+          opponent.kingdom, this.getCommanderModifiers(target), this.currentYear,
+          supplyRatio(opponent.kingdom)).total);
     }
     const rival = this.warfare.getRivals(playerId).find((entry: RivalRealm): boolean => entry.id === target);
     if (!rival) throw new Error('Unbekannter Gegner.');
@@ -2903,9 +2912,13 @@ export class GameEngine {
     // A garrison below its capacity cannot use its fortifications fully.
     if (soldiers < capacity) {
       const plan = this.getRecruitPlan(player.id, 10, 'infantry');
-      const upkeep = CampaignWarfareSystem.upkeepFor(soldiers + 10);
+      // Real monthly player costs (same basis as preview, automation and the
+      // monthly booking) instead of rival upkeep rates.
+      const monthlyGold = garrisonGoldUpkeep(kingdom) + Math.ceil(plan.bill.gold / 12);
+      const monthlyFood = garrisonFoodNeed(kingdom) + Math.ceil(plan.bill.food / 12);
       const affordable = canSpend(plan.bill)
-        && kingdom.resources.gold - plan.bill.gold >= upkeep.gold * 2
+        && kingdom.resources.gold - plan.bill.gold >= monthlyGold * 2
+        && kingdom.resources.food - plan.bill.food >= monthlyFood * 2
         && kingdom.population.peasants >= 10;
       if (affordable) {
         await action('Garnison auffüllen', () => this.recruitForPlayer(player.id, 10, 'infantry'));

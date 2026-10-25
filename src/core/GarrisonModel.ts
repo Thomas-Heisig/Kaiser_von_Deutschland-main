@@ -13,6 +13,9 @@
  *    Besatzung und begrenzte Frontlänge).
  *  - Versorgung und Schäden wirken als Abzüge, nicht als pauschale Prozente
  *    auf den Vorrat.
+ *  - Befestigungszahlen sind reichsweite Summen ohne Ortszuordnung. Die hier
+ *    ausgewiesene „örtliche“ Wirkung ist daher eine bewusste Vereinfachung
+ *    (Reichsdurchschnitt); echte Ortsdaten fließen noch nicht ein.
  *  - Alle Mengen sind abstrakte Versorgungseinheiten des Spielmodells, keine
  *    historischen oder metrischen Angaben.
  */
@@ -128,13 +131,13 @@ export function defenseBreakdown(
   // Unmanned or damaged works contribute far less than a fully held one.
   const sites: FortificationSite[] = [
     { kind: 'walls', count: kingdom.infrastructure.walls, label: 'Stadtmauern',
-      role: 'Schützen den zugehörigen Ort gegen Angriffe und Überfälle.',
+      role: 'Reichsweite Summe; schützt modellhaft einzelne Orte gegen Angriffe und Überfälle (keine echte Ortszuordnung).',
       contribution: walls * manning },
     { kind: 'castles', count: kingdom.infrastructure.castles, label: 'Burgen',
-      role: 'Befestigte Stützpunkte; schützen zugewiesene Kräfte und Vorräte.',
+      role: 'Reichsweite Summe; befestigte Stützpunkte, schützen modellhaft zugewiesene Kräfte und Vorräte.',
       contribution: castles * (0.5 + 0.5 * manning) },
     { kind: 'barracks', count: kingdom.infrastructure.barracks, label: 'Wachlager',
-      role: 'Örtliche Sicherung, Bereitschaft und Aufklärung.',
+      role: 'Reichsweite Summe; örtliche Sicherung, Bereitschaft und Aufklärung (modellhaft).',
       contribution: barracks }
   ] satisfies FortificationSite[];
   const active = sites.filter(site => site.count > 0);
@@ -157,23 +160,30 @@ export function defenseBreakdown(
 /**
  * Nahrungsbedarf der Garnison in Versorgungseinheiten.
  *
- * Soldaten sind **zusätzlich** zur Zivilbevölkerung zu versorgen und werden
- * nicht doppelt gezählt: `population.soldiers` bleibt die zivile Zuordnung,
- * `military` die kämpfende Truppe.
+ * Kostenbasis identisch zur Monatsbuchung im {@link Kingdom}: Zwölfter Teil
+ * des jährlichen Feldheeres-Bedarfs aus `militaryFoodConsumption` — genau der
+ * Anteil am gebuchten Monatsverbrauch, den die Garnison verursacht. Jahres-
+ * und Monatswerte sind hier eindeutig getrennt (diese Funktion liefert
+ * ausschließlich Monatswerte).
  *
  * @param kingdom Reich.
  * @returns Bedarf in Versorgungseinheiten pro Monat.
  */
 export function garrisonFoodNeed(kingdom: Kingdom): number {
-  const soldiers = garrisonSoldiers(kingdom);
-  return Math.ceil(soldiers * 0.5);
+  return Math.ceil(kingdom.militaryFoodConsumption() / 12);
 }
 
-/** Goldunterhalt der Garnison pro Monat. */
+/**
+ * Goldunterhalt der Garnison pro Monat.
+ *
+ * Kostenbasis identisch zur Monatsbuchung im {@link Kingdom}: Zwölfter Teil
+ * des jährlichen Gesamtaufwands aus `goldUpkeepParts` (Heer, Kasernen, Burgen
+ * und weitere Gebäude zusammen) — dieselbe Quelle wie Vorschau, Automatik
+ * und Monatsbuchung. Diese Funktion liefert ausschließlich Monatswerte.
+ *
+ * @param kingdom Reich.
+ * @returns Unterhalt in Goldeinheiten pro Monat.
+ */
 export function garrisonGoldUpkeep(kingdom: Kingdom): number {
-  const soldiers = garrisonSoldiers(kingdom);
-  return Math.ceil(soldiers * 0.5)
-    + kingdom.infrastructure.barracks * 4
-    + kingdom.infrastructure.castles * 8
-    + kingdom.infrastructure.walls * 2;
+  return Math.ceil(kingdom.goldUpkeepParts().total / 12);
 }

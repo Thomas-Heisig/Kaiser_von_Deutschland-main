@@ -678,22 +678,20 @@ export class Kingdom {
   }
 
   /**
-   * Berechnet Nahrungsverbrauch
-   */
-  /**
    * Nahrungsbedarf pro Jahr in Versorgungseinheiten.
    *
-   * Zwei getrennte, klar benannte Verbraucher:
-   *  - **Zivilbevölkerung**: `population.soldiers` sind die in der
-   *    Bevölkerungsstatistik geführten Wehrpflichtigen; sie essen als Teil der
-   *    Bevölkerung.
-   *  - **Feldheer**: die tatsächlich unter Waffen stehenden Truppen aus
-   *    `military`. Sie werden **zusätzlich** versorgt, weil sie nicht Teil der
-   *    zivilen Zählung sind.
+   * Eine Größe, zwei Sichtweisen — dadurch keine Doppelzählung: Das Feldheer
+   * (`military.infantry` … `military.cavalry`) wird beim Rekrutieren aus
+   * `population.soldiers` abgezogen; die Feldtruppen sind also eine
+   * **Teilmenge** der Soldaten der Bevölkerungsstatistik, keine zusätzliche
+   * Gruppe. Die zivile Zählung bewertet daher nur die Soldaten, die nicht
+   * unter Waffen stehen (Garnisonsreserve mit Hausversorgung); das Feldheer
+   * isst nach den höheren Feldraten von {@link Kingdom.militaryFoodConsumption}.
+   * Rekrutierung, Verluste und Entlassung verschieben Soldaten nur zwischen
+   * beiden Sichten, ohne den Gesamtbedarf zu verdoppeln.
    *
-   * Beide werden addiert, aber nie doppelt gezählt: `population.soldiers` und
-   * `military` sind getrennte Größen. Ein größerer Vorrat erhöht den Bedarf
-   * nicht — der Bedarf hängt ausschließlich an Personen, nicht am Bestand.
+   * Ein größerer Vorrat erhöht den Bedarf nicht — der Bedarf hängt
+   * ausschließlich an Personen, nicht am Bestand.
    *
    * @returns Bedarf in Versorgungseinheiten pro Jahr.
    */
@@ -710,16 +708,21 @@ export class Kingdom {
       scholars: 3
     };
 
+    // Garnisonsreserve: population.soldiers ohne das Feldheer (Teilmenge).
+    const fieldSoldiers =
+      this.military.infantry + this.military.archers + this.military.cavalry;
+    const reserveSoldiers = Math.max(0, soldiers - fieldSoldiers);
+
     const civilian =
       peasants * consumptionRates.peasants +
-      soldiers * consumptionRates.soldiers +
+      reserveSoldiers * consumptionRates.soldiers +
       nobles * consumptionRates.nobles +
       merchants * consumptionRates.merchants +
       clergy * consumptionRates.clergy +
       artisans * consumptionRates.artisans +
       scholars * consumptionRates.scholars;
 
-    // Field army: fed in addition, since it is not part of the civil count.
+    // Feldheer nach Feldraten; die Garnisonsreserve ist oben zivil gezählt.
     const field = this.militaryFoodConsumption();
     return Math.floor(civilian + field);
   }

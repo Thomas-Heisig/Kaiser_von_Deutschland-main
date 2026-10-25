@@ -15,6 +15,7 @@ import { journalMessageHtml } from './JournalFormatting';
 import { KingdomInfrastructure } from '../core/Kingdom';
 import { Player } from '../core/Player';
 import type { KingdomMap } from './KingdomMap';
+import type { FirstPersonView } from './FirstPersonView';
 import { SETTLEMENT_DISTRICTS, DistrictFilter, SEASON_LABELS, earlyBuildingName } from './SettlementSceneModel';
 import { GameAudio } from './GameAudio';
 import { MAIN_THEME, MusicJukebox } from './MusicJukebox';
@@ -183,6 +184,7 @@ export class KingdomGameUI {
   private readonly helpSystem = new HelpSystem();
   private motionEnabled = false;
   private mapStyle: 'flat' | 'isometric' = 'isometric';
+  private fp?: FirstPersonView;
   /** Jahr, für das die Regionsnamen zuletzt geladen wurden (vermeidet Neuzeichnen pro Frame). */
   private regionYear?: number;
   private councilDialog?: HTMLDialogElement;
@@ -194,6 +196,7 @@ export class KingdomGameUI {
     if (button) this.audio.playEffect('click');
   };
   private readonly keyboardHandler = (event: KeyboardEvent): void => {
+    if (this.fp?.active) return;
     if (event.target instanceof HTMLElement &&
         (event.target.matches('input, select, textarea, button') || event.target.isContentEditable)) return;
     if (this.root.querySelector('.handover')) return;
@@ -234,7 +237,7 @@ export class KingdomGameUI {
 <section id="settings-panel-display" role="tabpanel" class="settings-tab-panel" aria-labelledby="settings-tab-display" data-settings-panel="display" ><h3>Anzeige & Bedienung</h3>
 <label class="checkbox"><input type="checkbox" id="setting-journey-guide" ${this.showJourneyGuide?'checked':''}> „Dein Weg durch das Spiel“ anzeigen</label>
 <label class="checkbox"><input type="checkbox" id="setting-motion"> Kartenanimation aktivieren</label>
-<p id="setting-motion-hint" class="muted">Bewegungen und Karteneffekte ein- oder ausschalten.</p>
+<p id="setting-motion-hint" class="muted">Bewegungen, Karteneffekte und die Ich-Perspektive ein- oder ausschalten.</p>
 <label>Kartendarstellung<select id="setting-map-style"><option value="flat">2D · Draufsicht</option><option value="isometric">3D-Look · isometrisch</option></select></label>
 <p class="muted">Die Ansicht passt sich automatisch an Telefon, Tablet und Desktop an.</p>
 </section>
@@ -474,6 +477,7 @@ ${body}
       motionSetting.addEventListener('change', () => {
         this.motionEnabled = motionSetting.checked;
         this.map?.setMotion(this.motionEnabled);
+        this.fp?.setMotion(this.motionEnabled);
         this.saveDisplayPreferences();
       });
     }
@@ -730,6 +734,8 @@ ${body}
     window.clearTimeout(this.actionBannerTimer);
     this.map?.dispose();
     this.map = undefined;
+    this.fp?.dispose();
+    this.fp = undefined;
     // A new engine means the saved camera still has to be applied to the new map.
     this.cameraRestored = false;
     this.cancelCouncilSelectionTimer();
@@ -808,6 +814,7 @@ ${body}
                 <button type="button" data-map-control="north" aria-label="Karte nach Norden ausrichten" title="Nach Norden ausrichten">↑</button>
                 <button type="button" data-map-control="in" aria-label="Karte vergrößern" title="Vergrößern">+</button>
                 <button type="button" data-map-control="out" aria-label="Karte verkleinern" title="Verkleinern">−</button>
+                <button type="button" data-fp-control aria-label="Ich-Perspektive am eigenen Standort öffnen" title="Ich-Perspektive öffnen">👁</button>
               </div>
               <div class="map-hud" aria-label="Kartenwerkzeuge">
                 <div class="map-hud-top">
@@ -819,6 +826,7 @@ ${body}
                   <p id="map-stage" class="map-stage" role="status" aria-live="polite"></p>
                 </div>
               </div>
+              <div id="first-person" class="fp-host"></div>
             </section>
           <aside class="sidebar">
             <label class="compact-navigation">Verwaltung<select id="view-select" aria-label="Spielbereich wählen"><option value="" disabled selected>Bereich wählen …</option></select></label>
@@ -1272,7 +1280,47 @@ ${body}
         console.warn('Interaktive 2D-Fallbackansicht verwendet:', error);
       }
     }
+    this.bindFirstPerson();
     this.restoreCampaignResult();
+  }
+
+  /** Wires the optional first-person camera; the view is created lazily on first use. */
+  private bindFirstPerson(): void {
+    this.root.querySelectorAll<HTMLButtonElement>('[data-fp-control]').forEach((button: HTMLButtonElement): void => {
+      button.addEventListener('click', (): void => {
+        if (button.disabled) return;
+        void this.enterFirstPerson(button);
+      });
+    });
+  }
+
+  /**
+   * Opens the local first-person perspective at the player's dwelling.
+   * The renderer is imported and initialized on first use only, so a missing
+   * WebGL context never blocks the strategy map.
+   * @param trigger Button that opened the view; receives focus back on exit.
+   */
+  private async enterFirstPerson(trigger: HTMLButtonElement): Promise<void> {
+    if (!this.player) return;
+    try {
+      if (!this.fp) {
+        const { FirstPersonView } = await import('./FirstPersonView');
+        const host = this.root.querySelector<HTMLElement>('#first-person');
+        if (!host) return;
+        const view = new FirstPersonView();
+        view.initialize(host, {
+          onExit: (): void => trigger.focus(),
+          motionEnabled: this.motionEnabled,
+        });
+        this.fp = view;
+      }
+      this.fp.enter();
+    } catch (error) {
+      console.warn('Ich-Perspektive nicht verfügbar:', error);
+      trigger.disabled = true;
+      trigger.title = 'Ich-Perspektive in diesem Browser nicht verfügbar';
+      this.notify('Ich-Perspektive ist in diesem Browser nicht verfügbar.', true);
+    }
   }
 
   private restoreCampaignResult(): void {
@@ -3424,6 +3472,8 @@ ${body}
     this.engine?.pauseGame();
     this.map?.dispose();
     this.map = undefined;
+    this.fp?.dispose();
+    this.fp = undefined;
     for (const unsubscribe of this.subscriptions) unsubscribe();
     this.subscriptions = [];
     this.engine?.dispose();
@@ -3611,6 +3661,8 @@ ${body}
   public dispose(): void {
     this.engine?.dispose();
     this.map?.dispose();
+    this.fp?.dispose();
+    this.fp = undefined;
     this.councilDialog?.remove();
     for (const unsubscribe of this.subscriptions) unsubscribe();
     document.removeEventListener('keydown', this.keyboardHandler);

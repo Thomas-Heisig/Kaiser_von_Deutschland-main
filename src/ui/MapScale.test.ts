@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   BASE_HEIGHT, BASE_WIDTH, METRES_PER_BASE_PIXEL, ZOOM_MAX, ZOOM_MIN,
+  ZOOM_SURROUNDINGS,
   baseToMetres, clampZoom, formatDistance, longitudeStretch, metresToBase,
   pixelsPerMetre, scaleBar, stageForZoom
 } from './MapScale';
@@ -41,6 +42,18 @@ describe('Gemeinsame Kartenmaßstäbe', () => {
     // Zooming further in never returns to a coarser stage name.
     expect(stageForZoom(ZOOM_MAX)).toBe('Schreibtisch');
     expect(stageForZoom(ZOOM_MIN)).toBe('Europa');
+  });
+  it('orders all seven stages strictly between the endpoints', () => {
+    // Each threshold must introduce exactly one new stage; zooming out walks
+    // Schreibtisch → Behausung → Siedlung → Umgebung → Region →
+    // Herrschaftsraum → Europa without skipping or repeating a stage.
+    const walk = [ZOOM_MAX, 3, 1.5, 0.7, 0.4, 0.1, ZOOM_MIN].map(stageForZoom);
+    expect(walk).toEqual([
+      'Schreibtisch', 'Behausung', 'Siedlung', 'Umgebung',
+      'Region', 'Herrschaftsraum', 'Europa'
+    ]);
+    expect(stageForZoom(ZOOM_SURROUNDINGS)).toBe('Umgebung');
+    expect(stageForZoom(ZOOM_SURROUNDINGS - 0.01)).toBe('Region');
   });
   it('clamps zoom to a continuous range', () => {
     expect(clampZoom(1000)).toBe(ZOOM_MAX);

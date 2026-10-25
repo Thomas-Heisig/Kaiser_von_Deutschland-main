@@ -785,6 +785,36 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
   .kingdom-app .game-layout>.map-card .map-tools{top:195px;}
 }
 
+/* Laufende Vorhaben: feste Außenhöhe je responsivem Layout, Inhalt scrollt
+   intern. Neue Vorhaben, Fortschritt, Abschluss und Leerzustand verschieben
+   weder die Karte noch darunterliegende Bereiche. */
+.project-queue{
+  display:flex;
+  flex-direction:column;
+  height:clamp(190px,26vh,300px);
+  overflow:hidden;
+}
+.project-queue h3{flex:none;margin-top:0;}
+.project-queue .project-list{
+  flex:1 1 auto;
+  min-height:0;
+  margin:0;
+  padding-left:1.2em;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.project-queue .project-list li{margin-bottom:0.55em;}
+.project-queue .project-list progress{width:100%;max-width:280px;height:10px;vertical-align:middle;}
+.project-queue .project-empty{
+  flex:1 1 auto;
+  min-height:0;
+  margin:0;
+  overflow-y:auto;
+}
+@media(max-width:760px){
+  .project-queue{height:clamp(170px,32vh,260px);}
+}
+
 /* 2026-10-18: Map must be an independent content region, NEVER a dimmed
    backdrop behind sidebar/council/workspace. Supersedes the map-first overlay. */
 .kingdom-app .game-layout {
@@ -1056,4 +1086,109 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
     flex:1 1 100%;
     max-width:100%;
   }
+}
+
+/* Ich-Perspektive (Paket 4): lokaler Kameramodus über der Karte.
+   Das Overlay gehört zur map-card, füllt sie vollständig und liegt über
+   Karte (z-index 0), HUD (2) und Kartensteuerung (6); die vier Kartensteuerungen
+   sind dadurch während der Ich-Perspektive bewusst nicht bedienbar — der
+   Rückweg ist der dedizierte Exit-Button beziehungsweise Escape. */
+.kingdom-app .game-layout>.map-card .fp-overlay {
+  position:absolute;
+  inset:0;
+  z-index:10;
+  background:#0b1a13;
+  overflow:hidden;
+  border-radius:inherit;
+}
+.kingdom-app .game-layout>.map-card .fp-overlay[hidden] { display:none !important; }
+.kingdom-app .game-layout>.map-card>#first-person[hidden] { display:none !important; }
+.kingdom-app .game-layout>.map-card .fp-overlay:focus-visible {
+  outline:3px solid #f5d084;
+  outline-offset:-3px;
+}
+.kingdom-app .game-layout>.map-card .fp-canvas {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  touch-action:none;
+}
+.kingdom-app .game-layout>.map-card .fp-hud {
+  position:absolute;
+  top:12px;
+  left:12px;
+  right:12px;
+  z-index:2;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  pointer-events:none;
+}
+.kingdom-app .game-layout>.map-card .fp-hud-main {
+  pointer-events:auto;
+  max-width:26rem;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  padding:8px 12px;
+  border-radius:9px;
+  border:1px solid #94ac80;
+  background:#162c25f2;
+  color:#fff6d7;
+  box-shadow:0 4px 14px #06100b99;
+}
+.kingdom-app .game-layout>.map-card .fp-hud-main strong { font-size:.9rem; }
+.kingdom-app .game-layout>.map-card .fp-note {
+  font-size:.7rem;
+  line-height:1.35;
+  color:#e8dfc0;
+}
+.kingdom-app .game-layout>.map-card .fp-hud-actions {
+  pointer-events:auto;
+  display:flex;
+  gap:6px;
+}
+.kingdom-app .game-layout>.map-card .fp-hud-actions button {
+  min-width:44px;
+  min-height:38px;
+  padding:0 12px;
+  font-size:.85rem;
+  border-radius:9px;
+  border:1px solid #94ac80;
+  background:#162c25f2;
+  color:#fff6d7;
+  cursor:pointer;
+  box-shadow:0 4px 14px #06100b99;
+}
+.kingdom-app .game-layout>.map-card .fp-hud-actions button:hover { background:#24483a; }
+.kingdom-app .game-layout>.map-card .fp-hud-actions button:focus-visible {
+  outline:3px solid #f5d084;
+  outline-offset:2px;
+}
+.kingdom-app .game-layout>.map-card .fp-hint {
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  margin:0;
+  z-index:2;
+  text-align:center;
+  font-size:.72rem;
+  letter-spacing:.05em;
+  color:#e8dfc0;
+  opacity:.9;
+  pointer-events:none;
+}
+@media(max-width:760px){
+  .kingdom-app .game-layout>.map-card .fp-hud { top:8px; left:8px; right:8px; gap:6px; }
+  .kingdom-app .game-layout>.map-card .fp-hud-main { max-width:14rem; padding:6px 9px; }
+  .kingdom-app .game-layout>.map-card .fp-note { font-size:.66rem; }
+  .kingdom-app .game-layout>.map-card .fp-hud-actions button {
+    min-height:44px;
+    font-size:.9rem;
+  }
+  .kingdom-app .game-layout>.map-card .fp-hint { bottom:8px; font-size:.66rem; }
 }

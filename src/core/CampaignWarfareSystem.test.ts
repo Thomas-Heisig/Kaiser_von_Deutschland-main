@@ -65,18 +65,33 @@ describe('CampaignWarfareSystem', (): void => {
     kingdom.military.archers = 0;
     kingdom.military.cavalry = 0;
     const gold = kingdom.resources.gold;
+    const food = kingdom.resources.food;
+    const rivalsBefore = lost.getRivals('p1').map((r) => ({ id: r.id, food: r.food, loot: r.loot }));
     const report = lost.processMonth('p1', kingdom, { year: 1200, month: 2 }, { raids: true });
     expect(report?.kind).toBe('raid');
     expect(report?.attackerWon).toBe(true);
-    expect(kingdom.resources.gold).toBe(gold - (report?.plunder ?? 0));
+    const spoils = report?.spoils;
+    expect(spoils).toBeDefined();
+    // Endbestand = Anfangsbestand − gestohlen − zerstört, für beide Güter.
+    expect(kingdom.resources.gold).toBe(gold - spoils!.stolenGold - spoils!.destroyedGold);
+    expect(kingdom.resources.food).toBe(food - spoils!.stolenFood - spoils!.destroyedFood);
+    expect(spoils!.stolenGold + spoils!.destroyedGold).toBeGreaterThan(0);
+    // Geraubtes erreicht den Angreifer, Zerstörtes geht verloren.
+    const raiderAfter = lost.getRivals('p1').find((r) => r.id === report?.rivalId)!;
+    const raiderBefore = rivalsBefore.find((r) => r.id === report?.rivalId)!;
+    expect(raiderAfter.food).toBe(raiderBefore.food + spoils!.stolenFood);
+    expect(raiderAfter.loot).toBe(raiderBefore.loot + spoils!.stolenGold);
 
     const repelled = new CampaignWarfareSystem(sequence(0, 0, 0.99));
     const defender = createKingdom();
     repelled.ensureRivals('p1');
     const defenderGold = defender.resources.gold;
+    const defenderFood = defender.resources.food;
     const defended = repelled.processMonth('p1', defender, { year: 1200, month: 2 }, { raids: true });
     expect(defended?.attackerWon).toBe(false);
     expect(defender.resources.gold).toBe(defenderGold);
+    expect(defender.resources.food).toBe(defenderFood);
+    expect(defended?.spoils).toEqual({ stolenGold: 0, destroyedGold: 0, stolenFood: 0, destroyedFood: 0 });
     expect(repelled.processMonth('p1', defender, { year: 1200, month: 3 }, { raids: false })).toBeUndefined();
   });
 
