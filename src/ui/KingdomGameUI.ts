@@ -22,11 +22,12 @@ import { campaignsForYear, CAMPAIGNS, CampaignId } from '../core/CampaignCatalog
 import { COURT_OFFICE_IDS, COURT_OFFICES, CourtOffice, AssistantMode } from '../core/CourtAssistantRegistry';
 import { GameAmbience, Soundscape } from './GameAmbience';
 import { milestonesThroughDate, historicalMonthReport, milestoneDate, milestoneEvidence, type HistoryKind, type WorldMilestone } from '../core/WorldHistoryCatalog';
-import { bce, formatYear, formatYearRange } from '../core/HistoricalCalendar';
+import { formatYear, formatYearRange } from '../core/HistoricalCalendar';
 import { knowledgeForDate, knowledgeSpotlight, KNOWLEDGE_TOPICS, type KnowledgeTopic } from '../core/EraKnowledgeCatalog';
 import { HelpSystem } from './HelpSystem';
 import { groupFeaturesByStatus } from './FeatureStatus';
 import { allNameSets, EVIDENCE_LABELS } from '../core/NameCatalog';
+import { ADDITIONAL_START_YEARS, START_EPOCHS, epochForStartYear } from '../core/StartEpochs';
 import { AUTHENTICITY_NOTE, GENERIC_COVER } from './MusicJukebox';
 import { isZoomLevelsEnabled, regionsForMap, stepSlider } from './MapZoomLevels';
 import { deskMarkup, eraPresentation } from './EraPresentation';
@@ -563,19 +564,13 @@ ${body}
           <div class="opening-music" id="opening-music" aria-live="polite"><img src="${MAIN_THEME.coverUrl}" alt="Cover Ancient Veil"><span id="opening-music-label">♫ Ancient Veil · Hauptthema nach dem Intro</span><button type="button" id="opening-toggle" class="opening-toggle" aria-label="Musik pausieren">Ⅱ Pause</button></div>
           <form id="new-game">
             <label>Startepoche<select name="startYear" id="start-year">
-              ${[2000,1500,1200,800,753,490,480,447,431,371,338,336,333,331,323,216,202,44,31,27,15,1].map(year => `<option value="${bce(year)}">${year} v. Chr. · ${year > 800 ? 'Bronzezeit' : 'Antike'}</option>`).join('')}
-              ${[1,9,14,60,66,70,500,800,1000].map(year => `<option value="${year}">${formatYear(year)} · ${year < 500 ? 'Antike' : 'Frühes Mittelalter'}</option>`).join('')}
-              <option value="1200" selected>1200 · Hochmittelalter</option>
-              <option value="1300">1300 · Spätmittelalter</option>
-              <option value="1400">1400 · Frühe Renaissance</option>
-              <option value="1500">1500 · Renaissance</option>
-              <option value="1600">1600 · Frühe Neuzeit</option>
-              <option value="1750">1750 · Aufklärung</option>
-              <option value="1820">1820 · Industriezeitalter</option>
-              <option value="1890">1890 · Späte Industrialisierung</option>
-              <option value="1945">1945 · Krieg und Nachkriegszeit</option>
-              <option value="1970">1970 · Moderne</option>
-              <option value="2000">2000 · Digitalzeitalter</option>
+              ${START_EPOCHS.map(epoch => `<optgroup label="${escape(epoch.label)}">${
+                epoch.years.map(entry => `<option value="${entry.year}"${
+                  entry.year === 1200 ? ' selected' : ''}>${escape(formatYear(entry.year))} · ${escape(entry.name)}</option>`
+                ).join('')}</optgroup>`).join('')}
+              <optgroup label="Weitere Startjahre">${
+                ADDITIONAL_START_YEARS.map(entry => `<option value="${entry.year}">${escape(formatYear(entry.year))} · ${escape(entry.name)}</option>`).join('')
+              }</optgroup>
             </select></label>
             <label>Kampagne<select name="campaign" id="campaign-select">
               ${CAMPAIGNS.map((entry) => `<option value="${entry.id}">${escape(entry.name)} – ${escape(entry.description)}</option>`).join('')}
@@ -669,11 +664,14 @@ ${body}
         campaignSelect.value = available.some(campaign => campaign.id === current) ? current : (available.find(campaign => campaign.id !== 'frei')?.id ?? 'frei');
       }
       const campaign = CAMPAIGNS.find(c => c.id === campaignSelect?.value) ?? CAMPAIGNS[0];
-      const yearText = startYearSelect?.selectedOptions[0]?.textContent ?? '1200 · Mittelalter';
+      const yearText = startYearSelect?.selectedOptions[0]?.textContent ?? '1200 · Hochmittelalter';
       const header = this.root.querySelector('#start-era-summary');
       const info = this.root.querySelector('#start-campaign-summary');
+      const epoch = epochForStartYear(year);
       if (header) header.textContent = yearText;
-      if (info) info.textContent = 'Startgebiet: ' + localPlaceName(year) + ' · heutiges Niedersachsen. ' + campaign.name + ': ' + campaign.description;
+      if (info) info.textContent = 'Startgebiet: ' + localPlaceName(year) + ' · heutiges Niedersachsen. '
+        + (epoch ? epoch.label + ': ' + epoch.summary + ' ' : '')
+        + campaign.name + ': ' + campaign.description;
     };
     campaignSelect?.addEventListener('change', updateStartSummary);
     startYearSelect?.addEventListener('change', updateStartSummary);
