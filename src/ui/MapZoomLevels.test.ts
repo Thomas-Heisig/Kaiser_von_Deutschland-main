@@ -50,7 +50,7 @@ describe('Slider-zu-Kamera-Mapping', (): void => {
 
   it('clamps the inverse mapping too', (): void => {
     expect(zoomToSlider(0.001)).toBe(SLIDER_MIN);
-    expect(zoomToSlider(99)).toBe(SLIDER_MAX);
+    expect(zoomToSlider(99_999_999)).toBe(SLIDER_MAX);
     expect(zoomToSlider(Number.NaN)).toBe(SLIDER_MIN);
   });
 });
