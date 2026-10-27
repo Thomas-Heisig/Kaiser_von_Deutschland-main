@@ -50,8 +50,8 @@ export const ZOOM_MAX = 6;
 export const ZOOM_DWELLING = 4;
 /** Zoomstufe, bei der die Siedlung als Ganzes sichtbar ist. */
 export const ZOOM_SETTLEMENT = 1;
-/** Zoomstufe, bei der die nähere Umgebung der Siedlung sichtbar wird. */
-export const ZOOM_SURROUNDINGS = 0.55;
+/** Zoomstufe, bei der die nähere Umgebung (≈ 73 km) sichtbar wird. */
+export const ZOOM_SURROUNDINGS = 0.35;
 /** Zoomstufe, bei der die Region sichtbar wird. */
 export const ZOOM_REGION = 0.25;
 /** Zoomstufe, bei der Europa sichtbar wird. */
@@ -130,6 +130,10 @@ export function longitudeStretch(latitude: number): number {
  * (Schreibtisch + Behausung), was die Kamera-Achse allein noch nicht
  * erreicht; die Nahansicht ist die Ich-Perspektive (FirstPersonView).
  *
+ * Herrschaftsraum ↔ Europa: Die Reliefkarte deckt ≈ 1.460 km Breite ab
+ * (sichtbar bei ZOOM_MIN). Der Stufenname folgt dem sichtbaren Ausschnitt —
+ * ZOOM_MIN zeigt Mitteleuropa (Herrschaftsraum), nicht ganz Europa.
+ *
  * @param zoom Aktueller Kamerazoom.
  * @returns Bezeichnung der Detailstufe.
  */
@@ -142,8 +146,7 @@ export function stageForZoom(zoom: number): string {
   if (visibleMetres <= 40_000) return 'Siedlung';       // Zoom ≥ 0.73
   if (visibleMetres <= 90_000) return 'Umgebung';       // Zoom ≥ 0.32
   if (visibleMetres <= 400_000) return 'Region';        // Zoom ≥ 0.073
-  if (visibleMetres <= 4_000_000) return 'Herrschaftsraum';
-  return 'Europa';
+  return 'Herrschaftsraum';                             // ≈ ≤ 1.460 km Relief
 }
 
 /** Klemmt einen Zoom auf den erlaubten Bereich. */

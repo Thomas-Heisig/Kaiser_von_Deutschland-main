@@ -41,19 +41,21 @@ describe('Gemeinsame Kartenmaßstäbe', () => {
     for (const stage of stages) expect(stage.length).toBeGreaterThan(3);
     // Zooming further in never returns to a coarser stage name.
     expect(stageForZoom(ZOOM_MAX)).toBe('Siedlung');
-    expect(stageForZoom(ZOOM_MIN)).toBe('Europa');
+    // ZOOM_MIN shows the ≈1.460 km relief area, not all of Europe.
+    expect(stageForZoom(ZOOM_MIN)).toBe('Herrschaftsraum');
   });
   it('orders all stages strictly between the endpoints', () => {
-    // Zooming out walks Siedlung → Umgebung → Region → Herrschaftsraum →
-    // Europa without skipping or repeating a stage. The camera axis never
+    // Zooming out walks Siedlung → Umgebung → Region → Herrschaftsraum
+    // without skipping or repeating a stage. The camera axis never
     // reaches Behausung/Schreibtisch scale; those are the first-person view.
     const walk = [ZOOM_MAX, 1, 0.5, 0.4, 0.1, ZOOM_MIN].map(stageForZoom);
     expect(walk).toEqual([
       'Siedlung', 'Siedlung', 'Umgebung', 'Umgebung',
-      'Region', 'Europa'
+      'Region', 'Herrschaftsraum'
     ]);
     expect(stageForZoom(ZOOM_SURROUNDINGS)).toBe('Umgebung');
-    expect(stageForZoom(ZOOM_SURROUNDINGS - 0.01)).toBe('Region');
+    // A step below the surroundings zoom already shows the wider region.
+    expect(stageForZoom(ZOOM_SURROUNDINGS - 0.05)).toBe('Region');
     // Behausung/Schreibtisch exist as names for the near view, but the map
     // camera alone cannot reach them (honesty about reachable scale).
     expect(stageForZoom(ZOOM_MAX)).not.toBe('Behausung');

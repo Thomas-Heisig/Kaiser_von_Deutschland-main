@@ -101,6 +101,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 :root[data-era="digital"] .desk-compass { border-color:#789eaf; background:#233a47; }
 /* Management is paged within the viewport; the world never moves away. */
 .section-dialog { width:min(1060px,94vw)!important; height:min(760px,90dvh)!important; max-height:90dvh!important; padding:0!important; margin:auto; overflow:hidden!important; border:1px solid var(--gold); background:var(--surface)!important; color:var(--ink); border-radius:7px; box-shadow:0 25px 100px #000a; }
+/* Non-modal side sheet on large screens: the map stays interactive beside it. */
+.kingdom-app #section-dialog:not(.modal) { position:fixed; top:104px; right:0; bottom:23px; left:auto; width:min(560px,52vw)!important; height:auto!important; max-height:none!important; margin:0!important; border-radius:7px 0 0 7px; }
+.kingdom-app #section-dialog:not(.modal)::backdrop { background:transparent; }
+@media (max-width:900px) {
+ .kingdom-app #section-dialog:not(.modal) { top:0; right:0; bottom:0; left:0; width:96vw!important; height:93dvh!important; margin:auto!important; border-radius:7px; }
+}
 .section-dialog[open] { display:grid!important; grid-template-rows:52px minmax(0,1fr) 44px; }
 .section-dialog::backdrop { background:#101713ad; backdrop-filter:blur(5px); }
 .section-dialog-head { display:flex; align-items:center; justify-content:space-between; padding:8px 20px; border-bottom:1px solid var(--line); background:var(--surface-2); }
@@ -293,10 +299,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 .welcome-art p { bottom:5%; font:italic clamp(.8rem,1.7vw,1.2rem)/1.4 var(--heading); }
 @media(max-height:620px) { .welcome-art::after { bottom:25%; } }
 
-/* Information stays beside the map; compact screens switch between report cards. */
-.kingdom-app .game-layout { grid-template-columns:164px minmax(0,1fr) 292px!important; }
-.realm-report { grid-column:3; grid-row:1 / 3; align-self:stretch; height:100%; display:grid; grid-template-rows:auto repeat(3,minmax(0,1fr)) auto; min-width:0; min-height:0; padding:12px; gap:10px; border-left:1px solid var(--line); background:var(--surface); }
+/* Information is a closable side sheet over the map; the map fills the screen.
+   The report column no longer reserves layout width. */
+.kingdom-app .game-layout { grid-template-columns:164px minmax(0,1fr)!important; }
+.realm-report { position:absolute; top:0; right:0; bottom:0; z-index:7; width:min(340px,42vw);
+  display:grid; grid-template-rows:auto repeat(3,minmax(0,1fr)) auto; min-width:0; min-height:0;
+  padding:12px; gap:10px; border-left:1px solid var(--line); background:var(--surface);
+  box-shadow:-8px 0 30px #0006; }
+.realm-report[data-report-open="false"] { display:none!important; }
 .report-heading { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:.72rem; color:var(--gold); }
+#report-close { min-height:26px; min-width:26px; padding:2px 7px; font-size:.68rem; flex-shrink:0; }
+#report-toggle { min-height:28px; min-width:28px; padding:3px 7px; font-size:.68rem; }
 .report-heading span { font-size:.6rem; color:var(--muted); }
 .report-tabs { display:none; }
 .report-card { display:flex; flex-direction:column; gap:6px; min-height:0; padding:10px; border:1px solid var(--line); border-radius:4px; background:var(--surface-2); overflow:hidden; }
@@ -311,8 +324,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 .council-auto input { flex:0 0 17px; width:17px; height:17px; min-height:17px; margin:0; padding:0; accent-color:var(--gold); }
 .council-modal .council-auto { padding:10px; border:1px solid var(--line); background:var(--surface-2); }
 @media (max-width:1100px) and (min-width:601px) {
- .kingdom-app .game-layout { grid-template-columns:122px minmax(0,1fr) 244px!important; }
- .realm-report { padding:8px; gap:7px; }
+ .kingdom-app .game-layout { grid-template-columns:122px minmax(0,1fr)!important; }
+ .realm-report { width:min(280px,46vw); padding:8px; gap:7px; }
  .report-card { padding:8px; }
  .report-card p { font-size:.68rem; }
 }
@@ -325,10 +338,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
  .realm-report[data-report-tab=news] [data-report-card=news],.realm-report[data-report-tab=tutorial] [data-report-card=tutorial],.realm-report[data-report-tab=history] [data-report-card=history] { display:flex; }
 }
 @media (max-width:600px) {
- .kingdom-app .game-layout { grid-template-columns:minmax(0,1fr)!important; grid-template-rows:36px minmax(0,1fr) 178px 43px!important; }
- .kingdom-app .game-layout>.workspace { grid-row:4; }
- .realm-report { grid-column:1; grid-row:3; grid-template-rows:27px minmax(0,1fr) 24px; padding:5px 8px; gap:4px; border-top:1px solid var(--line); border-left:0; }
- .report-heading { display:none; }
+ .kingdom-app .game-layout { grid-template-columns:minmax(0,1fr)!important; grid-template-rows:36px minmax(0,1fr) 43px!important; }
+ .kingdom-app .game-layout>.workspace { grid-row:3; }
+ .realm-report { width:100%; grid-template-rows:27px minmax(0,1fr) 24px; padding:5px 8px; gap:4px; border-top:1px solid var(--line); border-left:0; top:auto; height:178px; }
+ .report-heading { font-size:.62rem; }
  .report-card { padding:6px 8px; gap:2px; }
  .report-card h2 { font-size:.72rem; }
  .report-card p { font-size:.65rem; line-height:1.3; -webkit-line-clamp:2; }
@@ -338,7 +351,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
  .council-auto { font-size:.65rem; padding:0; }
 }
 @media (max-width:600px) and (min-height:700px) {
- .kingdom-app .game-layout { grid-template-rows:36px minmax(0,1fr) 160px 43px!important; }
+ .realm-report { height:160px; }
  .report-card { padding:4px 8px; gap:1px; }
 }
 /* The historical reading filter stays within the paginated administration panel. */

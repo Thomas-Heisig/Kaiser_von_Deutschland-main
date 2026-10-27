@@ -814,7 +814,8 @@ ${body}
                 <button type="button" data-map-control="north" aria-label="Karte nach Norden ausrichten" title="Nach Norden ausrichten">↑</button>
                 <button type="button" data-map-control="in" aria-label="Karte vergrößern" title="Vergrößern">+</button>
                 <button type="button" data-map-control="out" aria-label="Karte verkleinern" title="Verkleinern">−</button>
-                <button type="button" data-fp-control aria-label="Ich-Perspektive am eigenen Standort öffnen" title="Ich-Perspektive öffnen">👁</button>
+                <button type="button" id="report-toggle" aria-label="Lagebericht anzeigen" aria-expanded="true" title="Lagebericht anzeigen/ausblenden">▤</button>
+                <button type="button" data-fp-control aria-expanded="false" aria-label="Ich-Perspektive am eigenen Standort öffnen" title="Ich-Perspektive öffnen">👁</button>
               </div>
               <div class="map-hud" aria-label="Kartenwerkzeuge">
                 <div class="map-hud-top">
@@ -870,8 +871,9 @@ ${body}
             <button id="council-prompt" data-view="council" class="council-alert" hidden></button>
             <section id="panel" class="content-panel" aria-label="Verwaltung"></section>
           </main>
-          <aside class="realm-report" aria-label="Lagebericht" data-report-tab="news">
-            <div class="report-heading"><strong>Lagebericht</strong><span id="report-date"></span></div>
+          <aside class="realm-report" aria-label="Lagebericht" data-report-tab="news" data-report-open="true">
+            <div class="report-heading"><strong>Lagebericht</strong><span id="report-date"></span>
+              <button type="button" id="report-close" aria-label="Lagebericht schließen" title="Lagebericht schließen">✕</button></div>
             <div class="report-tabs" aria-label="Informationen auswählen">
               <button type="button" data-report-tab="news" aria-pressed="true">Meldungen</button>
               <button type="button" data-report-tab="tutorial" aria-pressed="false">Tutorial</button>
@@ -972,6 +974,28 @@ ${body}
       };
     });
     this.root.querySelector('#hide-journey-guide')?.addEventListener('click',()=>{this.showJourneyGuide=false;this.saveDisplayPreferences();this.renderReport();});
+    // Lagebericht als schließbares Seitenblatt: Karte gewinnt die Fläche,
+    // der Bericht bleibt über den Toggle jederzeit erreichbar.
+    const setReportOpen = (open: boolean): void => {
+      const report = this.root.querySelector<HTMLElement>('.realm-report');
+      if (report) report.dataset.reportOpen = String(open);
+      const toggle = this.root.querySelector<HTMLButtonElement>('#report-toggle');
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Lagebericht ausblenden' : 'Lagebericht anzeigen');
+      }
+    };
+    setReportOpen(this.root.querySelector<HTMLElement>('.realm-report')?.dataset.reportOpen !== 'false');
+    this.root.querySelector('#report-close')?.addEventListener('click', () => {
+      setReportOpen(false);
+      this.root.querySelector<HTMLButtonElement>('#report-toggle')?.focus();
+    });
+    this.root.querySelector('#report-toggle')?.addEventListener('click', () => {
+      const report = this.root.querySelector<HTMLElement>('.realm-report');
+      const open = report?.dataset.reportOpen !== 'false';
+      setReportOpen(!open);
+      if (!open) report?.querySelector<HTMLElement>('.report-heading')?.scrollIntoView({ block: 'nearest' });
+    });
     this.root.querySelector('#news-filter')?.addEventListener('change',event=>{this.newsFilter=(event.target as HTMLSelectElement).value;this.reportIndex=0;this.renderReport();});
     this.root.querySelector('#report-previous')?.addEventListener('click', () => { this.reportIndex--; this.renderReport(); });
     this.root.querySelector('#report-next')?.addEventListener('click', () => { this.reportIndex++; this.renderReport(); });
@@ -1697,7 +1721,10 @@ ${body}
     const popup = this.root.querySelector<HTMLDialogElement>('#section-dialog');
     const panel = this.root.querySelector<HTMLElement>('#panel');
     if (popup && panel) {
-      if (!popup.open) popup.showModal();
+      // Große Screens: nichtmodales Seitenblatt — die Karte bleibt daneben
+      // bedienbar und Kamera/Fläche verändern sich nicht. Kleine Screens:
+      // schließbarer modal Dialog, dort gibt es keinen Platz für beides.
+      if (!popup.open) popup.show();
       const title = this.root.querySelector<HTMLElement>('#section-dialog-title');
       const button = this.root.querySelector<HTMLButtonElement>('nav [data-view="' + view + '"]');
       if (title) title.textContent = button?.textContent?.trim() ?? 'Verwaltung';
