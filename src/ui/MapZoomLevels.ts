@@ -6,9 +6,12 @@
  * bleiben. `KingdomMap` konsumiert es nur.
  *
  * Ebenen:
- *  - `schreibtisch`  – virtueller Schreibtisch der aktuellen Epoche
  *  - `dorf`         – die bestehenden 16 Bezirke (unverändert)
  *  - `zentraleuropa` – schematische Regionsnamen ohne Grenzlinien
+ *
+ * Der „Schreibtisch" ist keine Kartenebene mehr: Es ist eine Kamerastufe
+ * (stageForZoom) und wird als Nahansicht von der Ich-Perspektive
+ * (FirstPersonView) bedient, nicht von einer eigenen Layer-Schicht.
  *
  * Grundsätze:
  *  - Keine erfundenen Grenzen: Es werden ausschließlich Namen und Positionen
@@ -24,15 +27,22 @@ import { EvidenceLevel, HistoricalRegion, PolityCatalog } from '../history/Polit
 import { REGIONS } from '../history/PolityData';
 
 /** Sichtbare Kartenebene. */
-export type MapZoomLevel = 'schreibtisch' | 'dorf' | 'zentraleuropa';
+export type MapZoomLevel = 'dorf' | 'zentraleuropa';
 
 /** Slider-Grenzen (HTML `<input type="range">`). */
 export const SLIDER_MIN = 0;
 export const SLIDER_MAX = 100;
 
-/** Kamera-Zoombereich – bewusst weiter als die bisherigen 0.8–2.2. */
-export const CAMERA_ZOOM_MIN = 0.4;
-export const CAMERA_ZOOM_MAX = 4.0;
+/**
+ * Kamera-Zoombereich.
+ *
+ * Beide Grenzen stammen aus der gemeinsamen Maßstabsachse in `MapScale.ts`
+ * (ZOOM_MIN … ZOOM_MAX), damit Slider, Kamera, Maßstabsbalken und
+ * Detailstufen dieselbe Skala teilen und keine getrennten Grenzen mehr
+ * existieren. Der Slider deckt damit Schreibtisch bis Europa vollständig ab.
+ */
+export const CAMERA_ZOOM_MIN = 0.02;
+export const CAMERA_ZOOM_MAX = 6;
 
 /**
  * Schwellen mit Hysterese.
@@ -256,14 +266,18 @@ export function zoomToSlider(zoom: number): number {
 /**
  * Bestimmt die Ebene für einen Slider-Wert – mit Hysterese.
  *
+ * Die Slider-Richtung folgt {@link sliderToZoom}: 0 ist weit herausgezoomt
+ * (Europa), 100 weit hineingezoomt. Die Schwellen liegen daher spiegelverkehrt
+ * zu den früheren Werten: hohe Slider-Werte wechseln nach „dorf", niedrige
+ * nach „zentraleuropa". Die Schreibtisch-Ebene ist reine Kamerastufe
+ * (stageForZoom) und wählt keinen eigenen Layer mehr.
+ *
  * @param slider Slider-Wert.
  * @param current Aktuell aktive Ebene (für die Hysterese).
  * @returns Die Ebene, die gelten soll.
  */
 export function levelForSlider(slider: number, current: MapZoomLevel): MapZoomLevel {
   const clamped = Math.max(SLIDER_MIN, Math.min(SLIDER_MAX, slider));
-  if (clamped < 12) return 'schreibtisch';
-  if (current === 'schreibtisch') return clamped >= 40 ? 'dorf' : clamped >= 18 ? 'zentraleuropa' : current;
   if (current === 'dorf' && clamped < LEVEL_THRESHOLDS.toRegion) return 'zentraleuropa';
   if (current === 'zentraleuropa' && clamped >= LEVEL_THRESHOLDS.toVillage) return 'dorf';
   return current;

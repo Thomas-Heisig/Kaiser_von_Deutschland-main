@@ -123,16 +123,26 @@ export function longitudeStretch(latitude: number): number {
  * Benennt die Detailstufe eines Zooms. Die Begriffe beschreiben dieselbe
  * Ansicht, keine getrennten Karten.
  *
+ * Die Stufen sind aus tatsächlich sichtbaren Weltgrößen abgeleitet: Bei
+ * Zoom 1 zeigt die Karte die 20-km-Siedlung, bei ZOOM_MAX ≈ 3,5 m/px —
+ * das ist Behausungsgröße, noch kein Schreibtisch. „Schreibtisch" wird
+ * deshalb nur vergeben, wenn die sichtbare Weltbreite unter ≈ 12 m fällt
+ * (Schreibtisch + Behausung), was die Kamera-Achse allein noch nicht
+ * erreicht; die Nahansicht ist die Ich-Perspektive (FirstPersonView).
+ *
  * @param zoom Aktueller Kamerazoom.
  * @returns Bezeichnung der Detailstufe.
  */
 export function stageForZoom(zoom: number): string {
-  if (zoom >= ZOOM_DWELLING) return 'Schreibtisch';
-  if (zoom >= 2) return 'Behausung';
-  if (zoom >= ZOOM_SETTLEMENT) return 'Siedlung';
-  if (zoom >= ZOOM_SURROUNDINGS) return 'Umgebung';
-  if (zoom >= ZOOM_REGION) return 'Region';
-  if (zoom >= ZOOM_EUROPE) return 'Herrschaftsraum';
+  // Sichtbare Weltbreite bei vollem Bildschirm (Referenz ~1400 Basispixel):
+  // ≈ 29.167 m / Zoom. Schwellen prüfen, was tatsächlich sichtbar ist.
+  const visibleMetres = (1400 * METRES_PER_BASE_PIXEL) / Math.max(zoom, Number.MIN_VALUE);
+  if (visibleMetres <= 12) return 'Schreibtisch';       // ≈ Zoom 2431 — nur FP
+  if (visibleMetres <= 30) return 'Behausung';          // ≈ Zoom 971 — nur FP
+  if (visibleMetres <= 40_000) return 'Siedlung';       // Zoom ≥ 0.73
+  if (visibleMetres <= 90_000) return 'Umgebung';       // Zoom ≥ 0.32
+  if (visibleMetres <= 400_000) return 'Region';        // Zoom ≥ 0.073
+  if (visibleMetres <= 4_000_000) return 'Herrschaftsraum';
   return 'Europa';
 }
 

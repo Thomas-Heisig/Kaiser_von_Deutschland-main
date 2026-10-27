@@ -72,17 +72,14 @@ describe('Button-Schritte', (): void => {
 });
 
 describe('Ebenenwechsel mit Hysterese', (): void => {
-  it('keeps the desk stable around its boundary and allows direct village jumps', () => {
-    expect(levelForSlider(0, 'dorf')).toBe('schreibtisch');
-    expect(levelForSlider(11, 'zentraleuropa')).toBe('schreibtisch');
-    expect(levelForSlider(12, 'zentraleuropa')).toBe('zentraleuropa');
-    expect(levelForSlider(17, 'schreibtisch')).toBe('schreibtisch');
-    expect(levelForSlider(18, 'schreibtisch')).toBe('zentraleuropa');
-    expect(levelForSlider(40, 'schreibtisch')).toBe('dorf');
-  });
-  it('switches to Zentraleuropa below the lower threshold', (): void => {
+  it('switches to Zentraleuropa below the lower threshold and never to the desk', (): void => {
+    // Slider 0 is zoomed out (Europe side), so a low slider means Zentraleuropa.
     expect(levelForSlider(LEVEL_THRESHOLDS.toRegion - 1, 'dorf')).toBe('zentraleuropa');
-    expect(levelForSlider(SLIDER_MIN, 'dorf')).toBe('schreibtisch');
+    expect(levelForSlider(SLIDER_MIN, 'dorf')).toBe('zentraleuropa');
+    // 'schreibtisch' is a camera stage (stageForZoom), never a map layer.
+    for (const slider of [0, 11, 12, 17, 18, 40, 100]) {
+      expect(levelForSlider(slider, 'dorf')).not.toBe('schreibtisch');
+    }
   });
 
   it('stays on Dorf at or above the lower threshold', (): void => {
