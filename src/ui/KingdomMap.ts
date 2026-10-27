@@ -17,14 +17,7 @@ import {
 } from './MapZoomLevels';
 import { METRES_PER_BASE_PIXEL, metresToBase, clampZoom, scaleBar, stageForZoom } from './MapScale';
 import { DWELLING_DOOR, DWELLING_HALF_DEPTH, DWELLING_HALF_WIDTH, YARD_EXTENT } from './FirstPersonLogic';
-
-/**
- * Feste Verankerung der eigenen Behausung in der Siedlung (Basispixel).
- *
- * Der Schreibtisch ist dieser Behausung räumlich zugeordnet: Beim Hineinzoomen
- * bleibt die Kamera auf diesem Punkt, es wird keine getrennte Ansicht geöffnet.
- */
-export const DWELLING_ANCHOR = { x: 500, y: 310 } as const;
+import { DWELLING_ANCHOR } from './MapScale';
 
 /** Kamerazustand, der gespeichert und wiederhergestellt wird. */
 export interface CameraState {

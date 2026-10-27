@@ -7,9 +7,7 @@
  * MapScale.ts, damit Behausung, Siedlung und Karte dieselbe Datenbasis haben.
  */
 
-import { METRES_PER_BASE_PIXEL } from './MapScale';
-import { DWELLING_ANCHOR } from './KingdomMap';
-
+import { METRES_PER_BASE_PIXEL, DWELLING_ANCHOR } from './MapScale';
 /** Basispixel → Meter (einzige Umrechnung, identisch zur Karte). */
 export const MAP_METRES_PER_PIXEL = METRES_PER_BASE_PIXEL;
 
