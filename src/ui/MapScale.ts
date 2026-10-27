@@ -157,3 +157,13 @@ export function clampZoom(zoom: number): number {
   if (!Number.isFinite(zoom)) return ZOOM_SETTLEMENT;
   return Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom));
 }
+
+/**
+ * Feste Verankerung der eigenen Behausung in der Siedlung (Basispixel).
+ *
+ * Der Schreibtisch ist dieser Behausung räumlich zugeordnet: Beim Hineinzoomen
+ * bleibt die Kamera auf diesem Punkt, es wird keine getrennte Ansicht geöffnet.
+ * In MapScale, damit Karte (KingdomMap) und Ich-Perspektive
+ * (FirstPersonLogic) dieselbe Verankerung ohne Zirkelimport teilen.
+ */
+export const DWELLING_ANCHOR = { x: 500, y: 310 } as const;
