@@ -38,28 +38,32 @@ export const METRES_PER_BASE_PIXEL_Y = 14_000 / BASE_HEIGHT;
 /**
  * Kontinuierlicher Zoombereich.
  *
- * Die Grenzen sind aus den **benötigten sichtbaren Weltgrößen** abgeleitet,
- * nicht willkürlich (Referenz: ≈ 1.400 Basispixel sichtbarer Kartenbreite):
+ * Die Grenzen sind aus den **benötigten sichtbaren Weltgrößen** abgeleitet.
+ * Referenz ist die Einpassung der Siedlung auf eine 1350-px-Breite
+ * (Fit-Faktor 1 bei Zoom 1): sichtbare Basispixel = 1350/Zoom, sichtbare
+ * Meter = 1350 · 20,8333/Zoom. Bei anderen Viewports skaliert der Fit-Faktor
+ * die effektive Skala mit; die Stufengrenzen bleiben an der Referenz.
  *
- *   - `ZOOM_MIN = 0.0073` → ≈ 4.000 km sichtbar (Europa von Lissabon bis Warschau).
- *   - `ZOOM_MAX ≈ 9722`   → ≈ 3 m sichtbar (Schreibtisch).
+ *   - `ZOOM_MIN ≈ 0,007` → ≈ 4.000 km sichtbar (Europa, Lissabon–Warschau).
+ *   - `ZOOM_MAX = 9375`  → ≈ 3 m sichtbar (Schreibtisch).
  *
- * `1` zeigt die 20-km-Siedlung in ihrer natürlichen Größe. Der Bereich ist
- * durchgehend; jede der sieben Stufen (Schreibtisch → Europa) ist erreichbar.
+ * `1` zeigt die Siedlung mit Umgebung (≈ 28 km Breite); die 20-km-Siedlung
+ * füllt den Ausschnitt mit Rand. Der Bereich ist durchgehend; alle sieben
+ * Stufen (Schreibtisch → Europa) sind erreichbar.
  */
-export const ZOOM_MIN = 0.0073;
-export const ZOOM_MAX = 9723;
+export const ZOOM_MIN = 0.00703;
+export const ZOOM_MAX = 9375;
 
 /** Zoomstufe, bei der die eigene Behausung als Ganzes sichtbar wird (≈ 15 m). */
-export const ZOOM_DWELLING = 1945;
+export const ZOOM_DWELLING = 1875;
 /** Zoomstufe, bei der die Siedlung als Ganzes sichtbar ist (20 km). */
 export const ZOOM_SETTLEMENT = 1;
-/** Zoomstufe, bei der die nähere Umgebung (≈ 90 km) sichtbar wird. */
-export const ZOOM_SURROUNDINGS = 0.324;
-/** Zoomstufe, bei der die Region (≈ 400 km) sichtbar wird. */
-export const ZOOM_REGION = 0.0729;
+/** Zoomstufe, bei der die nähere Umgebung (≈ 120 km) sichtbar wird. */
+export const ZOOM_SURROUNDINGS = 0.24;
+/** Zoomstufe, bei der die Region (≈ 500 km) sichtbar wird. */
+export const ZOOM_REGION = 0.0563;
 /** Zoomstufe, bei der Europa (≈ 4.000 km) sichtbar wird. */
-export const ZOOM_EUROPE = 0.0073;
+export const ZOOM_EUROPE = 0.00703;
 
 /**
  * Bildschirmpixel je Weltmeter bei einem Zoom.
@@ -128,21 +132,21 @@ export function longitudeStretch(latitude: number): number {
  * Ansicht, keine getrennten Karten.
  *
  * Die Stufen sind aus tatsächlich sichtbaren Weltgrößen abgeleitet (Referenz
- * ≈ 1.400 Basispixel sichtbarer Breite; sichtbare Meter ≈ 29.167/Zoom):
+ * Fit-Faktor 1 = 1350 Basispixel sichtbar; sichtbare Meter ≈ 28.125/Zoom):
  *
- *   - Schreibtisch ≤ 3 m (Zoom ≥ 9.722) — Nahgeometrie + Ich-Perspektive
- *   - Behausung ≤ 15 m (Zoom ≥ 1.944)
- *   - Siedlung ≤ 40 km (Zoom ≥ 0,73)
- *   - Umgebung ≤ 120 km (Zoom ≥ 0,243)
- *   - Region ≤ 500 km (Zoom ≥ 0,058)
- *   - Herrschaftsraum ≤ 2.000 km (Zoom ≥ 0,0146)
+ *   - Schreibtisch ≤ 3 m (Zoom ≥ 9.375) — Nahgeometrie + Ich-Perspektive
+ *   - Behausung ≤ 15 m (Zoom ≥ 1.875)
+ *   - Siedlung ≤ 40 km (Zoom ≥ 0,70)
+ *   - Umgebung ≤ 120 km (Zoom ≥ 0,234)
+ *   - Region ≤ 500 km (Zoom ≥ 0,0563)
+ *   - Herrschaftsraum ≤ 2.000 km (Zoom ≥ 0,0141)
  *   - Europa > 2.000 km (bis ≈ 4.000 km bei ZOOM_MIN)
  *
  * @param zoom Aktueller Kamerazoom.
  * @returns Bezeichnung der Detailstufe.
  */
 export function stageForZoom(zoom: number): string {
-  const visibleMetres = (1400 * METRES_PER_BASE_PIXEL) / Math.max(zoom, Number.MIN_VALUE);
+  const visibleMetres = (1350 * METRES_PER_BASE_PIXEL) / Math.max(zoom, Number.MIN_VALUE);
   if (visibleMetres <= 3) return 'Schreibtisch';
   if (visibleMetres <= 15) return 'Behausung';
   if (visibleMetres <= 40_000) return 'Siedlung';
@@ -161,9 +165,11 @@ export function clampZoom(zoom: number): number {
 /**
  * Feste Verankerung der eigenen Behausung in der Siedlung (Basispixel).
  *
- * Der Schreibtisch ist dieser Behausung räumlich zugeordnet: Beim Hineinzoomen
- * bleibt die Kamera auf diesem Punkt, es wird keine getrennte Ansicht geöffnet.
- * In MapScale, damit Karte (KingdomMap) und Ich-Perspektive
- * (FirstPersonLogic) dieselbe Verankerung ohne Zirkelimport teilen.
+ * Der Anker liegt bewusst **nahe am belegten Ortsmarker** `places.home`
+ * (Ganderkesee, EPSG:25832 E=469588, N=5876004 → Basispixel [604,384]),
+ * nicht auf einem erfundenen Hausstandort: Haus und Ortsmarker sind
+ * unterschiedliche Dinge, aber der Hof gehört zum Ort. Der kleine Versatz
+ * (≈ 12 m nach Südwesten) hält Haus und Ortsmarke auf der Karte getrennt
+ * lesbar, ohne einen vermessenen Grundriss zu behaupten (≈ 7 m Versatz).
  */
-export const DWELLING_ANCHOR = { x: 500, y: 310 } as const;
+export const DWELLING_ANCHOR = { x: 604, y: 384 } as const;

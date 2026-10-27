@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BASE_HEIGHT, BASE_WIDTH, METRES_PER_BASE_PIXEL, ZOOM_DWELLING, ZOOM_MAX, ZOOM_MIN,
-  ZOOM_SURROUNDINGS,
+  BASE_HEIGHT, BASE_WIDTH, METRES_PER_BASE_PIXEL, ZOOM_DWELLING, ZOOM_EUROPE, ZOOM_MAX, ZOOM_MIN,
+  ZOOM_REGION, ZOOM_SURROUNDINGS,
   baseToMetres, clampZoom, formatDistance, longitudeStretch, metresToBase,
   pixelsPerMetre, scaleBar, stageForZoom
 } from './MapScale';
@@ -46,14 +46,14 @@ describe('Gemeinsame Kartenmaßstäbe', () => {
   it('orders all stages strictly between the endpoints', () => {
     // Zooming out walks Schreibtisch → Behausung → Siedlung → Umgebung →
     // Region → Herrschaftsraum → Europa without skipping or repeating a stage.
-    const walk = [ZOOM_MAX, 2000, 1, 0.3, 0.07, 0.016, ZOOM_MIN].map(stageForZoom);
+    const walk = [ZOOM_MAX, 2000, 1, ZOOM_SURROUNDINGS + 0.01, ZOOM_REGION + 0.01, ZOOM_EUROPE * 2.1, ZOOM_MIN].map(stageForZoom);
     expect(walk).toEqual([
       'Schreibtisch', 'Behausung', 'Siedlung', 'Umgebung',
       'Region', 'Herrschaftsraum', 'Europa'
     ]);
     expect(stageForZoom(ZOOM_SURROUNDINGS)).toBe('Umgebung');
     // A step below the surroundings zoom already shows the wider region.
-    expect(stageForZoom(0.07)).toBe('Region');
+    expect(stageForZoom(ZOOM_REGION)).toBe('Region');
     // Behausung/Schreibtisch are reachable on the camera axis now.
     expect(stageForZoom(ZOOM_MAX)).toBe('Schreibtisch');
     expect(stageForZoom(ZOOM_DWELLING)).toBe('Behausung');
@@ -65,12 +65,12 @@ describe('Gemeinsame Kartenmaßstäbe', () => {
     expect(clampZoom(1.5)).toBe(1.5);
   });
   it('keeps the measurement chain consistent at both ends', () => {
-    // Schreibtisch: ≈ 3 m visible across ≈ 1400 base pixels.
-    expect((1400 * METRES_PER_BASE_PIXEL) / ZOOM_MAX).toBeCloseTo(3, 1);
-    // Europa: ≈ 4000 km visible across ≈ 1400 base pixels.
-    expect((1400 * METRES_PER_BASE_PIXEL) / ZOOM_MIN).toBeCloseTo(4_000_000, -5);
+    // Schreibtisch: ≈ 3 m visible across the 1350-px reference width.
+    expect((1350 * METRES_PER_BASE_PIXEL) / ZOOM_MAX).toBeCloseTo(3, 1);
+    // Europa: ≈ 4000 km visible across the 1350-px reference width.
+    expect((1350 * METRES_PER_BASE_PIXEL) / ZOOM_MIN).toBeCloseTo(4_000_000, -5);
     // Behausung: the dwelling anchor zoom shows ≈ 15 m.
-    expect((1400 * METRES_PER_BASE_PIXEL) / ZOOM_DWELLING).toBeCloseTo(15, 0);
+    expect((1350 * METRES_PER_BASE_PIXEL) / ZOOM_DWELLING).toBeCloseTo(15, 0);
   });
   it('reports more pixels per metre when zooming in', () => {
     expect(pixelsPerMetre(2)).toBeGreaterThan(pixelsPerMetre(1));

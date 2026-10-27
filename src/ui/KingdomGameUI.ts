@@ -1332,7 +1332,7 @@ ${body}
       // beim Verlassen die Nahansicht (Behausung) auf der Karte weitergeführt
       // wird statt eines beliebigen Ausschnitts.
       if (this.map) {
-        if (this.map.getZoom() < 4) this.map.setZoom(1944);
+        if (this.map.getZoom() < 4) this.map.setZoom(1875);
         this.map.centerOnHome();
         this.updateMapStage();
       }

@@ -983,7 +983,6 @@ export class KingdomMap {
     // Schreibtisch sichtbar. Sie ist die Brücke zur Ich-Perspektive.
     const nearVisible = zoom > 4 && this.mapScope === 'home';
     this.nearLayer.visible = nearVisible;
-    this.settlements.visible = this.settlements.visible && zoom <= 60;
     // Neighbours and relief appear once the settlement no longer fills the view.
     const wide = zoom < 0.9;
     this.neighbors.visible = wide;
@@ -1326,20 +1325,20 @@ export class KingdomMap {
       this.app.renderer.render(this.app.stage);
       return;
     }
-    const scale = (mobile
-        ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
-        : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850)) * this.zoom;
+    const fitFactor = mobile
+      ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
+      : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850);
+    const scale = fitFactor * this.zoom;
     this.world.scale.set(scale);
-    // Bei Nahstufen (Schreibtisch/Behausung) bleibt die Kamera an der
-    // Behausungsverankerung verankert: Der Ausschnitt zeigt den Hof, nicht
-    // eine leere Fläche. Versatz bleibt möglich, wird aber begrenzt.
-    const maxPan = Math.max(0, (this.app.screen.width / scale) * 0.9);
-    const maxPanY = Math.max(0, (this.app.screen.height / scale) * 0.9);
-    const offsetX = Math.max(-maxPan, Math.min(maxPan, this.offset.x));
-    const offsetY = Math.max(-maxPanY, Math.min(maxPanY, this.offset.y));
+    // Kamera-Mittelpunkt in Basispixeln: bei Nahstufen bleibt die Kamera an
+    // der Behausungsverankerung verankert (Hof sichtbar, keine leere Fläche);
+    // sonst auf der Siedlungsmitte. Versatz bleibt möglich (keine Bindung),
+    // Zentrieren geschieht nur durch ausdrückliche Aktion (centerOnHome).
+    const centre = this.zoom > 4 ? DWELLING_ANCHOR
+      : { x: 500, y: 310 };
     this.world.position.set(
-      this.app.screen.width / 2 - 500 * scale + offsetX,
-      (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2) - 310 * scale + offsetY
+      this.app.screen.width / 2 - centre.x * scale + this.offset.x,
+      (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2) - centre.y * scale + this.offset.y
     );
     this.publishScale(scale);
     this.app.renderer.render(this.app.stage);
