@@ -1296,18 +1296,20 @@ export class KingdomMap {
     // Fit to a narrower, usable map window; retain normal desktop framing.
     const mobile = this.app.screen.width < 760;
     if (this.zoomLevel === 'zentraleuropa') {
-      // Eigene Einpassung für die Reliefkarte (960 × 660).
-      // Wenig Slider-Zoom bedeutet Übersicht → Karte füllt die Fläche;
-      // mehr Zoom vergrößert sie für Details. Die Dorf-Referenz (1350 × 850)
-      // würde die Reliefkarte klein und versetzt darstellen.
+      // Dieselbe Maßstabskette wie die Siedlung: effektive Skala =
+      // Fit-Faktor × Zoom. Die Reliefkarte (960 × 660 Basispixel) bleibt
+      // zentriert im Ausschnitt; der Zoom verkleinert/vergrößert sie
+      // kontinuierlich, ohne die Meter-pro-Pixel-Angabe zu verfälschen.
       const mapWidth = 960;
       const mapHeight = this.mapScope === 'home' ? 672 : 660;
-      const fitScale = Math.min((this.app.screen.width - 24) / mapWidth, (this.app.screen.height - 76) / mapHeight);
-      const scale = fitScale * (0.95 + (zoomToSlider(this.zoom) - 28) * 0.006);
+      const fitScale = mobile
+        ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
+        : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850);
+      const scale = fitScale * this.zoom;
       this.world.scale.set(scale);
       this.world.position.set(
         (this.app.screen.width - mapWidth * scale) / 2 + this.offset.x,
-        (this.app.screen.height - mapHeight * scale) / 2 + 25 + this.offset.y
+        (this.app.screen.height - mapHeight * scale) / 2 + this.offset.y
       );
       this.publishScale(scale);
       this.app.renderer.render(this.app.stage);
