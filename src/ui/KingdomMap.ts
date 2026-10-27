@@ -44,6 +44,12 @@ export class KingdomMap {
   private observer?: ResizeObserver;
   private zoom: number = 1;
   private offset = { x: 0, y: 0 };
+  /**
+   * Kamera-Mittelpunkt in Basispixeln (Weltkoordinaten). Vorrangig vor dem
+   * Bildschirmversatz: Resize erhält den Mittelpunkt, der sichtbare
+   * Ausschnitt ändert sich dadurch. `offset` bleibt für Drag/Pfeiltasten.
+   */
+  private centre = { x: 500, y: 310 };
   private destroyed: boolean = false;
   private initialized: boolean = false;
   private motionEnabled = false;
@@ -222,8 +228,9 @@ export class KingdomMap {
       const directions: Record<string, [number, number]> = {ArrowLeft:[40,0],ArrowRight:[-40,0],ArrowUp:[0,40],ArrowDown:[0,-40]};
       if (directions[event.key]) {
         event.preventDefault();
-        this.offset.x += directions[event.key][0];
-        this.offset.y += directions[event.key][1];
+        // Pfeiltasten verschieben den Kameramittelpunkt in Weltkoordinaten.
+        this.centre.x -= directions[event.key][0] / this.currentScale;
+        this.centre.y -= directions[event.key][1] / this.currentScale;
         this.fit();
       } else if (event.key === 'Home') {
         event.preventDefault();
@@ -264,8 +271,9 @@ export class KingdomMap {
       const dy = event.clientY - drag.y;
       if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
       if (drag.moved) {
-        this.offset.x += dx;
-        this.offset.y += dy;
+        // Ziehen verschiebt den Kameramittelpunkt in Weltkoordinaten.
+        this.centre.x -= dx / this.currentScale;
+        this.centre.y -= dy / this.currentScale;
         drag.x = event.clientX;
         drag.y = event.clientY;
         this.fit();
@@ -739,28 +747,42 @@ export class KingdomMap {
   /**
    * Ändert den Zoom um einen Faktor, optional am Bildschirmpunkt verankert.
    *
-   * Der Punkt unter dem Mauszeiger beziehungsweise zwischen den Fingern bleibt
-   * dabei liegen; ohne Angabe wird um die Bildschirmmitte gezoomt. Es gibt
-   * keinen Sprung zu einer anderen Ansicht.
+   * Der Weltpunkt unter dem Mauszeiger beziehungsweise zwischen den Fingern
+   * bleibt dabei an derselben Bildschirmposition. Die Verankerung läuft über
+   * den Kameramittelpunkt in Weltkoordinaten: Ein Basispixel an Bildschirm-x
+   * `ax` hat die Weltkoordinate `centre + (ax − screenW/2)/scale`; nach der
+   * Skalenänderung wird der Mittelpunkt so verschoben, dass diese Weltkoordinate
+   * wieder bei `ax` liegt. Ohne Angabe wird um die Bildschirmmitte gezoomt
+   * (Mittelpunkt bleibt). Es gibt keinen Sprung zu einer anderen Ansicht und
+   * keine automatische Bindung an den Hausanker.
    *
    * @param factor Multiplikator (>1 vergrößert, <1 verkleinert).
-   * @param anchorX Bildschirm-x des Verankerungspunkts.
-   * @param anchorY Bildschirm-y des Verankerungspunkts.
+   * @param anchorX Bildschirm-x (CSS-Pixel) des Verankerungspunkts.
+   * @param anchorY Bildschirm-y (CSS-Pixel) des Verankerungspunkts.
    * @returns Nothing.
    */
   public zoomBy(factor: number, anchorX?: number, anchorY?: number): void {
     if (this.destroyed || !Number.isFinite(factor) || factor <= 0) return;
-    const previous = this.zoom;
-    const next = clampZoom(previous * factor);
-    if (next === previous) return;
+    const previousScale = this.currentScale;
+    const next = clampZoom(this.zoom * factor);
+    if (next === this.zoom) return;
+    const nextScale = this.fitFactor() * next;
+    if (previousScale <= 0 || nextScale <= 0) {
+      this.zoom = next;
+      this.syncLevelFromZoom();
+      this.fit();
+      return;
+    }
     const width = this.app.screen?.width ?? 0;
     const height = this.app.screen?.height ?? 0;
     const ax = anchorX ?? width / 2;
     const ay = anchorY ?? height / 2;
-    // Keep the anchored world point fixed while the scale changes.
-    const ratio = next / previous;
-    this.offset.x = ax - (ax - this.offset.x) * ratio;
-    this.offset.y = ay - (ay - this.offset.y) * ratio;
+    // Weltkoordinate des Ankerpunkts vor dem Zoom (volle Transformation).
+    const worldX = this.centre.x + (ax - width / 2 - this.offset.x) / previousScale;
+    const worldY = this.centre.y + (ay - height / 2 - this.offset.y) / previousScale;
+    // Mittelpunkt so verschieben, dass dieselbe Weltkoordinate wieder bei ax liegt.
+    this.centre.x = worldX - (ax - width / 2 - this.offset.x) / nextScale;
+    this.centre.y = worldY - (ay - height / 2 - this.offset.y) / nextScale;
     this.zoom = next;
     this.syncLevelFromZoom();
     this.fit();
@@ -800,30 +822,47 @@ export class KingdomMap {
     return this.world.scale.x || 0;
   }
 
-  /** Kamerazustand zum Speichern. */
+  /** Fit-Faktor der aktuellen Einpassung (Referenz 1350 × 850 Basispixel). */
+  private fitFactor(): number {
+    if (!this.initialized) return 1;
+    const mobile = this.app.screen.width < 760;
+    return mobile
+      ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
+      : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850);
+  }
+
+  /** zuletzt gesetzte effektive Skala (für zoomBy-Verankerung). */
+  private currentScale = 1;
+
+  /** Kamerazustand zum Speichern (Mittelpunkt in Weltkoordinaten). */
   public getCameraState(): CameraState {
-    return { zoom: this.zoom, x: this.offset.x, y: this.offset.y };
+    return { zoom: this.zoom, x: this.centre.x, y: this.centre.y };
   }
 
   /**
    * Stellt einen gespeicherten Kamerazustand wieder her.
-   * Veraltete Moduswerte werden ignoriert, nicht wieder eingeführt.
+   * Der Mittelpunkt ist die Weltkoordinate; ältere Spielstände, die einen
+   * Bildschirmversatz speicherten, werden als Mittelpunkt interpretiert —
+   * der Wertebereich ist identisch (Basispixel), die Bedeutung hat sich
+   * zu Gunsten resize-stabiler Kamera geändert.
    */
   public setCameraState(state: Partial<CameraState> | undefined | null): void {
     if (this.destroyed || !state) return;
     if (Number.isFinite(state.zoom)) this.zoom = clampZoom(state.zoom as number);
-    if (Number.isFinite(state.x)) this.offset.x = state.x as number;
-    if (Number.isFinite(state.y)) this.offset.y = state.y as number;
+    if (Number.isFinite(state.x)) this.centre.x = state.x as number;
+    if (Number.isFinite(state.y)) this.centre.y = state.y as number;
+    this.offset = { x: 0, y: 0 };
     this.syncLevelFromZoom();
     this.fit();
   }
 
   /**
-   * Zentriert die Ansicht auf den eigenen Standort.
+   * Zentriert die Ansicht auf den eigenen Standort (ausdrückliche Aktion).
    * Verändert nur den Kartenausschnitt, nicht die Spielposition.
    */
   public centerOnHome(): void {
     if (this.destroyed) return;
+    this.centre = { x: DWELLING_ANCHOR.x, y: DWELLING_ANCHOR.y };
     this.offset = { x: 0, y: 0 };
     this.fit();
   }
@@ -1295,52 +1334,17 @@ export class KingdomMap {
     // On phones the old 1350px reference shrank the entire settlement to a blur.
     // Fit to a narrower, usable map window; retain normal desktop framing.
     const mobile = this.app.screen.width < 760;
-    if (this.zoomLevel === 'zentraleuropa') {
-      // Dieselbe Maßstabskette wie die Siedlung: effektive Skala =
-      // Fit-Faktor × Zoom. Die Reliefkarte (960 × 660 Basispixel) bleibt
-      // zentriert im Ausschnitt; der Zoom verkleinert/vergrößert sie
-      // kontinuierlich, ohne die Meter-pro-Pixel-Angabe zu verfälschen.
-      const mapWidth = 960;
-      const mapHeight = this.mapScope === 'home' ? 672 : 660;
-      const fitScale = mobile
-        ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
-        : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850);
-      const scale = fitScale * this.zoom;
-      this.world.scale.set(scale);
-      this.world.position.set(
-        (this.app.screen.width - mapWidth * scale) / 2 + this.offset.x,
-        (this.app.screen.height - mapHeight * scale) / 2 + this.offset.y
-      );
-      this.publishScale(scale);
-      this.app.renderer.render(this.app.stage);
-      return;
-    }
-    if (this.mapScope === 'world') {
-      const bounds = this.neighbors.getLocalBounds();
-      const minX = Math.min(bounds.x,300), minY = Math.min(bounds.y,220);
-      const maxX = Math.max(bounds.x+bounds.width,660), maxY = Math.max(bounds.y+bounds.height,420);
-      const scale = Math.max(0.01,Math.min((this.app.screen.width-32)/(maxX-minX), (this.app.screen.height-72)/(maxY-minY))) * this.zoom;
-      this.world.scale.set(scale);
-      this.world.position.set(this.app.screen.width/2-(minX+maxX)/2*scale+this.offset.x,
-        this.app.screen.height/2+16-(minY+maxY)/2*scale+this.offset.y);
-      this.publishScale(scale);
-      this.app.renderer.render(this.app.stage);
-      return;
-    }
-    const fitFactor = mobile
-      ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
-      : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850);
-    const scale = fitFactor * this.zoom;
+    const fitScale = this.fitFactor();
+    const scale = fitScale * this.zoom;
+    this.currentScale = scale;
     this.world.scale.set(scale);
-    // Kamera-Mittelpunkt in Basispixeln: bei Nahstufen bleibt die Kamera an
-    // der Behausungsverankerung verankert (Hof sichtbar, keine leere Fläche);
-    // sonst auf der Siedlungsmitte. Versatz bleibt möglich (keine Bindung),
-    // Zentrieren geschieht nur durch ausdrückliche Aktion (centerOnHome).
-    const centre = this.zoom > 4 ? DWELLING_ANCHOR
-      : { x: 500, y: 310 };
+    // Kamera-Mittelpunkt in Weltkoordinaten (Basispixel) steuert den Ausschnitt:
+    // Der Mittelpunkt liegt immer in der Bildschirmmitte, der Versatz schiebt
+    // zusätzlich. Resize ändert nur den sichtbaren Rahmen, nicht den Mittelpunkt
+    // und nicht den Maßstab. Keine automatische Bindung an den Hausanker.
     this.world.position.set(
-      this.app.screen.width / 2 - centre.x * scale + this.offset.x,
-      (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2) - centre.y * scale + this.offset.y
+      this.app.screen.width / 2 - this.centre.x * scale + this.offset.x,
+      (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2) - this.centre.y * scale + this.offset.y
     );
     this.publishScale(scale);
     this.app.renderer.render(this.app.stage);

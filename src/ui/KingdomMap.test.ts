@@ -9,6 +9,8 @@ function mapFixture() {
     zoom: 1, zoomLevel: 'dorf', mapScope: 'home', projection: 'isometric',
     motionEnabled: true, destroyed: false, initialized: true,
     offset: { x: 40, y: 20 },
+    centre: { x: 500, y: 310 },
+    currentScale: 1,
     app: { canvas: { dataset: {} }, screen: { width: 800, height: 600 },
       ticker: { remove: vi.fn() }, destroy: vi.fn() },
     fit: vi.fn(), drawRegionLayer: vi.fn(), loadReliefTexture: vi.fn(),
