@@ -16,7 +16,7 @@ import {
   zoomToSlider
 } from './MapZoomLevels';
 import { METRES_PER_BASE_PIXEL, metresToBase, clampZoom, scaleBar, stageForZoom } from './MapScale';
-import { DWELLING_INTERIOR, DWELLING_DOOR, DWELLING_HALF_DEPTH, DWELLING_HALF_WIDTH, YARD_EXTENT } from './FirstPersonLogic';
+import { DWELLING_DOOR, DWELLING_HALF_DEPTH, DWELLING_HALF_WIDTH, YARD_EXTENT } from './FirstPersonLogic';
 
 /**
  * Feste Verankerung der eigenen Behausung in der Siedlung (Basispixel).

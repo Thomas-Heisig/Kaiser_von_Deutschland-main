@@ -1731,9 +1731,15 @@ ${body}
     const panel = this.root.querySelector<HTMLElement>('#panel');
     if (popup && panel) {
       // Große Screens: nichtmodales Seitenblatt — die Karte bleibt daneben
-      // bedienbar und Kamera/Fläche verändern sich nicht. Kleine Screens:
-      // schließbarer modal Dialog, dort gibt es keinen Platz für beides.
-      if (!popup.open) popup.show();
+      // bedienbar und Kamera/Fläche verändern sich nicht. Kleine Screens
+      // (≤ 900 px): modal Dialog mit Fokusfang, damit Tastaturbedienung nicht
+      // unbeabsichtigt verdeckte Kartenaktionen auslöst; Escape schließt.
+      const narrow = window.matchMedia('(max-width: 900px)').matches;
+      if (popup.open && popup.matches('dialog:modal') !== narrow) popup.close();
+      if (!popup.open) {
+        if (narrow) popup.showModal();
+        else popup.show();
+      }
       const title = this.root.querySelector<HTMLElement>('#section-dialog-title');
       const button = this.root.querySelector<HTMLButtonElement>('nav [data-view="' + view + '"]');
       if (title) title.textContent = button?.textContent?.trim() ?? 'Verwaltung';
