@@ -833,6 +833,8 @@ export class KingdomMap {
 
   /** zuletzt gesetzte effektive Skala (für zoomBy-Verankerung). */
   private currentScale = 1;
+  /** Dach-Ausblendungszustand mit Hysterese (applyDetailFade). */
+  private roofHidden = false;
 
   /** Kamerazustand zum Speichern (Mittelpunkt in Weltkoordinaten). */
   public getCameraState(): CameraState {
@@ -1028,14 +1030,16 @@ export class KingdomMap {
     } else if (this.nearLayer.visible && (zoom < 3.5 || this.mapScope !== 'home')) {
       this.nearLayer.visible = false;
     }
-    // Dach-Ausblendung zur Innenraumeinsicht: Ab der Schreibtischstufe
-    // (Zoom ≥ 9375/3 ≈ 3125, sichtbar ≤ 9 m) verdeckt das Dach die Möbel;
-    // der Innenraum wird sichtbar, ohne dass das Haus Größe oder Position
-    // ändert. Hysterese analog zur Nahgeometrie.
-    const roofHidden = zoom >= 2500;
-    this.nearLayer.alpha = roofHidden ? 1 : 1;
-    const roof = this.nearLayer.children[1] as Container | undefined;
-    if (roof) roof.visible = !roofHidden;
+    // Dach-Ausblendung zur Innenraumeinsicht: Ab sichtbarer Breite ≤ 9 m
+    // (Zoom ≥ 3125) verdeckt das Dach die Möbel; es blendet aus, ohne dass
+    // das Haus seine Position oder Größe ändert. Hysterese analog zur
+    // Nahgeometrie (einblenden ≤ 2500, ausblenden ≥ 3125).
+    const roof = this.nearLayer.children[2];
+    if (roof) {
+      if (!this.roofHidden && zoom >= 3125) this.roofHidden = true;
+      else if (this.roofHidden && zoom < 2500) this.roofHidden = false;
+      roof.visible = !this.roofHidden;
+    }
     // Neighbours and relief appear once the settlement no longer fills the view.
     const wide = zoom < 0.9;
     this.neighbors.visible = wide;
@@ -1100,19 +1104,21 @@ export class KingdomMap {
       .stroke({ color: 0x4d6b45, width: 2, alpha: 0.6 });
     layer.addChild(yard);
     // Behausung: 6 × 8 m (DWELLING_HALF_* × 2), Tür an der Südseite.
-    const house = new Graphics();
+    // Drei getrennte Grafiken: Wände (bleibt), Dach (blendet zur
+    // Innenraumeinsicht aus), Möbel (immer über dem Boden, unter dem Dach).
     const hw = g(DWELLING_HALF_WIDTH), hd = g(DWELLING_HALF_DEPTH);
-    house.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, 2)
+    const walls = new Graphics();
+    walls.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, 2)
       .fill(0x8a6b4a);
-    house.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, 2)
+    walls.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, 2)
       .stroke({ color: 0x5d4630, width: 2 });
     // Innenraum (dunkler Kern) und Türspalt (Hoffarbe).
-    house.roundRect(anchor.x - hw + 1, anchor.y - hd + 1, 2 * hw - 2, 2 * hd - 2, 1)
+    walls.roundRect(anchor.x - hw + 1, anchor.y - hd + 1, 2 * hw - 2, 2 * hd - 2, 1)
       .fill(0x6d5336);
     const doorW = g(DWELLING_DOOR.x1 - DWELLING_DOOR.x0);
-    house.rect(anchor.x - doorW / 2, anchor.y + hd - 2, doorW, 4)
+    walls.rect(anchor.x - doorW / 2, anchor.y + hd - 2, doorW, 4)
       .fill(0x6a8a5c);
-    layer.addChild(house);
+    layer.addChild(walls);
     // Möbel (Meter identisch zur Ich-Perspektive): Tisch, Bank, Bett, Herd.
     const furniture = new Graphics();
     const box = (mx: number, mz: number, mw: number, md: number, color: number): void => {
@@ -1124,6 +1130,12 @@ export class KingdomMap {
     box(-2.2, 2.4, 1.9, 0.9, 0x9a8a66); // Bett
     box(2.3, -2.8, 1.1, 1.1, 0x4a4038); // Herd
     layer.addChild(furniture);
+    // Dach als eigenes Kind (Index 2): blendet zur Innenraumeinsicht aus,
+    // ohne dass das Haus seine Position oder Größe ändert.
+    const roof = new Graphics();
+    roof.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, 2)
+      .fill({ color: 0x7a4f33, alpha: 0.9 });
+    layer.addChild(roof);
     // Beschriftung erst ab Behausungsstufe sinnvoll; hier nur Datenattribut.
     this.app.canvas.dataset.nearGeometry = 'dwelling-yard-furniture';
   }
