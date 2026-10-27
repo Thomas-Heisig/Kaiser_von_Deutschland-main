@@ -1008,6 +1008,10 @@ export class KingdomMap {
    * Die Übergänge sind gestaffelt statt an einer harten Schwelle, damit beim
    * Zoomen nichts flackert. Gebäude verschwinden beim Herauszoomen, statt als
    * übergroße Häuser über der Region zu liegen.
+   *
+   * Nahgeometrie (Hof/Behausung) nutzt eine Hysterese: Einblenden erst bei
+   * Zoom > 5, Ausblenden erst unter Zoom < 3,5 — der Zwischenraum verhindert
+   * Flackern, wenn der Zoom nahe der Grenze pendelt.
    */
   private applyDetailFade(): void {
     if (this.destroyed) return;
@@ -1017,11 +1021,21 @@ export class KingdomMap {
     this.settlements.visible = buildingsVisible && this.mapScope === 'home';
     this.settlementTerrain.visible = buildingsVisible && this.mapScope === 'home';
     this.animation.visible = buildingsVisible && this.mapScope === 'home' && this.motionEnabled;
-    // Nahgeometrie erscheint, wenn die Siedlung nicht mehr ins Bild passt
-    // (Zoom > 4 ≈ sichtbare Breite unter 7,3 km) und bleibt bis zum
-    // Schreibtisch sichtbar. Sie ist die Brücke zur Ich-Perspektive.
-    const nearVisible = zoom > 4 && this.mapScope === 'home';
-    this.nearLayer.visible = nearVisible;
+    // Nahgeometrie mit Hysterese: sichtbar bleiben, sobald eingeblendet, bis
+    // deutlich herausgezoomt wurde. Sie ist die Brücke zur Ich-Perspektive.
+    if (!this.nearLayer.visible && zoom > 5 && this.mapScope === 'home') {
+      this.nearLayer.visible = true;
+    } else if (this.nearLayer.visible && (zoom < 3.5 || this.mapScope !== 'home')) {
+      this.nearLayer.visible = false;
+    }
+    // Dach-Ausblendung zur Innenraumeinsicht: Ab der Schreibtischstufe
+    // (Zoom ≥ 9375/3 ≈ 3125, sichtbar ≤ 9 m) verdeckt das Dach die Möbel;
+    // der Innenraum wird sichtbar, ohne dass das Haus Größe oder Position
+    // ändert. Hysterese analog zur Nahgeometrie.
+    const roofHidden = zoom >= 2500;
+    this.nearLayer.alpha = roofHidden ? 1 : 1;
+    const roof = this.nearLayer.children[1] as Container | undefined;
+    if (roof) roof.visible = !roofHidden;
     // Neighbours and relief appear once the settlement no longer fills the view.
     const wide = zoom < 0.9;
     this.neighbors.visible = wide;
