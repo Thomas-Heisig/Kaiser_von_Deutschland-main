@@ -16,7 +16,7 @@ function mapFixture() {
     , renderedBuildings: { dispose: vi.fn() }
   });
   for (const name of ['settlements', 'settlementTerrain', 'retroScenery', 'neighbors', 'animation',
-    'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer', 'scaleLayer']) {
+    'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer', 'scaleLayer', 'nearLayer']) {
     map[name] = { visible: true, children: [{}], removeChildren: () => [] };
   }
   return map;
@@ -83,7 +83,7 @@ describe('map lifecycle and view transitions', () => {
   });
 
   it('clamps zoom to the continuous range', () => {
-    expect(clampZoom(1000)).toBe(ZOOM_MAX);
+    expect(clampZoom(1_000_000)).toBe(ZOOM_MAX);
     expect(clampZoom(-5)).toBe(ZOOM_MIN);
   });
 

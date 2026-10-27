@@ -38,24 +38,28 @@ export const METRES_PER_BASE_PIXEL_Y = 14_000 / BASE_HEIGHT;
 /**
  * Kontinuierlicher Zoombereich.
  *
- * `1` zeigt die Siedlung in ihrer natürlichen Größe. Kleinere Werte zoomen
- * heraus (bis Europa), größere hinein (bis zum Schreibtisch). Der Bereich ist
- * so gewählt, dass Europa (≈ 4.000 km) und der Schreibtisch (≈ 3 m) in einer
- * durchgehenden Achse erreichbar sind.
+ * Die Grenzen sind aus den **benötigten sichtbaren Weltgrößen** abgeleitet,
+ * nicht willkürlich (Referenz: ≈ 1.400 Basispixel sichtbarer Kartenbreite):
+ *
+ *   - `ZOOM_MIN = 0.0073` → ≈ 4.000 km sichtbar (Europa von Lissabon bis Warschau).
+ *   - `ZOOM_MAX ≈ 9722`   → ≈ 3 m sichtbar (Schreibtisch).
+ *
+ * `1` zeigt die 20-km-Siedlung in ihrer natürlichen Größe. Der Bereich ist
+ * durchgehend; jede der sieben Stufen (Schreibtisch → Europa) ist erreichbar.
  */
-export const ZOOM_MIN = 0.02;
-export const ZOOM_MAX = 6;
+export const ZOOM_MIN = 0.0073;
+export const ZOOM_MAX = 9723;
 
-/** Zoomstufe, bei der die eigene Behausung als Ganzes sichtbar wird. */
-export const ZOOM_DWELLING = 4;
-/** Zoomstufe, bei der die Siedlung als Ganzes sichtbar ist. */
+/** Zoomstufe, bei der die eigene Behausung als Ganzes sichtbar wird (≈ 15 m). */
+export const ZOOM_DWELLING = 1945;
+/** Zoomstufe, bei der die Siedlung als Ganzes sichtbar ist (20 km). */
 export const ZOOM_SETTLEMENT = 1;
-/** Zoomstufe, bei der die nähere Umgebung (≈ 73 km) sichtbar wird. */
-export const ZOOM_SURROUNDINGS = 0.35;
-/** Zoomstufe, bei der die Region sichtbar wird. */
-export const ZOOM_REGION = 0.25;
-/** Zoomstufe, bei der Europa sichtbar wird. */
-export const ZOOM_EUROPE = 0.03;
+/** Zoomstufe, bei der die nähere Umgebung (≈ 90 km) sichtbar wird. */
+export const ZOOM_SURROUNDINGS = 0.324;
+/** Zoomstufe, bei der die Region (≈ 400 km) sichtbar wird. */
+export const ZOOM_REGION = 0.0729;
+/** Zoomstufe, bei der Europa (≈ 4.000 km) sichtbar wird. */
+export const ZOOM_EUROPE = 0.0073;
 
 /**
  * Bildschirmpixel je Weltmeter bei einem Zoom.
@@ -94,8 +98,8 @@ export function baseToMetres(pixels: number): number {
 export function scaleBar(zoom: number, maxWidthPx = 120): { metres: number; label: string } {
   const perPixel = METRES_PER_BASE_PIXEL / Math.max(zoom, Number.MIN_VALUE);
   const target = maxWidthPx * perPixel;
-  const steps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000,
-    10_000, 20_000, 50_000, 100_000, 200_000, 500_000, 1_000_000];
+  const steps = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000,
+    10_000, 20_000, 50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000];
   const metres = steps.find(step => step >= target) ?? steps[steps.length - 1];
   return { metres, label: formatDistance(metres) };
 }
@@ -123,30 +127,29 @@ export function longitudeStretch(latitude: number): number {
  * Benennt die Detailstufe eines Zooms. Die Begriffe beschreiben dieselbe
  * Ansicht, keine getrennten Karten.
  *
- * Die Stufen sind aus tatsächlich sichtbaren Weltgrößen abgeleitet: Bei
- * Zoom 1 zeigt die Karte die 20-km-Siedlung, bei ZOOM_MAX ≈ 3,5 m/px —
- * das ist Behausungsgröße, noch kein Schreibtisch. „Schreibtisch" wird
- * deshalb nur vergeben, wenn die sichtbare Weltbreite unter ≈ 12 m fällt
- * (Schreibtisch + Behausung), was die Kamera-Achse allein noch nicht
- * erreicht; die Nahansicht ist die Ich-Perspektive (FirstPersonView).
+ * Die Stufen sind aus tatsächlich sichtbaren Weltgrößen abgeleitet (Referenz
+ * ≈ 1.400 Basispixel sichtbarer Breite; sichtbare Meter ≈ 29.167/Zoom):
  *
- * Herrschaftsraum ↔ Europa: Die Reliefkarte deckt ≈ 1.460 km Breite ab
- * (sichtbar bei ZOOM_MIN). Der Stufenname folgt dem sichtbaren Ausschnitt —
- * ZOOM_MIN zeigt Mitteleuropa (Herrschaftsraum), nicht ganz Europa.
+ *   - Schreibtisch ≤ 3 m (Zoom ≥ 9.722) — Nahgeometrie + Ich-Perspektive
+ *   - Behausung ≤ 15 m (Zoom ≥ 1.944)
+ *   - Siedlung ≤ 40 km (Zoom ≥ 0,73)
+ *   - Umgebung ≤ 120 km (Zoom ≥ 0,243)
+ *   - Region ≤ 500 km (Zoom ≥ 0,058)
+ *   - Herrschaftsraum ≤ 2.000 km (Zoom ≥ 0,0146)
+ *   - Europa > 2.000 km (bis ≈ 4.000 km bei ZOOM_MIN)
  *
  * @param zoom Aktueller Kamerazoom.
  * @returns Bezeichnung der Detailstufe.
  */
 export function stageForZoom(zoom: number): string {
-  // Sichtbare Weltbreite bei vollem Bildschirm (Referenz ~1400 Basispixel):
-  // ≈ 29.167 m / Zoom. Schwellen prüfen, was tatsächlich sichtbar ist.
   const visibleMetres = (1400 * METRES_PER_BASE_PIXEL) / Math.max(zoom, Number.MIN_VALUE);
-  if (visibleMetres <= 12) return 'Schreibtisch';       // ≈ Zoom 2431 — nur FP
-  if (visibleMetres <= 30) return 'Behausung';          // ≈ Zoom 971 — nur FP
-  if (visibleMetres <= 40_000) return 'Siedlung';       // Zoom ≥ 0.73
-  if (visibleMetres <= 90_000) return 'Umgebung';       // Zoom ≥ 0.32
-  if (visibleMetres <= 400_000) return 'Region';        // Zoom ≥ 0.073
-  return 'Herrschaftsraum';                             // ≈ ≤ 1.460 km Relief
+  if (visibleMetres <= 3) return 'Schreibtisch';
+  if (visibleMetres <= 15) return 'Behausung';
+  if (visibleMetres <= 40_000) return 'Siedlung';
+  if (visibleMetres <= 120_000) return 'Umgebung';
+  if (visibleMetres <= 500_000) return 'Region';
+  if (visibleMetres <= 2_000_000) return 'Herrschaftsraum';
+  return 'Europa';
 }
 
 /** Klemmt einen Zoom auf den erlaubten Bereich. */

@@ -25,6 +25,7 @@
 import { historicalEpochFor } from '../core/HistoricalContext';
 import { EvidenceLevel, HistoricalRegion, PolityCatalog } from '../history/PolityModel';
 import { REGIONS } from '../history/PolityData';
+import { ZOOM_MIN, ZOOM_MAX } from './MapScale';
 
 /** Sichtbare Kartenebene. */
 export type MapZoomLevel = 'dorf' | 'zentraleuropa';
@@ -39,10 +40,10 @@ export const SLIDER_MAX = 100;
  * Beide Grenzen stammen aus der gemeinsamen Maßstabsachse in `MapScale.ts`
  * (ZOOM_MIN … ZOOM_MAX), damit Slider, Kamera, Maßstabsbalken und
  * Detailstufen dieselbe Skala teilen und keine getrennten Grenzen mehr
- * existieren. Der Slider deckt damit Schreibtisch bis Europa vollständig ab.
+ * existieren. Der Slider deckt Schreibtisch bis Europa vollständig ab.
  */
-export const CAMERA_ZOOM_MIN = 0.02;
-export const CAMERA_ZOOM_MAX = 6;
+export const CAMERA_ZOOM_MIN = ZOOM_MIN;
+export const CAMERA_ZOOM_MAX = ZOOM_MAX;
 
 /**
  * Schwellen mit Hysterese.

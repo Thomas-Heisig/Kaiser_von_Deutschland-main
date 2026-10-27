@@ -15,7 +15,8 @@ import {
   sliderToZoom,
   zoomToSlider
 } from './MapZoomLevels';
-import { METRES_PER_BASE_PIXEL, clampZoom, scaleBar, stageForZoom } from './MapScale';
+import { METRES_PER_BASE_PIXEL, metresToBase, clampZoom, scaleBar, stageForZoom } from './MapScale';
+import { DWELLING_INTERIOR, DWELLING_DOOR, DWELLING_HALF_DEPTH, DWELLING_HALF_WIDTH, YARD_EXTENT } from './FirstPersonLogic';
 
 /**
  * Feste Verankerung der eigenen Behausung in der Siedlung (Basispixel).
@@ -97,6 +98,12 @@ export class KingdomMap {
   private readonly reliefLayer = new Container();
   /** Bildschirmfeste Overlays: Maßstabsbalken und Stufenbezeichnung. */
   private readonly scaleLayer = new Container();
+  /**
+   * Nahgeometrie (Schreibtisch/Behausung): Hof, Behausung mit Innenraum und
+   * Möbel an {@link DWELLING_ANCHOR}. Meter-Basis identisch zur
+   * Ich-Perspektive (FirstPersonLogic), damit beide Ansichten zusammenpassen.
+   */
+  private readonly nearLayer = new Container();
 
   private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
     if (this.destroyed || document.hidden) return;
@@ -169,6 +176,8 @@ export class KingdomMap {
     this.reliefLayer.visible = false;
     this.world.addChild(this.reliefLayer);
     this.world.addChild(this.regionLayer);
+    this.world.addChild(this.nearLayer);
+    this.drawNearGeometry();
     // Screen-fixed: never transformed with the world, so labels stay readable.
     this.app.stage.addChild(this.scaleLayer);
     for (let i = 0; i < 5; i++) {
@@ -976,6 +985,12 @@ export class KingdomMap {
     this.settlements.visible = buildingsVisible && this.mapScope === 'home';
     this.settlementTerrain.visible = buildingsVisible && this.mapScope === 'home';
     this.animation.visible = buildingsVisible && this.mapScope === 'home' && this.motionEnabled;
+    // Nahgeometrie erscheint, wenn die Siedlung nicht mehr ins Bild passt
+    // (Zoom > 4 ≈ sichtbare Breite unter 7,3 km) und bleibt bis zum
+    // Schreibtisch sichtbar. Sie ist die Brücke zur Ich-Perspektive.
+    const nearVisible = zoom > 4 && this.mapScope === 'home';
+    this.nearLayer.visible = nearVisible;
+    this.settlements.visible = this.settlements.visible && zoom <= 60;
     // Neighbours and relief appear once the settlement no longer fills the view.
     const wide = zoom < 0.9;
     this.neighbors.visible = wide;
@@ -1013,6 +1028,59 @@ export class KingdomMap {
     } finally {
       this.reliefLoading = false;
     }
+  }
+
+  /**
+   * Zeichnet die Nahgeometrie (Hof, Behausung, Innenraum) an der
+   * Behausungsverankerung. Einheiten: Meter → Basispixel über die einzige
+   * Umrechnung {@link METRES_PER_BASE_PIXEL}; identische Maße wie die
+   * Ich-Perspektive (FirstPersonLogic), damit Haus und Dorf zusammenpassen.
+   *
+   * Die Geometrie ist statisch und wird einmal gebaut; Sichtbarkeit steuert
+   * {@link applyDetailFade}.
+   */
+  private drawNearGeometry(): void {
+    if (this.destroyed) return;
+    for (const child of this.nearLayer.removeChildren()) child.destroy({ children: true });
+    const g = (m: number): number => metresToBase(m);
+    const anchor = DWELLING_ANCHOR;
+    const layer = this.nearLayer;
+    // Hof (24 × 24 m um die Behausung) — dieselbe Fläche wie YARD_EXTENT.
+    const yard = new Graphics();
+    yard.rect(anchor.x - g(YARD_EXTENT), anchor.y - g(YARD_EXTENT),
+      g(2 * YARD_EXTENT), g(2 * YARD_EXTENT))
+      .fill({ color: 0x6a8a5c, alpha: 0.85 });
+    yard.rect(anchor.x - g(YARD_EXTENT), anchor.y - g(YARD_EXTENT),
+      g(2 * YARD_EXTENT), g(2 * YARD_EXTENT))
+      .stroke({ color: 0x4d6b45, width: 2, alpha: 0.6 });
+    layer.addChild(yard);
+    // Behausung: 6 × 8 m (DWELLING_HALF_* × 2), Tür an der Südseite.
+    const house = new Graphics();
+    const hw = g(DWELLING_HALF_WIDTH), hd = g(DWELLING_HALF_DEPTH);
+    house.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, 2)
+      .fill(0x8a6b4a);
+    house.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, 2)
+      .stroke({ color: 0x5d4630, width: 2 });
+    // Innenraum (dunkler Kern) und Türspalt (Hoffarbe).
+    house.roundRect(anchor.x - hw + 1, anchor.y - hd + 1, 2 * hw - 2, 2 * hd - 2, 1)
+      .fill(0x6d5336);
+    const doorW = g(DWELLING_DOOR.x1 - DWELLING_DOOR.x0);
+    house.rect(anchor.x - doorW / 2, anchor.y + hd - 2, doorW, 4)
+      .fill(0x6a8a5c);
+    layer.addChild(house);
+    // Möbel (Meter identisch zur Ich-Perspektive): Tisch, Bank, Bett, Herd.
+    const furniture = new Graphics();
+    const box = (mx: number, mz: number, mw: number, md: number, color: number): void => {
+      furniture.rect(anchor.x + g(mx) - g(mw) / 2, anchor.y + g(mz) - g(md) / 2,
+        g(mw), g(md)).fill(color).stroke({ color: 0x3a2c1c, width: 1 });
+    };
+    box(0, -2.6, 1.8, 0.9, 0x8a6238);   // Tisch
+    box(0, -1.7, 1.8, 0.35, 0x7a5630);  // Bank
+    box(-2.2, 2.4, 1.9, 0.9, 0x9a8a66); // Bett
+    box(2.3, -2.8, 1.1, 1.1, 0x4a4038); // Herd
+    layer.addChild(furniture);
+    // Beschriftung erst ab Behausungsstufe sinnvoll; hier nur Datenattribut.
+    this.app.canvas.dataset.nearGeometry = 'dwelling-yard-furniture';
   }
 
   /**
@@ -1269,9 +1337,16 @@ export class KingdomMap {
         ? Math.min(this.app.screen.width / 820, this.app.screen.height / 960)
         : Math.min(this.app.screen.width / 1350, this.app.screen.height / 850)) * this.zoom;
     this.world.scale.set(scale);
+    // Bei Nahstufen (Schreibtisch/Behausung) bleibt die Kamera an der
+    // Behausungsverankerung verankert: Der Ausschnitt zeigt den Hof, nicht
+    // eine leere Fläche. Versatz bleibt möglich, wird aber begrenzt.
+    const maxPan = Math.max(0, (this.app.screen.width / scale) * 0.9);
+    const maxPanY = Math.max(0, (this.app.screen.height / scale) * 0.9);
+    const offsetX = Math.max(-maxPan, Math.min(maxPan, this.offset.x));
+    const offsetY = Math.max(-maxPanY, Math.min(maxPanY, this.offset.y));
     this.world.position.set(
-      this.app.screen.width / 2 - 500 * scale + this.offset.x,
-      (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2) - 310 * scale + this.offset.y
+      this.app.screen.width / 2 - 500 * scale + offsetX,
+      (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2) - 310 * scale + offsetY
     );
     this.publishScale(scale);
     this.app.renderer.render(this.app.stage);
@@ -1286,10 +1361,10 @@ export class KingdomMap {
   private publishScale(screenScale: number): void {
     this.drawScaleBar();
     const canvas = this.app.canvas;
-    canvas.dataset.mapZoom = this.zoom.toFixed(4);
+    canvas.dataset.mapZoom = this.zoom.toPrecision(6);
     canvas.dataset.mapStage = stageForZoom(this.zoom);
     canvas.dataset.metresPerPixel = screenScale > 0
-      ? (METRES_PER_BASE_PIXEL / screenScale).toFixed(3) : '0';
+      ? (METRES_PER_BASE_PIXEL / screenScale).toPrecision(6) : '0';
     this.onCameraChange?.(this.getCameraState());
   }
 

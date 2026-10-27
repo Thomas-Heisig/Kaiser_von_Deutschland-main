@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BASE_HEIGHT, BASE_WIDTH, METRES_PER_BASE_PIXEL, ZOOM_MAX, ZOOM_MIN,
+  BASE_HEIGHT, BASE_WIDTH, METRES_PER_BASE_PIXEL, ZOOM_DWELLING, ZOOM_MAX, ZOOM_MIN,
   ZOOM_SURROUNDINGS,
   baseToMetres, clampZoom, formatDistance, longitudeStretch, metresToBase,
   pixelsPerMetre, scaleBar, stageForZoom
@@ -40,32 +40,37 @@ describe('Gemeinsame Kartenmaßstäbe', () => {
     expect(new Set(stages).size).toBeGreaterThan(1);
     for (const stage of stages) expect(stage.length).toBeGreaterThan(3);
     // Zooming further in never returns to a coarser stage name.
-    expect(stageForZoom(ZOOM_MAX)).toBe('Siedlung');
-    // ZOOM_MIN shows the ≈1.460 km relief area, not all of Europe.
-    expect(stageForZoom(ZOOM_MIN)).toBe('Herrschaftsraum');
+    expect(stageForZoom(ZOOM_MAX)).toBe('Schreibtisch');
+    expect(stageForZoom(ZOOM_MIN)).toBe('Europa');
   });
   it('orders all stages strictly between the endpoints', () => {
-    // Zooming out walks Siedlung → Umgebung → Region → Herrschaftsraum
-    // without skipping or repeating a stage. The camera axis never
-    // reaches Behausung/Schreibtisch scale; those are the first-person view.
-    const walk = [ZOOM_MAX, 1, 0.5, 0.4, 0.1, ZOOM_MIN].map(stageForZoom);
+    // Zooming out walks Schreibtisch → Behausung → Siedlung → Umgebung →
+    // Region → Herrschaftsraum → Europa without skipping or repeating a stage.
+    const walk = [ZOOM_MAX, 2000, 1, 0.3, 0.07, 0.016, ZOOM_MIN].map(stageForZoom);
     expect(walk).toEqual([
-      'Siedlung', 'Siedlung', 'Umgebung', 'Umgebung',
-      'Region', 'Herrschaftsraum'
+      'Schreibtisch', 'Behausung', 'Siedlung', 'Umgebung',
+      'Region', 'Herrschaftsraum', 'Europa'
     ]);
     expect(stageForZoom(ZOOM_SURROUNDINGS)).toBe('Umgebung');
     // A step below the surroundings zoom already shows the wider region.
-    expect(stageForZoom(ZOOM_SURROUNDINGS - 0.05)).toBe('Region');
-    // Behausung/Schreibtisch exist as names for the near view, but the map
-    // camera alone cannot reach them (honesty about reachable scale).
-    expect(stageForZoom(ZOOM_MAX)).not.toBe('Behausung');
-    expect(stageForZoom(ZOOM_MAX)).not.toBe('Schreibtisch');
+    expect(stageForZoom(0.07)).toBe('Region');
+    // Behausung/Schreibtisch are reachable on the camera axis now.
+    expect(stageForZoom(ZOOM_MAX)).toBe('Schreibtisch');
+    expect(stageForZoom(ZOOM_DWELLING)).toBe('Behausung');
   });
   it('clamps zoom to a continuous range', () => {
-    expect(clampZoom(1000)).toBe(ZOOM_MAX);
+    expect(clampZoom(1_000_000)).toBe(ZOOM_MAX);
     expect(clampZoom(-1)).toBe(ZOOM_MIN);
     expect(clampZoom(Number.NaN)).toBe(1);
     expect(clampZoom(1.5)).toBe(1.5);
+  });
+  it('keeps the measurement chain consistent at both ends', () => {
+    // Schreibtisch: ≈ 3 m visible across ≈ 1400 base pixels.
+    expect((1400 * METRES_PER_BASE_PIXEL) / ZOOM_MAX).toBeCloseTo(3, 1);
+    // Europa: ≈ 4000 km visible across ≈ 1400 base pixels.
+    expect((1400 * METRES_PER_BASE_PIXEL) / ZOOM_MIN).toBeCloseTo(4_000_000, -5);
+    // Behausung: the dwelling anchor zoom shows ≈ 15 m.
+    expect((1400 * METRES_PER_BASE_PIXEL) / ZOOM_DWELLING).toBeCloseTo(15, 0);
   });
   it('reports more pixels per metre when zooming in', () => {
     expect(pixelsPerMetre(2)).toBeGreaterThan(pixelsPerMetre(1));
