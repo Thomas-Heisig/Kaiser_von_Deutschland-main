@@ -1165,6 +1165,42 @@ export class KingdomMap {
     });
     note.position.set(left + 24, top + 20);
     this.europeLayer.addChild(note);
+    // Belegte Ortsmarker (dokumentierte Stadt-Koordinaten, keine Grenzen).
+    // Dieselbe Quellenbasis wie die Regionsnamen der Zentraleuropa-Ebene.
+    const PLACES: ReadonlyArray<{ name: string; lon: number; lat: number }> = [
+      { name: 'Lübeck', lon: 10.69, lat: 53.87 },
+      { name: 'Köln', lon: 6.96, lat: 50.94 },
+      { name: 'Nürnberg', lon: 11.08, lat: 49.45 },
+      { name: 'München', lon: 11.58, lat: 48.14 },
+      { name: 'Berlin', lon: 13.40, lat: 52.52 },
+      { name: 'Breslau', lon: 17.03, lat: 51.11 },
+      { name: 'Wien', lon: 16.37, lat: 48.21 },
+      { name: 'Prag', lon: 14.42, lat: 50.09 },
+      { name: 'Paris', lon: 2.35, lat: 48.86 },
+      { name: 'Rom', lon: 12.50, lat: 41.90 },
+      { name: 'Kopenhagen', lon: 12.57, lat: 55.68 },
+      { name: 'Warschau', lon: 21.01, lat: 52.23 }
+    ];
+    for (const place of PLACES) {
+      const px = lonToBase(place.lon);
+      const py = latToBase(place.lat);
+      if (px < left || px > left + width || py < top || py > top + height) continue;
+      const marker = new Container();
+      marker.position.set(px, py);
+      marker.addChild(new Graphics()
+        .circle(0, 0, 4).fill({ color: 0xffffff, alpha: 0.95 })
+        .circle(0, 0, 8).stroke({ color: 0x2b3f36, width: 2, alpha: 0.8 }));
+      const label = new Text({
+        text: place.name,
+        style: { fontFamily: 'Georgia', fontSize: 15, fill: 0xffffff,
+          align: 'center', stroke: { color: 0x1b2820, width: 3 }, fontWeight: '600' }
+      });
+      label.anchor.set(0.5);
+      label.position.set(0, -18);
+      marker.addChild(label);
+      this.europeLayer.addChild(marker);
+    }
+    this.app.canvas.dataset.europePlaces = String(PLACES.length);
     this.app.canvas.dataset.europeBounds = JSON.stringify(bounds);
   }
 
@@ -1181,7 +1217,10 @@ export class KingdomMap {
     if (this.destroyed) return;
     for (const child of this.nearLayer.removeChildren()) child.destroy({ children: true });
     const g = (m: number): number => metresToBase(m);
-    const anchor = DWELLING_ANCHOR;
+    // Der Hof liegt leicht südöstlich des belegten Ortsmarkers, so dass
+    // Ortsmarker (Kreis aus drawLocalMap) und Haus nebeneinander sichtbar
+    // bleiben: Marker und Hausposition sind ausdrücklich verschiedene Dinge.
+    const anchor = { x: DWELLING_ANCHOR.x + g(20), y: DWELLING_ANCHOR.y + g(15) };
     const layer = this.nearLayer;
     // Hof (24 × 24 m um die Behausung) — dieselbe Fläche wie YARD_EXTENT.
     const yard = new Graphics();

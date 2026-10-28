@@ -84,6 +84,42 @@ describe('map lifecycle and view transitions', () => {
     expect(map.zoom).toBe(2);
   });
 
+  it('persists and restores the camera centre through save/load', () => {
+    const map = mapFixture();
+    map.setZoom(1);
+    // Explizite Aktion: auf die Behausung zentrieren.
+    map.centerOnHome();
+    const saved = map.getCameraState();
+    expect(saved.zoom).toBe(1);
+    // Der Mittelpunkt liegt an der Behausungsverankerung.
+    expect(saved.x).toBeCloseTo(604, 0);
+    expect(saved.y).toBeCloseTo(384, 0);
+    // Wiederherstellen in einer neuen Karte (geladener Spielstand).
+    const restored = mapFixture();
+    restored.setCameraState(saved);
+    expect(restored.getCameraState()).toEqual(saved);
+  });
+
+  it('migrates legacy camera states (screen offset) as centre values', () => {
+    // Ältere Spielstände speicherten einen Bildschirmversatz in denselben
+    // Feldern x/y; die Migration interpretiert sie als Mittelpunkt.
+    const map = mapFixture();
+    map.setCameraState({ zoom: 1, x: 40, y: 20 });
+    const state = map.getCameraState();
+    expect(state.x).toBe(40);
+    expect(state.y).toBe(20);
+    // Der Versatz ist nach der Migration neutralisiert.
+    expect(map.offset).toEqual({ x: 0, y: 0 });
+  });
+
+  it('rejects non-finite camera values instead of corrupting state', () => {
+    const map = mapFixture();
+    map.setCameraState({ zoom: Number.NaN, x: Number.POSITIVE_INFINITY, y: Number.NEGATIVE_INFINITY });
+    expect(Number.isFinite(map.getCameraState().zoom)).toBe(true);
+    expect(Number.isFinite(map.getCameraState().x)).toBe(true);
+    expect(Number.isFinite(map.getCameraState().y)).toBe(true);
+  });
+
   it('clamps zoom to the continuous range', () => {
     expect(clampZoom(1_000_000)).toBe(ZOOM_MAX);
     expect(clampZoom(-5)).toBe(ZOOM_MIN);
