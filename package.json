@@ -23,6 +23,8 @@
   "devDependencies": {
     "@types/node": "^26.6.5",
     "@types/sql.js": "^1.4.11",
+    "canvas": "^3.2.3",
+    "sharp": "^0.35.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"

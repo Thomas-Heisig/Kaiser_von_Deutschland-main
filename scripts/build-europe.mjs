@@ -82,7 +82,7 @@ for (const f of rivers.features) {
 
 const buffer = canvas.toBuffer('image/png');
 await writeFile('.temp/europe-overview.png', buffer);
-await writeFile('.temp/europe-source.json', JSON.stringify({
+await writeFile('public/maps/europe-source.json', JSON.stringify({
   bounds,
   width,
   height,
@@ -96,3 +96,6 @@ await writeFile('.temp/europe-source.json', JSON.stringify({
   note: 'Modern generalized physical geography, not reconstructed historical coastlines, rivers or political boundaries.'
 }, null, 2));
 console.log(`Built Europe overview ${width}×${height}.`);
+// PNG → WebP via sharp (canvas selbst unterstützt kein WebP); Aufruf:
+//   node scripts/build-europe.mjs
+//   node -e "import('sharp').then(s=>s.default('.temp/europe-overview.png').webp({quality:88}).toFile('public/maps/europe-overview.webp'))"

@@ -18,7 +18,7 @@ function mapFixture() {
     , renderedBuildings: { dispose: vi.fn() }
   });
   for (const name of ['settlements', 'settlementTerrain', 'retroScenery', 'neighbors', 'animation',
-    'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer', 'scaleLayer', 'nearLayer']) {
+    'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer', 'scaleLayer', 'nearLayer', 'europeLayer']) {
     map[name] = { visible: true, children: [{}], removeChildren: () => [] };
   }
   return map;

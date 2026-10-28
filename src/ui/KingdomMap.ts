@@ -95,6 +95,14 @@ export class KingdomMap {
   private onLandmark?: () => void;
   private onCameraChange?: (state: CameraState) => void;
   private readonly reliefLayer = new Container();
+  /**
+   * Europastufe: Relief-Übersicht (Natural Earth 50m, Public Domain).
+   * Plate carrée / WGS84; der Maßstab ist nur am Bezugsbreitengrad 56°N
+   * metrisch — dokumentiert in `public/maps/europe-source.json`.
+   */
+  private readonly europeLayer = new Container();
+  private europeTexture?: Texture;
+  private europeLoading = false;
   /** Bildschirmfeste Overlays: Maßstabsbalken und Stufenbezeichnung. */
   private readonly scaleLayer = new Container();
   /**
@@ -175,6 +183,7 @@ export class KingdomMap {
     this.reliefLayer.visible = false;
     this.world.addChild(this.reliefLayer);
     this.world.addChild(this.regionLayer);
+    this.world.addChild(this.europeLayer);
     this.world.addChild(this.nearLayer);
     this.drawNearGeometry();
     // Screen-fixed: never transformed with the world, so labels stay readable.
@@ -1048,6 +1057,15 @@ export class KingdomMap {
     this.reliefLayer.visible = zoom < 0.16;
     if (this.regionLayer.visible && this.regionLayer.children.length === 0) this.drawRegionLayer();
     if (this.reliefLayer.visible) void this.loadReliefTexture();
+    // Europastufe: unterhalb der Zentraleuropa-Schwelle erscheint die
+    // Europa-Übersicht (Natural Earth 50m, Public Domain). Hysterese gegen
+    // Flackern: einblenden ≤ 0,014, ausblenden ≥ 0,02.
+    if (!this.europeLayer.visible && zoom <= 0.014) {
+      this.europeLayer.visible = true;
+      void this.loadEuropeTexture();
+    } else if (this.europeLayer.visible && zoom >= 0.02) {
+      this.europeLayer.visible = false;
+    }
   }
 
   /**
@@ -1077,6 +1095,77 @@ export class KingdomMap {
     } finally {
       this.reliefLoading = false;
     }
+  }
+
+  /**
+   * Lädt die Relief-Textur der Europastufe.
+   *
+   * Quelle: Natural Earth 50m (land/lakes/rivers), Public Domain, gerendert
+   * von `scripts/build-europe.mjs`. Plate carrée / WGS84; der Maßstab ist nur
+   * am Bezugsbreitengrad 56°N metrisch (siehe `europe-source.json`).
+   * Fehlertolerant: Schlägt das Laden fehl, bleibt die Regionsansicht
+   * bedienbar, die Europastufe zeigt eine Datenlücke.
+   */
+  private async loadEuropeTexture(): Promise<void> {
+    if (this.europeTexture || this.europeLoading || this.destroyed) return;
+    this.europeLoading = true;
+    try {
+      const base = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? '/';
+      const texture = await Assets.load<Texture>(`${base}maps/europe-overview.webp`);
+      if (this.destroyed) return;
+      this.europeTexture = texture;
+      this.app.canvas.dataset.europeLoaded = 'true';
+      this.drawEuropeLayer();
+      this.fit();
+    } catch (error) {
+      if (this.destroyed) return;
+      console.warn('Europa-Übersicht nicht verfügbar; Stufe bleibt Datenlücke.', error);
+      this.app.canvas.dataset.europeLoaded = 'false';
+    } finally {
+      this.europeLoading = false;
+    }
+  }
+
+  /**
+   * Zeichnet die Europa-Übersicht in Weltkoordinaten.
+   *
+   * Georeferenzierung: Die Textur deckt −10…40°O / 35…62°N ab. Die Position
+   * in Basispixeln folgt aus dem belegten Ortsmarker: Ganderkesee
+   * (places.home, EPSG:25832 E=469588, N=5876004 ≈ 8,30°O / 53,02°N) muss
+   * exakt auf DWELLING_ANCHOR liegen. Daraus ergibt sich die Weltgröße der
+   * Textur in Basispixeln; die Europakamera ist damit an dieselbe
+   * Weltgeometrie gebunden wie die lokale Karte (kein Sprung beim Wechsel).
+   */
+  private drawEuropeLayer(): void {
+    if (this.destroyed || !this.europeTexture) return;
+    for (const child of this.europeLayer.removeChildren()) child.destroy({ children: true });
+    const bounds = { west: -10, east: 40, south: 35, north: 62 };
+    // Ganderkesee in Grad (aus EPSG:25832 Ortsmarker abgeleitet).
+    const homeLon = 8.30, homeLat = 53.02;
+    // Basispixel je Grad, so dass der Ortsmarker auf DWELLING_ANCHOR fällt.
+    const pxPerLon = 1 / 0.020833333; // 1 Basispixel = 20,8333 m; am Bezugsbreitengrad
+    const pxPerLat = pxPerLon / Math.cos(53.02 * Math.PI / 180); // Mercator-nahe Streckung
+    const lonToBase = (lon: number): number => (lon - homeLon) * pxPerLon;
+    const latToBase = (lat: number): number => (homeLat - lat) * pxPerLat;
+    const left = lonToBase(bounds.west);
+    const top = latToBase(bounds.north);
+    const width = (bounds.east - bounds.west) * pxPerLon;
+    const height = (bounds.north - bounds.south) * pxPerLat;
+    const sprite = new Sprite(this.europeTexture);
+    sprite.position.set(left, top);
+    sprite.width = width;
+    sprite.height = height;
+    this.europeLayer.addChild(sprite);
+    this.europeLayer.addChild(new Graphics()
+      .rect(left, top, width, height).stroke({ color: 0x6b8270, width: 2, alpha: 0.7 }));
+    const note = new Text({
+      text: 'Europa · Natural Earth 50m (Public Domain) · Maßstab am Bezugsbreitengrad 56°N, Verzerrung Richtung Äquator · Rand = Datenlücke',
+      style: { fontFamily: 'Georgia', fontSize: 16, fill: 0xf0e6c8,
+        stroke: { color: 0x1b2820, width: 3 }, wordWrap: true, wordWrapWidth: Math.min(900, width - 60) }
+    });
+    note.position.set(left + 24, top + 20);
+    this.europeLayer.addChild(note);
+    this.app.canvas.dataset.europeBounds = JSON.stringify(bounds);
   }
 
   /**

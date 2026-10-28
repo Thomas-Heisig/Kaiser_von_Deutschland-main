@@ -1,0 +1,18 @@
+{
+  "bounds": {
+    "west": -10,
+    "east": 40,
+    "south": 35,
+    "north": 62
+  },
+  "width": 2000,
+  "height": 1080,
+  "projection": "Plate carrée / WGS84 (Grad = Koordinate)",
+  "referenceLatitude": 56,
+  "scaleNote": "Maßstab nur am Bezugsbreitengrad 56°N metrisch; Verzerrung wächst zum Äquator (1/cos(lat)). Die Spielkamera rechnet Meter lokal über EPSG:25832; die Europastufe nutzt diese Grad-Geometrie als Darstellungsmaßstab.",
+  "sources": [
+    "https://www.naturalearthdata.com/downloads/50m-physical-vectors/ (land, lakes, rivers)"
+  ],
+  "license": "Public domain",
+  "note": "Modern generalized physical geography, not reconstructed historical coastlines, rivers or political boundaries."
+}
