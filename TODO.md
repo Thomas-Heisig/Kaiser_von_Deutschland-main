@@ -75,7 +75,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Logistik, Belagerungen und Kriegsgefangene nur nach vollständigem Hauptkampagnen-/Savegame-Test erweitern.
 - [x] Hanse, Wissenschaft, Kultur und diplomatische Kaiserkrone bis zum Sieg ohne Eroberung inklusive Save/Load geprüft. Finanzierte Testpartien; normale Startbalance bleibt unter P1a offen.
 
-#- [x] Karte als großflächiger Spielhintergrund mit innenliegenden 2D/3D- und Bezirksfiltern, Zoom/Zentrieren und Bezirksausbau; doppelte Gebäudebutton-Leiste entfernt.
+- [x] Karte als großflächiger Spielhintergrund mit innenliegenden 2D/3D- und Bezirksfiltern, Zoom/Zentrieren und Bezirksausbau; doppelte Gebäudebutton-Leiste entfernt.
 - [ ] Karte und überlagerte Panels auf iPad/Smartphone samt Touch, Fokus, Performance und realen Geräten prüfen; Nachbarpositionen sind zunächst schematisch.
 
 ## P1c – Qualität und Zugänglichkeit
@@ -86,7 +86,7 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ## P0 — Veröffentlichung und zuverlässiger Betrieb
 
-- [x] **HTTPS live geschaltet:** GitHub Pages aktiv unter https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/ – PWA, Offline-Modus und alle Medien bestätigt.
+- [x] **HTTPS live geschaltet:** GitHub Pages aktiv unter [https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/](https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/) – PWA, Offline-Modus und alle Medien bestätigt.
 - [x] Echte URL mit HTTPS, HTTP 200/206 für MP3/MP4, korrektes Manifest, Scope und Service Worker gemessen.
 - [ ] PWA-Installation auf iPad/Safari, Android/Chrome und Windows/Edge sowie Offlinebetrieb mit Musik und Video im Flugmodus prüfen.
 - [ ] Vor öffentlicher Freigabe Impressum, Datenschutz, Musik-/Video- und Coverrechte, Urheber-/KI-Credits vervollständigen.
@@ -121,7 +121,6 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 - [ ] Erst Desktop-Chromium visuell/technisch abnehmen; danach Safari auf echten iPad-/iPhone-Geräten nach Messplan prüfen. **Gerätemodelle/OS unbekannt – beim Test erfassen.**
 - [x] Die 16 festen Bezirke besitzen im Hauptspiel Kenney-Retro-Darstellungen (PR #72), Umschalter zwischen 2D und Retro steuert den Pixi-Renderer (PR #73); deterministische Retro-Landschaft eingefügt. GameEngine und Savegames unverändert.
 - [~] Die 16 Bezirke besitzen nun differenzierte Retro-Silhouetten und Bauzustands-Deckkraft. Für **vollständige** Epochen-Grafik fehlen weiterhin umfangreiche Originalmodelle und hochauflösende Gebäuderenderings, Endgerätetests und Performance-Baseline. Die drei kleinen Vorschaustreifen sind seit PR #80 eingecheckt.
-
 
 ## P0/P1 – Vollständige Welt- und Retro-Grafikintegration (verbindlicher Abnahmeplan, 18.10.2026)
 
