@@ -33,7 +33,6 @@ for (const f of land.features) {
     ctx.beginPath();
     for (const ring of poly) {
       ring.forEach(([lon, lat], i) => {
-        if (lon < bounds.west - 5 || lon > bounds.east + 5 || lat < bounds.south - 5 || lat > bounds.north + 5) return;
         if (i === 0) ctx.moveTo(x(lon), y(lat)); else ctx.lineTo(x(lon), y(lat));
       });
       ctx.closePath();
@@ -52,7 +51,6 @@ for (const f of lakes.features) {
     ctx.beginPath();
     for (const ring of poly) {
       ring.forEach(([lon, lat], i) => {
-        if (lon < bounds.west - 5 || lon > bounds.east + 5 || lat < bounds.south - 5 || lat > bounds.north + 5) return;
         if (i === 0) ctx.moveTo(x(lon), y(lat)); else ctx.lineTo(x(lon), y(lat));
       });
       ctx.closePath();

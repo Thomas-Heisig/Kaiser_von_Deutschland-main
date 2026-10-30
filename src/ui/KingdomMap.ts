@@ -1066,6 +1066,11 @@ export class KingdomMap {
     } else if (this.europeLayer.visible && zoom >= 0.02) {
       this.europeLayer.visible = false;
     }
+    if (this.europeLayer.visible) {
+      for (const child of this.europeLayer.children) {
+        if (child.label === 'europe-ui') child.scale.set(1 / Math.max(this.effectiveScreenScale(), 1e-9));
+      }
+    }
   }
 
   /**
@@ -1143,8 +1148,12 @@ export class KingdomMap {
     // Ganderkesee in Grad (aus EPSG:25832 Ortsmarker abgeleitet).
     const homeLon = 8.30, homeLat = 53.02;
     // Basispixel je Grad, so dass der Ortsmarker auf DWELLING_ANCHOR fällt.
-    const pxPerLon = 1 / 0.020833333; // 1 Basispixel = 20,8333 m; am Bezugsbreitengrad
-    const pxPerLat = pxPerLon / Math.cos(53.02 * Math.PI / 180); // Mercator-nahe Streckung
+    // Lineare Plate-carrée-Abbildung mit Metermaßstab am Bezugsbreitengrad:
+    // 1° Breite ≈ 110 950 m, 1° Länge ≈ 111 320 m × cos(Breite).
+    const METRES_PER_DEG_LAT = 110950;
+    const METRES_PER_DEG_LON_EQUATOR = 111320;
+    const pxPerLat = METRES_PER_DEG_LAT / METRES_PER_BASE_PIXEL;
+    const pxPerLon = METRES_PER_DEG_LON_EQUATOR * Math.cos(homeLat * Math.PI / 180) / METRES_PER_BASE_PIXEL;
     const lonToBase = (lon: number): number => (lon - homeLon) * pxPerLon;
     const latToBase = (lat: number): number => (homeLat - lat) * pxPerLat;
     const left = lonToBase(bounds.west);
@@ -1157,12 +1166,13 @@ export class KingdomMap {
     sprite.height = height;
     this.europeLayer.addChild(sprite);
     this.europeLayer.addChild(new Graphics()
-      .rect(left, top, width, height).stroke({ color: 0x6b8270, width: 2, alpha: 0.7 }));
+      .rect(left, top, width, height).stroke({ color: 0x6b8270, width: 300, alpha: 0.7 }));
     const note = new Text({
-      text: 'Europa · Natural Earth 50m (Public Domain) · Maßstab am Bezugsbreitengrad 56°N, Verzerrung Richtung Äquator · Rand = Datenlücke',
+      text: 'Europa · Natural Earth 50m (Public Domain) · lineare Plate-carrée-Abbildung, Maßstab nur um 53°N exakt · Rand = Datenlücke',
       style: { fontFamily: 'Georgia', fontSize: 16, fill: 0xf0e6c8,
-        stroke: { color: 0x1b2820, width: 3 }, wordWrap: true, wordWrapWidth: Math.min(900, width - 60) }
+        stroke: { color: 0x1b2820, width: 3 }, wordWrap: true, wordWrapWidth: 700 }
     });
+    note.label = 'europe-ui';
     note.position.set(left + 24, top + 20);
     this.europeLayer.addChild(note);
     // Belegte Ortsmarker (dokumentierte Stadt-Koordinaten, keine Grenzen).
@@ -1186,6 +1196,7 @@ export class KingdomMap {
       const py = latToBase(place.lat);
       if (px < left || px > left + width || py < top || py > top + height) continue;
       const marker = new Container();
+      marker.label = 'europe-ui';
       marker.position.set(px, py);
       marker.addChild(new Graphics()
         .circle(0, 0, 4).fill({ color: 0xffffff, alpha: 0.95 })
@@ -1201,6 +1212,10 @@ export class KingdomMap {
       this.europeLayer.addChild(marker);
     }
     this.app.canvas.dataset.europePlaces = String(PLACES.length);
+    const uiScale = 1 / Math.max(this.effectiveScreenScale(), 1e-9);
+    for (const child of this.europeLayer.children) {
+      if (child.label === 'europe-ui') child.scale.set(uiScale);
+    }
     this.app.canvas.dataset.europeBounds = JSON.stringify(bounds);
   }
 
