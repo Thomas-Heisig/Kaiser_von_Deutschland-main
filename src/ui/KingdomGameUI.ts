@@ -806,7 +806,7 @@ ${body}
           </div>
         </section>
         <div class="game-layout">
-            <section class="map-card" aria-label="Interaktive Siedlungsübersicht mit angrenzenden Reichen">
+            <section class="map-card" data-report-open="true" aria-label="Interaktive Siedlungsübersicht mit angrenzenden Reichen">
               <div id="kingdom-map" class="map-host" role="group" aria-label="Zentrierte Siedlungskarte – Gebäude auf der Karte auswählen"></div>
               ${deskMarkup()}
               <div class="map-controls" role="group" aria-label="Kartensteuerung">
@@ -979,6 +979,7 @@ ${body}
     const setReportOpen = (open: boolean): void => {
       const report = this.root.querySelector<HTMLElement>('.realm-report');
       if (report) report.dataset.reportOpen = String(open);
+      this.root.querySelector<HTMLElement>('.map-card')?.setAttribute('data-report-open', String(open));
       const toggle = this.root.querySelector<HTMLButtonElement>('#report-toggle');
       if (toggle) {
         toggle.setAttribute('aria-expanded', String(open));

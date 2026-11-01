@@ -121,7 +121,7 @@ export class KingdomMap {
   private readonly scaleLayer = new Container();
   /**
    * Nahgeometrie (Schreibtisch/Behausung): Hof, Behausung mit Innenraum und
-   * Möbel an {@link DWELLING_ANCHOR}. Meter-Basis identisch zur
+   * Möbel am modellierten Versatz vom {@link DWELLING_ANCHOR}. Meter-Basis identisch zur
    * Ich-Perspektive (FirstPersonLogic), damit beide Ansichten zusammenpassen.
    */
   private readonly nearLayer = new Container();

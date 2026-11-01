@@ -216,14 +216,11 @@ export function clampZoom(zoom: number): number {
 }
 
 /**
- * Feste Verankerung der eigenen Behausung in der Siedlung (Basispixel).
+ * Basispixelposition des belegten Ortsmarkers `places.home`.
  *
- * Der Anker liegt bewusst **nahe am belegten Ortsmarker** `places.home`
- * (Ganderkesee, EPSG:25832 E=469588, N=5876004 → Basispixel [604,384]),
- * nicht auf einem erfundenen Hausstandort: Haus und Ortsmarker sind
- * unterschiedliche Dinge, aber der Hof gehört zum Ort. Der kleine Versatz
- * (≈ 12 m nach Südwesten) hält Haus und Ortsmarke auf der Karte getrennt
- * lesbar, ohne einen vermessenen Grundriss zu behaupten (≈ 7 m Versatz).
+ * Die modellierte Behausung ist ein eigener, relativ dazu definierter Punkt
+ * (`DWELLING_OFFSET_METRES`); weder Marker noch Versatz behaupten einen
+ * vermessenen Hausstandort. Ortsmarker und Gebäudegeometrie bleiben getrennt.
  */
 export const DWELLING_ANCHOR = { x: 604, y: 384 } as const;
 
