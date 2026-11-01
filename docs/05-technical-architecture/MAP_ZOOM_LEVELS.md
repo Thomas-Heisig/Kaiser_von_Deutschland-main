@@ -25,27 +25,33 @@ Die Simulation bleibt unberührt: Die Karte **liest** nur.
 | Geografische Verankerung | 8,5459°O / 53,0336°N | `MapScale.HOME_LON` / `HOME_LAT` — **einzige** Brücke Grad ↔ Basispixel |
 | Kamerazoom | 0,00703 – 9.375 (kontinuierlich) | `MapScale.ZOOM_MIN` / `ZOOM_MAX`, `clampZoom` |
 
-`zoom = 1` zeigt die Siedlung in natürlicher Größe; kleinere Werte zoomen nach Europa heraus, größere zum Schreibtisch hinein.
-`pixelsPerMetre(zoom)`, `metresToBase()` und `baseToMetres()` sind die einzige Umrechnung zwischen Weltmetern und Basispixeln.
+Der Zoom ist kontinuierlich; der tatsächlich sichtbare Maßstab ergibt sich aus der vollständigen Pixi-Transformation:
+
+```
+Meter je CSS-Pixel = METRES_PER_BASE_PIXEL / (Fit-Faktor × Zoom)
+Sichtbare Weltbreite = Canvasbreite in CSS-Pixeln × Meter je CSS-Pixel
+```
+
+`DevicePixelRatio` beeinflusst nur die Renderauflösung. Detailstufen und Maßstabsleiste verwenden die effektive CSS-Skalierung und damit dieselbe sichtbare Weltbreite. `pixelsPerMetre(zoom)`, `metresToBase()` und `baseToMetres()` beschreiben weiter die Basisskalierung; für den aktuellen Bildschirmmaßstab ist `KingdomMap.getMetresPerScreenPixel()` maßgeblich.
 
 ---
 
 ## 2. Die sieben Detailstufen
 
-| Stufe | ab Zoom | Sichtbar |
+| Stufe | Sichtbare Weltbreite | Sichtbar |
 | --- | --- | --- |
-| Schreibtisch | ≥ 9.375 | Nahgeometrie: Möbel, Innenraum, Ich-Perspektive |
-| Behausung | ≥ 1.875 | Hof und Behausung als Ganzes (`nearLayer`, Hysterese ab Zoom > 1,2) |
-| Siedlung | ≥ 0,70 | Die 16 Bezirke (`SettlementSceneModel`) |
-| Umgebung | ≥ 0,234 | Nachbarorte, Verbundlandschaft |
-| Region | ≥ 0,0563 | Relief, Flüsse, belegte Regionsnamen |
-| Herrschaftsraum | ≥ 0,0141 | Regionspunkte, keine Grenzpolygone |
-| Europa | < 0,0141 | Europa-Übersicht (`europeLayer`, Natural Earth 50m) |
+| Schreibtisch | ≤ 3 m | Nahgeometrie: Möbel und Innenraum; Ich-Perspektive optional |
+| Behausung | ≤ 15 m | Hof und Behausung als Ganzes |
+| Siedlung | ≤ 40 km | Die 16 Bezirke (`SettlementSceneModel`) |
+| Umgebung | ≤ 120 km | Nachbarorte, Verbundlandschaft |
+| Region | ≤ 500 km | Relief, Flüsse, belegte Regionsnamen |
+| Herrschaftsraum | ≤ 2.000 km | Regionspunkte, keine Grenzpolygone |
+| Europa | > 2.000 km | Europa-Übersicht (`europeLayer`, Natural Earth 50m) |
 
-Namensgebung zentral in `MapScale.stageForZoom(zoom)`. Es gibt **keine Hysterese** wie im früheren 3-Ebenen-Slider-System:
-die Stufen sind reine Beschriftung über einem kontinuierlichen Zoom, ein Flackern ist ausgeschlossen, weil nichts umgeschaltet
-wird. Alle Zoomstufen teilen sich einen Kamerazustand `{ zoom, x, y }` (`KingdomMap.CameraState`) — es gibt keinen
-stufenabhängigen Offset.
+Die Stufenbezeichnung verwendet `MapScale.stageForVisibleWidth()` mit der echten Canvasbreite und dem effektiven Metermaßstab.
+Interne Layerübergänge verwenden dieselbe Weltbreite und Hysterese gegen Flackern. So verschieben sich die Übergänge nicht
+durch einen anderen Viewport oder eine abweichende Geräte-Pixeldichte. Alle Stufen teilen sich einen Kamerazustand
+`{ zoom, x, y }` (`KingdomMap.CameraState`) — es gibt keinen stufenabhängigen Offset.
 
 ---
 
@@ -71,8 +77,9 @@ deckte den heutigen Bereich (0,02–6) nicht ab. `KingdomMap.setZoomSlider` ist 
 | --- | --- | --- |
 | **Skalenkette mit einem Meter-Faktor** | X- und Y-Achse nutzen denselben Faktor (20,83 m/px). `METRES_PER_BASE_PIXEL_Y` existiert als Dokumentation, wird aber **nicht** separat gerechnet. | Abweichung < 0,1 %, messbar irrelevant. |
 | **Europa-Verankerung am Bezugsbreitengrad** | Die Europa-Ebene nutzt eine lineare Plate-carrée-Abbildung mit dem Lon/Lat-Verhältnis von 53,0336°N (`HOME_LON`). Der Maßstab ist nur dort exakt; die Verzerrung wächst mit der Breite. | Dokumentiert in `europe-source.json` und auf der Karte. |
-| **Scale-Bar-Schrittauswahl** | `scaleBar()` wählt aus 1-2-5-Schritten (1 m … 2.000 km) die kleinste ≥ Zielgröße. Kein stufenabhängiges Raster. | Für einen Maßstab genug; exakte Teilung wäre Kosmetik. |
-| **Detail-Fade statt Stufenlogik** | Sichtbarkeit der Layer hängt **direkt** am Zoom mit Hysterese: Nahgeometrie > 1,2 / < 0,9, Gebäude ≥ 0,35, Nachbarn < 0,9, Region/Relief < 0,16, Europa ≤ 0,014 / ≥ 0,02, Dach-Ausblendung ≥ 3.125 / < 2.500. | Übergänge sind gestaffelt, nicht hart. |
+| **Scale-Bar-Schrittauswahl** | `scaleBarForMetresPerPixel()` wählt den größten passenden 1-2-5-Schritt, dessen Bildschirmbreite 120 CSS-Pixel nicht überschreitet. | Label und gezeichnete Länge folgen derselben CSS-Skalierung. |
+| **Detail-Fade statt Stufenlogik** | Die Stufenlabels beruhen auf sichtbaren Weltbreiten; interne Layer-Schwellen und Hysterese stehen zentral in `MapScale.MAP_LAYER_WIDTHS`. | Übergänge sind gestaffelt, nicht hart und viewportunabhängig in realen Metern ausgedrückt. |
+| **Modellierter Nahbereich** | Kartenansicht und Ich-Perspektive teilen dieselbe metrische Haus-, Tür-, Möbel- und Offsetdefinition. Eintritt in die Ich-Perspektive verändert den Kartenkamerazustand nicht. | Grundrisse und Ausstattung sind weiterhin Spielmodelle, keine Vermessung oder archäologische Befunde. |
 | **Symbolische Gebäude-Footprints** | Gebäude ≥ Zoom 0,35 als Sprites fester Symbolgröße — **keine** vermessenen Grundrisse. Symbole dürfen bildschirmgroß bleiben; Grundflächen nicht. | Der Siedlungsplan ist ein Spielmodell, keine Vermessung. |
 | **Heutige Gemeindegrenze** | Die OSM-Grenze (ODbL) ist eine **heutige** Verwaltungsgrenze mit Quellenangabe auf der Karte — keine historische Reichs- oder Herrschaftsgrenze. | Quellen- und Lizenzvermerk sichtbar (`LocalMap.ts`, `ganderkesee-boundary.json`). |
 | **ResizeObserver-Refit** | `KingdomMap` registriert einen `ResizeObserver`, der bei Containergrößenänderung Canvas-Auflösung (bis `devicePixelRatio`, max. 2) und Kamera anpasst. Fokus/Zoom bleiben erhalten. | Verhindert Verzerrung; exaktes Wiedereinpassen ist nicht möglich, wenn das Fenster kleiner wird. |
@@ -105,7 +112,7 @@ deckte den heutigen Bereich (0,02–6) nicht ab. `KingdomMap.setZoomSlider` ist 
 
 | Datei | Rolle |
 | --- | --- |
-| `src/ui/MapScale.ts` | **Reine Logik** — Skalenkette, Stufenbenennung, Klemmung, Maßstab, Distanzformatierung. Kein PixiJS, kein DOM → testbar |
+| `src/ui/MapScale.ts` | **Reine Logik** — Skalenkette, Stufenbenennung anhand sichtbarer Breite, LOD-Schwellen, Klemmung, Maßstabsleiste. Kein PixiJS, kein DOM → testbar |
 | `src/ui/MapScale.test.ts` | 36 Tests (Skalenkette, Stufen, Klemmung, Scale-Bar, Mercator-Faktor) |
 | `src/ui/KingdomMap.ts` | PixiJS-Renderer — Kamera, Layer-Sichtbarkeiten, Detail-Fade, ResizeObserver |
 | `src/ui/KingdomGameUI.ts` | Integration — Karten-Init, Kamera-Sync (`syncMapCamera`), Stufen-Label (`updateMapStage`), Steuerbuttons |
@@ -118,8 +125,9 @@ nicht instanziierbar; die Logik wäre dort ungetestet geblieben.
 
 ## 7. Tests und offene Punkte
 
-**Automatisiert:** `npm run check` ✅ · `npx vitest run` ✅ 427 Tests · `npm run build` ✅ · Browser-Abnahme: alle sieben Stufen
-im Chromium geprüft (Maßstabsbalken, Datenattribute, Nahgeometrie, Europa-Ebene, Gemeindegrenze).
+**Automatisiert:** `npm run check` ✅ · gezielte Maßstabs-, Karten- und Ich-Perspektive-Tests ✅. Der jüngste Stand der
+Gesamttests und Build-Abnahme ist im aktuellen Arbeitsprotokoll nachzutragen. Die frühere Browser-Abnahme prüfte die sieben
+Stufen und Kartendaten; Nahansicht, Tabellenblick und Rückkehr nach den jüngsten Änderungen müssen erneut visuell bestätigt werden.
 
 1. **Geräteabnahme:** Zoomverhalten nur Chromium/Windows geprüft, nicht iPad/iPhone.
 2. **Barrierefreiheit:** Steuerbuttons sind tastaturbedienbar; Stufenwechsel werden nicht per `aria-live` angekündigt.

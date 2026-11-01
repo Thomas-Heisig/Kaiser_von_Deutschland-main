@@ -54,15 +54,15 @@ export const DWELLING_MAP_POSITION = {
   y: DWELLING_ANCHOR.y + metresToBase(DWELLING_OFFSET_METRES.south),
 } as const;
 
-/** Blickwinkel auf der Karte, aus dem die Ich-Perspektive startet (Grad, 0 = Norden). */
+/** Kartografische Nordrichtung in der Ich-Perspektive (Grad, 0 = +Z/Norden). */
 export const DWELLING_MAP_BEARING = 0;
 
 /**
- * Ausrichtung der Behausung auf dem Siedlungsplan: Die Tür liegt an der
- * Südseite (unten im Plan), damit die Blickrichtung beim Betreten nach Norden
- * zeigt. Reines Spielmodell — der Plan enthält keine vermessene Grundfläche.
+ * Ausrichtung der Behausung auf dem Siedlungsplan: +Z entspricht Norden und
+ * wird in der Karte als kleineres Y dargestellt. Die modellierte Tür liegt
+ * daher an der Nordseite. Reines Spielmodell, kein vermessener Grundriss.
  */
-export const DWELLING_DOOR_SIDE = 'south' as const;
+export const DWELLING_DOOR_SIDE = 'north' as const;
 
 export interface RoomBox {
   /** Minimale X-Koordinate in Metern. */
@@ -83,7 +83,7 @@ export const DWELLING_INTERIOR: RoomBox = {
   maxZ: DWELLING_HALF_DEPTH,
 };
 
-/** Türöffnung an der Südseite: Spalt in der Wand (X-Bereich in Metern). */
+/** Türöffnung an der Nordseite: Spalt in der Wand (X-Bereich in Metern). */
 export const DWELLING_DOOR: { readonly x0: number; readonly x1: number; readonly z: number } = {
   x0: -0.8,
   x1: 0.8,
@@ -199,7 +199,7 @@ export function resolveCollisions(pos: CameraPosition, inside: boolean): CameraP
     const box = DWELLING_INTERIOR;
     // Innenraum: beide Achsen hart begrenzen (verhindert diagonales
     // Durchqueren an Ecken); nur der Türspalt erlaubt das Überschreiten
-    // der Süd-Grenze.
+    // der Nord-Grenze.
     x = clampAxis(x, box.minX + WALL_CLEARANCE, box.maxX - WALL_CLEARANCE);
     const atDoor = x >= DWELLING_DOOR.x0 && x <= DWELLING_DOOR.x1;
     const zMin = box.minZ + WALL_CLEARANCE;

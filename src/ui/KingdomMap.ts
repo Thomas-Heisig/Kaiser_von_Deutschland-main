@@ -1290,7 +1290,7 @@ export class KingdomMap {
       g(2 * YARD_EXTENT), g(2 * YARD_EXTENT))
       .stroke({ color: 0x4d6b45, width: 2, alpha: 0.6 });
     layer.addChild(yard);
-    // Behausung: 6 × 8 m (DWELLING_HALF_* × 2), Tür an der Südseite.
+    // Behausung: 6 × 8 m (DWELLING_HALF_* × 2), Nordseite zeigt im Plan nach oben.
     // Drei getrennte Grafiken: Wände (bleibt), Dach (blendet zur
     // Innenraumeinsicht aus), Möbel (immer über dem Boden, unter dem Dach).
     const hw = g(DWELLING_HALF_WIDTH), hd = g(DWELLING_HALF_DEPTH);
@@ -1303,7 +1303,7 @@ export class KingdomMap {
     walls.roundRect(anchor.x - hw + 1, anchor.y - hd + 1, 2 * hw - 2, 2 * hd - 2, 1)
       .fill(0x6d5336);
     const doorW = g(DWELLING_DOOR.x1 - DWELLING_DOOR.x0);
-    walls.rect(anchor.x - doorW / 2, anchor.y + hd - 2, doorW, 4)
+    walls.rect(anchor.x - doorW / 2, anchor.y - hd + 2, doorW, 4)
       .fill(0x6a8a5c);
     layer.addChild(walls);
     // Möbel (Meter identisch zur Ich-Perspektive): Tisch, Bank, Bett, Herd.

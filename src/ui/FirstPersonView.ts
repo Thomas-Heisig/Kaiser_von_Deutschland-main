@@ -78,7 +78,7 @@ function pushBox(out: number[], box: Box): void {
     // Boden (unten, Normale -Y) und Decke (oben, +Y)
     [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]],
     [[x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0]],
-    // Süd (+Z) und Nord (-Z)
+    // Nord (+Z) und Süd (-Z)
     [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]],
     [[x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0]],
     // Ost (+X) und West (-X)
@@ -416,7 +416,7 @@ export class FirstPersonView {
       w: 2 * DWELLING_HALF_WIDTH, h: 0.02, d: 2 * DWELLING_HALF_DEPTH,
       r: 0.34, g: 0.25, b: 0.16,
     });
-    // Wände (Nord, Ost, West; Süd offen außer Türpfosten)
+    // Wände: südliche Wand und Seitenwände; die Nordseite hat die Türöffnung.
     const wallOffset = DWELLING_HALF_WIDTH + DWELLING_WALL_THICKNESS / 2;
     pushBox(verts, {
       x: 0, y: 0, z: -DWELLING_HALF_DEPTH - DWELLING_WALL_THICKNESS / 2,
@@ -433,7 +433,7 @@ export class FirstPersonView {
       h: DWELLING_WALL_HEIGHT, d: 2 * DWELLING_HALF_DEPTH,
       r: 0.40, g: 0.29, b: 0.19,
     });
-    // Südwand mit Türspalt (-0.8..0.8): Segmente -3.3..-0.8 und 0.8..3.3
+    // Nordwand mit Türspalt (-0.8..0.8).
     const doorSegmentWidth = (2 * wallOffset - 1.6) / 2;
     const doorWallZ = DWELLING_HALF_DEPTH + DWELLING_WALL_THICKNESS / 2;
     pushBox(verts, {
@@ -446,7 +446,7 @@ export class FirstPersonView {
       w: doorSegmentWidth, h: DWELLING_WALL_HEIGHT, d: DWELLING_WALL_THICKNESS,
       r: 0.42, g: 0.31, b: 0.20,
     });
-    // Sturz über der Tür
+    // Sturz über der Türöffnung
     pushBox(verts, {
       x: 0, y: DWELLING_WALL_HEIGHT - 0.5, z: doorWallZ,
       w: 1.6, h: 0.5, d: DWELLING_WALL_THICKNESS,

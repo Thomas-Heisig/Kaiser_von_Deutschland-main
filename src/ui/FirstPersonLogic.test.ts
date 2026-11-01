@@ -33,7 +33,7 @@ describe('FirstPersonLogic: Einheiten und Datenbasis', () => {
     expect(EYE_HEIGHT).toBeLessThan(2.0);
   });
 
-  it('Türspalt liegt an der Südwand des Innenraums', () => {
+  it('Türspalt liegt an der Nordwand des Innenraums', () => {
     expect(DWELLING_DOOR.z).toBe(DWELLING_INTERIOR.maxZ);
     expect(DWELLING_DOOR.x0).toBeGreaterThan(DWELLING_INTERIOR.minX);
     expect(DWELLING_DOOR.x1).toBeLessThan(DWELLING_INTERIOR.maxX);
@@ -128,7 +128,7 @@ describe('FirstPersonLogic: Kollision', () => {
     expect(atDoor.z).toBeGreaterThan(DWELLING_DOOR.z);
   });
 
-  it('blockiert den Versuch, durch die Süd-Wand außerhalb der Tür zu gehen', () => {
+  it('blockiert den Versuch, durch die Nord-Wand außerhalb der Tür zu gehen', () => {
     const blocked = resolveCollisions({ x: 2.0, z: DWELLING_INTERIOR.maxZ + 0.1 }, false);
     expect(blocked.z).toBeLessThanOrEqual(DWELLING_INTERIOR.maxZ + 0.25);
   });
@@ -140,7 +140,7 @@ describe('FirstPersonLogic: Kollision', () => {
   });
 
   it('erlaubt im Innenraum den Ausgang durch die Tür', () => {
-    // Von der Türöffnung nach Süden hinaus: Z-Grenze wird nicht zurückgesetzt.
+    // Von der Türöffnung nach Norden hinaus: Z-Grenze wird nicht zurückgesetzt.
     const out = resolveCollisions({ x: 0, z: DWELLING_DOOR.z + 0.3 }, false);
     expect(out.z).toBeGreaterThan(DWELLING_DOOR.z);
   });
