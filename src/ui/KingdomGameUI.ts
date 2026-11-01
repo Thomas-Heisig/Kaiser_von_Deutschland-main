@@ -1327,15 +1327,8 @@ ${body}
   private async enterFirstPerson(trigger: HTMLButtonElement): Promise<void> {
     if (!this.player) return;
     try {
-      // Die Ich-Perspektive zeigt Haus und Hof: Die Kartenumgebung wird
-      // sichtbar geschaltet und die Kamera auf die Behausung gezogen, damit
-      // beim Verlassen die Nahansicht (Behausung) auf der Karte weitergeführt
-      // wird statt eines beliebigen Ausschnitts.
-      if (this.map) {
-        if (this.map.getZoom() < 4) this.map.setZoom(1875);
-        this.map.centerOnHome();
-        this.updateMapStage();
-      }
+      // Die optionale Innenansicht darf den vorherigen Kartenausschnitt nicht
+      // verändern; beim Exit bleibt so exakt dieselbe Kamera bedienbar.
       if (!this.fp) {
         const { FirstPersonView } = await import('./FirstPersonView');
         const host = this.root.querySelector<HTMLElement>('#first-person');

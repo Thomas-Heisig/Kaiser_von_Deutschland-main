@@ -16,10 +16,17 @@ import {
   zoomToSlider
 } from './MapZoomLevels';
 import {
-  METRES_PER_BASE_PIXEL, metresToBase, clampZoom, scaleBar, stageForZoom,
+  METRES_PER_BASE_PIXEL, metresToBase, clampZoom, scaleBarForMetresPerPixel,
+  stageForVisibleWidth, MAP_LAYER_WIDTHS, DWELLING_OFFSET_METRES,
   METRES_PER_DEG_LAT, METRES_PER_DEG_LON_HOME, lonToBaseX, latToBaseY
 } from './MapScale';
-import { DWELLING_DOOR, DWELLING_HALF_DEPTH, DWELLING_HALF_WIDTH, YARD_EXTENT } from './FirstPersonLogic';
+import {
+  DWELLING_DOOR,
+  DWELLING_FURNITURE,
+  DWELLING_HALF_DEPTH,
+  DWELLING_HALF_WIDTH,
+  YARD_EXTENT,
+} from './FirstPersonLogic';
 import { DWELLING_ANCHOR } from './MapScale';
 
 /** Kamerazustand, der gespeichert und wiederhergestellt wird. */
@@ -819,18 +826,23 @@ export class KingdomMap {
 
   /** Bezeichnung der Detailstufe (dieselbe Ansicht, keine getrennte Karte). */
   public getStage(): string {
-    return stageForZoom(this.zoom);
+    return stageForVisibleWidth(this.getVisibleWorldWidthMetres());
   }
 
   /** Maßstabsbalken für die aktuelle Ansicht. */
   public getScaleBar(): { metres: number; label: string } {
-    return scaleBar(this.zoom);
+    return scaleBarForMetresPerPixel(this.getMetresPerScreenPixel());
   }
 
   /** Meter je Bildschirmpixel in der aktuellen Ansicht. */
   public getMetresPerScreenPixel(): number {
     const screenScale = this.effectiveScreenScale();
     return screenScale > 0 ? METRES_PER_BASE_PIXEL / screenScale : 0;
+  }
+
+  /** Weltbreite des Kartenfensters in Metern (Canvasmaß in CSS-Pixeln). */
+  public getVisibleWorldWidthMetres(): number {
+    return this.app.screen.width * this.getMetresPerScreenPixel();
   }
 
   /** Tatsächliche Bildschirmskalierung der Welt (Basispixel → Bildschirmpixel). */
@@ -1054,54 +1066,51 @@ export class KingdomMap {
    * Zoomen nichts flackert. Gebäude verschwinden beim Herauszoomen, statt als
    * übergroße Häuser über der Region zu liegen.
    *
-   * Nahgeometrie (Hof/Behausung) nutzt eine Hysterese: Einblenden erst bei
-   * Zoom > 1,2 (≈ 23 m sichtbar, kurz vor der Behausungsstufe), Ausblenden
-   * erst unter Zoom < 0,9 — der Zwischenraum verhindert Flackern, wenn der
-   * Zoom nahe der Grenze pendelt.
+   * Alle Detailübergänge verwenden die sichtbare Weltbreite in Metern und
+   * bleiben dadurch unabhängig von CSS-Viewport und Geräte-Pixeldichte.
+   * Nahgeometrie nutzt Hysterese gegen Flackern an ihren Übergängen.
    */
   private applyDetailFade(): void {
     if (this.destroyed) return;
-    const zoom = this.zoom;
+    const visibleWidth = this.getVisibleWorldWidthMetres();
     // Buildings: visible up close, hidden when a house would span a region.
-    const buildingsVisible = zoom >= 0.35;
+    const buildingsVisible = visibleWidth <= MAP_LAYER_WIDTHS.buildings;
     this.settlements.visible = buildingsVisible && this.mapScope === 'home';
     this.settlementTerrain.visible = buildingsVisible && this.mapScope === 'home';
     this.animation.visible = buildingsVisible && this.mapScope === 'home' && this.motionEnabled;
     // Nahgeometrie mit Hysterese: sichtbar bleiben, sobald eingeblendet, bis
     // deutlich herausgezoomt wurde. Sie ist die Brücke zur Ich-Perspektive.
-    // Einblenden ab Zoom > 1,2 (≈ 23 m sichtbar — der Hof beginnt kurz vor der
-    // Behausungsstufe 15 m), damit Haus und Hof die Behausungsstufe füllen,
-    // statt erst bei 5,6 m zu erscheinen. Ausblenden erst unter Zoom < 0,9.
-    if (!this.nearLayer.visible && zoom > 1.2 && this.mapScope === 'home') {
+    // Einblenden bei einer sichtbaren Breite von höchstens ≈23,4 km,
+    // ausblenden erst oberhalb ≈31,3 km.
+    if (!this.nearLayer.visible && visibleWidth < MAP_LAYER_WIDTHS.nearShow && this.mapScope === 'home') {
       this.nearLayer.visible = true;
-    } else if (this.nearLayer.visible && (zoom < 0.9 || this.mapScope !== 'home')) {
+    } else if (this.nearLayer.visible
+      && (visibleWidth > MAP_LAYER_WIDTHS.nearHide || this.mapScope !== 'home')) {
       this.nearLayer.visible = false;
     }
-    // Dach-Ausblendung zur Innenraumeinsicht: Ab sichtbarer Breite ≤ 9 m
-    // (Zoom ≥ 3125) verdeckt das Dach die Möbel; es blendet aus, ohne dass
-    // das Haus seine Position oder Größe ändert. Hysterese analog zur
-    // Nahgeometrie (einblenden ≤ 2500, ausblenden ≥ 3125).
+    // Das Dach wird bei höchstens 9 m sichtbarer Breite ausgeblendet und erst
+    // oberhalb 11,25 m wieder gezeigt; Hauslage und -größe bleiben gleich.
     const roof = this.nearLayer.children[2];
     if (roof) {
-      if (!this.roofHidden && zoom >= 3125) this.roofHidden = true;
-      else if (this.roofHidden && zoom < 2500) this.roofHidden = false;
+      if (!this.roofHidden && visibleWidth <= MAP_LAYER_WIDTHS.roofHide) this.roofHidden = true;
+      else if (this.roofHidden && visibleWidth > MAP_LAYER_WIDTHS.roofShow) this.roofHidden = false;
       roof.visible = !this.roofHidden;
     }
     // Neighbours and relief appear once the settlement no longer fills the view.
-    const wide = zoom < 0.9;
+    const wide = visibleWidth > MAP_LAYER_WIDTHS.nearHide;
     this.neighbors.visible = wide;
     this.worldMarker.visible = wide && this.mapScope === 'world';
-    this.regionLayer.visible = zoom < 0.16;
-    this.reliefLayer.visible = zoom < 0.16;
+    this.regionLayer.visible = visibleWidth > MAP_LAYER_WIDTHS.terrain;
+    this.reliefLayer.visible = visibleWidth > MAP_LAYER_WIDTHS.terrain;
     if (this.regionLayer.visible && this.regionLayer.children.length === 0) this.drawRegionLayer();
     if (this.reliefLayer.visible) void this.loadReliefTexture();
     // Europastufe: unterhalb der Zentraleuropa-Schwelle erscheint die
     // Europa-Übersicht (Natural Earth 50m, Public Domain). Hysterese gegen
     // Flackern: einblenden ≤ 0,014, ausblenden ≥ 0,02.
-    if (!this.europeLayer.visible && zoom <= 0.014) {
+    if (!this.europeLayer.visible && visibleWidth >= MAP_LAYER_WIDTHS.europeShow) {
       this.europeLayer.visible = true;
       void this.loadEuropeTexture();
-    } else if (this.europeLayer.visible && zoom >= 0.02) {
+    } else if (this.europeLayer.visible && visibleWidth < MAP_LAYER_WIDTHS.europeHide) {
       this.europeLayer.visible = false;
     }
     if (this.europeLayer.visible) {
@@ -1265,10 +1274,12 @@ export class KingdomMap {
     if (this.destroyed) return;
     for (const child of this.nearLayer.removeChildren()) child.destroy({ children: true });
     const g = (m: number): number => metresToBase(m);
-    // Der Hof liegt leicht südöstlich des belegten Ortsmarkers, so dass
-    // Ortsmarker (Kreis aus drawLocalMap) und Haus nebeneinander sichtbar
-    // bleiben: Marker und Hausposition sind ausdrücklich verschiedene Dinge.
-    const anchor = { x: DWELLING_ANCHOR.x + g(20), y: DWELLING_ANCHOR.y + g(15) };
+    // Der Modellversatz ist in MapScale zentral definiert und wird auch von
+    // der Ich-Perspektive für die Rückprojektion verwendet.
+    const anchor = {
+      x: DWELLING_ANCHOR.x + g(DWELLING_OFFSET_METRES.east),
+      y: DWELLING_ANCHOR.y + g(DWELLING_OFFSET_METRES.south),
+    };
     const layer = this.nearLayer;
     // Hof (24 × 24 m um die Behausung) — dieselbe Fläche wie YARD_EXTENT.
     const yard = new Graphics();
@@ -1301,10 +1312,11 @@ export class KingdomMap {
       furniture.rect(anchor.x + g(mx) - g(mw) / 2, anchor.y + g(mz) - g(md) / 2,
         g(mw), g(md)).fill(color).stroke({ color: 0x3a2c1c, width: 1 });
     };
-    box(0, -2.6, 1.8, 0.9, 0x8a6238);   // Tisch
-    box(0, -1.7, 1.8, 0.35, 0x7a5630);  // Bank
-    box(-2.2, 2.4, 1.9, 0.9, 0x9a8a66); // Bett
-    box(2.3, -2.8, 1.1, 1.1, 0x4a4038); // Herd
+    for (const [name, item] of Object.entries(DWELLING_FURNITURE)) {
+      const color = name === 'table' ? 0x8a6238
+        : name === 'bench' ? 0x7a5630 : name === 'bed' ? 0x9a8a66 : 0x4a4038;
+      box(item.x, item.z, item.width, item.depth, color);
+    }
     layer.addChild(furniture);
     // Dach als eigenes Kind (Index 2): blendet zur Innenraumeinsicht aus,
     // ohne dass das Haus seine Position oder Größe ändert.
@@ -1510,11 +1522,11 @@ export class KingdomMap {
   private drawScaleBar(): void {
     if (this.destroyed) return;
     for (const child of this.scaleLayer.removeChildren()) child.destroy({ children: true });
-    const bar = scaleBar(this.zoom);
+    const bar = this.getScaleBar();
     const screenScale = this.effectiveScreenScale();
     if (screenScale <= 0) return;
     // Bar length in screen pixels follows the same metre basis as the geometry.
-    const widthPx = Math.max(24, (bar.metres / METRES_PER_BASE_PIXEL) * screenScale);
+    const widthPx = (bar.metres / METRES_PER_BASE_PIXEL) * screenScale;
     const x = 16, y = this.app.screen.height - 34;
     const line = new Graphics()
       .moveTo(x, y).lineTo(x + widthPx, y)
@@ -1523,7 +1535,7 @@ export class KingdomMap {
       .stroke({ color: 0x2c2418, width: 2.5 });
     this.scaleLayer.addChild(line);
     const caption = new Text({
-      text: `${bar.label} · ${stageForZoom(this.zoom)}`,
+      text: `${bar.label} · ${this.getStage()}`,
       style: { fontFamily: 'Segoe UI', fontSize: 13, fill: 0x2c2418,
         stroke: { color: 0xf3ecd9, width: 3 } }
     });
@@ -1562,9 +1574,10 @@ export class KingdomMap {
     this.drawScaleBar();
     const canvas = this.app.canvas;
     canvas.dataset.mapZoom = this.zoom.toPrecision(6);
-    canvas.dataset.mapStage = stageForZoom(this.zoom);
+    canvas.dataset.mapStage = this.getStage();
     canvas.dataset.metresPerPixel = screenScale > 0
       ? (METRES_PER_BASE_PIXEL / screenScale).toPrecision(6) : '0';
+    canvas.dataset.visibleWidthMetres = this.getVisibleWorldWidthMetres().toPrecision(7);
     this.onCameraChange?.(this.getCameraState());
   }
 

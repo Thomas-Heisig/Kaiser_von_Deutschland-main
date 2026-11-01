@@ -18,7 +18,20 @@
  * globale Handler das Spiel nicht pausiert.
  */
 
-import { EYE_HEIGHT, FIELD_OF_VIEW_DEGREES, FIRST_PERSON_NOTE, startingState, step, TURN_SPEED, type FirstPersonState } from './FirstPersonLogic';
+import {
+  DWELLING_FURNITURE,
+  DWELLING_HALF_DEPTH,
+  DWELLING_HALF_WIDTH,
+  DWELLING_WALL_HEIGHT,
+  DWELLING_WALL_THICKNESS,
+  EYE_HEIGHT,
+  FIELD_OF_VIEW_DEGREES,
+  FIRST_PERSON_NOTE,
+  startingState,
+  step,
+  TURN_SPEED,
+  type FirstPersonState,
+} from './FirstPersonLogic';
 
 /** UI-Texte der Ich-Perspektive. */
 export const FIRST_PERSON_HUD = {
@@ -398,25 +411,73 @@ export class FirstPersonView {
     // Hof: Bodenplatte
     pushBox(verts, { x: 0, y: 0, z: 0, w: 24, h: 0.02, d: 24, r: 0.22, g: 0.30, b: 0.20 });
     // Behausung: Boden
-    pushBox(verts, { x: 0, y: 0.02, z: 0, w: 6, h: 0.02, d: 8, r: 0.34, g: 0.25, b: 0.16 });
+    pushBox(verts, {
+      x: 0, y: 0.02, z: 0,
+      w: 2 * DWELLING_HALF_WIDTH, h: 0.02, d: 2 * DWELLING_HALF_DEPTH,
+      r: 0.34, g: 0.25, b: 0.16,
+    });
     // Wände (Nord, Ost, West; Süd offen außer Türpfosten)
-    pushBox(verts, { x: 0, y: 0, z: -4.15, w: 6.6, h: 2.6, d: 0.3, r: 0.42, g: 0.31, b: 0.20 });
-    pushBox(verts, { x: -3.15, y: 0, z: 0, w: 0.3, h: 2.6, d: 8, r: 0.40, g: 0.29, b: 0.19 });
-    pushBox(verts, { x: 3.15, y: 0, z: 0, w: 0.3, h: 2.6, d: 8, r: 0.40, g: 0.29, b: 0.19 });
+    const wallOffset = DWELLING_HALF_WIDTH + DWELLING_WALL_THICKNESS / 2;
+    pushBox(verts, {
+      x: 0, y: 0, z: -DWELLING_HALF_DEPTH - DWELLING_WALL_THICKNESS / 2,
+      w: 2 * wallOffset, h: DWELLING_WALL_HEIGHT, d: DWELLING_WALL_THICKNESS,
+      r: 0.42, g: 0.31, b: 0.20,
+    });
+    pushBox(verts, {
+      x: -wallOffset, y: 0, z: 0, w: DWELLING_WALL_THICKNESS,
+      h: DWELLING_WALL_HEIGHT, d: 2 * DWELLING_HALF_DEPTH,
+      r: 0.40, g: 0.29, b: 0.19,
+    });
+    pushBox(verts, {
+      x: wallOffset, y: 0, z: 0, w: DWELLING_WALL_THICKNESS,
+      h: DWELLING_WALL_HEIGHT, d: 2 * DWELLING_HALF_DEPTH,
+      r: 0.40, g: 0.29, b: 0.19,
+    });
     // Südwand mit Türspalt (-0.8..0.8): Segmente -3.3..-0.8 und 0.8..3.3
-    pushBox(verts, { x: -2.05, y: 0, z: 4.15, w: 2.5, h: 2.6, d: 0.3, r: 0.42, g: 0.31, b: 0.20 });
-    pushBox(verts, { x: 2.05, y: 0, z: 4.15, w: 2.5, h: 2.6, d: 0.3, r: 0.42, g: 0.31, b: 0.20 });
+    const doorSegmentWidth = (2 * DWELLING_HALF_WIDTH - 1.6) / 2;
+    const doorWallZ = DWELLING_HALF_DEPTH + DWELLING_WALL_THICKNESS / 2;
+    pushBox(verts, {
+      x: -(0.8 + doorSegmentWidth / 2), y: 0, z: doorWallZ,
+      w: doorSegmentWidth, h: DWELLING_WALL_HEIGHT, d: DWELLING_WALL_THICKNESS,
+      r: 0.42, g: 0.31, b: 0.20,
+    });
+    pushBox(verts, {
+      x: 0.8 + doorSegmentWidth / 2, y: 0, z: doorWallZ,
+      w: doorSegmentWidth, h: DWELLING_WALL_HEIGHT, d: DWELLING_WALL_THICKNESS,
+      r: 0.42, g: 0.31, b: 0.20,
+    });
     // Sturz über der Tür
-    pushBox(verts, { x: 0, y: 2.1, z: 4.15, w: 1.6, h: 0.5, d: 0.3, r: 0.42, g: 0.31, b: 0.20 });
+    pushBox(verts, {
+      x: 0, y: DWELLING_WALL_HEIGHT - 0.5, z: doorWallZ,
+      w: 1.6, h: 0.5, d: DWELLING_WALL_THICKNESS,
+      r: 0.42, g: 0.31, b: 0.20,
+    });
     // Dach (flaches Spielmodell)
     pushBox(verts, { x: 0, y: 2.6, z: 0, w: 7, h: 0.15, d: 9, r: 0.30, g: 0.18, b: 0.11 });
-    // Ausstattung (gestalterische Annäherung): Tisch, Bank, Bett, Herd
-    pushBox(verts, { x: 0, y: 0.04, z: -2.6, w: 1.8, h: 0.75, d: 0.9, r: 0.35, g: 0.22, b: 0.12 });
-    pushBox(verts, { x: 0, y: 0.04, z: -1.7, w: 1.8, h: 0.42, d: 0.35, r: 0.32, g: 0.21, b: 0.12 });
-    pushBox(verts, { x: -2.2, y: 0.04, z: 2.4, w: 1.9, h: 0.45, d: 0.9, r: 0.38, g: 0.33, b: 0.26 });
-    pushBox(verts, { x: 2.3, y: 0.04, z: -2.8, w: 1.1, h: 0.6, d: 1.1, r: 0.25, g: 0.22, b: 0.20 });
+    // Ausstattung (gestalterische Annäherung): dieselbe metrische Geometrie wie auf der Karte.
+    const { table, bench, bed, hearth } = DWELLING_FURNITURE;
+    pushBox(verts, {
+      x: table.x, y: 0.04, z: table.z, w: table.width, h: table.height, d: table.depth,
+      r: 0.35, g: 0.22, b: 0.12,
+    });
+    pushBox(verts, {
+      x: bench.x, y: 0.04, z: bench.z, w: bench.width, h: bench.height, d: bench.depth,
+      r: 0.32, g: 0.21, b: 0.12,
+    });
+    pushBox(verts, {
+      x: bed.x, y: 0.04, z: bed.z, w: bed.width, h: bed.height, d: bed.depth,
+      r: 0.38, g: 0.33, b: 0.26,
+    });
+    pushBox(verts, {
+      x: hearth.x, y: 0.04, z: hearth.z, w: hearth.width, h: hearth.height, d: hearth.depth,
+      r: 0.25, g: 0.22, b: 0.20,
+    });
     // Tisch oben (Arbeitsfläche)
-    pushBox(verts, { x: 0, y: 0.79, z: -2.6, w: 2.0, h: 0.06, d: 1.1, r: 0.45, g: 0.30, b: 0.17 });
+    pushBox(verts, {
+      x: table.x, y: 0.04 + table.height, z: table.z,
+      w: table.width, h: 0.06, d: table.depth,
+      r: 0.45, g: 0.30, b: 0.17,
+    });
 
     const position = new Float32Array(verts);
     // Farben sind in verts gemischt (xyz rgb); trennen für zwei Buffer.

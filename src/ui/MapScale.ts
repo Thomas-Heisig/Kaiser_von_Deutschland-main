@@ -65,6 +65,29 @@ export const ZOOM_REGION = 0.0563;
 /** Zoomstufe, bei der Europa (≈ 4.000 km) sichtbar wird. */
 export const ZOOM_EUROPE = 0.00703;
 
+/** Sichtbare Kartenbreiten, an denen die Namen der durchgehenden Detailstufen wechseln. */
+export const MAP_DETAIL_WIDTHS = {
+  desk: 3,
+  dwelling: 15,
+  settlement: 40_000,
+  surroundings: 120_000,
+  region: 500_000,
+  realm: 2_000_000,
+} as const;
+
+/** Weitere LOD-Schwellen, als reale sichtbare Kartenbreiten ausgedrückt. */
+const REFERENCE_VIEW_WIDTH_METRES = 1350 * METRES_PER_BASE_PIXEL;
+export const MAP_LAYER_WIDTHS = {
+  buildings: REFERENCE_VIEW_WIDTH_METRES / 0.35,
+  nearShow: REFERENCE_VIEW_WIDTH_METRES / 1.2,
+  nearHide: REFERENCE_VIEW_WIDTH_METRES / 0.9,
+  terrain: REFERENCE_VIEW_WIDTH_METRES / 0.16,
+  europeShow: REFERENCE_VIEW_WIDTH_METRES / 0.014,
+  europeHide: REFERENCE_VIEW_WIDTH_METRES / 0.02,
+  roofHide: REFERENCE_VIEW_WIDTH_METRES / 3125,
+  roofShow: REFERENCE_VIEW_WIDTH_METRES / 2500,
+} as const;
+
 /**
  * Bildschirmpixel je Weltmeter bei einem Zoom.
  * @param zoom Aktueller Kamerazoom.
@@ -101,10 +124,25 @@ export function baseToMetres(pixels: number): number {
  */
 export function scaleBar(zoom: number, maxWidthPx = 120): { metres: number; label: string } {
   const perPixel = METRES_PER_BASE_PIXEL / Math.max(zoom, Number.MIN_VALUE);
-  const target = maxWidthPx * perPixel;
-  const steps = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000,
-    10_000, 20_000, 50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000];
-  const metres = steps.find(step => step >= target) ?? steps[steps.length - 1];
+  return scaleBarForMetresPerPixel(perPixel, maxWidthPx);
+}
+
+/**
+ * Wählt einen 1/2/5-Maßstabsbalken anhand des tatsächlichen CSS-Pixelmaßstabs.
+ * @param metresPerCssPixel Effektive Weltmeter je CSS-Pixel inklusive Fit-Faktor.
+ * @param maxWidthPx Maximale Balkenbreite in CSS-Pixeln.
+ * @returns Gerundete Meterlänge und passende Beschriftung.
+ */
+export function scaleBarForMetresPerPixel(
+  metresPerCssPixel: number,
+  maxWidthPx = 120,
+): { metres: number; label: string } {
+  const target = Math.max(Number.MIN_VALUE, maxWidthPx * metresPerCssPixel);
+  const magnitude = 10 ** Math.floor(Math.log10(target));
+  const metres = [1, 2, 5].reduce((selected, step) => {
+    const candidate = step * magnitude;
+    return candidate <= target ? candidate : selected;
+  }, magnitude);
   return { metres, label: formatDistance(metres) };
 }
 
@@ -131,8 +169,9 @@ export function longitudeStretch(latitude: number): number {
  * Benennt die Detailstufe eines Zooms. Die Begriffe beschreiben dieselbe
  * Ansicht, keine getrennten Karten.
  *
- * Die Stufen sind aus tatsächlich sichtbaren Weltgrößen abgeleitet (Referenz
- * Fit-Faktor 1 = 1350 Basispixel sichtbar; sichtbare Meter ≈ 28.125/Zoom):
+ * Die Stufen sind aus der tatsächlich sichtbaren Weltbreite abgeleitet. Die
+ * Renderer sollten {@link stageForVisibleWidth} mit der Canvasbreite und dem
+ * effektiven Maßstab aufrufen; diese Funktion bleibt für Referenz-/Altaufrufe.
  *
  *   - Schreibtisch ≤ 3 m (Zoom ≥ 9.375) — Nahgeometrie + Ich-Perspektive
  *   - Behausung ≤ 15 m (Zoom ≥ 1.875)
@@ -147,14 +186,28 @@ export function longitudeStretch(latitude: number): number {
  */
 export function stageForZoom(zoom: number): string {
   const visibleMetres = (1350 * METRES_PER_BASE_PIXEL) / Math.max(zoom, Number.MIN_VALUE);
-  if (visibleMetres <= 3) return 'Schreibtisch';
-  if (visibleMetres <= 15) return 'Behausung';
-  if (visibleMetres <= 40_000) return 'Siedlung';
-  if (visibleMetres <= 120_000) return 'Umgebung';
-  if (visibleMetres <= 500_000) return 'Region';
-  if (visibleMetres <= 2_000_000) return 'Herrschaftsraum';
+  return stageForVisibleWidth(visibleMetres);
+}
+
+/**
+ * Benennt die Detailstufe anhand der real sichtbaren Weltbreite.
+ * @param visibleMetres Weltbreite des Canvas in Metern pro CSS-Pixel × CSS-Pixel.
+ * @returns Detailstufenname.
+ */
+export function stageForVisibleWidth(visibleMetres: number): string {
+  const width = Number.isFinite(visibleMetres) && visibleMetres >= 0
+    ? visibleMetres : Number.POSITIVE_INFINITY;
+  if (width <= MAP_DETAIL_WIDTHS.desk) return 'Schreibtisch';
+  if (width <= MAP_DETAIL_WIDTHS.dwelling) return 'Behausung';
+  if (width <= MAP_DETAIL_WIDTHS.settlement) return 'Siedlung';
+  if (width <= MAP_DETAIL_WIDTHS.surroundings) return 'Umgebung';
+  if (width <= MAP_DETAIL_WIDTHS.region) return 'Region';
+  if (width <= MAP_DETAIL_WIDTHS.realm) return 'Herrschaftsraum';
   return 'Europa';
 }
+
+/** Versatz der modellierten Behausung vom Ortsmarker, in lokalen Weltmetern. */
+export const DWELLING_OFFSET_METRES = { east: 20, south: 15 } as const;
 
 /** Klemmt einen Zoom auf den erlaubten Bereich. */
 export function clampZoom(zoom: number): number {

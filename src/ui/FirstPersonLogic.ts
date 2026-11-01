@@ -7,7 +7,12 @@
  * MapScale.ts, damit Behausung, Siedlung und Karte dieselbe Datenbasis haben.
  */
 
-import { METRES_PER_BASE_PIXEL, DWELLING_ANCHOR } from './MapScale';
+import {
+  METRES_PER_BASE_PIXEL,
+  DWELLING_ANCHOR,
+  DWELLING_OFFSET_METRES,
+  metresToBase,
+} from './MapScale';
 /** Basispixel → Meter (einzige Umrechnung, identisch zur Karte). */
 export const MAP_METRES_PER_PIXEL = METRES_PER_BASE_PIXEL;
 
@@ -26,6 +31,16 @@ export const TURN_SPEED = 120;
 /** Grundfläche der eigenen Behausung in Metern (Spielmodell, nicht vermessen). */
 export const DWELLING_HALF_WIDTH = 3;
 export const DWELLING_HALF_DEPTH = 4;
+export const DWELLING_WALL_HEIGHT = 2.6;
+export const DWELLING_WALL_THICKNESS = 0.3;
+
+/** Gemeinsame, ausdrücklich modellierte Möbelgeometrie in Metern. */
+export const DWELLING_FURNITURE = {
+  table: { x: 0, z: -2.6, width: 1.8, depth: 0.9, height: 0.75 },
+  bench: { x: 0, z: -1.7, width: 1.8, depth: 0.35, height: 0.42 },
+  bed: { x: -2.2, z: 2.4, width: 1.9, depth: 0.9, height: 0.45 },
+  hearth: { x: 2.3, z: -2.8, width: 1.1, depth: 1.1, height: 0.6 },
+} as const;
 
 /** Abstand, den die Kamera von einer Wand freihält (m), um Durchdringen zu verhindern. */
 export const WALL_CLEARANCE = 0.25;
@@ -33,8 +48,11 @@ export const WALL_CLEARANCE = 0.25;
 /** Wandstärke der behelfsmäßigen Begrenzungen in Metern. */
 export const WALL_THICKNESS = 0.3;
 
-/** Position der Behausung auf der Basiskarte (Bildschirmkoordinaten des Plans). */
-export const DWELLING_MAP_POSITION = DWELLING_ANCHOR;
+/** Position der modellierten Behausungsmitte, mit derselben Lage wie die Kartenansicht. */
+export const DWELLING_MAP_POSITION = {
+  x: DWELLING_ANCHOR.x + metresToBase(DWELLING_OFFSET_METRES.east),
+  y: DWELLING_ANCHOR.y + metresToBase(DWELLING_OFFSET_METRES.south),
+} as const;
 
 /** Blickwinkel auf der Karte, aus dem die Ich-Perspektive startet (Grad, 0 = Norden). */
 export const DWELLING_MAP_BEARING = 0;
@@ -224,11 +242,10 @@ export function isInsideDwelling(pos: CameraPosition): boolean {
 }
 
 /**
- * Startposition der Ich-Perspektive: mitten in der Behausung, Blick nach
- * Norden (Richtung Tür nicht sichtbar — Spieler steht „am Schreibtisch“).
+ * Startposition am modellierten Arbeitstisch, mit Blick auf die Einrichtung.
  */
 export function startingState(): FirstPersonState {
-  return { x: 0, z: -1, yaw: 0 };
+  return { x: 0, z: -1, yaw: 180 };
 }
 
 /**
