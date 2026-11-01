@@ -53,6 +53,7 @@ describe('FirstPersonLogic: Einheiten und Datenbasis', () => {
     expect(DWELLING_MAP_POSITION.x).toBeGreaterThan(604);
     expect(DWELLING_MAP_POSITION.y).toBeGreaterThan(384);
     expect(DWELLING_FURNITURE.table).toMatchObject({ width: 1.8, depth: 0.9 });
+    expect(desk.y).toBeGreaterThan(centre.y);
     expect(desk.y - centre.y).toBeCloseTo(2.6 / MAP_METRES_PER_PIXEL, 6);
   });
 

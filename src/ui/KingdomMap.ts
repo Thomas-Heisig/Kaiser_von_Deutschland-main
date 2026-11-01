@@ -871,6 +871,7 @@ export class KingdomMap {
   private currentScale = 1;
   /** Dach-Ausblendungszustand mit Hysterese (applyDetailFade). */
   private roofHidden = false;
+  private fitting = false;
 
   /** Kamerazustand zum Speichern (Mittelpunkt in Weltkoordinaten). */
   public getCameraState(): CameraState {
@@ -1062,7 +1063,6 @@ export class KingdomMap {
       if (changed || this.regionLayer.children.length === 0) this.drawRegionLayer();
       void this.loadReliefTexture();
     }
-    this.applyDetailFade();
     this.app.canvas.dataset.zoomLevel = level;
     this.fit();
   }
@@ -1559,24 +1559,31 @@ export class KingdomMap {
   }
 
   private fit(): void {
-    if (!this.initialized || this.destroyed) return;
-    // On phones the old 1350px reference shrank the entire settlement to a blur.
-    // Fit to a narrower, usable map window; retain normal desktop framing.
-    const mobile = this.app.screen.width < 760;
-    const fitScale = this.fitFactor();
-    const scale = fitScale * this.zoom;
-    this.currentScale = scale;
-    this.world.scale.set(scale);
-    // Kamera-Mittelpunkt in Weltkoordinaten (Basispixel) steuert den Ausschnitt:
-    // Der Mittelpunkt liegt immer in der Bildschirmmitte, der Versatz schiebt
-    // zusätzlich. Resize ändert nur den sichtbaren Rahmen, nicht den Mittelpunkt
-    // und nicht den Maßstab. Keine automatische Bindung an den Hausanker.
-    this.world.position.set(
-      this.app.screen.width / 2 - this.centre.x * scale + this.offset.x,
-      (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2) - this.centre.y * scale + this.offset.y
-    );
-    this.publishScale(scale);
-    this.app.renderer.render(this.app.stage);
+    if (!this.initialized || this.destroyed || this.fitting) return;
+    this.fitting = true;
+    try {
+      // On phones the old 1350px reference shrank the entire settlement to a blur.
+      // Fit to a narrower, usable map window; retain normal desktop framing.
+      const mobile = this.app.screen.width < 760;
+      const fitScale = this.fitFactor();
+      const scale = fitScale * this.zoom;
+      this.currentScale = scale;
+      this.world.scale.set(scale);
+      // Kamera-Mittelpunkt in Weltkoordinaten (Basispixel) steuert den Ausschnitt:
+      // Der Mittelpunkt liegt immer in der Bildschirmmitte, der Versatz schiebt
+      // zusätzlich. Resize ändert nur den sichtbaren Rahmen, nicht den Mittelpunkt
+      // und nicht den Maßstab. Keine automatische Bindung an den Hausanker.
+      this.world.position.set(
+        this.app.screen.width / 2 - this.centre.x * scale + this.offset.x,
+        (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2)
+          - this.centre.y * scale + this.offset.y
+      );
+      this.applyDetailFade();
+      this.publishScale(scale);
+      this.app.renderer.render(this.app.stage);
+    } finally {
+      this.fitting = false;
+    }
   }
 
   /** Optionaler Rückruf nach jeder Kamerabewegung (Persistenz in der Engine). */
