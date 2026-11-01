@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { KingdomMap } from './KingdomMap';
 import { ZOOM_MAX, ZOOM_MIN, clampZoom } from './MapScale';
+import { DWELLING_MAP_POSITION } from './FirstPersonLogic';
 
 // Exercise renderer transitions without requiring a GPU or browser DOM.
 function mapFixture() {
@@ -103,9 +104,9 @@ describe('map lifecycle and view transitions', () => {
     map.centerOnHome();
     const saved = map.getCameraState();
     expect(saved.zoom).toBe(1);
-    // Der Mittelpunkt liegt an der Behausungsverankerung.
-    expect(saved.x).toBeCloseTo(604, 0);
-    expect(saved.y).toBeCloseTo(384, 0);
+    // Der Fokus liegt auf derselben modellierten Behausungsmitte wie die Nahgeometrie.
+    expect(saved.x).toBeCloseTo(DWELLING_MAP_POSITION.x, 6);
+    expect(saved.y).toBeCloseTo(DWELLING_MAP_POSITION.y, 6);
     // Wiederherstellen in einer neuen Karte (geladener Spielstand).
     const restored = mapFixture();
     restored.setCameraState(saved);

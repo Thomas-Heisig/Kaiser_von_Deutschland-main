@@ -23,6 +23,7 @@ import {
 import {
   DWELLING_DOOR,
   DWELLING_FURNITURE,
+  DWELLING_MAP_POSITION,
   DWELLING_HALF_DEPTH,
   DWELLING_HALF_WIDTH,
   YARD_EXTENT,
@@ -892,7 +893,7 @@ export class KingdomMap {
    */
   public centerOnHome(): void {
     if (this.destroyed) return;
-    this.centre = { x: DWELLING_ANCHOR.x, y: DWELLING_ANCHOR.y };
+    this.centre = { x: DWELLING_MAP_POSITION.x, y: DWELLING_MAP_POSITION.y };
     this.offset = { x: 0, y: 0 };
     this.fit();
   }
