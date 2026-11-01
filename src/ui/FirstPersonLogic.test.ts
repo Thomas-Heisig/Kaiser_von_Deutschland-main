@@ -8,7 +8,9 @@ import { describe, expect, it } from 'vitest';
 import {
   applyLook,
   DWELLING_DOOR,
+  DWELLING_FURNITURE,
   DWELLING_INTERIOR,
+  DWELLING_MAP_POSITION,
   EYE_HEIGHT,
   MAP_METRES_PER_PIXEL,
   NO_MOVE,
@@ -40,6 +42,21 @@ describe('FirstPersonLogic: Einheiten und Datenbasis', () => {
   it('Hofgrenze enthält die Behausung', () => {
     expect(YARD_EXTENT).toBeGreaterThan(10);
   });
+
+  it('uses the same dwelling offset and furniture footprint as the map', () => {
+    const centre = positionToMapPixels({ x: 0, z: 0 });
+    expect(centre).toEqual(DWELLING_MAP_POSITION);
+    expect(DWELLING_MAP_POSITION.x).toBeGreaterThan(604);
+    expect(DWELLING_MAP_POSITION.y).toBeGreaterThan(384);
+    expect(DWELLING_FURNITURE.table).toMatchObject({ width: 1.8, depth: 0.9 });
+  });
+
+  it('starts inside the house facing the modeled desk', () => {
+    const state = startingState();
+    expect(state.x).toBe(0);
+    expect(state.z).toBe(-1);
+    expect(state.yaw).toBe(180);
+  });
 });
 
 describe('FirstPersonLogic: Winkel', () => {
@@ -57,19 +74,22 @@ describe('FirstPersonLogic: Winkel', () => {
 
 describe('FirstPersonLogic: Bewegung', () => {
   it('bewegt vorwärts nach Norden bei yaw 0', () => {
-    const next = step(startingState(), 0, { forward: 1, strafe: 0 }, 1);
+    const northFacing = { ...startingState(), yaw: 0 };
+    const next = step(northFacing, 0, { forward: 1, strafe: 0 }, 1);
     expect(next.z).toBeGreaterThan(startingState().z);
     expect(next.x).toBeCloseTo(startingState().x, 5);
   });
 
   it('bewegt seitlich nach Osten bei D nach rechts', () => {
-    const next = step(startingState(), 0, { forward: 0, strafe: 1 }, 1);
+    const northFacing = { ...startingState(), yaw: 0 };
+    const next = step(northFacing, 0, { forward: 0, strafe: 1 }, 1);
     expect(next.x).toBeGreaterThan(startingState().x);
   });
 
   it('skaliert die Bewegung mit der Zeit', () => {
-    const half = step(startingState(), 0, { forward: 1, strafe: 0 }, 0.5);
-    const full = step(startingState(), 0, { forward: 1, strafe: 0 }, 1);
+    const northFacing = { ...startingState(), yaw: 0 };
+    const half = step(northFacing, 0, { forward: 1, strafe: 0 }, 0.5);
+    const full = step(northFacing, 0, { forward: 1, strafe: 0 }, 1);
     const dHalf = half.z - startingState().z;
     const dFull = full.z - startingState().z;
     expect(dHalf).toBeCloseTo(dFull / 2, 5);
@@ -82,7 +102,7 @@ describe('FirstPersonLogic: Bewegung', () => {
   });
 
   it('dämpft Drehungen über applyLook korrekt', () => {
-    const next = applyLook(startingState(), 450);
+    const next = applyLook({ ...startingState(), yaw: 0 }, 450);
     expect(next.yaw).toBe(90);
   });
 });

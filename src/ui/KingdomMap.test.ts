@@ -21,6 +21,15 @@ function mapFixture() {
     'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer', 'scaleLayer', 'europeLayer']) {
     map[name] = { visible: true, children: [{}], removeChildren: () => [] };
   }
+  map.world.scale = {
+    get x() {
+      const { width, height } = map.app.screen;
+      const fitFactor = width < 760
+        ? Math.min(width / 820, height / 960)
+        : Math.min(width / 1350, height / 850);
+      return map.zoom * fitFactor;
+    },
+  };
   // Nahgeometrie startet verborgen (wie in initialize()); der Test steuert sie
   // über setZoom mit echter Hysterese.
   map.nearLayer = { visible: false, children: [{}], removeChildren: () => [] };
@@ -127,11 +136,21 @@ describe('map lifecycle and view transitions', () => {
     expect(clampZoom(1_000_000)).toBe(ZOOM_MAX);
     expect(clampZoom(-5)).toBe(ZOOM_MIN);
   });
-
+  it('measures detail stages and map width in CSS pixels, not device pixels', () => {
+    const map = mapFixture();
+    map.setZoom(1);
+    const desktopWidth = map.getVisibleWorldWidthMetres();
+    expect(desktopWidth).toBeCloseTo(28_125, 0);
+    expect(map.getStage()).toBe('Siedlung');
+    map.app.screen.width = 700;
+    const narrowWidth = map.getVisibleWorldWidthMetres();
+    expect(narrowWidth).not.toBe(desktopWidth);
+    expect(map.getMetresPerScreenPixel()).toBeGreaterThan(0);
+  });
   it('shows the dwelling near geometry across the dwelling stage', () => {
     const map = mapFixture();
-    // Der Hof füllt die Behausungsstufe: er erscheint kurz vor 15 m sichtbarer
-    // Breite (Zoom > 1,2) und bleibt bis deutlich unter der Stufe sichtbar.
+    // Der Hof erscheint bei einer sichtbaren Breite von ≈18,8 km und bleibt
+    // durch die Behausungsstufe bis zur Weitzoom-Hysterese sichtbar.
     map.setZoom(1);
     expect(map.nearLayer.visible).toBe(false);
     map.setZoom(1.5);

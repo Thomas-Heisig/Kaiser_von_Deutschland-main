@@ -434,7 +434,7 @@ export class FirstPersonView {
       r: 0.40, g: 0.29, b: 0.19,
     });
     // Südwand mit Türspalt (-0.8..0.8): Segmente -3.3..-0.8 und 0.8..3.3
-    const doorSegmentWidth = (2 * DWELLING_HALF_WIDTH - 1.6) / 2;
+    const doorSegmentWidth = (2 * wallOffset - 1.6) / 2;
     const doorWallZ = DWELLING_HALF_DEPTH + DWELLING_WALL_THICKNESS / 2;
     pushBox(verts, {
       x: -(0.8 + doorSegmentWidth / 2), y: 0, z: doorWallZ,

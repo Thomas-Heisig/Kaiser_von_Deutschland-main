@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   BASE_HEIGHT, BASE_WIDTH, DWELLING_ANCHOR, HOME_LAT, HOME_LON, METRES_PER_BASE_PIXEL,
+  MAP_DETAIL_WIDTHS,
   ZOOM_DWELLING, ZOOM_EUROPE, ZOOM_MAX, ZOOM_MIN, ZOOM_REGION, ZOOM_SURROUNDINGS,
   baseToMetres, clampZoom, formatDistance, latToBaseY, longitudeStretch, lonToBaseX, metresToBase,
-  pixelsPerMetre, scaleBar, stageForZoom
+  pixelsPerMetre, scaleBar, scaleBarForMetresPerPixel, stageForVisibleWidth, stageForZoom
 } from './MapScale';
 
 describe('Gemeinsame Kartenmaßstäbe', () => {
@@ -34,6 +35,23 @@ describe('Gemeinsame Kartenmaßstäbe', () => {
       expect(bar.metres).toBeGreaterThan(0);
       expect(bar.label).toMatch(/^\d[\d.,]*\s(km|m)$/);
     }
+  });
+  it('keeps scale-bar labels and CSS lengths consistent at desk and regional scales', () => {
+    for (const metresPerCssPixel of [0.002, 0.1, 1, 100, 25_000]) {
+      const bar = scaleBarForMetresPerPixel(metresPerCssPixel);
+      expect(bar.metres / metresPerCssPixel).toBeLessThanOrEqual(120);
+      expect(bar.metres / metresPerCssPixel).toBeGreaterThan(0);
+      expect(bar.label).toBe(formatDistance(bar.metres));
+    }
+  });
+  it('derives named detail stages from visible world width', () => {
+    expect(stageForVisibleWidth(MAP_DETAIL_WIDTHS.desk)).toBe('Schreibtisch');
+    expect(stageForVisibleWidth(MAP_DETAIL_WIDTHS.dwelling)).toBe('Behausung');
+    expect(stageForVisibleWidth(MAP_DETAIL_WIDTHS.settlement)).toBe('Siedlung');
+    expect(stageForVisibleWidth(MAP_DETAIL_WIDTHS.surroundings)).toBe('Umgebung');
+    expect(stageForVisibleWidth(MAP_DETAIL_WIDTHS.region)).toBe('Region');
+    expect(stageForVisibleWidth(MAP_DETAIL_WIDTHS.realm)).toBe('Herrschaftsraum');
+    expect(stageForVisibleWidth(MAP_DETAIL_WIDTHS.realm + 1)).toBe('Europa');
   });
   it('names detail stages as one continuous view', () => {
     const stages = [ZOOM_MIN, 0.1, 0.5, 1, 3, ZOOM_MAX].map(stageForZoom);
