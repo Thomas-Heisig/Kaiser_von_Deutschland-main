@@ -1,0 +1,1965 @@
+{
+  "license": "CC0-1.0",
+  "authors": [
+    "Kenney"
+  ],
+  "sources": [
+    "https://kenney.nl/assets/retro-fantasy-kit",
+    "https://kenney.nl/assets/retro-urban-kit"
+  ],
+  "renderer": "VTK offscreen, orthographic; original GLB UV textures via trimesh",
+  "frames": [
+    {
+      "key": "workshops",
+      "page": 0,
+      "frame": 0,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-wood-door.glb",
+          "sha256": "05957d9111312cd9c4aa595b630fae6ac9d40077abf258e0cf33e5c9a7459d00",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood-window.glb",
+          "sha256": "77f9e703339bf5ae0ca4e5cce90c2de416a7bfa2095873a95e9bb56aaeb73c05",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/pulley.glb",
+          "sha256": "fcac7ec8db844c666de8d31c420ad5710b29536a6b0b620f318fab514a173708",
+          "position": [
+            -0.7,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/bricks.glb",
+          "sha256": "bef1bb322e33574ec5db0aa163179d56f673f55dff779f5a2e5f05a5774f5e4e",
+          "position": [
+            0.8,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "taverns",
+      "page": 0,
+      "frame": 1,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-wood-door.glb",
+          "sha256": "05957d9111312cd9c4aa595b630fae6ac9d40077abf258e0cf33e5c9a7459d00",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood-window.glb",
+          "sha256": "77f9e703339bf5ae0ca4e5cce90c2de416a7bfa2095873a95e9bb56aaeb73c05",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/barrels.glb",
+          "sha256": "c5e86e2415bf194f011e9ca85875dca7869d163cca1b93780bbb0aaaefac0660",
+          "position": [
+            0.8,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/overhang.glb",
+          "sha256": "1938a83412e9ce24931c0d664974c22212170f9ec6b05ee44971d7017f851a32",
+          "position": [
+            0,
+            0.8,
+            0.6
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "warehouses",
+      "page": 0,
+      "frame": 2,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-wood-door.glb",
+          "sha256": "05957d9111312cd9c4aa595b630fae6ac9d40077abf258e0cf33e5c9a7459d00",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood-window.glb",
+          "sha256": "77f9e703339bf5ae0ca4e5cce90c2de416a7bfa2095873a95e9bb56aaeb73c05",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-crate.glb",
+          "sha256": "45f31f44bb71d111c99e87176688db1954d8b6c12f96fd357a20cfc499de3d77",
+          "position": [
+            0.8,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-crate-ropes.glb",
+          "sha256": "88408437f365a77e9a3dcd287893f2ebd16d1a5719fbf4309f9b6f53fbc8e31f",
+          "position": [
+            -0.8,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "markets",
+      "page": 0,
+      "frame": 3,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-wood-door.glb",
+          "sha256": "05957d9111312cd9c4aa595b630fae6ac9d40077abf258e0cf33e5c9a7459d00",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood-window.glb",
+          "sha256": "77f9e703339bf5ae0ca4e5cce90c2de416a7bfa2095873a95e9bb56aaeb73c05",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/overhang.glb",
+          "sha256": "1938a83412e9ce24931c0d664974c22212170f9ec6b05ee44971d7017f851a32",
+          "position": [
+            0,
+            0.8,
+            0.7
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-crate.glb",
+          "sha256": "45f31f44bb71d111c99e87176688db1954d8b6c12f96fd357a20cfc499de3d77",
+          "position": [
+            -0.8,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/barrels.glb",
+          "sha256": "c5e86e2415bf194f011e9ca85875dca7869d163cca1b93780bbb0aaaefac0660",
+          "position": [
+            0.9,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "guildhalls",
+      "page": 1,
+      "frame": 0,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-door.glb",
+          "sha256": "da9b80bce4217cf3cdc13b2ffb3c364def54276e6a1a1311a0433a4ec34be604",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-window.glb",
+          "sha256": "52c0ed9db5f9534e4e7b2421169c3c4673f0e117afaf4aba2864bc5f115a9bbb",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/column-paint.glb",
+          "sha256": "adb08803e19246ff0538366b0b65b7e20f8decbadf210274042bb973c0a5881f",
+          "position": [
+            -0.7,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/column-paint.glb",
+          "sha256": "adb08803e19246ff0538366b0b65b7e20f8decbadf210274042bb973c0a5881f",
+          "position": [
+            0.7,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "schools",
+      "page": 1,
+      "frame": 1,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-door.glb",
+          "sha256": "da9b80bce4217cf3cdc13b2ffb3c364def54276e6a1a1311a0433a4ec34be604",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-window.glb",
+          "sha256": "52c0ed9db5f9534e4e7b2421169c3c4673f0e117afaf4aba2864bc5f115a9bbb",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tree-shrub.glb",
+          "sha256": "0f68a595546810bfd14d275691def1d7345c1bcd25cbf48a776dfdc33054f825",
+          "position": [
+            0.9,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-crate-small.glb",
+          "sha256": "ddccb76012c324378aaae1f6372de626b84411d70c602a240de46d5b3c014d59",
+          "position": [
+            -0.7,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "hospitals",
+      "page": 1,
+      "frame": 2,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-door.glb",
+          "sha256": "da9b80bce4217cf3cdc13b2ffb3c364def54276e6a1a1311a0433a4ec34be604",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-window.glb",
+          "sha256": "52c0ed9db5f9534e4e7b2421169c3c4673f0e117afaf4aba2864bc5f115a9bbb",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/overhang-round.glb",
+          "sha256": "6efe3c88627caea7f4efa3d30722d98047ebc0e492cbe5e612b05e10c67d1d29",
+          "position": [
+            0,
+            0.8,
+            0.6
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tree-shrub.glb",
+          "sha256": "0f68a595546810bfd14d275691def1d7345c1bcd25cbf48a776dfdc33054f825",
+          "position": [
+            1,
+            0,
+            0
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "universities",
+      "page": 1,
+      "frame": 3,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-door.glb",
+          "sha256": "da9b80bce4217cf3cdc13b2ffb3c364def54276e6a1a1311a0433a4ec34be604",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-window.glb",
+          "sha256": "52c0ed9db5f9534e4e7b2421169c3c4673f0e117afaf4aba2864bc5f115a9bbb",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-paint-base.glb",
+          "sha256": "f54af1d7fef909d039d1784605a89de829114a3579dda8799dc3506284b06d54",
+          "position": [
+            1,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-paint.glb",
+          "sha256": "c949a93c54315526752f58e83c79dd39037a314eb0135d6e57eb4e3e919f5604",
+          "position": [
+            1,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-top.glb",
+          "sha256": "491eb877785acf0070aa23e1704951188dc989d6dd9d2cb60ddd8d5d7f15d973",
+          "position": [
+            1,
+            2,
+            0
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "churches",
+      "page": 2,
+      "frame": 0,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-door.glb",
+          "sha256": "da9b80bce4217cf3cdc13b2ffb3c364def54276e6a1a1311a0433a4ec34be604",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-window.glb",
+          "sha256": "52c0ed9db5f9534e4e7b2421169c3c4673f0e117afaf4aba2864bc5f115a9bbb",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-base.glb",
+          "sha256": "ec5771e5fb36bbf1e939689c2c0042c94db93209aca652a15ae3e15e0f5c0795",
+          "position": [
+            0,
+            0,
+            -0.8
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower.glb",
+          "sha256": "0fce7beedca2246396216fc34836cb738750654799b6df15aa77cb8c2f932810",
+          "position": [
+            0,
+            1,
+            -0.8
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-top.glb",
+          "sha256": "491eb877785acf0070aa23e1704951188dc989d6dd9d2cb60ddd8d5d7f15d973",
+          "position": [
+            0,
+            2,
+            -0.8
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "castles",
+      "page": 2,
+      "frame": 1,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-fortified-gate.glb",
+          "sha256": "571a5b5bdaad3f6fd6271a166a25e94ee33fd94e8e49cf18e560829f547799ee",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-base.glb",
+          "sha256": "ec5771e5fb36bbf1e939689c2c0042c94db93209aca652a15ae3e15e0f5c0795",
+          "position": [
+            -1,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower.glb",
+          "sha256": "0fce7beedca2246396216fc34836cb738750654799b6df15aa77cb8c2f932810",
+          "position": [
+            -1,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-top.glb",
+          "sha256": "491eb877785acf0070aa23e1704951188dc989d6dd9d2cb60ddd8d5d7f15d973",
+          "position": [
+            -1,
+            2,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-base.glb",
+          "sha256": "ec5771e5fb36bbf1e939689c2c0042c94db93209aca652a15ae3e15e0f5c0795",
+          "position": [
+            1,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower.glb",
+          "sha256": "0fce7beedca2246396216fc34836cb738750654799b6df15aa77cb8c2f932810",
+          "position": [
+            1,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-top.glb",
+          "sha256": "491eb877785acf0070aa23e1704951188dc989d6dd9d2cb60ddd8d5d7f15d973",
+          "position": [
+            1,
+            2,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-door.glb",
+          "sha256": "da9b80bce4217cf3cdc13b2ffb3c364def54276e6a1a1311a0433a4ec34be604",
+          "position": [
+            0,
+            0,
+            -0.19999999999999996
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood-window.glb",
+          "sha256": "52c0ed9db5f9534e4e7b2421169c3c4673f0e117afaf4aba2864bc5f115a9bbb",
+          "position": [
+            0,
+            0,
+            -1.2
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            0.5,
+            0,
+            -0.7
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-painted-wood.glb",
+          "sha256": "f83dcdceb12b41381b77bd5a5ee3967815f2095d3a38cb57a75b585d986c02b2",
+          "position": [
+            -0.5,
+            0,
+            -0.7
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            -0.7
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "barracks",
+      "page": 2,
+      "frame": 2,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-wood-door.glb",
+          "sha256": "05957d9111312cd9c4aa595b630fae6ac9d40077abf258e0cf33e5c9a7459d00",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood-window.glb",
+          "sha256": "77f9e703339bf5ae0ca4e5cce90c2de416a7bfa2095873a95e9bb56aaeb73c05",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/fence.glb",
+          "sha256": "347a691c5bc90ee535a7d390538736b90d3d0e912670f2557b3ae75562737f30",
+          "position": [
+            1,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/detail-crate.glb",
+          "sha256": "45f31f44bb71d111c99e87176688db1954d8b6c12f96fd357a20cfc499de3d77",
+          "position": [
+            -0.8,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/structure-poles.glb",
+          "sha256": "4b0d71e8152e9a899d5b04160be1077c94d84b022c42be2c5a6c4cec0f2f0cf8",
+          "position": [
+            0.8,
+            0,
+            0.6
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "walls",
+      "page": 2,
+      "frame": 3,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-fortified-gate.glb",
+          "sha256": "571a5b5bdaad3f6fd6271a166a25e94ee33fd94e8e49cf18e560829f547799ee",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-base.glb",
+          "sha256": "ec5771e5fb36bbf1e939689c2c0042c94db93209aca652a15ae3e15e0f5c0795",
+          "position": [
+            -1,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower.glb",
+          "sha256": "0fce7beedca2246396216fc34836cb738750654799b6df15aa77cb8c2f932810",
+          "position": [
+            -1,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-top.glb",
+          "sha256": "491eb877785acf0070aa23e1704951188dc989d6dd9d2cb60ddd8d5d7f15d973",
+          "position": [
+            -1,
+            2,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-base.glb",
+          "sha256": "ec5771e5fb36bbf1e939689c2c0042c94db93209aca652a15ae3e15e0f5c0795",
+          "position": [
+            1,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/tower-top.glb",
+          "sha256": "491eb877785acf0070aa23e1704951188dc989d6dd9d2cb60ddd8d5d7f15d973",
+          "position": [
+            1,
+            1,
+            0
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "mines",
+      "page": 3,
+      "frame": 0,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-gate.glb",
+          "sha256": "aa49f6d628d7fbdc7873b2f6fa1af9f8dd6b7e263b39c7e4113a9ca3e1deb74c",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/bricks.glb",
+          "sha256": "bef1bb322e33574ec5db0aa163179d56f673f55dff779f5a2e5f05a5774f5e4e",
+          "position": [
+            -0.8,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/bricks.glb",
+          "sha256": "bef1bb322e33574ec5db0aa163179d56f673f55dff779f5a2e5f05a5774f5e4e",
+          "position": [
+            0.8,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/pulley-crate.glb",
+          "sha256": "63a6f00bf6ebd39a70b1e79bdfebdb4a1849d87826a4f0f516b9a55063b92870",
+          "position": [
+            0,
+            0.7,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-crate.glb",
+          "sha256": "45f31f44bb71d111c99e87176688db1954d8b6c12f96fd357a20cfc499de3d77",
+          "position": [
+            0.8,
+            0,
+            0.8
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "ports",
+      "page": 3,
+      "frame": 1,
+      "parts": [
+        {
+          "file": "Models/GLB format/dock-side.glb",
+          "sha256": "baf9a847f8cf539cc2e37f756fcb5f0fe4e025e0c07ba132ff1ace112614a8ae",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/dock-side.glb",
+          "sha256": "baf9a847f8cf539cc2e37f756fcb5f0fe4e025e0c07ba132ff1ace112614a8ae",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/dock-corner.glb",
+          "sha256": "37b8bb82051194606b5ca5d827bff89ec007875a43a260dfc02a0871aeeda8ff",
+          "position": [
+            0,
+            0,
+            1
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-barrel.glb",
+          "sha256": "4262d0d3c8ac39bc10c0bb96e9b687d3bd1cc4a79df12b86fef37ebfd24fbb1b",
+          "position": [
+            -0.6,
+            0.1,
+            0.6
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-crate.glb",
+          "sha256": "45f31f44bb71d111c99e87176688db1954d8b6c12f96fd357a20cfc499de3d77",
+          "position": [
+            0.6,
+            0.1,
+            0.6
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "farms",
+      "page": 3,
+      "frame": 2,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-pane-wood-door.glb",
+          "sha256": "05957d9111312cd9c4aa595b630fae6ac9d40077abf258e0cf33e5c9a7459d00",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood-window.glb",
+          "sha256": "77f9e703339bf5ae0ca4e5cce90c2de416a7bfa2095873a95e9bb56aaeb73c05",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-pane-wood.glb",
+          "sha256": "5a8252886d7ebf1efc43a546c5d5b24efb9910cc4416121725e869ae34e39f27",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/roof.glb",
+          "sha256": "d28f9a50ee3902c5f222897546a48ef4e43c1a44636778df92c6e206fb055c71",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/fence-wood.glb",
+          "sha256": "a9731f7395763bae062c3c2d5b2122e91a90bdc8082478b254202756901f1736",
+          "position": [
+            1,
+            0,
+            0.5
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/fence-wood.glb",
+          "sha256": "a9731f7395763bae062c3c2d5b2122e91a90bdc8082478b254202756901f1736",
+          "position": [
+            1,
+            0,
+            -0.5
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/detail-barrel.glb",
+          "sha256": "4262d0d3c8ac39bc10c0bb96e9b687d3bd1cc4a79df12b86fef37ebfd24fbb1b",
+          "position": [
+            -0.8,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "roads",
+      "page": 3,
+      "frame": 3,
+      "parts": [
+        {
+          "file": "Models/GLB format/floor-flat.glb",
+          "sha256": "dade14d9b65f5ace5852de75dc4e58894c6d158662a8952dced6cb1fe736f736",
+          "position": [
+            -0.8,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/floor-flat.glb",
+          "sha256": "dade14d9b65f5ace5852de75dc4e58894c6d158662a8952dced6cb1fe736f736",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/floor-flat.glb",
+          "sha256": "dade14d9b65f5ace5852de75dc4e58894c6d158662a8952dced6cb1fe736f736",
+          "position": [
+            0.8,
+            0,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/column-damaged.glb",
+          "sha256": "fd3e2101ae29b35fe3c8b22b1ff80213e4903f7b50d45f5be4dd47b3e65a6147",
+          "position": [
+            0.8,
+            0,
+            -0.6
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "urban-workshops",
+      "page": 4,
+      "frame": 0,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-a-door.glb",
+          "sha256": "554f1c0cedac9b31b73ee8c623395059a4bca05290ecf8f6a8920363d6f487bf",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-a-window.glb",
+          "sha256": "4a5ecc11c1c8820f555375ccabb426c6420ebd2bc9c7bcb5f2c472f655c3b03b",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-a.glb",
+          "sha256": "6fceda24c30d2c22694f232f03fe2115fb1a462046fbbf719a90eea10dc9af00",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-a.glb",
+          "sha256": "6fceda24c30d2c22694f232f03fe2115fb1a462046fbbf719a90eea10dc9af00",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/roof-metal-type-a.glb",
+          "sha256": "91c5f28be3d30dfd209a6be24786a20d5c279256baaa8274d933e34a058de40a",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-bench.glb",
+          "sha256": "ccf6f0a95b04db1720c9a7040404ca0d676a0f850815aee90de5edc33b96c47c",
+          "position": [
+            0.9,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/pallet.glb",
+          "sha256": "1844660dfffda177d42efc35db47c22e7476f991737f4c35f6b5fbaf0d2ccf8b",
+          "position": [
+            -0.8,
+            0,
+            0.8
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "urban-warehouses",
+      "page": 4,
+      "frame": 1,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-b-door.glb",
+          "sha256": "1a47116484e5ad3539cf01e39f8dfd5e0c8ae5be6ea1f85d686707b009f4c0e2",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-b-window.glb",
+          "sha256": "b579cff0a0c17ff69a37abd87bb9ef9b9cd06ce4538a00368b75d3ed1a47e96f",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/roof-metal-type-a.glb",
+          "sha256": "91c5f28be3d30dfd209a6be24786a20d5c279256baaa8274d933e34a058de40a",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-bench.glb",
+          "sha256": "ccf6f0a95b04db1720c9a7040404ca0d676a0f850815aee90de5edc33b96c47c",
+          "position": [
+            0.9,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/pallet.glb",
+          "sha256": "1844660dfffda177d42efc35db47c22e7476f991737f4c35f6b5fbaf0d2ccf8b",
+          "position": [
+            -0.8,
+            0,
+            0.8
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "urban-markets",
+      "page": 4,
+      "frame": 2,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-a-door.glb",
+          "sha256": "554f1c0cedac9b31b73ee8c623395059a4bca05290ecf8f6a8920363d6f487bf",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-a-window.glb",
+          "sha256": "4a5ecc11c1c8820f555375ccabb426c6420ebd2bc9c7bcb5f2c472f655c3b03b",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-a.glb",
+          "sha256": "6fceda24c30d2c22694f232f03fe2115fb1a462046fbbf719a90eea10dc9af00",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-a.glb",
+          "sha256": "6fceda24c30d2c22694f232f03fe2115fb1a462046fbbf719a90eea10dc9af00",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/roof-metal-type-a.glb",
+          "sha256": "91c5f28be3d30dfd209a6be24786a20d5c279256baaa8274d933e34a058de40a",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-bench.glb",
+          "sha256": "ccf6f0a95b04db1720c9a7040404ca0d676a0f850815aee90de5edc33b96c47c",
+          "position": [
+            0.9,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-awning-wide.glb",
+          "sha256": "77ea699e4d3c668d909e549e236766feaa8c4d3438ef66234a5d81b46fef5821",
+          "position": [
+            0,
+            0.7,
+            0.55
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "urban-guildhalls",
+      "page": 4,
+      "frame": 3,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-b-door.glb",
+          "sha256": "1a47116484e5ad3539cf01e39f8dfd5e0c8ae5be6ea1f85d686707b009f4c0e2",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-b-window.glb",
+          "sha256": "b579cff0a0c17ff69a37abd87bb9ef9b9cd06ce4538a00368b75d3ed1a47e96f",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-b-window.glb",
+          "sha256": "b579cff0a0c17ff69a37abd87bb9ef9b9cd06ce4538a00368b75d3ed1a47e96f",
+          "position": [
+            0,
+            1,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-b-window.glb",
+          "sha256": "b579cff0a0c17ff69a37abd87bb9ef9b9cd06ce4538a00368b75d3ed1a47e96f",
+          "position": [
+            0.5,
+            1,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            -0.5,
+            1,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            0,
+            1,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/roof-metal-type-a.glb",
+          "sha256": "91c5f28be3d30dfd209a6be24786a20d5c279256baaa8274d933e34a058de40a",
+          "position": [
+            0,
+            2,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-bench.glb",
+          "sha256": "ccf6f0a95b04db1720c9a7040404ca0d676a0f850815aee90de5edc33b96c47c",
+          "position": [
+            0.9,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "urban-schools",
+      "page": 5,
+      "frame": 0,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-a-door.glb",
+          "sha256": "554f1c0cedac9b31b73ee8c623395059a4bca05290ecf8f6a8920363d6f487bf",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-a-window.glb",
+          "sha256": "4a5ecc11c1c8820f555375ccabb426c6420ebd2bc9c7bcb5f2c472f655c3b03b",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-a.glb",
+          "sha256": "6fceda24c30d2c22694f232f03fe2115fb1a462046fbbf719a90eea10dc9af00",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-a.glb",
+          "sha256": "6fceda24c30d2c22694f232f03fe2115fb1a462046fbbf719a90eea10dc9af00",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/roof-metal-type-a.glb",
+          "sha256": "91c5f28be3d30dfd209a6be24786a20d5c279256baaa8274d933e34a058de40a",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-bench.glb",
+          "sha256": "ccf6f0a95b04db1720c9a7040404ca0d676a0f850815aee90de5edc33b96c47c",
+          "position": [
+            0.9,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "urban-universities",
+      "page": 5,
+      "frame": 1,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-b-door.glb",
+          "sha256": "1a47116484e5ad3539cf01e39f8dfd5e0c8ae5be6ea1f85d686707b009f4c0e2",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-b-window.glb",
+          "sha256": "b579cff0a0c17ff69a37abd87bb9ef9b9cd06ce4538a00368b75d3ed1a47e96f",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-b-window.glb",
+          "sha256": "b579cff0a0c17ff69a37abd87bb9ef9b9cd06ce4538a00368b75d3ed1a47e96f",
+          "position": [
+            0,
+            1,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-b-window.glb",
+          "sha256": "b579cff0a0c17ff69a37abd87bb9ef9b9cd06ce4538a00368b75d3ed1a47e96f",
+          "position": [
+            0.5,
+            1,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            -0.5,
+            1,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            0,
+            1,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/roof-metal-type-a.glb",
+          "sha256": "91c5f28be3d30dfd209a6be24786a20d5c279256baaa8274d933e34a058de40a",
+          "position": [
+            0,
+            2,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-bench.glb",
+          "sha256": "ccf6f0a95b04db1720c9a7040404ca0d676a0f850815aee90de5edc33b96c47c",
+          "position": [
+            0.9,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "urban-hospitals",
+      "page": 5,
+      "frame": 2,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-a-door.glb",
+          "sha256": "554f1c0cedac9b31b73ee8c623395059a4bca05290ecf8f6a8920363d6f487bf",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-a-window.glb",
+          "sha256": "4a5ecc11c1c8820f555375ccabb426c6420ebd2bc9c7bcb5f2c472f655c3b03b",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-a.glb",
+          "sha256": "6fceda24c30d2c22694f232f03fe2115fb1a462046fbbf719a90eea10dc9af00",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-a.glb",
+          "sha256": "6fceda24c30d2c22694f232f03fe2115fb1a462046fbbf719a90eea10dc9af00",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/wall-a-window.glb",
+          "sha256": "4a5ecc11c1c8820f555375ccabb426c6420ebd2bc9c7bcb5f2c472f655c3b03b",
+          "position": [
+            0,
+            1,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-a-window.glb",
+          "sha256": "4a5ecc11c1c8820f555375ccabb426c6420ebd2bc9c7bcb5f2c472f655c3b03b",
+          "position": [
+            0.5,
+            1,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-a.glb",
+          "sha256": "6fceda24c30d2c22694f232f03fe2115fb1a462046fbbf719a90eea10dc9af00",
+          "position": [
+            -0.5,
+            1,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-a.glb",
+          "sha256": "6fceda24c30d2c22694f232f03fe2115fb1a462046fbbf719a90eea10dc9af00",
+          "position": [
+            0,
+            1,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/roof-metal-type-a.glb",
+          "sha256": "91c5f28be3d30dfd209a6be24786a20d5c279256baaa8274d933e34a058de40a",
+          "position": [
+            0,
+            2,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-bench.glb",
+          "sha256": "ccf6f0a95b04db1720c9a7040404ca0d676a0f850815aee90de5edc33b96c47c",
+          "position": [
+            0.9,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "key": "urban-taverns",
+      "page": 5,
+      "frame": 3,
+      "parts": [
+        {
+          "file": "Models/GLB format/wall-b-door.glb",
+          "sha256": "1a47116484e5ad3539cf01e39f8dfd5e0c8ae5be6ea1f85d686707b009f4c0e2",
+          "position": [
+            0,
+            0,
+            0.5
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/wall-b-window.glb",
+          "sha256": "b579cff0a0c17ff69a37abd87bb9ef9b9cd06ce4538a00368b75d3ed1a47e96f",
+          "position": [
+            0.5,
+            0,
+            0
+          ],
+          "rotation": 90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            -0.5,
+            0,
+            0
+          ],
+          "rotation": -90
+        },
+        {
+          "file": "Models/GLB format/wall-b.glb",
+          "sha256": "8fca42a344b37c34add41c6dda88ee35899b26444237f88b7f0fe9da14f09e28",
+          "position": [
+            0,
+            0,
+            -0.5
+          ],
+          "rotation": 180
+        },
+        {
+          "file": "Models/GLB format/roof-metal-type-a.glb",
+          "sha256": "91c5f28be3d30dfd209a6be24786a20d5c279256baaa8274d933e34a058de40a",
+          "position": [
+            0,
+            1,
+            0
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-bench.glb",
+          "sha256": "ccf6f0a95b04db1720c9a7040404ca0d676a0f850815aee90de5edc33b96c47c",
+          "position": [
+            0.9,
+            0,
+            0.7
+          ],
+          "rotation": 0
+        },
+        {
+          "file": "Models/GLB format/detail-awning-wide.glb",
+          "sha256": "77ea699e4d3c668d909e549e236766feaa8c4d3438ef66234a5d81b46fef5821",
+          "position": [
+            0,
+            0.7,
+            0.55
+          ],
+          "rotation": 0
+        }
+      ]
+    }
+  ],
+  "sourceArchives": {
+    "kenney_retro-fantasy-kit.zip": "d3462b453018d0d150406d85af3c4ae1322ceef8f1754c4eb4e6355adfeaab0f",
+    "kenney_retro-urban-kit.zip": "19201cbcb0d90080dfc33b54f5b4be2089de927c2a23274180798e7166d6b6ca"
+  }
+}

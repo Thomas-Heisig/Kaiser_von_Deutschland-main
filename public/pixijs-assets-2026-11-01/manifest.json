@@ -1,0 +1,145 @@
+{
+  "created": "2026-11-01",
+  "files": [
+    {
+      "path": "assets/kenney/buildings/districts-v1-0.json",
+      "bytes": 1781,
+      "sha256": "2e56993ee0416fef1b4de274d4c5d2a1ac04ea0c2ad687df240bb983d6fb81fe"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-0.webp",
+      "bytes": 67844,
+      "sha256": "65e92b53f862fa6704399ac0e61ec5ece0a3b4f57ae49adfda3776ce58a19b3a"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-1.json",
+      "bytes": 1786,
+      "sha256": "65616c5f8a9b0de084da482249b24ebddeb58b2080511ee27119d6488b91dfe9"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-1.webp",
+      "bytes": 78328,
+      "sha256": "cf70a0c5314017788b477e408b5c24a47b4cdb20d25e460fc53b0db5eaacb157"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-2.json",
+      "bytes": 1776,
+      "sha256": "3d2041a9e3762a4ce59f955b9882f3e8f29fdd404dffea18fc1fd1e0da9c9269"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-2.webp",
+      "bytes": 75440,
+      "sha256": "a685b05eee18cfd0880a4cbb4b5bb38de4383e10054b9417fa2013fd9bdbabe6"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-3.json",
+      "bytes": 1768,
+      "sha256": "5cb5cbcd119a2f474b70926b6f28fee3242a929d0bc5a0c783c36f82df9c95b7"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-3.webp",
+      "bytes": 60492,
+      "sha256": "825c0003543936dda1b6cfdc8b351b397940cd436e67bf7a698b7d14d866faa5"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-4.json",
+      "bytes": 1808,
+      "sha256": "9318bc2a37e1ecd703cf58f4c2d8f5f2fdf294ade88b79b8fcb022b32f1d3a99"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-4.webp",
+      "bytes": 63056,
+      "sha256": "172026a05bd1937b9d4b853bed418878b87ebb0e9e919477c6a4ef3b170a301c"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-5.json",
+      "bytes": 1807,
+      "sha256": "79c2107799e876ed29eeddaf3e7b18954013bef9b1e316747c2ee375bec19116"
+    },
+    {
+      "path": "assets/kenney/buildings/districts-v1-5.webp",
+      "bytes": 68590,
+      "sha256": "5969f0606a47fd0c3df14d16609012d5a9365fa108f1f94d4cd6c428577d616a"
+    },
+    {
+      "path": "assets/kenney/buildings/provenance.json",
+      "bytes": 53626,
+      "sha256": "00341eacbec127b18e6808805b66d39d38597542a64afc25035aec4f58074754"
+    },
+    {
+      "path": "assets/kenney/retro-fantasy-atlas.png",
+      "bytes": 544,
+      "sha256": "696a2a96680aaf65b38dd5b697cf820ab1001aaf125a601cddb6a9c31c283c3a"
+    },
+    {
+      "path": "assets/kenney/retro-house-1200.png",
+      "bytes": 1010,
+      "sha256": "bd8b1798dcf99926074deeb6e791a73a9d4d0897e202d47d9a79cc2f4a4f0ad8"
+    },
+    {
+      "path": "assets/kenney/retro-textures-atlas.png",
+      "bytes": 751,
+      "sha256": "e928cbb9796b880ecc4bb66be02aa3d5b9c90f19804eb414280fe13b4bc9ce42"
+    },
+    {
+      "path": "assets/kenney/retro-urban-atlas.png",
+      "bytes": 509,
+      "sha256": "13f71c42c4ed1a1ad49576320c87cccf8ffbb361513fb02c3cc931ce4594de84"
+    },
+    {
+      "path": "assets/kenney/retro-workshop-atlas.png",
+      "bytes": 5598,
+      "sha256": "d8487bf6a8b082ec6cf49e927b9dc536888d08e054a3378e1ff46c9cba58b452"
+    },
+    {
+      "path": "docs/ASSETS.md",
+      "bytes": 4780,
+      "sha256": "332c0ab4aac4786eedbba2e9dc47b8e2168ed3a071d1d7f93fd3cda938e32062"
+    },
+    {
+      "path": "LICENSE-code.txt",
+      "bytes": 1091,
+      "sha256": "a2e00b04c55dc39dda8b298e232b546fbbce2e5181d38cddebbb16bd0ed3934c"
+    },
+    {
+      "path": "load-assets.ts",
+      "bytes": 809,
+      "sha256": "40571eeb8c0f8519bbcf2e8fe7eeae249f1b9d38529a5cf316fc95b37406687b"
+    },
+    {
+      "path": "maps/ganderkesee-map.json",
+      "bytes": 31769,
+      "sha256": "479660b3d1d80370b524a5b8eabc6ade8665946f8630934122d7b266e1382dd5"
+    },
+    {
+      "path": "maps/ganderkesee-source.json",
+      "bytes": 1964,
+      "sha256": "4ad162f2be5943317713dc4b3c4117786ec9ad89690e9ce63e6a949733abd51a"
+    },
+    {
+      "path": "maps/ganderkesee-terrain.webp",
+      "bytes": 189986,
+      "sha256": "b83ac9b6f41e9762f7e378952afe9a350e8461be4f2591254e017b1dececdb96"
+    },
+    {
+      "path": "maps/landscape-central-europe.webp",
+      "bytes": 217660,
+      "sha256": "82f5a90615fd85cc2add532592787d29482e8c1ea2884b33a1e106a8a6fb16d3"
+    },
+    {
+      "path": "maps/landscape-source.json",
+      "bytes": 1143,
+      "sha256": "b0b91b447c9c3852e48b19c03a5bce8933f7cc09e577e0b6af52b03678ef7541"
+    },
+    {
+      "path": "maps/relief-central-europe.webp",
+      "bytes": 51148,
+      "sha256": "e19c715ec66de7b9a6d7703c4596ef7c394fda1eb7d51841bf67727c81077332"
+    },
+    {
+      "path": "README.txt",
+      "bytes": 1607,
+      "sha256": "2bf5cac36493186a2a010972a4133df5f72408691102f48a8037f2b9e01ea488"
+    }
+  ]
+}

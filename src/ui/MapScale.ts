@@ -211,7 +211,7 @@ export function stageForZoom(zoom: number): string {
 export function stageForVisibleWidth(visibleMetres: number): string {
   const width = Number.isFinite(visibleMetres) && visibleMetres >= 0
     ? visibleMetres : Number.POSITIVE_INFINITY;
-  if (width <= MAP_DETAIL_WIDTHS.desk) return 'Schreibtisch';
+  if (width <= MAP_DETAIL_WIDTHS.desk + 1e-9) return 'Schreibtisch';
   if (width <= MAP_DETAIL_WIDTHS.dwelling) return 'Behausung';
   if (width <= MAP_DETAIL_WIDTHS.settlement) return 'Siedlung';
   if (width <= MAP_DETAIL_WIDTHS.surroundings) return 'Umgebung';

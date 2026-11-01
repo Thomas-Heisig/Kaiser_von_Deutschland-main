@@ -3,11 +3,26 @@ import {
   BASE_HEIGHT, BASE_WIDTH, DWELLING_ANCHOR, HOME_LAT, HOME_LON, METRES_PER_BASE_PIXEL,
   MAP_DETAIL_WIDTHS,
   ZOOM_DWELLING, ZOOM_EUROPE, ZOOM_MAX, ZOOM_MIN, ZOOM_REGION, ZOOM_SURROUNDINGS,
-  baseToMetres, clampZoom, formatDistance, latToBaseY, longitudeStretch, lonToBaseX, metresToBase,
+  baseToMetres, clampZoom, clampZoomForViewport, formatDistance, latToBaseY, longitudeStretch, lonToBaseX, metresToBase,
   pixelsPerMetre, scaleBar, scaleBarForMetresPerPixel, stageForVisibleWidth, stageForZoom
 } from './MapScale';
 
 describe('Gemeinsame Kartenmaßstäbe', () => {
+  it('reaches the real desk and Europe widths regardless of viewport fit', () => {
+    for (const [width, fit] of [[1276, 601 / 850], [390, 390 / 820], [3840, 1.4]]) {
+      const max = clampZoomForViewport(Infinity, width, fit);
+      // Use a finite request; invalid zoom uses the minimum by design.
+      const near = clampZoomForViewport(1e9, width, fit);
+      expect(width * METRES_PER_BASE_PIXEL / (near * fit)).toBeCloseTo(3, 10);
+      expect(width * METRES_PER_BASE_PIXEL / (max * fit)).toBeCloseTo(4_000_000, 5);
+    }
+  });
+  it('projects an 8 metre reference to exactly 80 or 8 CSS pixels', () => {
+    for (const [metresPerCssPixel, expected] of [[0.1, 80], [1, 8]]) {
+      const effectiveScale = METRES_PER_BASE_PIXEL / metresPerCssPixel;
+      expect(metresToBase(8) * effectiveScale).toBeCloseTo(expected, 12);
+    }
+  });
   it('uses one uniform metre-per-pixel basis on both axes', () => {
     // 20 km across 960 px and 14 km across 672 px must agree, otherwise
     // buildings and distances would distort differently per axis.

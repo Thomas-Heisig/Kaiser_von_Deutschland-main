@@ -1559,6 +1559,8 @@ export class KingdomMap {
     if (screenScale <= 0) return;
     // Bar length in screen pixels follows the same metre basis as the geometry.
     const widthPx = (bar.metres / METRES_PER_BASE_PIXEL) * screenScale;
+    this.app.canvas.dataset.scaleBarMetres = String(bar.metres);
+    this.app.canvas.dataset.scaleBarCssPixels = String(widthPx);
     const x = 16, y = this.app.screen.height - 34;
     const line = new Graphics()
       .moveTo(x, y).lineTo(x + widthPx, y)
