@@ -77,6 +77,20 @@ describe('map lifecycle and view transitions', () => {
     expect(after.x).toBeCloseTo(before.x, 8);
     expect(after.y).toBeCloseTo(before.y, 8);
   });
+  it('preserves a moving pinch midpoint through sequential pointer updates', () => {
+    const map = mapFixture();
+    let midpoint = { x: 300, y: 200 };
+    const worldPoint = map.world.toLocal(midpoint);
+    for (const next of [{ x: 295, y: 200 }, { x: 300, y: 200 }, { x: 320, y: 230 }]) {
+      map.zoomBy(1.2, midpoint.x, midpoint.y);
+      map.panByScreenPixels(next.x - midpoint.x, next.y - midpoint.y);
+      map.fit();
+      midpoint = next;
+      const actual = map.world.toLocal(midpoint);
+      expect(actual.x).toBeCloseTo(worldPoint.x, 8);
+      expect(actual.y).toBeCloseTo(worldPoint.y, 8);
+    }
+  });
   it('restores playable districts after region → world → home', () => {
     const map = mapFixture();
     map.setZoom(0.1);

@@ -16,7 +16,7 @@
  * Grenzen:
  *  - Gebäudegrundflächen sind Spielmodelle, keine vermessenen Grundrisse.
  *  - Regionenpositionen sind Ortsreferenzen, keine Gebietsgrenzen.
- *  - Europa wird über einen einfachen Mercator-Längengradfaktor angenähert;
+ *  - Europa wird über eine lineare Lon/Lat-Darstellung angenähert;
  *    die Verzerrung wächst mit der Breite und wird im Maßstab angegeben,
  *    nicht korrigiert.
  */
@@ -42,7 +42,8 @@ export const METRES_PER_BASE_PIXEL_Y = 14_000 / BASE_HEIGHT;
  * Referenz ist die Einpassung der Siedlung auf eine 1350-px-Breite
  * (Fit-Faktor 1 bei Zoom 1): sichtbare Basispixel = 1350/Zoom, sichtbare
  * Meter = 1350 · 20,8333/Zoom. Bei anderen Viewports skaliert der Fit-Faktor
- * die effektive Skala mit; die Stufengrenzen bleiben an der Referenz.
+ * die effektive Skala mit. Diese Zahlen dienen der Kompatibilität;
+ * die Kamera begrenzt den tatsächlichen Ausschnitt mit clampZoomForViewport.
  *
  *   - `ZOOM_MIN ≈ 0,007` → ≈ 4.000 km sichtbar (Europa, Lissabon–Warschau).
  *   - `ZOOM_MAX = 9375`  → ≈ 3 m sichtbar (Schreibtisch).

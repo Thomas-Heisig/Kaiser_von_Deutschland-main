@@ -6,6 +6,11 @@ Historische Strategiesimulation mit einer spielbaren, lokalen Aufbaukampagne, Ge
 
 Neu: Start ab **2000 v. Chr.** und [Geschichte & Zeitbild](docs/09-history-model/ZEITBILD.md) mit Quellen zu Ereignissen, Kunst, Baustilen, Kultur und Alltag. Tages-/Monatsdaten, Jahreskontext und längere Zeiträume bleiben unterscheidbar; unsichere Datierungen sind gekennzeichnet.
 
+Die zentrale Karte nutzt nun Vektoren für lokale Gewässer und die Europaübersicht.
+Haus und Möbel sind metrische Spielmodelle; die optionale Ich-Perspektive verwendet
+ein separates Three.js-Canvas mit WASD und Maus-Look. Keine vollständige begehbare
+Siedlung oder historische Vermessung: [Umfang und Abnahme](docs/05-technical-architecture/MAP_ZOOM_LEVELS.md).
+
 ## Spielen
 
 ### 🌐 Online (GitHub Pages)

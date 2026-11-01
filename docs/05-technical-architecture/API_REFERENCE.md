@@ -5,6 +5,20 @@
 
 Diese Dokumentation beschreibt die öffentlichen APIs aller Hauptsysteme für Entwickler.
 
+## Kartenrenderer: aktuelle Ergänzung (01.11.2026)
+
+- `MapCameraState`: `zoom`, `x`, `y` (Mittelpunkt in Basispixeln), optional
+  `metresPerCssPixel` (maßgeblicher metrischer Maßstab neuer Spielstände).
+- `GameEngine.setMapCamera/getMapCamera`: speichern/kopieren diesen Darstellungszustand.
+- `KingdomMap.getCameraState/setCameraState`: erhalten Mittelpunkt und metrischen Maßstab;
+  ohne neues Maßstabsfeld wird der alte Zoom auf dem aktuellen Viewport verwendet.
+- `clampZoomForViewport(zoom, cssWidth, fitFactor)`: begrenzt die reale sichtbare Breite
+  auf 3 m bis 4.000 km; ungültige Viewport-Skalierung wirft einen Fehler.
+- `validateGeographicVectors(value)` prüft WGS84-Geometrie und Herkunft;
+  `drawGeographicVectors(data)` baut maskierte Pixi-Vektorflächen mit Polygonlöchern.
+- `FirstPersonView.initialize/enter/exit/dispose`: separater Three.js-Lebenszyklus;
+  fehlendes WebGL führt zu einer expliziten UI-Fehlermeldung, nicht zu einer falschen Erfolgsszene.
+
 ---
 
 ## 📋 Inhaltsverzeichnis

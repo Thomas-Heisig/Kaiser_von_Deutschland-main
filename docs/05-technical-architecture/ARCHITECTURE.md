@@ -12,6 +12,14 @@ responsivem CSS; ausschließlich die Siedlungskarte wird mit PixiJS 8 gezeichnet
 `KingdomMap` wird erst beim Spielstart nachgeladen. Die älteren Oberflächen
 `UIFlowManager`, `GameUI` und `EnhancedPixiRenderer` sind nicht der Standard-Einstieg.
 
+Die Hauptkarte zeichnet lokale Gewässer und Europa als PixiJS-Vektoren; die optional
+nachgeladene `FirstPersonView` verwendet Three.js in einem separaten Canvas.
+Gemeinsame metrische Wände und Möbel liegen in `FirstPersonLogic.ts`.
+`MapCameraState.metresPerCssPixel` erhält den effektiven Maßstab auch beim Laden auf
+einem anderen Viewport; alte Zoom-only-Spielstände bleiben lesbar. Historische
+Spielzustände werden durch Kamera-/LOD-Wechsel nicht ersetzt.
+Abnahme und Datengrenzen: [Kartenmaßstab](./MAP_ZOOM_LEVELS.md), [Renderer](./RENDERER.md).
+
 ```text
 KingdomGameUI -> GameEngine -> Kingdom / EconomySystem / weitere Systeme
       |              |

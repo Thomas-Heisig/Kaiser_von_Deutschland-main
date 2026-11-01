@@ -235,7 +235,7 @@ export class KingdomMap {
     // This keeps desk → Europe in one continuous camera instead of mode jumps.
     const pointers = new Map<number, { x: number; y: number }>();
     let drag: { x: number; y: number; moved: boolean } | undefined;
-    let pinch: { distance: number } | undefined;
+    let pinch: { distance: number; centre: { x: number; y: number } } | undefined;
     const pinchCentre = (): { x: number; y: number } => {
       const points = [...pointers.values()];
       const rect = canvas.getBoundingClientRect();
@@ -276,7 +276,7 @@ export class KingdomMap {
         drag = { x: event.clientX, y: event.clientY, moved: false };
       } else if (pointers.size === 2) {
         drag = undefined;
-        pinch = { distance: pinchDistance() };
+        pinch = { distance: pinchDistance(), centre: pinchCentre() };
       }
     });
     canvas.addEventListener('pointermove', (event: PointerEvent): void => {
@@ -286,7 +286,10 @@ export class KingdomMap {
         const distance = pinchDistance();
         if (pinch.distance > 0 && distance > 0) {
           const centre = pinchCentre();
-          this.zoomBy(distance / pinch.distance, centre.x, centre.y);
+          this.zoomBy(distance / pinch.distance, pinch.centre.x, pinch.centre.y);
+          this.panByScreenPixels(centre.x - pinch.centre.x, centre.y - pinch.centre.y);
+          this.fit();
+          pinch.centre = centre;
         }
         pinch.distance = distance;
         return;
@@ -1569,11 +1572,14 @@ export class KingdomMap {
       .stroke({ color: 0x2c2418, width: 2.5 });
     this.scaleLayer.addChild(line);
     const caption = new Text({
-      text: `${bar.label} · ${this.getStage()}`,
+      text: `${bar.label} · ${this.getStage()}${this.europeLayer.visible
+        ? ' · heutige physische Referenz · Maßstab um Ganderkesee angenähert'
+        : this.getVisibleWorldWidthMetres() < 2_000 ? ' · modellierte Spielgeometrie' : ''}`,
       style: { fontFamily: 'Segoe UI', fontSize: 13, fill: 0x2c2418,
-        stroke: { color: 0xf3ecd9, width: 3 } }
+        stroke: { color: 0xf3ecd9, width: 3 }, wordWrap: true,
+        wordWrapWidth: Math.max(100, this.app.screen.width - 80) }
     });
-    caption.position.set(x, y - 22);
+    caption.position.set(x, y - caption.height - 8);
     this.scaleLayer.addChild(caption);
   }
 

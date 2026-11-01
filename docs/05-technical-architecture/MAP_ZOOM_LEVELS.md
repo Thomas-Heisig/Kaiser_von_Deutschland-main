@@ -1,7 +1,7 @@
 # Karten-Zoom: Ein durchgehender Zoomweg mit korrekten Größen
 
-**Stand:** 01.11.2026 · **Status:** Kontinuierlicher Zoom Schreibtisch → Europa implementiert · Ich-Perspektive als dritte
-Kameraperspektive derselben Welt (siehe [RENDERER.md](RENDERER.md))
+**Stand:** 01.11.2026 · **Status:** Vektor-/Kameragrundlage und lokale Three.js-Perspektive browsergeprüft.
+Geografische Kontrollpunkte und vollständige regionale/historische Inhalte bleiben offen (siehe [RENDERER.md](RENDERER.md)).
 
 Ein **durchgehender Zoomweg** statt unabhängiger Ansichten: Alle Stufen — Schreibtisch, Behausung, Siedlung, Umgebung, Region,
 Herrschaftsraum und Europa — sind **dieselbe Ansicht in verschiedenen Zoomstufen**, nicht getrennte Karten. Damit Gebäude,
@@ -22,8 +22,8 @@ Die Simulation bleibt unberührt: Die Karte **liest** nur.
 | Siedlungsbasis | 960 × 672 px | `MapScale.BASE_WIDTH` / `BASE_HEIGHT` |
 | Entsprechung | 20 × 14 km (EPSG:25832, UTM 32N) | Kartendaten Ganderkesee |
 | Meter je Basispixel | 20.000 / 960 ≈ 20,83 m | `METRES_PER_BASE_PIXEL` — **einzige** Geometrieumrechnung |
-| Geografische Verankerung | 8,5459°O / 53,0336°N | `MapScale.HOME_LON` / `HOME_LAT` — **einzige** Brücke Grad ↔ Basispixel |
-| Kamerazoom | 0,00703 – 9.375 (kontinuierlich) | `MapScale.ZOOM_MIN` / `ZOOM_MAX`, `clampZoom` |
+| Geografische Verankerung | näherungsweise 8,5459°O / 53,0336°N | `HOME_LON` / `HOME_LAT`; keine unabhängig verifizierte EPSG-Transformation |
+| Kameragrenzen | tatsächlich 3 m bis 4.000 km sichtbare Breite | `clampZoomForViewport(zoom, cssWidth, fitFactor)`; alte rohe Konstanten nur zur Kompatibilität |
 
 Der Zoom ist kontinuierlich; der tatsächlich sichtbare Maßstab ergibt sich aus der vollständigen Pixi-Transformation:
 
@@ -41,17 +41,20 @@ Sichtbare Weltbreite = Canvasbreite in CSS-Pixeln × Meter je CSS-Pixel
 | Stufe | Sichtbare Weltbreite | Sichtbar |
 | --- | --- | --- |
 | Schreibtisch | ≤ 3 m | Nahgeometrie: Möbel und Innenraum; Ich-Perspektive optional |
-| Behausung | ≤ 15 m | Hof und Behausung als Ganzes |
-| Siedlung | ≤ 40 km | Die 16 Bezirke (`SettlementSceneModel`) |
-| Umgebung | ≤ 120 km | Nachbarorte, Verbundlandschaft |
-| Region | ≤ 500 km | Relief, Flüsse, belegte Regionsnamen |
+| Behausung | ≤ 15 m | Metrische Wände und Möbel; ob das ganze Haus passt, hängt auch von der sichtbaren Höhe ab |
+| Siedlung | ≤ 40 km | Symbolische Infrastruktur; unter 2 km echte modellierte Hausgeometrie statt großer Sprites |
+| Umgebung | ≤ 120 km | Lokale Referenz und schematische Nachbarn; zusammenhängende regionale Spielgeometrie fehlt |
+| Region | ≤ 500 km | Generalisierte Natural-Earth-Vektoren ab ca. 176 km Breite, keine vermessenen regionalen Bauplätze |
 | Herrschaftsraum | ≤ 2.000 km | Regionspunkte, keine Grenzpolygone |
 | Europa | > 2.000 km | Europa-Übersicht (`europeLayer`, Natural Earth 50m) |
 
 Die Stufenbezeichnung verwendet `MapScale.stageForVisibleWidth()` mit der echten Canvasbreite und dem effektiven Metermaßstab.
 Interne Layerübergänge verwenden dieselbe Weltbreite und Hysterese gegen Flackern. So verschieben sich die Übergänge nicht
 durch einen anderen Viewport oder eine abweichende Geräte-Pixeldichte. Alle Stufen teilen sich einen Kamerazustand
-`{ zoom, x, y }` (`KingdomMap.CameraState`) — es gibt keinen stufenabhängigen Offset.
+`{ zoom, x, y, metresPerCssPixel? }` (`MapCameraState`) — es gibt keinen stufenabhängigen Offset.
+Resize erhält Mittelpunkt und Meter/CSS-Pixel; der rohe Zoom wird dem neuen Fit-Faktor angepasst.
+Neue Spielstände erhalten diesen Maßstab auch auf anderen Viewports. Alte Zoom-only-Zustände bleiben lesbar;
+die noch älteren Bildschirmversätze sind mangels ursprünglicher Viewportdaten nicht geografisch korrekt rekonstruierbar.
 
 ---
 
@@ -65,7 +68,7 @@ durch einen anderen Viewport oder eine abweichende Geräte-Pixeldichte. Alle Stu
 | `<input type="range" id="zoom-slider">` | **Legacy:** Kein Markup mehr erzeugt diesen Slider. `levelForSlider`/`zoomToSlider` bleiben als reine Utility-Funktionen für Tests bestehen. |
 
 Der frühere logarithmische Slider (`0.4 * (4.0/0.4)^(slider/100)`) ist **kein** Bedienelement mehr; sein Bereich (0,4–4,0)
-deckte den heutigen Bereich (0,02–6) nicht ab. `KingdomMap.setZoomSlider` ist eine leere Kompatibilitätsmethode.
+deckte den benötigten Weltmaßstabsbereich nicht ab. `KingdomMap.setZoomSlider` ist eine leere Kompatibilitätsmethode.
 
 ---
 
@@ -75,14 +78,14 @@ deckte den heutigen Bereich (0,02–6) nicht ab. `KingdomMap.setZoomSlider` ist 
 
 | Vereinfachung | Konsequenz | Warum akzeptabel |
 | --- | --- | --- |
-| **Skalenkette mit einem Meter-Faktor** | X- und Y-Achse nutzen denselben Faktor (20,83 m/px). `METRES_PER_BASE_PIXEL_Y` existiert als Dokumentation, wird aber **nicht** separat gerechnet. | Abweichung < 0,1 %, messbar irrelevant. |
-| **Europa-Verankerung am Bezugsbreitengrad** | Die Europa-Ebene nutzt eine lineare Plate-carrée-Abbildung mit dem Lon/Lat-Verhältnis von 53,0336°N (`HOME_LON`). Der Maßstab ist nur dort exakt; die Verzerrung wächst mit der Breite. | Dokumentiert in `europe-source.json` und auf der Karte. |
+| **Skalenkette mit einem Meter-Faktor** | Beide lokalen Achsen haben exakt denselben Faktor: 20.000/960 = 14.000/672. | Keine unterschiedliche Raster-/Vektor-Auflösung vermischt. |
+| **Europa-Verankerung am Bezugsbreitengrad** | Lineare Lon/Lat-Darstellung, um 53,0336°N angenähert; keine europaweit unverzerrte UTM-Abbildung. | Näherung ausdrücklich in `europe-vectors.json` und im bildschirmfesten Kartenhinweis markiert; unabhängige Kontrollpunkte noch offen. |
 | **Scale-Bar-Schrittauswahl** | `scaleBarForMetresPerPixel()` wählt den größten passenden 1-2-5-Schritt, dessen Bildschirmbreite 120 CSS-Pixel nicht überschreitet. | Label und gezeichnete Länge folgen derselben CSS-Skalierung. |
 | **Detail-Fade statt Stufenlogik** | Die Stufenlabels beruhen auf sichtbaren Weltbreiten; interne Layer-Schwellen und Hysterese stehen zentral in `MapScale.MAP_LAYER_WIDTHS`. | Übergänge sind gestaffelt, nicht hart und viewportunabhängig in realen Metern ausgedrückt. |
 | **Modellierter Nahbereich** | Kartenansicht und Ich-Perspektive teilen dieselbe metrische Haus-, Tür-, Möbel- und Offsetdefinition. Eintritt in die Ich-Perspektive verändert den Kartenkamerazustand nicht. | Grundrisse und Ausstattung sind weiterhin Spielmodelle, keine Vermessung oder archäologische Befunde. |
-| **Symbolische Gebäude-Footprints** | Gebäude ≥ Zoom 0,35 als Sprites fester Symbolgröße — **keine** vermessenen Grundrisse. Symbole dürfen bildschirmgroß bleiben; Grundflächen nicht. | Der Siedlungsplan ist ein Spielmodell, keine Vermessung. |
+| **Symbolische Infrastruktur** | Bei breitem Ausschnitt Bezirks-/Infrastruktursymbole; unter 2 km ausgeblendet. Das Haus und seine Wände/Möbel verwenden feste Metergrundflächen. | Symbole sind keine geografischen Baugrundstücke. |
 | **Heutige Gemeindegrenze** | Die OSM-Grenze (ODbL) ist eine **heutige** Verwaltungsgrenze mit Quellenangabe auf der Karte — keine historische Reichs- oder Herrschaftsgrenze. | Quellen- und Lizenzvermerk sichtbar (`LocalMap.ts`, `ganderkesee-boundary.json`). |
-| **ResizeObserver-Refit** | `KingdomMap` registriert einen `ResizeObserver`, der bei Containergrößenänderung Canvas-Auflösung (bis `devicePixelRatio`, max. 2) und Kamera anpasst. Fokus/Zoom bleiben erhalten. | Verhindert Verzerrung; exaktes Wiedereinpassen ist nicht möglich, wenn das Fenster kleiner wird. |
+| **ResizeObserver ohne geografisches Refit** | Canvasmaß ändern, bisherigen effektiven Maßstab beibehalten, relativen Zoom neu berechnen. | Der Ausschnitt ändert sich, nicht die Objektgröße in CSS-Pixeln. |
 
 **Was NICHT behauptet wird:**
 
@@ -90,7 +93,7 @@ deckte den heutigen Bereich (0,02–6) nicht ab. `KingdomMap.setZoomSlider` ist 
   **keine Gebietsgrenzen**. Die Regionsansicht zeichnet nur Punkte, Namen und eine Legende mit dem Hinweis „Regionen schematisch,
   Grenzverläufe nicht belegt". Es gibt **keine** Polygone, Linien oder Flächeneinfärbung. Tests prüfen, dass die gelieferten
   Daten keine Felder wie `polygon`, `path`, `boundary` oder `geometry` enthalten.
-- Moderne Geodaten (Natural Earth Relief) werden **nicht** als Beleg historischer Bebauung ausgegeben; sie sind Hintergrundtextur.
+- Moderne Natural-Earth-Vektoren werden **nicht** als Beleg historischer Bebauung ausgegeben.
 - Fehlende Nahbereichsdetails sind **modellierte Spielwelt**, nicht belegte Historie. Kennzeichnung über `LOCAL_MAP_NOTE`
   (`StartLocations.ts`).
 
@@ -125,9 +128,34 @@ nicht instanziierbar; die Logik wäre dort ungetestet geblieben.
 
 ## 7. Tests und offene Punkte
 
-**Automatisiert:** `npm run check` ✅ · gezielte Maßstabs-, Karten- und Ich-Perspektive-Tests ✅. Der jüngste Stand der
-Gesamttests und Build-Abnahme ist im aktuellen Arbeitsprotokoll nachzutragen. Die frühere Browser-Abnahme prüfte die sieben
-Stufen und Kartendaten; Nahansicht, Tabellenblick und Rückkehr nach den jüngsten Änderungen müssen erneut visuell bestätigt werden.
+**Browserabnahme:** `scripts/map-renderer-smoke.mjs` exportiert `runMapRendererSmoke(page, outputDir, url)`
+für einen vorhandenen Playwright-Browser. Das Ausgabeverzeichnis muss existieren. Der geprüfte Lauf nutzt einen
+frischen Kontext ohne Service Worker, echte Wheel-/Drag-/Tastaturereignisse, Desktop-Seitenblatt, mobiles Dialogverhalten,
+Three.js-Maus-Look/WASD sowie Escape/Exit mit Fokus-Rückgabe. Kein zusätzlicher Server pro Test.
+
+### Messtabelle (Chromium, derselbe Canvas und Hausanker)
+
+| Ausschnitt | Canvas CSS-px | m/CSS-px | sichtbare Welt (m) | 8-m-Referenz (CSS-px) |
+| --- | --- | --- | --- | --- |
+| Europa | 1276 × 601 | 3070,73 | 3.918.256 × 1.845.511 | 0,002605 |
+| Region | 1276 × 601 | 356,533 | 454.936 × 214.276 | 0,022438 |
+| Siedlung | 1276 × 601 | 16,7191 | 21.333,58 × 10.048,18 | 0,478495 |
+| Ganzes Haus (Dach sichtbar) | 1276 × 601 | 0,0166308 | 21,22093 × 9,995124 | 481,035 |
+| Behausung (Innenraum) | 1276 × 601 | 0,0105692 | 13,48628 × 6,352082 | 756,916 |
+| Schreibtisch | 1276 × 601 | 0,0023511 | 3 × 1,413009 | 3402,663 |
+
+Die 8-m-Referenz ist eine **rechnerische Länge**, kein künstlich eingeblendetes Gebäude in der Europastufe.
+Zum Tisch wurde ausdrücklich um 2,6 m nach Süden gezogen, nicht beim Zoomen gesprungen.
+Beim Schreibtisch beträgt der 0,2-m-Maßstabsbalken 85,0667 CSS-Pixel.
+Resize auf 1436 × 701 CSS-Pixel erhält 0,0023511 m/CSS-Pixel und den Mittelpunkt; sichtbar sind dann
+3,376176 × 1,648119 m. DPR 1 und 2 liefern bei identischem CSS-Canvas denselben Maßstab
+29,4647809207 m/CSS-Pixel, aber 1276 × 601 bzw. 2552 × 1202 Backing-Pixel.
+
+Mausanker und nativer Chromium-Pinch wurden zusätzlich geometrisch geprüft: Restabweichung unter 1 mm
+bei auf vier Dezimalen ausgegebenem Basispixel-Mittelpunkt. Das ist keine reale iPad-/iPhone-Abnahme.
+Screenshots und Messdaten werden beim Arbeitslauf separat aufbewahrt; eine Vorher-Browseraufnahme des alten
+Rasterstands wurde nicht erstellt. Vorher/Nachher ist daher für die Architektur durch den Quelldiff belegt,
+nicht durch eine behauptete visuelle Altstandsabnahme.
 
 1. **Geräteabnahme:** Zoomverhalten nur Chromium/Windows geprüft, nicht iPad/iPhone.
 2. **Barrierefreiheit:** Steuerbuttons sind tastaturbedienbar; Stufenwechsel werden nicht per `aria-live` angekündigt.
