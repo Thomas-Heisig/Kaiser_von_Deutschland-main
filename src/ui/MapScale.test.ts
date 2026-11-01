@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BASE_HEIGHT, BASE_WIDTH, METRES_PER_BASE_PIXEL, ZOOM_DWELLING, ZOOM_EUROPE, ZOOM_MAX, ZOOM_MIN,
-  ZOOM_REGION, ZOOM_SURROUNDINGS,
-  baseToMetres, clampZoom, formatDistance, longitudeStretch, metresToBase,
+  BASE_HEIGHT, BASE_WIDTH, DWELLING_ANCHOR, HOME_LAT, HOME_LON, METRES_PER_BASE_PIXEL,
+  ZOOM_DWELLING, ZOOM_EUROPE, ZOOM_MAX, ZOOM_MIN, ZOOM_REGION, ZOOM_SURROUNDINGS,
+  baseToMetres, clampZoom, formatDistance, latToBaseY, longitudeStretch, lonToBaseX, metresToBase,
   pixelsPerMetre, scaleBar, stageForZoom
 } from './MapScale';
 
@@ -84,5 +84,36 @@ describe('Gemeinsame Kartenmaßstäbe', () => {
   it('formats distances in metres and kilometres', () => {
     expect(formatDistance(500)).toBe('500 m');
     expect(formatDistance(2_000)).toBe('2 km');
+  });
+});
+
+describe('Geografische Verankerung (Grad ↔ Basispixel)', () => {
+  it('maps the home anchor degree values onto the dwelling anchor', () => {
+    // Die Verankerung ist die einzige Brücke zwischen Grad-Geografie und
+    // Basispixeln: HOME_LON/HOME_LAT müssen exakt auf DWELLING_ANCHOR fallen.
+    expect(lonToBaseX(HOME_LON)).toBeCloseTo(DWELLING_ANCHOR.x, 6);
+    expect(latToBaseY(HOME_LAT)).toBeCloseTo(DWELLING_ANCHOR.y, 6);
+  });
+  it('keeps control-point distances plausible (Ganderkesee–Berlin ≈ 325 km)', () => {
+    // Gerade Linie über die Grad-Geometrie: Δlon × Meter/Grad am Bezugsbreiten-
+    // grad und Δlat × Meter/Grad Breite. Berlin liegt 4,854° östlich und
+    // 0,514° südlich des Ortsmarkers; die reale Luftlinie beträgt ≈ 325 km.
+    const berlin = { lon: 13.40, lat: 52.52 };
+    const dxEast = (berlin.lon - HOME_LON) * (111_320 * Math.cos(HOME_LAT * Math.PI / 180) * 0.9996);
+    const dySouth = (HOME_LAT - berlin.lat) * 110_950;
+    const metres = Math.hypot(dxEast, dySouth);
+    expect(metres / 1000).toBeGreaterThan(300);
+    expect(metres / 1000).toBeLessThan(350);
+  });
+  it('round-trips degrees through the anchor chain', () => {
+    // Umkehrung: Basispixel − DWELLING_ANCHOR zurück nach Grad muss den
+    // Ausgangswert liefern (dieselbe Kette, keine zweite Umrechnung).
+    const lon = 10.69, lat = 53.87; // Lübeck
+    const x = lonToBaseX(lon), y = latToBaseY(lat);
+    const lonBack = HOME_LON + (x - DWELLING_ANCHOR.x) * METRES_PER_BASE_PIXEL
+      / (111_320 * Math.cos(HOME_LAT * Math.PI / 180) * 0.9996);
+    const latBack = HOME_LAT + (DWELLING_ANCHOR.y - y) * METRES_PER_BASE_PIXEL / 110_950;
+    expect(lonBack).toBeCloseTo(lon, 6);
+    expect(latBack).toBeCloseTo(lat, 6);
   });
 });

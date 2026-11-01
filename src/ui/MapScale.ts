@@ -173,3 +173,43 @@ export function clampZoom(zoom: number): number {
  * lesbar, ohne einen vermessenen Grundriss zu behaupten (≈ 7 m Versatz).
  */
 export const DWELLING_ANCHOR = { x: 604, y: 384 } as const;
+
+/**
+ * Geografische Verankerung des Ortsmarkers (places.home).
+ *
+ * Aus der EPSG:25832-Position des Markers abgeleitet (E=469 588,5 / N=5 876 004,4,
+ * UTM 32N, Zentralmeridian 9°O, Maßstabsfaktor 0,9996):
+ *
+ *   lon = 9° − (500 000 − E) / (111 320 · cos(lat) · 0,9996) ≈ 8,5459°O
+ *   lat ≈ 53,0336°N (Meridianbogen, Genauigkeit ±0,005°)
+ *
+ * Diese Werte sind die **einzige** Brücke zwischen Grad-Geografie (Europa-
+ * übersicht, Gemeindegrenze) und Basispixeln. Alle Transformationen laufen über
+ * {@link lonToBaseX}/{@link latToBaseY}, damit Europa- und Lokalebene dieselbe
+ * Verankerung teilen und beim Detailwechsel nichts verspringt.
+ */
+export const HOME_LON = 8.5459;
+export const HOME_LAT = 53.0336;
+
+/** Meter je Grad Breite am Standort (Meridianbogen, genähert). */
+export const METRES_PER_DEG_LAT = 110_950;
+/** Meter je Grad Länge am Bezugsbreitengrad (UTM-Skalierung eingerechnet). */
+export const METRES_PER_DEG_LON_HOME = 111_320 * Math.cos(HOME_LAT * Math.PI / 180) * 0.9996;
+
+/**
+ * Rechnet einen Längengrad in Basispixel-x um (georeferenzierte Ebenen).
+ * @param lon Längengrad in Grad (östlich positiv).
+ * @returns Basispixel-x der Siedlungsbasis.
+ */
+export function lonToBaseX(lon: number): number {
+  return DWELLING_ANCHOR.x + (lon - HOME_LON) * METRES_PER_DEG_LON_HOME / METRES_PER_BASE_PIXEL;
+}
+
+/**
+ * Rechnet einen Breitengrad in Basispixel-y um (georeferenzierte Ebenen).
+ * @param lat Breitengrad in Grad (nördlich positiv).
+ * @returns Basispixel-y der Siedlungsbasis (y zeigt nach Süden).
+ */
+export function latToBaseY(lat: number): number {
+  return DWELLING_ANCHOR.y - (lat - HOME_LAT) * METRES_PER_DEG_LAT / METRES_PER_BASE_PIXEL;
+}

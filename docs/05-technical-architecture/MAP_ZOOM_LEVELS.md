@@ -1,7 +1,7 @@
 # Karten-Zoom: Ein durchgehender Zoomweg mit korrekten Größen
 
-**Stand:** 29.01.2026 · **Status:** Kontinuierlicher Zoom Schreibtisch → Europa implementiert · Ich-Perspektive als separate, optionale
-Nahansicht geplant (siehe [RENDERER.md](RENDERER.md))
+**Stand:** 01.11.2026 · **Status:** Kontinuierlicher Zoom Schreibtisch → Europa implementiert · Ich-Perspektive als dritte
+Kameraperspektive derselben Welt (siehe [RENDERER.md](RENDERER.md))
 
 Ein **durchgehender Zoomweg** statt unabhängiger Ansichten: Alle Stufen — Schreibtisch, Behausung, Siedlung, Umgebung, Region,
 Herrschaftsraum und Europa — sind **dieselbe Ansicht in verschiedenen Zoomstufen**, nicht getrennte Karten. Damit Gebäude,
@@ -22,7 +22,8 @@ Die Simulation bleibt unberührt: Die Karte **liest** nur.
 | Siedlungsbasis | 960 × 672 px | `MapScale.BASE_WIDTH` / `BASE_HEIGHT` |
 | Entsprechung | 20 × 14 km (EPSG:25832, UTM 32N) | Kartendaten Ganderkesee |
 | Meter je Basispixel | 20.000 / 960 ≈ 20,83 m | `METRES_PER_BASE_PIXEL` — **einzige** Geometrieumrechnung |
-| Kamerazoom | 0,02 – 6 (kontinuierlich) | `MapScale.ZOOM_MIN` / `ZOOM_MAX`, `clampZoom` |
+| Geografische Verankerung | 8,5459°O / 53,0336°N | `MapScale.HOME_LON` / `HOME_LAT` — **einzige** Brücke Grad ↔ Basispixel |
+| Kamerazoom | 0,00703 – 9.375 (kontinuierlich) | `MapScale.ZOOM_MIN` / `ZOOM_MAX`, `clampZoom` |
 
 `zoom = 1` zeigt die Siedlung in natürlicher Größe; kleinere Werte zoomen nach Europa heraus, größere zum Schreibtisch hinein.
 `pixelsPerMetre(zoom)`, `metresToBase()` und `baseToMetres()` sind die einzige Umrechnung zwischen Weltmetern und Basispixeln.
@@ -33,13 +34,13 @@ Die Simulation bleibt unberührt: Die Karte **liest** nur.
 
 | Stufe | ab Zoom | Sichtbar |
 | --- | --- | --- |
-| Schreibtisch | ≥ 4 | Epochenabhängiger virtueller Schreibtisch (Einstieg bei Zoom 0) |
-| Behausung | ≥ 2 | Eigene Behausung als Ganzes; Symbolgrößen, keine Grundrisse |
-| Siedlung | ≥ 1 | Die 16 Bezirke (`SettlementSceneModel`) |
-| Umgebung | ≥ 0,55 | Nachbarorte, Verbundlandschaft |
-| Region | ≥ 0,25 | Relief, Flüsse, belegte Regionsnamen |
-| Herrschaftsraum | ≥ 0,03 | Regionspunkte, keine Grenzpolygone |
-| Europa | < 0,03 | Ganze Karte |
+| Schreibtisch | ≥ 9.375 | Nahgeometrie: Möbel, Innenraum, Ich-Perspektive |
+| Behausung | ≥ 1.875 | Hof und Behausung als Ganzes (`nearLayer`, Hysterese ab Zoom > 1,2) |
+| Siedlung | ≥ 0,70 | Die 16 Bezirke (`SettlementSceneModel`) |
+| Umgebung | ≥ 0,234 | Nachbarorte, Verbundlandschaft |
+| Region | ≥ 0,0563 | Relief, Flüsse, belegte Regionsnamen |
+| Herrschaftsraum | ≥ 0,0141 | Regionspunkte, keine Grenzpolygone |
+| Europa | < 0,0141 | Europa-Übersicht (`europeLayer`, Natural Earth 50m) |
 
 Namensgebung zentral in `MapScale.stageForZoom(zoom)`. Es gibt **keine Hysterese** wie im früheren 3-Ebenen-Slider-System:
 die Stufen sind reine Beschriftung über einem kontinuierlichen Zoom, ein Flackern ist ausgeschlossen, weil nichts umgeschaltet
@@ -69,12 +70,12 @@ deckte den heutigen Bereich (0,02–6) nicht ab. `KingdomMap.setZoomSlider` ist 
 | Vereinfachung | Konsequenz | Warum akzeptabel |
 | --- | --- | --- |
 | **Skalenkette mit einem Meter-Faktor** | X- und Y-Achse nutzen denselben Faktor (20,83 m/px). `METRES_PER_BASE_PIXEL_Y` existiert als Dokumentation, wird aber **nicht** separat gerechnet. | Abweichung < 0,1 %, messbar irrelevant. |
-| **Scale-Bar-Schrittauswahl** | `scaleBar()` wählt aus 1-2-5-Schritten (1 m … 1.000 km) die kleinste ≥ Zielgröße. Kein stufenabhängiges Raster. | Für einen Maßstab genug; exakte Teilung wäre Kosmetik. |
-| **Detail-Fade statt Stufenlogik** | Sichtbarkeit der Layer hängt **direkt** am Zoom: Gebäude ≥ 0,35, Nachbarn < 0,9, Region/Relief < 0,16. Kein Umschalten, kein Flackern. | Übergänge sind gestaffelt, nicht hart. |
+| **Europa-Verankerung am Bezugsbreitengrad** | Die Europa-Ebene nutzt eine lineare Plate-carrée-Abbildung mit dem Lon/Lat-Verhältnis von 53,0336°N (`HOME_LON`). Der Maßstab ist nur dort exakt; die Verzerrung wächst mit der Breite. | Dokumentiert in `europe-source.json` und auf der Karte. |
+| **Scale-Bar-Schrittauswahl** | `scaleBar()` wählt aus 1-2-5-Schritten (1 m … 2.000 km) die kleinste ≥ Zielgröße. Kein stufenabhängiges Raster. | Für einen Maßstab genug; exakte Teilung wäre Kosmetik. |
+| **Detail-Fade statt Stufenlogik** | Sichtbarkeit der Layer hängt **direkt** am Zoom mit Hysterese: Nahgeometrie > 1,2 / < 0,9, Gebäude ≥ 0,35, Nachbarn < 0,9, Region/Relief < 0,16, Europa ≤ 0,014 / ≥ 0,02, Dach-Ausblendung ≥ 3.125 / < 2.500. | Übergänge sind gestaffelt, nicht hart. |
 | **Symbolische Gebäude-Footprints** | Gebäude ≥ Zoom 0,35 als Sprites fester Symbolgröße — **keine** vermessenen Grundrisse. Symbole dürfen bildschirmgroß bleiben; Grundflächen nicht. | Der Siedlungsplan ist ein Spielmodell, keine Vermessung. |
-| **`stageForZoom`-Namenslücke** | Die Stufen sind reine Beschriftung. Es gibt keine Validierung, dass „Behausung" bei Zoom ≥ 2 wirklich ein Haus zeigt — die Symbolgröße ist willkürlich gewählt. | Beschriftung ist konsistent, Inhalt ist Spielmodell. |
+| **Heutige Gemeindegrenze** | Die OSM-Grenze (ODbL) ist eine **heutige** Verwaltungsgrenze mit Quellenangabe auf der Karte — keine historische Reichs- oder Herrschaftsgrenze. | Quellen- und Lizenzvermerk sichtbar (`LocalMap.ts`, `ganderkesee-boundary.json`). |
 | **ResizeObserver-Refit** | `KingdomMap` registriert einen `ResizeObserver`, der bei Containergrößenänderung Canvas-Auflösung (bis `devicePixelRatio`, max. 2) und Kamera anpasst. Fokus/Zoom bleiben erhalten. | Verhindert Verzerrung; exaktes Wiedereinpassen ist nicht möglich, wenn das Fenster kleiner wird. |
-| **`longitudeStretch` ohne Anwendung** | Die Mercator-Streckung ist exportiert, aber für Europa **nicht** in die Zeichenroutine integriert. | Europa ist Schematik mit Maßstab, keine Kartografie. |
 
 **Was NICHT behauptet wird:**
 
@@ -117,9 +118,10 @@ nicht instanziierbar; die Logik wäre dort ungetestet geblieben.
 
 ## 7. Tests und offene Punkte
 
-**Automatisiert:** `npm run check` ✅ · `npx vitest run src/ui/MapScale.test.ts` ✅ 10 Tests · `npm run build` ✅
+**Automatisiert:** `npm run check` ✅ · `npx vitest run` ✅ 427 Tests · `npm run build` ✅ · Browser-Abnahme: alle sieben Stufen
+im Chromium geprüft (Maßstabsbalken, Datenattribute, Nahgeometrie, Europa-Ebene, Gemeindegrenze).
 
-1. **`longitudeStretch` ist exportiert, aber ungenutzt.** Entweder in die Europa-Zeichnung integrieren oder entfernen.
-2. **Geräteabnahme:** Zoomverhalten nur Chromium/Windows geprüft, nicht iPad/iPhone.
-3. **Barrierefreiheit:** Steuerbuttons sind tastaturbedienbar; Stufenwechsel werden nicht per `aria-live` angekündigt.
-4. **Ich-Perspektive:** Separate Nahansicht am DWELLING_ANCHOR — Umfang und Grenzen siehe [RENDERER.md](RENDERER.md).
+1. **Geräteabnahme:** Zoomverhalten nur Chromium/Windows geprüft, nicht iPad/iPhone.
+2. **Barrierefreiheit:** Steuerbuttons sind tastaturbedienbar; Stufenwechsel werden nicht per `aria-live` angekündigt.
+3. **Ich-Perspektive:** Dritte Kameraperspektive derselben Welt — Umfang und Grenzen siehe [RENDERER.md](RENDERER.md).
+4. **Politische Grenzen:** Europa zeigt keine historischen Reichsgrenzen; die OSM-Gemeindegrenze ist eine heutige Referenz.

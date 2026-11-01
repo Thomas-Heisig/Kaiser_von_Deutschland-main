@@ -815,7 +815,7 @@ ${body}
                 <button type="button" data-map-control="in" aria-label="Karte vergrößern" title="Vergrößern">+</button>
                 <button type="button" data-map-control="out" aria-label="Karte verkleinern" title="Verkleinern">−</button>
                 <button type="button" id="report-toggle" aria-label="Lagebericht anzeigen" aria-expanded="true" title="Lagebericht anzeigen/ausblenden">▤</button>
-                <button type="button" data-fp-control aria-expanded="false" aria-label="Ich-Perspektive am eigenen Standort öffnen" title="Ich-Perspektive öffnen">👁</button>
+                <button type="button" data-fp-control aria-expanded="false" aria-pressed="false" aria-label="Ich-Perspektive am eigenen Standort öffnen" title="Ich-Perspektive öffnen">👁</button>
               </div>
               <div class="map-hud" aria-label="Kartenwerkzeuge">
                 <div class="map-hud-top">

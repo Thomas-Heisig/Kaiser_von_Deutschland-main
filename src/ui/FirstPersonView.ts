@@ -273,10 +273,12 @@ export class FirstPersonView {
     this.overlay.hidden = false;
     this.resizeCanvas();
     this.overlay.focus({ preventScroll: true });
-    // Der 👁-Zustand wird zugänglich gespiegelt: Der Öffner-Button
-    // zeigt an, ob die Ich-Perspektive gerade aktiv ist.
+    // Der 👁-Zustand wird zugänglich gespiegelt: aria-expanded zeigt, dass ein
+    // Dialog geöffnet ist; aria-pressed spiegelt den Aktiv-Zustand des Buttons.
     this.host?.parentElement?.querySelector<HTMLButtonElement>('[data-fp-control]')
       ?.setAttribute('aria-expanded', 'true');
+    this.host?.parentElement?.querySelector<HTMLButtonElement>('[data-fp-control]')
+      ?.setAttribute('aria-pressed', 'true');
     this.lastTime = performance.now();
     if (!this.raf) this.startLoop();
   }
@@ -299,6 +301,8 @@ export class FirstPersonView {
     if (lockBtn) lockBtn.setAttribute('aria-pressed', 'false');
     this.host?.parentElement?.querySelector<HTMLButtonElement>('[data-fp-control]')
       ?.setAttribute('aria-expanded', 'false');
+    this.host?.parentElement?.querySelector<HTMLButtonElement>('[data-fp-control]')
+      ?.setAttribute('aria-pressed', 'false');
   }
 
   /**

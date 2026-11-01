@@ -6,7 +6,7 @@ import { StrategyWorld, type StrategyWorldSnapshot } from '../core/StrategyWorld
 import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature, earlyBuildingName } from './SettlementSceneModel';
 import { formatYear } from '../core/HistoricalCalendar';
 import { startLocation, LOCAL_MAP_NOTE } from '../core/StartLocations';
-import { drawLocalMap, validateLocalMap, type LocalMapData } from './LocalMap';
+import { drawLocalMap, validateLocalMap, validateBoundary, type LocalMapData, type BoundaryData } from './LocalMap';
 import {
   isZoomLevelsEnabled,
   levelForSlider,
@@ -15,7 +15,10 @@ import {
   sliderToZoom,
   zoomToSlider
 } from './MapZoomLevels';
-import { METRES_PER_BASE_PIXEL, metresToBase, clampZoom, scaleBar, stageForZoom } from './MapScale';
+import {
+  METRES_PER_BASE_PIXEL, metresToBase, clampZoom, scaleBar, stageForZoom,
+  METRES_PER_DEG_LAT, METRES_PER_DEG_LON_HOME, lonToBaseX, latToBaseY
+} from './MapScale';
 import { DWELLING_DOOR, DWELLING_HALF_DEPTH, DWELLING_HALF_WIDTH, YARD_EXTENT } from './FirstPersonLogic';
 import { DWELLING_ANCHOR } from './MapScale';
 
@@ -92,6 +95,9 @@ export class KingdomMap {
   private localMapData?: LocalMapData;
   private localLoading = false;
   private localLoadFailed = false;
+  /** Heutige Gemeindegrenze (OSM, ODbL) — ergänzende Referenz, fehlertolerant. */
+  private boundaryData?: BoundaryData;
+  private boundaryLoading = false;
   private onLandmark?: () => void;
   private onCameraChange?: (state: CameraState) => void;
   private readonly reliefLayer = new Container();
@@ -185,6 +191,7 @@ export class KingdomMap {
     this.world.addChild(this.regionLayer);
     this.world.addChild(this.europeLayer);
     this.world.addChild(this.nearLayer);
+    this.nearLayer.visible = false;
     this.drawNearGeometry();
     // Screen-fixed: never transformed with the world, so labels stay readable.
     this.app.stage.addChild(this.scaleLayer);
@@ -961,6 +968,9 @@ export class KingdomMap {
       ]);
       if(this.destroyed)return;
       this.localMapData=validateLocalMap(data);this.localTexture=texture;this.localLoadFailed=false;
+      // Heutige Gemeindegrenze (OSM, ODbL) optional laden; fehlt sie, bleibt
+      // die Karte voll bedienbar — die Grenze ist eine ergänzende Referenz.
+      void this.loadBoundary();
       this.drawSettlementTerrain();
       this.app.canvas.dataset.localMapLoaded='true';
       this.app.canvas.dataset.reliefLoaded='true';
@@ -972,6 +982,30 @@ export class KingdomMap {
       console.warn('Heimatkarte nicht verfügbar',error);
       this.drawRegionLayer();this.fit();
     } finally {this.localLoading=false;}
+  }
+
+  /**
+   * Lädt die heutige Gemeindegrenze (OpenStreetMap, ODbL 1.0). Fehlertolerant:
+   * Schlägt das Laden fehl, wird die Grenze einfach nicht gezeichnet.
+   */
+  private async loadBoundary(): Promise<void> {
+    if (this.boundaryData || this.boundaryLoading || this.destroyed) return;
+    this.boundaryLoading = true;
+    try {
+      const base = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? '/';
+      const raw = await Assets.load<unknown>(`${base}maps/ganderkesee-boundary.json`);
+      if (this.destroyed) return;
+      this.boundaryData = validateBoundary(raw);
+      this.app.canvas.dataset.boundaryLoaded = 'true';
+      this.drawRegionLayer();
+      this.fit();
+    } catch (error) {
+      if (this.destroyed) return;
+      console.warn('Grenzdaten nicht verfügbar; Karte ohne Gemeindegrenze.', error);
+      this.app.canvas.dataset.boundaryLoaded = 'false';
+    } finally {
+      this.boundaryLoading = false;
+    }
   }
 
   private syncLevelFromZoom(): void {
@@ -1021,8 +1055,9 @@ export class KingdomMap {
    * übergroße Häuser über der Region zu liegen.
    *
    * Nahgeometrie (Hof/Behausung) nutzt eine Hysterese: Einblenden erst bei
-   * Zoom > 5, Ausblenden erst unter Zoom < 3,5 — der Zwischenraum verhindert
-   * Flackern, wenn der Zoom nahe der Grenze pendelt.
+   * Zoom > 1,2 (≈ 23 m sichtbar, kurz vor der Behausungsstufe), Ausblenden
+   * erst unter Zoom < 0,9 — der Zwischenraum verhindert Flackern, wenn der
+   * Zoom nahe der Grenze pendelt.
    */
   private applyDetailFade(): void {
     if (this.destroyed) return;
@@ -1034,9 +1069,12 @@ export class KingdomMap {
     this.animation.visible = buildingsVisible && this.mapScope === 'home' && this.motionEnabled;
     // Nahgeometrie mit Hysterese: sichtbar bleiben, sobald eingeblendet, bis
     // deutlich herausgezoomt wurde. Sie ist die Brücke zur Ich-Perspektive.
-    if (!this.nearLayer.visible && zoom > 5 && this.mapScope === 'home') {
+    // Einblenden ab Zoom > 1,2 (≈ 23 m sichtbar — der Hof beginnt kurz vor der
+    // Behausungsstufe 15 m), damit Haus und Hof die Behausungsstufe füllen,
+    // statt erst bei 5,6 m zu erscheinen. Ausblenden erst unter Zoom < 0,9.
+    if (!this.nearLayer.visible && zoom > 1.2 && this.mapScope === 'home') {
       this.nearLayer.visible = true;
-    } else if (this.nearLayer.visible && (zoom < 3.5 || this.mapScope !== 'home')) {
+    } else if (this.nearLayer.visible && (zoom < 0.9 || this.mapScope !== 'home')) {
       this.nearLayer.visible = false;
     }
     // Dach-Ausblendung zur Innenraumeinsicht: Ab sichtbarer Breite ≤ 9 m
@@ -1135,27 +1173,22 @@ export class KingdomMap {
    * Zeichnet die Europa-Übersicht in Weltkoordinaten.
    *
    * Georeferenzierung: Die Textur deckt −10…40°O / 35…62°N ab. Die Position
-   * in Basispixeln folgt aus dem belegten Ortsmarker: Ganderkesee
-   * (places.home, EPSG:25832 E=469588, N=5876004 ≈ 8,30°O / 53,02°N) muss
-   * exakt auf DWELLING_ANCHOR liegen. Daraus ergibt sich die Weltgröße der
-   * Textur in Basispixeln; die Europakamera ist damit an dieselbe
-   * Weltgeometrie gebunden wie die lokale Karte (kein Sprung beim Wechsel).
+   * in Basispixeln folgt aus dem belegten Ortsmarker: places.home
+   * (EPSG:25832 E=469 588, N=5 876 004 → 8,5459°O / 53,0336°N, siehe
+   * {@link HOME_LON}) muss exakt auf DWELLING_ANCHOR liegen. Daraus ergibt sich
+   * die Weltgröße der Textur in Basispixeln; die Europakamera ist damit an
+   * dieselbe Weltgeometrie gebunden wie die lokale Karte (kein Sprung beim
+   * Wechsel). Die Umrechnung läuft über die zentralen Funktionen in MapScale.
    */
   private drawEuropeLayer(): void {
     if (this.destroyed || !this.europeTexture) return;
     for (const child of this.europeLayer.removeChildren()) child.destroy({ children: true });
     const bounds = { west: -10, east: 40, south: 35, north: 62 };
-    // Ganderkesee in Grad (aus EPSG:25832 Ortsmarker abgeleitet).
-    const homeLon = 8.30, homeLat = 53.02;
-    // Basispixel je Grad, so dass der Ortsmarker auf DWELLING_ANCHOR fällt.
-    // Lineare Plate-carrée-Abbildung mit Metermaßstab am Bezugsbreitengrad:
-    // 1° Breite ≈ 110 950 m, 1° Länge ≈ 111 320 m × cos(Breite).
-    const METRES_PER_DEG_LAT = 110950;
-    const METRES_PER_DEG_LON_EQUATOR = 111320;
+    // Basispixel je Grad über die zentrale Verankerung (MapScale).
+    const pxPerLon = METRES_PER_DEG_LON_HOME / METRES_PER_BASE_PIXEL;
     const pxPerLat = METRES_PER_DEG_LAT / METRES_PER_BASE_PIXEL;
-    const pxPerLon = METRES_PER_DEG_LON_EQUATOR * Math.cos(homeLat * Math.PI / 180) / METRES_PER_BASE_PIXEL;
-    const lonToBase = (lon: number): number => (lon - homeLon) * pxPerLon;
-    const latToBase = (lat: number): number => (homeLat - lat) * pxPerLat;
+    const lonToBase = (lon: number): number => lonToBaseX(lon);
+    const latToBase = (lat: number): number => latToBaseY(lat);
     const left = lonToBase(bounds.west);
     const top = latToBase(bounds.north);
     const width = (bounds.east - bounds.west) * pxPerLon;
@@ -1295,7 +1328,7 @@ export class KingdomMap {
     for (const child of this.regionLayer.removeChildren()) child.destroy({ children: true });
     for (const child of this.reliefLayer.removeChildren()) child.destroy({ children: true });
     if (this.mapScope === 'home') {
-      const count=drawLocalMap(this.reliefLayer,this.localTexture,this.localMapData,this.retroContext?.year??1200,this.onLandmark);
+      const count=drawLocalMap(this.reliefLayer,this.localTexture,this.localMapData,this.retroContext?.year??1200,this.onLandmark,this.boundaryData);
       this.app.canvas.dataset.localRiverSegments=String(count);
       this.app.canvas.dataset.regionCount=String(this.localMapData?Object.keys(this.localMapData.places).length:0);
       if(this.localLoadFailed) this.regionLayer.addChild(new Text({text:'Kartendaten fehlen · Landkarte erneut öffnen',style:{fontSize:22,fill:0xffffff}}));

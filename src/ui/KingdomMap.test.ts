@@ -18,9 +18,12 @@ function mapFixture() {
     , renderedBuildings: { dispose: vi.fn() }
   });
   for (const name of ['settlements', 'settlementTerrain', 'retroScenery', 'neighbors', 'animation',
-    'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer', 'scaleLayer', 'nearLayer', 'europeLayer']) {
+    'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer', 'scaleLayer', 'europeLayer']) {
     map[name] = { visible: true, children: [{}], removeChildren: () => [] };
   }
+  // Nahgeometrie startet verborgen (wie in initialize()); der Test steuert sie
+  // über setZoom mit echter Hysterese.
+  map.nearLayer = { visible: false, children: [{}], removeChildren: () => [] };
   return map;
 }
 
@@ -125,6 +128,32 @@ describe('map lifecycle and view transitions', () => {
     expect(clampZoom(-5)).toBe(ZOOM_MIN);
   });
 
+  it('shows the dwelling near geometry across the dwelling stage', () => {
+    const map = mapFixture();
+    // Der Hof füllt die Behausungsstufe: er erscheint kurz vor 15 m sichtbarer
+    // Breite (Zoom > 1,2) und bleibt bis deutlich unter der Stufe sichtbar.
+    map.setZoom(1);
+    expect(map.nearLayer.visible).toBe(false);
+    map.setZoom(1.5);
+    expect(map.nearLayer.visible).toBe(true);
+    map.setZoom(9_375);
+    expect(map.nearLayer.visible).toBe(true);
+    // Hysterese: erst unter 0,9 ausblenden, nicht bei 1,2 flackern.
+    map.setZoom(1.0);
+    expect(map.nearLayer.visible).toBe(true);
+    map.setZoom(0.8);
+    expect(map.nearLayer.visible).toBe(false);
+  });
+  it('hides the roof for interior view without moving the house', () => {
+    const map = mapFixture();
+    // Der Fixture-Hof hat drei Kinder (Wände, Möbel, Dach) wie drawNearGeometry.
+    const roof = { visible: true };
+    map.nearLayer.children = [{}, {}, roof];
+    map.setZoom(9_375);
+    expect(roof.visible).toBe(false);
+    map.setZoom(2_000);
+    expect(roof.visible).toBe(true);
+  });
   it('disposes the renderer once and ignores late region updates', () => {
     vi.stubGlobal('window', { clearTimeout: vi.fn() });
     vi.stubGlobal('document', { removeEventListener: vi.fn() });

@@ -1,10 +1,40 @@
 import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import { localLandmarks, localPlaceName, LOCAL_MAP_CREDIT } from '../core/StartLocations';
+import { DWELLING_ANCHOR, HOME_LON, HOME_LAT, METRES_PER_DEG_LAT, METRES_PER_DEG_LON_HOME, METRES_PER_BASE_PIXEL } from './MapScale';
 
 export interface LocalMapData {
   version: number; crs: string; bounds: number[]; width: number; height: number;
   rivers: Array<{id: number; name: string; points: [number,number][]}>;
   places: Record<string,[number,number]>;
+}
+/**
+ * Heutige Gemeindegrenze (OSM, ODbL): Grad-Koordinaten, zur Laufzeit über die
+ * zentrale Verankerung in Basispixel umgerechnet. Ausdrücklich heutige
+ * Verwaltungsgrenze — keine historische Reichs- oder Herrschaftsgrenze.
+ */
+export interface BoundaryData {
+  version: number; crs: string; licence: string; source: string; nature: string;
+  polygons: number[][][][];
+}
+export function validateBoundary(value: unknown): BoundaryData {
+  const data = value as BoundaryData;
+  const ring = (r: unknown): r is [number, number][] => Array.isArray(r)
+    && r.length >= 4 && r.every(p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite));
+  if (!data || data.version !== 1 || data.crs !== 'EPSG:4326' || typeof data.licence !== 'string'
+      || !Array.isArray(data.polygons) || !data.polygons.length
+      || !data.polygons.every(poly => Array.isArray(poly) && poly.every(ring)))
+    throw new Error('Unvollständige Grenzdaten.');
+  return data;
+}
+/**
+ * Rechnet WGS84-Grad in Basispixel der Siedlungsbasis um. Dieselbe Verankerung
+ * wie die Europa-Ebene (MapScale.HOME_LON), damit beide Ebenen zusammenpassen.
+ */
+export function lonLatToBase(lon: number, lat: number): { x: number; y: number } {
+  return {
+    x: DWELLING_ANCHOR.x + (lon - HOME_LON) * METRES_PER_DEG_LON_HOME / METRES_PER_BASE_PIXEL,
+    y: DWELLING_ANCHOR.y - (lat - HOME_LAT) * METRES_PER_DEG_LAT / METRES_PER_BASE_PIXEL
+  };
 }
 export function validateLocalMap(value: unknown): LocalMapData {
   const data = value as LocalMapData;
@@ -16,7 +46,7 @@ export function validateLocalMap(value: unknown): LocalMapData {
   return data;
 }
 export function drawLocalMap(layer: Container, texture: Texture | undefined, data: LocalMapData | undefined,
-  year: number, onLandmark?: () => void): number {
+  year: number, onLandmark?: () => void, boundary?: BoundaryData): number {
   const width=960, height=672;
   const backdrop = new Graphics().rect(0,0,width,height).fill(0x83977a);
   layer.addChild(backdrop);
@@ -51,6 +81,34 @@ export function drawLocalMap(layer: Container, texture: Texture | undefined, dat
     while(occupied.some(b=>x<b.x+b.width+8 && x+label.width+8>b.x && y<b.y+b.height+6 && y+label.height+6>b.y)) y+=24;
     label.position.set(x,y);occupied.push({x,y,width:label.width,height:label.height});
   };
+  // Heutige Gemeindegrenze (OSM, ODbL) als gestrichelte Referenzlinie.
+  // Bewusst heutige Verwaltungsgrenze mit Quellenangabe — keine historische
+  // Grenze. Auf die Kartenfläche beschnitten; Teile außerhalb bleiben Datenlücke.
+  if (boundary) {
+    const clipped = new Graphics();
+    for (const poly of boundary.polygons) {
+      for (const ring of poly) {
+        // Nur Ringe zeichnen, deren Bounding-Box die Karte berührt.
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        const pts = ring.map(([lon, lat]) => {
+          const p = lonLatToBase(lon, lat);
+          minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+          minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+          return p;
+        });
+        if (maxX < 0 || minX > width || maxY < 0 || minY > height) continue;
+        const [first, ...rest] = pts;
+        clipped.moveTo(first.x, first.y);
+        for (const p of rest) clipped.lineTo(p.x, p.y);
+      }
+    }
+    clipped.stroke({ color: 0x4d8a3d, width: 2.6, alpha: 0.85 });
+    const mask = new Graphics().rect(0, 0, width, height).fill(0xffffff);
+    clipped.mask = mask;
+    layer.addChild(clipped, mask);
+    const credit = text('Grenze: © OpenStreetMap (ODbL) · heutige Verwaltungsgrenze', 24, 636, 10, 0x2f5a2a);
+    credit.alpha = 0.85;
+  }
   const [homeX,homeY]=data.places.home;
   layer.addChild(new Graphics().circle(homeX,homeY,12).fill(0xf8e1a3).stroke({color:0x715b36,width:3}));
   placeLabel(text(localPlaceName(year),0,0,20),homeX+17,homeY-12);
