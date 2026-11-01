@@ -90,6 +90,22 @@ export const DWELLING_DOOR: { readonly x0: number; readonly x1: number; readonly
   z: DWELLING_INTERIOR.maxZ,
 };
 
+/** Shared wall footprints: outer building dimensions remain exactly 6 by 8 metres. */
+export const DWELLING_WALLS = [
+  { x: -DWELLING_HALF_WIDTH + DWELLING_WALL_THICKNESS / 2, z: 0,
+    width: DWELLING_WALL_THICKNESS, depth: 2 * DWELLING_HALF_DEPTH },
+  { x: DWELLING_HALF_WIDTH - DWELLING_WALL_THICKNESS / 2, z: 0,
+    width: DWELLING_WALL_THICKNESS, depth: 2 * DWELLING_HALF_DEPTH },
+  { x: 0, z: -DWELLING_HALF_DEPTH + DWELLING_WALL_THICKNESS / 2,
+    width: 2 * DWELLING_HALF_WIDTH, depth: DWELLING_WALL_THICKNESS },
+  { x: (-DWELLING_HALF_WIDTH + DWELLING_DOOR.x0) / 2,
+    z: DWELLING_HALF_DEPTH - DWELLING_WALL_THICKNESS / 2,
+    width: DWELLING_HALF_WIDTH + DWELLING_DOOR.x0, depth: DWELLING_WALL_THICKNESS },
+  { x: (DWELLING_HALF_WIDTH + DWELLING_DOOR.x1) / 2,
+    z: DWELLING_HALF_DEPTH - DWELLING_WALL_THICKNESS / 2,
+    width: DWELLING_HALF_WIDTH - DWELLING_DOOR.x1, depth: DWELLING_WALL_THICKNESS },
+] as const;
+
 /** Bewegliche Kameraposition in Metern. */
 export interface CameraPosition {
   x: number;
@@ -276,9 +292,20 @@ export function step(
 ): FirstPersonState {
   const looked = applyLook(state, lookDelta);
   const moved = applyMove(looked, looked.yaw, move, seconds);
-  const inside = isInsideDwelling(moved);
-  const resolved = resolveCollisions(moved, inside);
-  return { ...looked, x: resolved.x, z: resolved.z };
+  const distance = Math.hypot(moved.x - looked.x, moved.z - looked.z);
+  const steps = Math.max(1, Math.ceil(distance / 0.1));
+  const dx = (moved.x - looked.x) / steps, dz = (moved.z - looked.z) / steps;
+  const blocked = (x: number, z: number): boolean => DWELLING_WALLS.some(wall =>
+    Math.abs(x - wall.x) < wall.width / 2 + WALL_CLEARANCE
+      && Math.abs(z - wall.z) < wall.depth / 2 + WALL_CLEARANCE);
+  let x = looked.x, z = looked.z;
+  for (let i = 0; i < steps; i++) {
+    const nextX = clampAxis(x + dx, -YARD_EXTENT + WALL_CLEARANCE, YARD_EXTENT - WALL_CLEARANCE);
+    if (!blocked(nextX, z)) x = nextX;
+    const nextZ = clampAxis(z + dz, -YARD_EXTENT + WALL_CLEARANCE, YARD_EXTENT - WALL_CLEARANCE);
+    if (!blocked(x, nextZ)) z = nextZ;
+  }
+  return { ...looked, x, z };
 }
 
 /**

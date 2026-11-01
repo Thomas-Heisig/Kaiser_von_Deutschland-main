@@ -1,8 +1,7 @@
 /**
  * Optionale Ich-Perspektive am eigenen Standort — klar begrenzte lokale Ausbaustufe.
  *
- * WAS DAS IST: Ein minimaler eigener WebGL-Renderer (rohes WebGL, keine
- * zusätzliche Engine-Abhängigkeit), der ausschließlich die unmittelbare
+ * WAS DAS IST: Ein separater Three.js-Renderer, der ausschließlich die unmittelbare
  * Umgebung der eigenen Behausung am {@link DWELLING_ANCHOR} darstellt —
  * Innenraum, Türöffnung und Hof. Augenhöhe und Gebäudegrößen in Metern,
  * konsistent zur Kartenmaßstabskette (MapScale.ts).
@@ -20,6 +19,8 @@
 
 import {
   DWELLING_FURNITURE,
+  DWELLING_DOOR,
+  DWELLING_WALLS,
   DWELLING_HALF_DEPTH,
   DWELLING_HALF_WIDTH,
   DWELLING_WALL_HEIGHT,
@@ -30,8 +31,13 @@ import {
   startingState,
   step,
   TURN_SPEED,
+  YARD_EXTENT,
   type FirstPersonState,
 } from './FirstPersonLogic';
+import {
+  BoxGeometry, Color, DirectionalLight, HemisphereLight, Mesh, MeshStandardMaterial,
+  PerspectiveCamera, Scene, WebGLRenderer,
+} from 'three';
 
 /** UI-Texte der Ich-Perspektive. */
 export const FIRST_PERSON_HUD = {
@@ -41,85 +47,19 @@ export const FIRST_PERSON_HUD = {
   button: 'Zurück zur Karte',
 } as const;
 
-const VERTEX_SHADER = `
-attribute vec3 aPosition;
-attribute vec3 aColor;
-uniform mat4 uProjection;
-uniform mat4 uView;
-varying vec3 vColor;
-void main() {
-  vColor = aColor;
-  gl_Position = uProjection * uView * vec4(aPosition, 1.0);
-}
-`;
-
-const FRAGMENT_SHADER = `
-precision mediump float;
-varying vec3 vColor;
-void main() {
-  gl_FragColor = vec4(vColor, 1.0);
-}
-`;
-
 interface Box {
   x: number; y: number; z: number;
   w: number; h: number; d: number;
   r: number; g: number; b: number;
 }
 
-function pushBox(out: number[], box: Box): void {
+function pushBox(out: Mesh<BoxGeometry, MeshStandardMaterial>[], box: Box): void {
   const { x, y, z, w, h, d, r, g, b } = box;
-  const x0 = x - w / 2, x1 = x + w / 2;
-  const y0 = y, y1 = y + h;
-  const z0 = z - d / 2, z1 = z + d / 2;
-  // Zwei Dreiecke pro Fläche; Farbe konstant. Nur sichtbare Flächen genügen
-  // für diese Ausbaustufe — Rückseiten-Culling bleibt aktiv.
-  const quads: Array<[number[], number[], number[], number[]]> = [
-    // Boden (unten, Normale -Y) und Decke (oben, +Y)
-    [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]],
-    [[x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0]],
-    // Nord (+Z) und Süd (-Z)
-    [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]],
-    [[x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0]],
-    // Ost (+X) und West (-X)
-    [[x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1]],
-    [[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0]],
-  ];
-  for (const q of quads) {
-    out.push(...q[0], ...q[1], ...q[2], r, g, b);
-    out.push(...q[0], ...q[2], ...q[3], r, g, b);
-  }
-}
-
-/** Für WebView/DPI robuste Kamera-Matrix (View = inverse Transformation). */
-function viewMatrix(x: number, z: number, yawDeg: number, eyeHeight: number): Float32Array {
-  const yaw = (yawDeg * Math.PI) / 180;
-  const cos = Math.cos(yaw), sin = Math.sin(yaw);
-  // Blick nach Norden (+Z) bei yaw = 0; rechts = +X.
-  const fx = sin, fz = cos;
-  const rx = cos, rz = -sin;
-  const eyeY = eyeHeight;
-  // Zeilenweise: rechte Achse, hoch, negative Blickrichtung (Rechtssystem).
-  return new Float32Array([
-    rx, 0, rz, 0,
-    0, 1, 0, 0,
-    -fx, 0, -fz, 0,
-    -(rx * x + rz * z),
-    -eyeY,
-    (fx * x + fz * z),
-    1,
-  ]);
-}
-
-function perspectiveMatrix(fovDeg: number, aspect: number, near: number, far: number): Float32Array {
-  const f = 1 / Math.tan((fovDeg * Math.PI) / 360);
-  const nf = 1 / (near - far);
-  return new Float32Array([
-    f / aspect, 0, 0, 0,
-    0, f, 0, 0,
-    0, 0, (far + near) * nf, -1,
-    0, 0, 2 * far * near * nf, 0,
-  ]);
+  const mesh = new Mesh(new BoxGeometry(w, h, d),
+    new MeshStandardMaterial({ color: new Color(r, g, b), roughness: 0.85 }));
+  // Logical +Z is north; Three's right-handed scene uses -Z for geographic north.
+  mesh.position.set(x, y + h / 2, -z);
+  out.push(mesh);
 }
 
 /**
@@ -132,9 +72,11 @@ export class FirstPersonView {
   private canvas?: HTMLCanvasElement;
   private overlay?: HTMLDivElement;
   private host?: HTMLElement;
-  private gl?: WebGLRenderingContext;
-  private program?: WebGLProgram;
-  private buffers?: { position: WebGLBuffer; color: WebGLBuffer; count: number };
+  private renderer?: WebGLRenderer;
+  private scene?: Scene;
+  private camera = new PerspectiveCamera(FIELD_OF_VIEW_DEGREES, 1, 0.05, 120);
+  private pitch = 0;
+  private observer?: ResizeObserver;
   private raf = 0;
   private disposed = false;
 
@@ -147,6 +89,7 @@ export class FirstPersonView {
   private motionEnabled = true;
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (!this.active || document.querySelector('dialog:modal')) return;
     // Escape beendet die Sicht (und ggf. die Zeigersperre) — vor dem globalen
     // Handler, damit das Spiel nicht pausiert.
     if (event.key === 'Escape') {
@@ -160,8 +103,10 @@ export class FirstPersonView {
     const target = event.target;
     const onFormElement = target instanceof HTMLElement
       && (target.matches('input, select, textarea, button') || target.isContentEditable);
-    if (this.active && !onFormElement && event.code.startsWith('Key')) {
+    if (!onFormElement && target instanceof Node && this.overlay?.contains(target)
+      && ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
       event.preventDefault();
+      event.stopPropagation();
       this.pressed.add(event.code);
     }
   };
@@ -173,6 +118,7 @@ export class FirstPersonView {
   private readonly onPointerDown = (event: PointerEvent): void => {
     if (event.button !== 0 || this.pointerLocked) return;
     this.dragging = true;
+    this.canvas?.focus();
     try { this.canvas?.setPointerCapture(event.pointerId); } catch { /* Capture nicht verfügbar */ }
   };
 
@@ -182,11 +128,10 @@ export class FirstPersonView {
   };
 
   private readonly onPointerMove = (event: PointerEvent): void => {
-    if (this.pointerLocked) {
-      this.rotate(event.movementX * 0.22);
-      return;
-    }
-    if (this.dragging) this.rotate(event.movementX * 0.22);
+    if (!this.pointerLocked && !this.dragging) return;
+    this.rotate(event.movementX * 0.22);
+    const damping = this.motionEnabled ? 1 : 0.25;
+    this.pitch = Math.max(-80, Math.min(80, this.pitch - event.movementY * 0.22 * damping));
   };
 
   private readonly onCanvasClick = (): void => {
@@ -249,15 +194,20 @@ export class FirstPersonView {
     host.appendChild(overlay);
     this.overlay = overlay;
 
-    this.canvas = overlay.querySelector('.fp-canvas') ?? undefined;
-    const gl = this.canvas?.getContext('webgl', { antialias: false, alpha: false });
-    if (!gl || !this.canvas) {
+    this.canvas = overlay.querySelector<HTMLCanvasElement>('.fp-canvas') ?? undefined;
+    try {
+      if (!this.canvas) throw new Error('Canvas der Ich-Perspektive fehlt.');
+      this.canvas.tabIndex = 0;
+      this.renderer = new WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: false });
+      this.canvas.dataset.renderer = 'three';
+      this.buildScene();
+    } catch (error) {
+      this.renderer?.dispose();
+      this.renderer = undefined;
       overlay.remove();
       this.overlay = undefined;
-      throw new Error('WebGL ist nicht verfügbar — Ich-Perspektive kann nicht gestartet werden.');
+      throw error;
     }
-    this.gl = gl;
-    this.buildScene();
 
     overlay.querySelector('.fp-exit-btn')?.addEventListener('click', () => this.requestExit());
     overlay.querySelector('.fp-lock-btn')?.addEventListener('click', () => {
@@ -269,6 +219,8 @@ export class FirstPersonView {
     document.addEventListener('keyup', this.onKeyUp, true);
     document.addEventListener('pointerlockchange', this.onPointerLockChange);
     window.addEventListener('resize', this.onResize);
+    this.observer = new ResizeObserver(this.onResize);
+    this.observer.observe(host);
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
     this.canvas.addEventListener('pointerup', this.onPointerUp);
     this.canvas.addEventListener('pointermove', this.onPointerMove);
@@ -276,7 +228,7 @@ export class FirstPersonView {
     this.canvas.addEventListener('blur', this.onCanvasBlur);
 
     this.resizeCanvas();
-    this.startLoop();
+    overlay.hidden = true;
   }
 
   /** Zeigt die Sicht an und hält die Karte an (nur Darstellung, keine Simulation). */
@@ -310,6 +262,7 @@ export class FirstPersonView {
     this.dragging = false;
     this.pressed.clear();
     this.state = startingState();
+    this.pitch = 0;
     const lockBtn = this.overlay.querySelector('.fp-lock-btn');
     if (lockBtn) lockBtn.setAttribute('aria-pressed', 'false');
     this.host?.parentElement?.querySelector<HTMLButtonElement>('[data-fp-control]')
@@ -387,73 +340,53 @@ export class FirstPersonView {
       this.canvas.removeEventListener('click', this.onCanvasClick);
       this.canvas.removeEventListener('blur', this.onCanvasBlur);
     }
-    if (this.buffers) {
-      this.gl?.deleteBuffer(this.buffers.position);
-      this.gl?.deleteBuffer(this.buffers.color);
-      this.buffers = undefined;
-    }
-    if (this.program) this.gl?.deleteProgram(this.program);
-    this.program = undefined;
-    this.gl = undefined;
+    this.observer?.disconnect();
+    this.scene?.traverse((object): void => {
+      if (object instanceof Mesh) {
+        object.geometry.dispose();
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        for (const material of materials) material.dispose();
+      }
+    });
+    this.scene = undefined;
+    this.renderer?.dispose();
+    this.renderer = undefined;
     this.canvas = undefined;
     this.overlay?.remove();
     this.overlay = undefined;
   }
 
   private buildScene(): void {
-    const gl = this.gl;
-    if (!gl) return;
-    const program = createProgram(gl, VERTEX_SHADER, FRAGMENT_SHADER);
-    if (!program) throw new Error('Shader-Kompilierung fehlgeschlagen.');
-    this.program = program;
-
-    const verts: number[] = [];
+    const scene = new Scene();
+    scene.background = new Color(0x8ca9c2);
+    scene.add(new HemisphereLight(0xe8f2ff, 0x70543a, 2));
+    const sun = new DirectionalLight(0xffe6bb, 2);
+    sun.position.set(4, 10, 6);
+    scene.add(sun);
+    const verts: Mesh<BoxGeometry, MeshStandardMaterial>[] = [];
     // Hof: Bodenplatte
-    pushBox(verts, { x: 0, y: 0, z: 0, w: 24, h: 0.02, d: 24, r: 0.22, g: 0.30, b: 0.20 });
+    pushBox(verts, { x: 0, y: 0, z: 0, w: 2 * YARD_EXTENT, h: 0.02,
+      d: 2 * YARD_EXTENT, r: 0.22, g: 0.30, b: 0.20 });
     // Behausung: Boden
     pushBox(verts, {
       x: 0, y: 0.02, z: 0,
       w: 2 * DWELLING_HALF_WIDTH, h: 0.02, d: 2 * DWELLING_HALF_DEPTH,
       r: 0.34, g: 0.25, b: 0.16,
     });
-    // Wände: südliche Wand und Seitenwände; die Nordseite hat die Türöffnung.
-    const wallOffset = DWELLING_HALF_WIDTH + DWELLING_WALL_THICKNESS / 2;
-    pushBox(verts, {
-      x: 0, y: 0, z: -DWELLING_HALF_DEPTH - DWELLING_WALL_THICKNESS / 2,
-      w: 2 * wallOffset, h: DWELLING_WALL_HEIGHT, d: DWELLING_WALL_THICKNESS,
-      r: 0.42, g: 0.31, b: 0.20,
-    });
-    pushBox(verts, {
-      x: -wallOffset, y: 0, z: 0, w: DWELLING_WALL_THICKNESS,
-      h: DWELLING_WALL_HEIGHT, d: 2 * DWELLING_HALF_DEPTH,
-      r: 0.40, g: 0.29, b: 0.19,
-    });
-    pushBox(verts, {
-      x: wallOffset, y: 0, z: 0, w: DWELLING_WALL_THICKNESS,
-      h: DWELLING_WALL_HEIGHT, d: 2 * DWELLING_HALF_DEPTH,
-      r: 0.40, g: 0.29, b: 0.19,
-    });
-    // Nordwand mit Türspalt (-0.8..0.8).
-    const doorSegmentWidth = (2 * wallOffset - 1.6) / 2;
-    const doorWallZ = DWELLING_HALF_DEPTH + DWELLING_WALL_THICKNESS / 2;
-    pushBox(verts, {
-      x: -(0.8 + doorSegmentWidth / 2), y: 0, z: doorWallZ,
-      w: doorSegmentWidth, h: DWELLING_WALL_HEIGHT, d: DWELLING_WALL_THICKNESS,
-      r: 0.42, g: 0.31, b: 0.20,
-    });
-    pushBox(verts, {
-      x: 0.8 + doorSegmentWidth / 2, y: 0, z: doorWallZ,
-      w: doorSegmentWidth, h: DWELLING_WALL_HEIGHT, d: DWELLING_WALL_THICKNESS,
-      r: 0.42, g: 0.31, b: 0.20,
-    });
+    for (const wall of DWELLING_WALLS) {
+      pushBox(verts, { x: wall.x, y: 0, z: wall.z, w: wall.width,
+        h: DWELLING_WALL_HEIGHT, d: wall.depth, r: 0.42, g: 0.31, b: 0.20 });
+    }
     // Sturz über der Türöffnung
     pushBox(verts, {
-      x: 0, y: DWELLING_WALL_HEIGHT - 0.5, z: doorWallZ,
-      w: 1.6, h: 0.5, d: DWELLING_WALL_THICKNESS,
+      x: (DWELLING_DOOR.x0 + DWELLING_DOOR.x1) / 2, y: DWELLING_WALL_HEIGHT - 0.5,
+      z: DWELLING_HALF_DEPTH - DWELLING_WALL_THICKNESS / 2,
+      w: DWELLING_DOOR.x1 - DWELLING_DOOR.x0, h: 0.5, d: DWELLING_WALL_THICKNESS,
       r: 0.42, g: 0.31, b: 0.20,
     });
     // Dach (flaches Spielmodell)
-    pushBox(verts, { x: 0, y: 2.6, z: 0, w: 7, h: 0.15, d: 9, r: 0.30, g: 0.18, b: 0.11 });
+    pushBox(verts, { x: 0, y: DWELLING_WALL_HEIGHT, z: 0, w: 2 * DWELLING_HALF_WIDTH,
+      h: 0.15, d: 2 * DWELLING_HALF_DEPTH, r: 0.30, g: 0.18, b: 0.11 });
     // Ausstattung (gestalterische Annäherung): dieselbe metrische Geometrie wie auf der Karte.
     const { table, bench, bed, hearth } = DWELLING_FURNITURE;
     pushBox(verts, {
@@ -479,40 +412,27 @@ export class FirstPersonView {
       r: 0.45, g: 0.30, b: 0.17,
     });
 
-    const position = new Float32Array(verts);
-    // Farben sind in verts gemischt (xyz rgb); trennen für zwei Buffer.
-    const positions: number[] = [];
-    const colors: number[] = [];
-    for (let i = 0; i < position.length; i += 6) {
-      positions.push(position[i], position[i + 1], position[i + 2]);
-      colors.push(position[i + 3], position[i + 4], position[i + 5]);
-    }
-
-    const posBuf = gl.createBuffer();
-    const colBuf = gl.createBuffer();
-    if (!posBuf || !colBuf) throw new Error('GL-Buffer konnten nicht erzeugt werden.');
-    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, colBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    this.buffers = { position: posBuf, color: colBuf, count: positions.length / 3 };
+    scene.add(...verts);
+    this.scene = scene;
   }
 
   private resizeCanvas(): void {
-    if (!this.canvas || !this.overlay) return;
+    if (!this.renderer || !this.overlay) return;
     const rect = this.overlay.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = Math.max(1, Math.round(rect.width * dpr));
-    const h = Math.max(1, Math.round(rect.height * dpr));
-    if (this.canvas.width !== w || this.canvas.height !== h) {
-      this.canvas.width = w;
-      this.canvas.height = h;
-    }
+    const w = Math.max(1, rect.width), h = Math.max(1, rect.height);
+    this.renderer.setPixelRatio(dpr);
+    this.renderer.setSize(w, h, false);
+    // FIELD_OF_VIEW_DEGREES describes the horizontal field of view.
+    this.camera.aspect = w / h;
+    this.camera.fov = 2 * Math.atan(Math.tan(FIELD_OF_VIEW_DEGREES * Math.PI / 360)
+      / this.camera.aspect) * 180 / Math.PI;
+    this.camera.updateProjectionMatrix();
   }
 
   private startLoop(): void {
     const loop = (time: number): void => {
-      if (this.disposed || !this.gl || !this.overlay || this.overlay.hidden) return;
+      if (this.disposed || !this.renderer || !this.overlay || this.overlay.hidden) return;
       const dt = Math.min(0.1, Math.max(0, (time - this.lastTime) / 1000));
       this.lastTime = time;
       this.update(dt);
@@ -544,63 +464,15 @@ export class FirstPersonView {
   }
 
   private render(): void {
-    const gl = this.gl;
-    if (!gl || !this.program || !this.buffers || !this.canvas) return;
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    gl.clearColor(0.55, 0.66, 0.76, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.enable(gl.DEPTH_TEST);
-    gl.enable(gl.CULL_FACE);
-    gl.cullFace(gl.BACK);
-
-    gl.useProgram(this.program);
-    const aspect = this.canvas.width / Math.max(1, this.canvas.height);
-    const proj = perspectiveMatrix(FIELD_OF_VIEW_DEGREES, aspect, 0.1, 120);
-    const view = viewMatrix(this.state.x, this.state.z, this.state.yaw, EYE_HEIGHT);
-    const projLoc = gl.getUniformLocation(this.program, 'uProjection');
-    const viewLoc = gl.getUniformLocation(this.program, 'uView');
-    gl.uniformMatrix4fv(projLoc, false, proj);
-    gl.uniformMatrix4fv(viewLoc, false, view);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.position);
-    const aPos = gl.getAttribLocation(this.program, 'aPosition');
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.color);
-    const aCol = gl.getAttribLocation(this.program, 'aColor');
-    gl.enableVertexAttribArray(aCol);
-    gl.vertexAttribPointer(aCol, 3, gl.FLOAT, false, 0, 0);
-
-    gl.drawArrays(gl.TRIANGLES, 0, this.buffers.count);
+    if (!this.renderer || !this.scene) return;
+    const yaw = this.state.yaw * Math.PI / 180, pitch = this.pitch * Math.PI / 180;
+    this.camera.position.set(this.state.x, EYE_HEIGHT, -this.state.z);
+    this.camera.lookAt(this.state.x + Math.sin(yaw) * Math.cos(pitch),
+      EYE_HEIGHT + Math.sin(pitch), -this.state.z - Math.cos(yaw) * Math.cos(pitch));
+    this.renderer.render(this.scene, this.camera);
+    if (this.canvas) {
+      this.canvas.dataset.position = JSON.stringify(this.state);
+      this.canvas.dataset.pitch = String(this.pitch);
+    }
   }
-}
-
-function createProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string): WebGLProgram | undefined {
-  const vs = compileShader(gl, gl.VERTEX_SHADER, vsSource);
-  const fs = compileShader(gl, gl.FRAGMENT_SHADER, fsSource);
-  if (!vs || !fs) return undefined;
-  const program = gl.createProgram();
-  if (!program) return undefined;
-  gl.attachShader(program, vs);
-  gl.attachShader(program, fs);
-  gl.linkProgram(program);
-  gl.deleteShader(vs);
-  gl.deleteShader(fs);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    gl.deleteProgram(program);
-    return undefined;
-  }
-  return program;
-}
-
-function compileShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader | undefined {
-  const shader = gl.createShader(type);
-  if (!shader) return undefined;
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    gl.deleteShader(shader);
-    return undefined;
-  }
-  return shader;
 }

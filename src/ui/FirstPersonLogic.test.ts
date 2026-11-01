@@ -11,6 +11,7 @@ import {
   DWELLING_FURNITURE,
   DWELLING_INTERIOR,
   DWELLING_MAP_POSITION,
+  DWELLING_WALLS,
   EYE_HEIGHT,
   MAP_METRES_PER_PIXEL,
   NO_MOVE,
@@ -114,6 +115,22 @@ describe('FirstPersonLogic: Bewegung', () => {
 });
 
 describe('FirstPersonLogic: Kollision', () => {
+  it('keeps the outer footprint exactly 6 by 8 metres', () => {
+    expect(Math.min(...DWELLING_WALLS.map(w => w.x - w.width / 2))).toBe(-3);
+    expect(Math.max(...DWELLING_WALLS.map(w => w.x + w.width / 2))).toBe(3);
+    expect(Math.min(...DWELLING_WALLS.map(w => w.z - w.depth / 2))).toBe(-4);
+    expect(Math.max(...DWELLING_WALLS.map(w => w.z + w.depth / 2))).toBe(4);
+  });
+  it('does not tunnel through a wall even with a large time step', () => {
+    const next = step({ x: 0, z: 0, yaw: 90 }, 0, { forward: 1, strafe: 0 }, 5);
+    expect(next.x).toBeLessThan(2.5);
+  });
+  it('crosses the actual door in both directions without snapping outside', () => {
+    const outside = step({ x: 0, z: 3, yaw: 0 }, 0, { forward: 1, strafe: 0 }, 1);
+    expect(outside.z).toBeGreaterThan(4);
+    const inside = step({ ...outside, yaw: 180 }, 0, { forward: 1, strafe: 0 }, 1);
+    expect(inside.z).toBeCloseTo(3);
+  });
   it('hält die Kamera im Hof', () => {
     const far = resolveCollisions({ x: 100, z: -100 }, false);
     expect(far.x).toBeLessThanOrEqual(YARD_EXTENT);

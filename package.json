@@ -18,11 +18,13 @@
     "localforage": "^1.10.0",
     "pixi.js": "^8.22.0",
     "sql.js": "^1.15.1",
+    "three": "^0.187.0",
     "uuid": "^14.0.3"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "@types/sql.js": "^1.4.11",
+    "@types/three": "^0.187.0",
     "canvas": "^3.2.3",
     "sharp": "^0.35.5",
     "typescript": "^7.0.2",

@@ -34,6 +34,11 @@ function mapFixture() {
   // Nahgeometrie startet verborgen (wie in initialize()); der Test steuert sie
   // über setZoom mit echter Hysterese.
   map.nearLayer = { visible: false, children: [{}], removeChildren: () => [] };
+  map.fit = vi.fn(() => {
+    map.currentScale = map.world.scale.x;
+    map.applyDetailFade();
+  });
+  map.currentScale = map.world.scale.x;
   return map;
 }
 
@@ -173,8 +178,21 @@ describe('map lifecycle and view transitions', () => {
     map.setZoom(9_375);
     expect(roof.visible).toBe(false);
     expect(furniture.visible).toBe(true);
-    map.setZoom(2_000);
+    map.setZoom(1_000);
     expect(roof.visible).toBe(true);
+  });
+  it('culls cartographic infrastructure and oversized labels in the metric near view', () => {
+    const map = mapFixture();
+    map.setZoom(1);
+    expect(map.settlements.visible).toBe(true);
+    map.setZoom(1_875);
+    expect(map.settlements.visible).toBe(false);
+    expect(map.animation.visible).toBe(false);
+    expect(map.atmosphere.visible).toBe(false);
+    expect(map.nearLayer.visible).toBe(true);
+    expect(map.app.canvas.dataset.terrainRenderer).toBe('vector');
+    map.setZoom(1);
+    expect(map.settlements.visible).toBe(true);
   });
   it('disposes the renderer once and ignores late region updates', () => {
     vi.stubGlobal('window', { clearTimeout: vi.fn() });

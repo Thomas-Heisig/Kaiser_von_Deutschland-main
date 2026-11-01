@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
+import { Container, Graphics, Text, type Texture } from 'pixi.js';
 import { localLandmarks, localPlaceName, LOCAL_MAP_CREDIT } from '../core/StartLocations';
 import { DWELLING_ANCHOR, HOME_LON, HOME_LAT, METRES_PER_DEG_LAT, METRES_PER_DEG_LON_HOME, METRES_PER_BASE_PIXEL } from './MapScale';
 
@@ -45,12 +45,11 @@ export function validateLocalMap(value: unknown): LocalMapData {
     throw new Error('Unvollständige geografische Kartendaten.');
   return data;
 }
-export function drawLocalMap(layer: Container, texture: Texture | undefined, data: LocalMapData | undefined,
+export function drawLocalMap(layer: Container, _texture: Texture | undefined, data: LocalMapData | undefined,
   year: number, onLandmark?: () => void, boundary?: BoundaryData): number {
   const width=960, height=672;
   const backdrop = new Graphics().rect(0,0,width,height).fill(0x83977a);
   layer.addChild(backdrop);
-  if (texture) { const sprite = new Sprite(texture); sprite.width=width; sprite.height=height; layer.addChild(sprite); }
   const text = (value: string,x: number,y: number,size=16,color=0x213a35): Text => {
     const label = new Text({text:value,style:{fontFamily:'Georgia',fontSize:size,fill:color,
       stroke:{color:0xf2ecd5,width:3},fontWeight:'600'}});
@@ -69,7 +68,7 @@ export function drawLocalMap(layer: Container, texture: Texture | undefined, dat
     if(river.points.length<2) continue;
     const line=new Graphics();line.moveTo(...river.points[0]);
     for(const p of river.points.slice(1))line.lineTo(...p);
-    line.stroke({width:river.name==='Delme'?3.2:2.1,color:0x287b99,alpha:.95});water.addChild(line);
+    line.stroke({pixelLine:true,color:0x287b99,alpha:.95});water.addChild(line);
     const inside=river.points.filter(([x,y])=>x>65 && x<width-130 && y>95 && y<height-80);
     const length=inside.reduce((sum,p,i)=>i?sum+Math.hypot(p[0]-inside[i-1][0],p[1]-inside[i-1][1]):0,0);
     if(inside.length && length > (names.get(river.name)?.length??0))names.set(river.name,{length,point:inside[Math.floor(inside.length/2)]});

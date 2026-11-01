@@ -1104,6 +1104,7 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
    sind dadurch während der Ich-Perspektive bewusst nicht bedienbar — der
    Rückweg ist der dedizierte Exit-Button beziehungsweise Escape. */
 .kingdom-app .game-layout>.map-card .fp-overlay {
+  pointer-events:auto;
   position:absolute;
   inset:0;
   z-index:10;

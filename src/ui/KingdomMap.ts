@@ -7,6 +7,7 @@ import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistri
 import { formatYear } from '../core/HistoricalCalendar';
 import { startLocation, LOCAL_MAP_NOTE } from '../core/StartLocations';
 import { drawLocalMap, validateLocalMap, validateBoundary, type LocalMapData, type BoundaryData } from './LocalMap';
+import { drawGeographicVectors, validateGeographicVectors, type GeographicVectors } from './GeographicVectors';
 import {
   isZoomLevelsEnabled,
   levelForSlider,
@@ -21,8 +22,8 @@ import {
   METRES_PER_DEG_LAT, METRES_PER_DEG_LON_HOME, lonToBaseX, latToBaseY
 } from './MapScale';
 import {
-  DWELLING_DOOR,
   DWELLING_FURNITURE,
+  DWELLING_WALLS,
   DWELLING_MAP_POSITION,
   DWELLING_HALF_DEPTH,
   DWELLING_HALF_WIDTH,
@@ -116,7 +117,7 @@ export class KingdomMap {
    * metrisch — dokumentiert in `public/maps/europe-source.json`.
    */
   private readonly europeLayer = new Container();
-  private europeTexture?: Texture;
+  private europeVectors?: GeographicVectors;
   private europeLoading = false;
   /** Bildschirmfeste Overlays: Maßstabsbalken und Stufenbezeichnung. */
   private readonly scaleLayer = new Container();
@@ -1086,6 +1087,17 @@ export class KingdomMap {
     this.settlements.visible = buildingsVisible && this.mapScope === 'home';
     this.settlementTerrain.visible = buildingsVisible && this.mapScope === 'home';
     this.animation.visible = buildingsVisible && this.mapScope === 'home' && this.motionEnabled;
+    // Infrastructure counts are cartographic symbols, not metric building footprints.
+    const metricView = visibleWidth < 2_000;
+    this.settlements.visible = this.settlements.visible && !metricView;
+    this.animation.visible = this.animation.visible && !metricView;
+    this.retroScenery.visible = false;
+    this.atmosphere.visible = !metricView;
+    for (const child of this.settlementTerrain.children) {
+      if (child instanceof Text) child.visible = !metricView;
+    }
+    this.app.canvas.dataset.terrainRenderer = 'vector';
+    this.app.canvas.dataset.metricView = String(metricView);
     // Nahgeometrie mit Hysterese: sichtbar bleiben, sobald eingeblendet, bis
     // deutlich herausgezoomt wurde. Sie ist die Brücke zur Ich-Perspektive.
     // Einblenden bei einer sichtbaren Breite von höchstens ≈23,4 km,
@@ -1111,16 +1123,15 @@ export class KingdomMap {
     this.neighbors.visible = wide;
     this.worldMarker.visible = wide && this.mapScope === 'world';
     this.regionLayer.visible = visibleWidth > MAP_LAYER_WIDTHS.terrain;
-    this.reliefLayer.visible = visibleWidth > MAP_LAYER_WIDTHS.terrain;
+    this.reliefLayer.visible = this.mapScope === 'home' && visibleWidth > MAP_LAYER_WIDTHS.terrain;
     if (this.regionLayer.visible && this.regionLayer.children.length === 0) this.drawRegionLayer();
-    if (this.reliefLayer.visible) void this.loadReliefTexture();
     // Europastufe: unterhalb der Zentraleuropa-Schwelle erscheint die
     // Europa-Übersicht (Natural Earth 50m, Public Domain). Hysterese gegen
     // Flackern: einblenden ≤ 0,014, ausblenden ≥ 0,02.
-    if (!this.europeLayer.visible && visibleWidth >= MAP_LAYER_WIDTHS.europeShow) {
+    if (!this.europeLayer.visible && visibleWidth >= MAP_LAYER_WIDTHS.terrain) {
       this.europeLayer.visible = true;
       void this.loadEuropeTexture();
-    } else if (this.europeLayer.visible && visibleWidth < MAP_LAYER_WIDTHS.europeHide) {
+    } else if (this.europeLayer.visible && visibleWidth < MAP_LAYER_WIDTHS.terrain * 0.8) {
       this.europeLayer.visible = false;
     }
     if (this.europeLayer.visible) {
@@ -1169,13 +1180,15 @@ export class KingdomMap {
    * bedienbar, die Europastufe zeigt eine Datenlücke.
    */
   private async loadEuropeTexture(): Promise<void> {
-    if (this.europeTexture || this.europeLoading || this.destroyed) return;
+    if (this.europeVectors || this.europeLoading || this.destroyed) return;
     this.europeLoading = true;
     try {
       const base = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? '/';
-      const texture = await Assets.load<Texture>(`${base}maps/europe-overview.webp`);
+      const response = await fetch(`${base}maps/europe-vectors.json`);
+      if (!response.ok) throw new Error(`Europa-Vektoren: HTTP ${response.status}`);
+      const vectors = validateGeographicVectors(await response.json());
       if (this.destroyed) return;
-      this.europeTexture = texture;
+      this.europeVectors = vectors;
       this.app.canvas.dataset.europeLoaded = 'true';
       this.drawEuropeLayer();
       this.fit();
@@ -1200,7 +1213,7 @@ export class KingdomMap {
    * Wechsel). Die Umrechnung läuft über die zentralen Funktionen in MapScale.
    */
   private drawEuropeLayer(): void {
-    if (this.destroyed || !this.europeTexture) return;
+    if (this.destroyed || !this.europeVectors) return;
     for (const child of this.europeLayer.removeChildren()) child.destroy({ children: true });
     const bounds = { west: -10, east: 40, south: 35, north: 62 };
     // Basispixel je Grad über die zentrale Verankerung (MapScale).
@@ -1212,15 +1225,11 @@ export class KingdomMap {
     const top = latToBase(bounds.north);
     const width = (bounds.east - bounds.west) * pxPerLon;
     const height = (bounds.north - bounds.south) * pxPerLat;
-    const sprite = new Sprite(this.europeTexture);
-    sprite.position.set(left, top);
-    sprite.width = width;
-    sprite.height = height;
-    this.europeLayer.addChild(sprite);
+    this.europeLayer.addChild(drawGeographicVectors(this.europeVectors));
     this.europeLayer.addChild(new Graphics()
-      .rect(left, top, width, height).stroke({ color: 0x6b8270, width: 300, alpha: 0.7 }));
+      .rect(left, top, width, height).stroke({ color: 0x6b8270, pixelLine: true, alpha: 0.7 }));
     const note = new Text({
-      text: 'Europa · Natural Earth 50m (Public Domain) · lineare Plate-carrée-Abbildung, Maßstab nur um 53°N exakt · Rand = Datenlücke',
+      text: 'Europa · Natural Earth 50m (Public Domain) · Vektoren, heutige physische Referenz · Maßstab um 53°N angenähert · Rand = Datenlücke',
       style: { fontFamily: 'Georgia', fontSize: 16, fill: 0xf0e6c8,
         stroke: { color: 0x1b2820, width: 3 }, wordWrap: true, wordWrapWidth: 700 }
     });
@@ -1305,19 +1314,14 @@ export class KingdomMap {
     // Drei getrennte Grafiken: Wände (bleibt), Dach (blendet zur
     // Innenraumeinsicht aus), Möbel (immer über dem Boden, unter dem Dach).
     const hw = g(DWELLING_HALF_WIDTH), hd = g(DWELLING_HALF_DEPTH);
-    const wallThickness = g(0.3);
     const walls = new Graphics();
-    walls.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, g(0.2))
-      .fill(0x8a6b4a);
-    walls.roundRect(anchor.x - hw + wallThickness, anchor.y - hd + wallThickness,
-      2 * hw - 2 * wallThickness, 2 * hd - 2 * wallThickness, g(0.12))
+    walls.rect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd)
       .fill(0x6d5336);
-    walls.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, g(0.2))
-      .stroke({ color: 0x5d4630, width: g(0.08) });
-    // Innenraum (dunkler Kern) und Türspalt (Hoffarbe).
-    const doorW = g(DWELLING_DOOR.x1 - DWELLING_DOOR.x0);
-    walls.rect(anchor.x - doorW / 2, anchor.y - hd, doorW, wallThickness)
-      .fill(0x6a8a5c);
+    for (const wall of DWELLING_WALLS) {
+      const position = positionToMapPixels({ x: wall.x, z: wall.z });
+      walls.rect(position.x - g(wall.width) / 2, position.y - g(wall.depth) / 2,
+        g(wall.width), g(wall.depth)).fill(0x8a6b4a);
+    }
     layer.addChild(walls);
     // Möbel (Meter identisch zur Ich-Perspektive): Tisch, Bank, Bett, Herd.
     const furniture = new Graphics();
@@ -1644,14 +1648,14 @@ export class KingdomMap {
   }
   private drawSettlementTerrain():void {
     for(const child of this.settlementTerrain.removeChildren())child.destroy({children:true});
-    if(!this.localTexture||!this.localMapData)return;
-    const sprite=new Sprite(this.localTexture);sprite.width=960;sprite.height=672;this.settlementTerrain.addChild(sprite);
+    if(!this.localMapData)return;
+    this.settlementTerrain.addChild(new Graphics().rect(0,0,960,672).fill(0x83977a));
     const water=new Graphics();
     for(const river of this.localMapData.rivers) {
       if(river.points.length<2)continue;
       water.moveTo(...river.points[0]);for(const p of river.points.slice(1))water.lineTo(...p);
     }
-    water.stroke({width:2.3,color:0x287b99});
+    water.stroke({pixelLine:true,color:0x287b99});
     const mask=new Graphics().rect(0,0,960,672).fill(0xffffff);
     water.mask=mask;this.settlementTerrain.addChild(water,mask);
     const label=new Text({text:'Ganderkeseer Geest · 20 × 14 km · reale Geländebasis, modellierte Bauplätze',style:{fontSize:13,fill:0x213a35,stroke:{color:0xf2ecd5,width:3}}});
