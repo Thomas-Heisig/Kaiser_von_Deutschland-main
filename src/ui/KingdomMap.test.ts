@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { KingdomMap } from './KingdomMap';
 import { ZOOM_MAX, ZOOM_MIN, clampZoom } from './MapScale';
 import { DWELLING_MAP_POSITION } from './FirstPersonLogic';
+import { Container } from 'pixi.js';
 
 // Exercise renderer transitions without requiring a GPU or browser DOM.
 function mapFixture() {
@@ -19,26 +20,22 @@ function mapFixture() {
     , renderedBuildings: { dispose: vi.fn() }
   });
   for (const name of ['settlements', 'settlementTerrain', 'retroScenery', 'neighbors', 'animation',
-    'world', 'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer', 'scaleLayer', 'europeLayer']) {
+    'worldMarker', 'atmosphere', 'regionLayer', 'reliefLayer', 'scaleLayer', 'europeLayer']) {
     map[name] = { visible: true, children: [{}], removeChildren: () => [] };
   }
-  map.world.scale = {
-    get x() {
-      const { width, height } = map.app.screen;
-      const fitFactor = width < 760
-        ? Math.min(width / 820, height / 960)
-        : Math.min(width / 1350, height / 850);
-      return map.zoom * fitFactor;
-    },
-  };
+  map.world = new Container();
   // Nahgeometrie startet verborgen (wie in initialize()); der Test steuert sie
   // über setZoom mit echter Hysterese.
   map.nearLayer = { visible: false, children: [{}], removeChildren: () => [] };
   map.fit = vi.fn(() => {
+    map.world.scale.set(map.zoom * map.fitFactor());
+    map.world.pivot.set(map.centre.x, map.centre.y);
+    map.world.position.set(map.app.screen.width / 2 + map.offset.x,
+      map.app.screen.height / 2 + map.offset.y);
     map.currentScale = map.world.scale.x;
     map.applyDetailFade();
   });
-  map.currentScale = map.world.scale.x;
+  map.fit();
   return map;
 }
 
@@ -69,6 +66,16 @@ describe('map lifecycle and view transitions', () => {
     map.setZoom(2);
     // A continuous camera keeps its position instead of jumping to a new view.
     expect(map.offset).toEqual({ x: 40, y: 20 });
+  });
+  it('keeps the pointer world point fixed with a rotated container', () => {
+    const map = mapFixture();
+    map.world.rotation = 0.7;
+    map.fit();
+    const before = map.world.toLocal({ x: 250, y: 180 });
+    map.zoomBy(1.5, 250, 180);
+    const after = map.world.toLocal({ x: 250, y: 180 });
+    expect(after.x).toBeCloseTo(before.x, 8);
+    expect(after.y).toBeCloseTo(before.y, 8);
   });
   it('restores playable districts after region → world → home', () => {
     const map = mapFixture();
@@ -116,6 +123,18 @@ describe('map lifecycle and view transitions', () => {
     const restored = mapFixture();
     restored.setCameraState(saved);
     expect(restored.getCameraState()).toEqual(saved);
+  });
+  it('restores the real scale on a different viewport rather than refitting the map', () => {
+    const map = mapFixture();
+    map.setZoom(1_000);
+    const saved = map.getCameraState();
+    const restored = mapFixture();
+    restored.app.screen.width = 390;
+    restored.app.screen.height = 650;
+    restored.setCameraState(saved);
+    expect(restored.getMetresPerScreenPixel()).toBeCloseTo(map.getMetresPerScreenPixel(), 10);
+    expect(restored.getCameraState().x).toBe(saved.x);
+    expect(restored.getVisibleWorldWidthMetres()).toBeCloseTo(390 * saved.metresPerCssPixel, 8);
   });
 
   it('migrates legacy camera states (screen offset) as centre values', () => {

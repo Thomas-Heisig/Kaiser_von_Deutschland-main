@@ -75,7 +75,7 @@ export class FirstPersonView {
   private renderer?: WebGLRenderer;
   private scene?: Scene;
   private camera = new PerspectiveCamera(FIELD_OF_VIEW_DEGREES, 1, 0.05, 120);
-  private pitch = 0;
+  private pitch = -25;
   private observer?: ResizeObserver;
   private raf = 0;
   private disposed = false;
@@ -262,7 +262,7 @@ export class FirstPersonView {
     this.dragging = false;
     this.pressed.clear();
     this.state = startingState();
-    this.pitch = 0;
+    this.pitch = -25;
     const lockBtn = this.overlay.querySelector('.fp-lock-btn');
     if (lockBtn) lockBtn.setAttribute('aria-pressed', 'false');
     this.host?.parentElement?.querySelector<HTMLButtonElement>('[data-fp-control]')

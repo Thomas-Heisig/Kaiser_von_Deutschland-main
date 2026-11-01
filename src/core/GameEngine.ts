@@ -222,6 +222,14 @@ export interface SaveMeta {
   year: number;
 }
 
+/** Camera centre in base-world pixels; optional metric scale migrates older zoom-only saves. */
+export interface MapCameraState {
+  zoom: number;
+  x: number;
+  y: number;
+  metresPerCssPixel?: number;
+}
+
 export class GameEngine {
   private realmProjects=new RealmProjects();
   private travellingTime=false;
@@ -360,19 +368,26 @@ export class GameEngine {
    * Reine Darstellung: wird gespeichert, damit die Ansicht nach dem Laden
    * erhalten bleibt. Veraltete Moduswerte werden beim Laden verworfen.
    */
-  private mapCamera: { zoom: number; x: number; y: number } | null = null;
+  private mapCamera: MapCameraState | null = null;
 
   /** Speichert den Kamerazustand der Karte. */
-  public setMapCamera(state: { zoom: number; x: number; y: number } | null): void {
+  public setMapCamera(state: MapCameraState | null): void {
     if (!state || !Number.isFinite(state.zoom) || !Number.isFinite(state.x) || !Number.isFinite(state.y)) {
       this.mapCamera = null;
       return;
     }
     this.mapCamera = { zoom: state.zoom, x: state.x, y: state.y };
+    if (state.metresPerCssPixel !== undefined) {
+      if (!Number.isFinite(state.metresPerCssPixel) || state.metresPerCssPixel <= 0) {
+        console.warn('Ungültiger gespeicherter Kartenmaßstab; alter Zoom wird verwendet.');
+      } else {
+        this.mapCamera.metresPerCssPixel = state.metresPerCssPixel;
+      }
+    }
   }
 
   /** Liefert den gespeicherten Kamerazustand oder `null`. */
-  public getMapCamera(): { zoom: number; x: number; y: number } | null {
+  public getMapCamera(): MapCameraState | null {
     return this.mapCamera ? { ...this.mapCamera } : null;
   }
   private technologySystems: Map<string, PlayerTechnologySystem> = new Map();

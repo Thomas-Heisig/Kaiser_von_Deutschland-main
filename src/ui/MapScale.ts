@@ -54,6 +54,22 @@ export const METRES_PER_BASE_PIXEL_Y = 14_000 / BASE_HEIGHT;
 export const ZOOM_MIN = 0.00703;
 export const ZOOM_MAX = 9375;
 
+/**
+ * Clamps zoom to a real visible width, including the current viewport fit.
+ * @param zoom Requested relative scale.
+ * @param cssWidth Canvas width in CSS pixels.
+ * @param fitFactor All baseline container scaling.
+ * @returns Relative zoom giving a view between 3 metres and 4,000 kilometres.
+ */
+export function clampZoomForViewport(zoom: number, cssWidth: number, fitFactor: number): number {
+  const referenceWidth = cssWidth * METRES_PER_BASE_PIXEL / fitFactor;
+  if (!Number.isFinite(referenceWidth) || referenceWidth <= 0) {
+    throw new Error('Invalid viewport scale.');
+  }
+  const min = referenceWidth / 4_000_000, max = referenceWidth / MAP_DETAIL_WIDTHS.desk;
+  return Math.max(min, Math.min(max, Number.isFinite(zoom) ? zoom : min));
+}
+
 /** Zoomstufe, bei der die eigene Behausung als Ganzes sichtbar wird (≈ 15 m). */
 export const ZOOM_DWELLING = 1875;
 /** Zoomstufe, bei der die Siedlung als Ganzes sichtbar ist (20 km). */

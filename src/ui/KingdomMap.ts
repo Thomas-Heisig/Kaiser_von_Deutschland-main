@@ -1,5 +1,6 @@
 import { Application, Assets, Container, Graphics, Text, Sprite, Texture, Rectangle } from 'pixi.js';
 import { Kingdom, KingdomInfrastructure } from '../core/Kingdom';
+import type { MapCameraState } from '../core/GameEngine';
 import { BUILDING_RENDER_VERSION, RenderedBuildingLibrary } from './RenderedBuildingLibrary';
 import type { RivalRealm } from '../core/CampaignWarfareSystem';
 import { StrategyWorld, type StrategyWorldSnapshot } from '../core/StrategyWorld';
@@ -17,7 +18,7 @@ import {
   zoomToSlider
 } from './MapZoomLevels';
 import {
-  METRES_PER_BASE_PIXEL, metresToBase, clampZoom, scaleBarForMetresPerPixel,
+  METRES_PER_BASE_PIXEL, metresToBase, clampZoom, clampZoomForViewport, scaleBarForMetresPerPixel,
   stageForVisibleWidth, MAP_LAYER_WIDTHS, DWELLING_OFFSET_METRES,
   METRES_PER_DEG_LAT, METRES_PER_DEG_LON_HOME, lonToBaseX, latToBaseY
 } from './MapScale';
@@ -33,11 +34,7 @@ import {
 import { DWELLING_ANCHOR } from './MapScale';
 
 /** Kamerazustand, der gespeichert und wiederhergestellt wird. */
-export interface CameraState {
-  zoom: number;
-  x: number;
-  y: number;
-}
+export type CameraState = MapCameraState;
 
 /**
  * PixiJS settlement overview. Counts represent infrastructure, not geographic claims.
@@ -228,7 +225,9 @@ export class KingdomMap {
     this.app.ticker.add(this.animatedTicker);
     document.addEventListener('visibilitychange', this.visibility);
     this.observer = new ResizeObserver((): void => {
+      const previousScale = this.currentScale;
       this.app.renderer.resize(Math.max(1, host.clientWidth), Math.max(1, host.clientHeight));
+      this.zoom = previousScale / this.fitFactor();
       this.fit();
     });
     this.observer.observe(host);
@@ -256,8 +255,7 @@ export class KingdomMap {
       if (directions[event.key]) {
         event.preventDefault();
         // Pfeiltasten verschieben den Kameramittelpunkt in Weltkoordinaten.
-        this.centre.x -= directions[event.key][0] / this.currentScale;
-        this.centre.y -= directions[event.key][1] / this.currentScale;
+        this.panByScreenPixels(...directions[event.key]);
         this.fit();
       } else if (event.key === 'Home') {
         event.preventDefault();
@@ -299,8 +297,7 @@ export class KingdomMap {
       if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
       if (drag.moved) {
         // Ziehen verschiebt den Kameramittelpunkt in Weltkoordinaten.
-        this.centre.x -= dx / this.currentScale;
-        this.centre.y -= dy / this.currentScale;
+        this.panByScreenPixels(dx, dy);
         drag.x = event.clientX;
         drag.y = event.clientY;
         this.fit();
@@ -314,8 +311,7 @@ export class KingdomMap {
     canvas.addEventListener('pointerup', (event: PointerEvent): void => {
       if (drag && !drag.moved && this.zoomLevel === 'dorf' && this.mapScope === 'home') {
         const rect = canvas.getBoundingClientRect();
-        const x = (event.clientX - rect.left - this.world.x) / this.world.scale.x;
-        const y = (event.clientY - rect.top - this.world.y) / this.world.scale.y;
+        const { x, y } = this.world.toLocal({ x: event.clientX - rect.left, y: event.clientY - rect.top });
         const location = visibleDistricts(this.districtFilter).find((place: SettlementDistrict) => Math.hypot(place.x - x, place.y - y) < 47);
         if (location) onSelect(location.type);
       }
@@ -791,7 +787,7 @@ export class KingdomMap {
   public zoomBy(factor: number, anchorX?: number, anchorY?: number): void {
     if (this.destroyed || !Number.isFinite(factor) || factor <= 0) return;
     const previousScale = this.currentScale;
-    const next = clampZoom(this.zoom * factor);
+    const next = this.clampCameraZoom(this.zoom * factor);
     if (next === this.zoom) return;
     const nextScale = this.fitFactor() * next;
     if (previousScale <= 0 || nextScale <= 0) {
@@ -804,12 +800,10 @@ export class KingdomMap {
     const height = this.app.screen?.height ?? 0;
     const ax = anchorX ?? width / 2;
     const ay = anchorY ?? height / 2;
-    // Weltkoordinate des Ankerpunkts vor dem Zoom (volle Transformation).
-    const worldX = this.centre.x + (ax - width / 2 - this.offset.x) / previousScale;
-    const worldY = this.centre.y + (ay - height / 2 - this.offset.y) / previousScale;
-    // Mittelpunkt so verschieben, dass dieselbe Weltkoordinate wieder bei ax liegt.
-    this.centre.x = worldX - (ax - width / 2 - this.offset.x) / nextScale;
-    this.centre.y = worldY - (ay - height / 2 - this.offset.y) / nextScale;
+    const point = this.world.toLocal({ x: ax, y: ay });
+    const ratio = previousScale / nextScale;
+    this.centre.x = point.x - (point.x - this.centre.x) * ratio;
+    this.centre.y = point.y - (point.y - this.centre.y) * ratio;
     this.zoom = next;
     this.syncLevelFromZoom();
     this.fit();
@@ -818,7 +812,7 @@ export class KingdomMap {
   /** Setzt den Zoom direkt (kontinuierlich, kein Moduswechsel). */
   public setZoom(zoom: number): void {
     if (this.destroyed) return;
-    this.zoom = clampZoom(zoom);
+    this.zoom = this.clampCameraZoom(zoom);
     this.syncLevelFromZoom();
     this.fit();
   }
@@ -874,9 +868,23 @@ export class KingdomMap {
   private roofHidden = false;
   private fitting = false;
 
+  private clampCameraZoom(zoom: number): number {
+    return this.initialized
+      ? clampZoomForViewport(zoom, this.app.screen.width, this.fitFactor())
+      : clampZoom(zoom);
+  }
+
+  private panByScreenPixels(dx: number, dy: number): void {
+    const start = this.world.toLocal({ x: 0, y: 0 });
+    const end = this.world.toLocal({ x: dx, y: dy });
+    this.centre.x -= end.x - start.x;
+    this.centre.y -= end.y - start.y;
+  }
+
   /** Kamerazustand zum Speichern (Mittelpunkt in Weltkoordinaten). */
   public getCameraState(): CameraState {
-    return { zoom: this.zoom, x: this.centre.x, y: this.centre.y };
+    return { zoom: this.zoom, x: this.centre.x, y: this.centre.y,
+      metresPerCssPixel: this.getMetresPerScreenPixel() };
   }
 
   /**
@@ -888,7 +896,14 @@ export class KingdomMap {
    */
   public setCameraState(state: Partial<CameraState> | undefined | null): void {
     if (this.destroyed || !state) return;
-    if (Number.isFinite(state.zoom)) this.zoom = clampZoom(state.zoom as number);
+    if (Number.isFinite(state.zoom)) this.zoom = this.clampCameraZoom(state.zoom as number);
+    if (state.metresPerCssPixel !== undefined) {
+      if (Number.isFinite(state.metresPerCssPixel) && state.metresPerCssPixel > 0) {
+        this.zoom = METRES_PER_BASE_PIXEL / state.metresPerCssPixel / this.fitFactor();
+      } else {
+        console.warn('Ungültiger Kartenmaßstab; gespeicherter Zoom wird verwendet.');
+      }
+    }
     if (Number.isFinite(state.x)) this.centre.x = state.x as number;
     if (Number.isFinite(state.y)) this.centre.y = state.y as number;
     this.offset = { x: 0, y: 0 };
@@ -1522,10 +1537,8 @@ export class KingdomMap {
     this.setMapScope('world');
     this.zoom = 3;
     this.fit();
-    this.offset = {
-      x:this.app.screen.width/2 - (this.world.x + region.x*this.world.scale.x),
-      y:this.app.screen.height/2 - (this.world.y + region.y*this.world.scale.y)
-    };
+    this.centre = { x: region.x, y: region.y };
+    this.offset = { x: 0, y: 0 };
     this.app.canvas.dataset.focusedRegion = id;
     this.fit();
     this.app.canvas.focus();
@@ -1568,7 +1581,6 @@ export class KingdomMap {
     try {
       // On phones the old 1350px reference shrank the entire settlement to a blur.
       // Fit to a narrower, usable map window; retain normal desktop framing.
-      const mobile = this.app.screen.width < 760;
       const fitScale = this.fitFactor();
       const scale = fitScale * this.zoom;
       this.currentScale = scale;
@@ -1577,11 +1589,9 @@ export class KingdomMap {
       // Der Mittelpunkt liegt immer in der Bildschirmmitte, der Versatz schiebt
       // zusätzlich. Resize ändert nur den sichtbaren Rahmen, nicht den Mittelpunkt
       // und nicht den Maßstab. Keine automatische Bindung an den Hausanker.
-      this.world.position.set(
-        this.app.screen.width / 2 - this.centre.x * scale + this.offset.x,
-        (mobile ? this.app.screen.height * 0.54 : this.app.screen.height / 2)
-          - this.centre.y * scale + this.offset.y
-      );
+      this.world.pivot.set(this.centre.x, this.centre.y);
+      this.world.position.set(this.app.screen.width / 2 + this.offset.x,
+        this.app.screen.height / 2 + this.offset.y);
       this.applyDetailFade();
       this.publishScale(scale);
       this.app.renderer.render(this.app.stage);
