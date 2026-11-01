@@ -26,6 +26,7 @@ import {
   DWELLING_MAP_POSITION,
   DWELLING_HALF_DEPTH,
   DWELLING_HALF_WIDTH,
+  positionToMapPixels,
   YARD_EXTENT,
 } from './FirstPersonLogic';
 import { DWELLING_ANCHOR } from './MapScale';
@@ -125,6 +126,7 @@ export class KingdomMap {
    * Ich-Perspektive (FirstPersonLogic), damit beide Ansichten zusammenpassen.
    */
   private readonly nearLayer = new Container();
+  private nearRoof: Graphics | undefined;
 
   private readonly animatedTicker = (ticker: { deltaMS: number }): void => {
     if (this.destroyed || document.hidden) return;
@@ -846,6 +848,11 @@ export class KingdomMap {
     return this.app.screen.width * this.getMetresPerScreenPixel();
   }
 
+  /** Sichtbare Welt-Höhe des Kartenfensters auf Basis von CSS-Pixeln. */
+  public getVisibleWorldHeightMetres(): number {
+    return this.app.screen.height * this.getMetresPerScreenPixel();
+  }
+
   /** Tatsächliche Bildschirmskalierung der Welt (Basispixel → Bildschirmpixel). */
   private effectiveScreenScale(): number {
     return this.world.scale.x || 0;
@@ -1091,10 +1098,12 @@ export class KingdomMap {
     }
     // Das Dach wird bei höchstens 9 m sichtbarer Breite ausgeblendet und erst
     // oberhalb 11,25 m wieder gezeigt; Hauslage und -größe bleiben gleich.
-    const roof = this.nearLayer.children[2];
+    const roof = this.nearRoof;
     if (roof) {
-      if (!this.roofHidden && visibleWidth <= MAP_LAYER_WIDTHS.roofHide) this.roofHidden = true;
-      else if (this.roofHidden && visibleWidth > MAP_LAYER_WIDTHS.roofShow) this.roofHidden = false;
+      const visibleHeight = this.getVisibleWorldHeightMetres();
+      const dwellingDepth = 2 * DWELLING_HALF_DEPTH;
+      if (!this.roofHidden && visibleHeight <= dwellingDepth) this.roofHidden = true;
+      else if (this.roofHidden && visibleHeight > dwellingDepth * 1.25) this.roofHidden = false;
       roof.visible = !this.roofHidden;
     }
     // Neighbours and relief appear once the settlement no longer fills the view.
@@ -1273,6 +1282,7 @@ export class KingdomMap {
    */
   private drawNearGeometry(): void {
     if (this.destroyed) return;
+    this.nearRoof = undefined;
     for (const child of this.nearLayer.removeChildren()) child.destroy({ children: true });
     const g = (m: number): number => metresToBase(m);
     // Der Modellversatz ist in MapScale zentral definiert und wird auch von
@@ -1289,29 +1299,32 @@ export class KingdomMap {
       .fill({ color: 0x6a8a5c, alpha: 0.85 });
     yard.rect(anchor.x - g(YARD_EXTENT), anchor.y - g(YARD_EXTENT),
       g(2 * YARD_EXTENT), g(2 * YARD_EXTENT))
-      .stroke({ color: 0x4d6b45, width: 2, alpha: 0.6 });
+      .stroke({ color: 0x4d6b45, width: g(0.12), alpha: 0.6 });
     layer.addChild(yard);
     // Behausung: 6 × 8 m (DWELLING_HALF_* × 2), Nordseite zeigt im Plan nach oben.
     // Drei getrennte Grafiken: Wände (bleibt), Dach (blendet zur
     // Innenraumeinsicht aus), Möbel (immer über dem Boden, unter dem Dach).
     const hw = g(DWELLING_HALF_WIDTH), hd = g(DWELLING_HALF_DEPTH);
+    const wallThickness = g(0.3);
     const walls = new Graphics();
-    walls.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, 2)
+    walls.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, g(0.2))
       .fill(0x8a6b4a);
-    walls.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, 2)
-      .stroke({ color: 0x5d4630, width: 2 });
-    // Innenraum (dunkler Kern) und Türspalt (Hoffarbe).
-    walls.roundRect(anchor.x - hw + 1, anchor.y - hd + 1, 2 * hw - 2, 2 * hd - 2, 1)
+    walls.roundRect(anchor.x - hw + wallThickness, anchor.y - hd + wallThickness,
+      2 * hw - 2 * wallThickness, 2 * hd - 2 * wallThickness, g(0.12))
       .fill(0x6d5336);
+    walls.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, g(0.2))
+      .stroke({ color: 0x5d4630, width: g(0.08) });
+    // Innenraum (dunkler Kern) und Türspalt (Hoffarbe).
     const doorW = g(DWELLING_DOOR.x1 - DWELLING_DOOR.x0);
-    walls.rect(anchor.x - doorW / 2, anchor.y - hd + 2, doorW, 4)
+    walls.rect(anchor.x - doorW / 2, anchor.y - hd, doorW, wallThickness)
       .fill(0x6a8a5c);
     layer.addChild(walls);
     // Möbel (Meter identisch zur Ich-Perspektive): Tisch, Bank, Bett, Herd.
     const furniture = new Graphics();
     const box = (mx: number, mz: number, mw: number, md: number, color: number): void => {
-      furniture.rect(anchor.x + g(mx) - g(mw) / 2, anchor.y + g(mz) - g(md) / 2,
-        g(mw), g(md)).fill(color).stroke({ color: 0x3a2c1c, width: 1 });
+      const position = positionToMapPixels({ x: mx, z: mz });
+      furniture.rect(position.x - g(mw) / 2, position.y - g(md) / 2,
+        g(mw), g(md)).fill(color).stroke({ color: 0x3a2c1c, width: g(0.04) });
     };
     for (const [name, item] of Object.entries(DWELLING_FURNITURE)) {
       const color = name === 'table' ? 0x8a6238
@@ -1319,11 +1332,12 @@ export class KingdomMap {
       box(item.x, item.z, item.width, item.depth, color);
     }
     layer.addChild(furniture);
-    // Dach als eigenes Kind (Index 2): blendet zur Innenraumeinsicht aus,
+    // Dach separat referenziert: blendet zur Innenraumeinsicht aus,
     // ohne dass das Haus seine Position oder Größe ändert.
     const roof = new Graphics();
-    roof.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, 2)
+    roof.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, g(0.2))
       .fill({ color: 0x7a4f33, alpha: 0.9 });
+    this.nearRoof = roof;
     layer.addChild(roof);
     // Beschriftung erst ab Behausungsstufe sinnvoll; hier nur Datenattribut.
     this.app.canvas.dataset.nearGeometry = 'dwelling-yard-furniture';
@@ -1579,6 +1593,13 @@ export class KingdomMap {
     canvas.dataset.metresPerPixel = screenScale > 0
       ? (METRES_PER_BASE_PIXEL / screenScale).toPrecision(6) : '0';
     canvas.dataset.visibleWidthMetres = this.getVisibleWorldWidthMetres().toPrecision(7);
+    canvas.dataset.visibleHeightMetres = this.getVisibleWorldHeightMetres().toPrecision(7);
+    canvas.dataset.cameraCentre = `${this.centre.x.toPrecision(7)},${this.centre.y.toPrecision(7)}`;
+    canvas.dataset.nearGeometryVisible = String(this.nearLayer.visible);
+    canvas.dataset.nearRoofVisible = String(this.nearRoof?.visible ?? false);
+    const metresPerCssPixel = METRES_PER_BASE_PIXEL / screenScale;
+    canvas.dataset.dwellingWidthCssPixels = (2 * DWELLING_HALF_WIDTH / metresPerCssPixel).toPrecision(6);
+    canvas.dataset.tableWidthCssPixels = (DWELLING_FURNITURE.table.width / metresPerCssPixel).toPrecision(6);
     this.onCameraChange?.(this.getCameraState());
   }
 

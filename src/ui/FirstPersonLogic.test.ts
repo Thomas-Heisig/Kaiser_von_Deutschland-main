@@ -45,10 +45,15 @@ describe('FirstPersonLogic: Einheiten und Datenbasis', () => {
 
   it('uses the same dwelling offset and furniture footprint as the map', () => {
     const centre = positionToMapPixels({ x: 0, z: 0 });
+    const desk = positionToMapPixels({
+      x: DWELLING_FURNITURE.table.x,
+      z: DWELLING_FURNITURE.table.z,
+    });
     expect(centre).toEqual(DWELLING_MAP_POSITION);
     expect(DWELLING_MAP_POSITION.x).toBeGreaterThan(604);
     expect(DWELLING_MAP_POSITION.y).toBeGreaterThan(384);
     expect(DWELLING_FURNITURE.table).toMatchObject({ width: 1.8, depth: 0.9 });
+    expect(desk.y - centre.y).toBeCloseTo(2.6 / MAP_METRES_PER_PIXEL, 6);
   });
 
   it('starts inside the house facing the modeled desk', () => {

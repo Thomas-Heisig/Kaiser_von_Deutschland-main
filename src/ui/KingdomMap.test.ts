@@ -166,11 +166,13 @@ describe('map lifecycle and view transitions', () => {
   });
   it('hides the roof for interior view without moving the house', () => {
     const map = mapFixture();
-    // Der Fixture-Hof hat drei Kinder (Wände, Möbel, Dach) wie drawNearGeometry.
     const roof = { visible: true };
-    map.nearLayer.children = [{}, {}, roof];
+    const furniture = { visible: true };
+    map.nearLayer.children = [{}, {}, furniture, roof];
+    map.nearRoof = roof;
     map.setZoom(9_375);
     expect(roof.visible).toBe(false);
+    expect(furniture.visible).toBe(true);
     map.setZoom(2_000);
     expect(roof.visible).toBe(true);
   });
