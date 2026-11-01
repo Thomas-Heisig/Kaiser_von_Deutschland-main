@@ -123,12 +123,44 @@ export async function runMapRendererSmoke(page, outputDir, url = 'http://127.0.0
     && resizeAfter.metresPerCssPixel === resizeBefore.metresPerCssPixel, 'Resize changed centre or scale');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(250);
+  await zoomToWidth(20_000);
+  const pinchState = async () => canvas.evaluate(el => ({
+    width: el.clientWidth, height: el.clientHeight,
+    m: Number(el.dataset.scaleBarMetres) / Number(el.dataset.scaleBarCssPixels),
+    centre: el.dataset.cameraCentre.split(',').map(Number),
+  }));
+  const pinchBefore = await pinchState(), touchBox = await canvas.boundingBox();
+  const tx = Math.floor(touchBox.x + touchBox.width / 2);
+  const ty = Math.floor(touchBox.y + touchBox.height / 2);
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchStart', touchPoints: [{ id: 1, x: tx - 30, y: ty }, { id: 2, x: tx + 30, y: ty }],
+    });
+    for (let i = 1; i <= 6; i++) {
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [
+        { id: 1, x: tx - 30 - i * 5, y: ty }, { id: 2, x: tx + 30 + i * 5, y: ty },
+      ] });
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  } finally {
+    await cdp.detach();
+  }
+  const pinchAfter = await pinchState();
+  const point = state => [
+    state.centre[0] * (20_000 / 960) + (tx - touchBox.x - state.width / 2) * state.m,
+    state.centre[1] * (20_000 / 960) + (ty - touchBox.y - state.height / 2) * state.m,
+  ];
+  const a = point(pinchBefore), b = point(pinchAfter);
+  const pinchErrorMetres = Math.hypot(a[0] - b[0], a[1] - b[1]);
+  assert(pinchAfter.m < pinchBefore.m && pinchErrorMetres < 0.003, 'Native pinch lost its midpoint');
   await page.locator('#view-select').selectOption('economy');
   assert(await page.locator('#section-dialog').evaluate(el => el.matches(':modal')), 'Phone dialog not modal');
   await page.keyboard.press('Escape');
   await page.locator('[data-fp-control]').click();
   await page.locator('.fp-exit-btn').click();
   assert(errors.length === 0, errors.join('\n'));
-  const result = { rows, resizeBefore, resizeAfter, errors, input: 'real Playwright wheel, drag and keyboard' };
+  const result = { rows, resizeBefore, resizeAfter, pinchErrorMetres, errors,
+    input: 'real Playwright wheel, drag, keyboard and Chromium native touch' };
   return result;
 }

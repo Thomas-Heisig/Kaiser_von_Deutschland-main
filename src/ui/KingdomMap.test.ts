@@ -150,6 +150,17 @@ describe('map lifecycle and view transitions', () => {
     expect(restored.getCameraState().x).toBe(saved.x);
     expect(restored.getVisibleWorldWidthMetres()).toBeCloseTo(390 * saved.metresPerCssPixel, 8);
   });
+  it('never reverses zoom direction after restoring a near camera on a smaller viewport', () => {
+    const map = mapFixture();
+    map.app.screen.width = 390;
+    map.app.screen.height = 650;
+    map.setCameraState({ x: 604, y: 384, metresPerCssPixel: 0.001 });
+    const near = map.getZoom();
+    map.zoomBy(1.12);
+    expect(map.getZoom()).toBe(near);
+    map.zoomBy(1 / 1.12);
+    expect(map.getZoom()).toBeCloseTo(near / 1.12, 8);
+  });
 
   it('migrates legacy camera states (screen offset) as centre values', () => {
     // Ältere Spielstände speicherten einen Bildschirmversatz in denselben

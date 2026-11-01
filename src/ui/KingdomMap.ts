@@ -790,7 +790,11 @@ export class KingdomMap {
   public zoomBy(factor: number, anchorX?: number, anchorY?: number): void {
     if (this.destroyed || !Number.isFinite(factor) || factor <= 0) return;
     const previousScale = this.currentScale;
-    const next = this.clampCameraZoom(this.zoom * factor);
+    // A resize/save restore may preserve a scale outside the new viewport bounds.
+    // Permit a gradual return instead of reversing or snapping the user's zoom.
+    const min = Math.min(this.zoom, this.clampCameraZoom(-1));
+    const max = Math.max(this.zoom, this.clampCameraZoom(Number.MAX_VALUE));
+    const next = Math.max(min, Math.min(max, this.zoom * factor));
     if (next === this.zoom) return;
     const nextScale = this.fitFactor() * next;
     if (previousScale <= 0 || nextScale <= 0) {
