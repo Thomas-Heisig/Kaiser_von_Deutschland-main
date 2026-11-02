@@ -135,6 +135,12 @@ für einen vorhandenen Playwright-Browser. Das Ausgabeverzeichnis muss existiere
 frischen Kontext ohne Service Worker, echte Wheel-/Drag-/Tastaturereignisse, Desktop-Seitenblatt, mobiles Dialogverhalten,
 Three.js-Maus-Look/WASD sowie Escape/Exit mit Fokus-Rückgabe. Kein zusätzlicher Server pro Test.
 
+**Abschließende Validierung:** `npm run check` bestanden; `npx vitest run`:
+50 Testdateien, 446 bestanden, 7 übersprungen; `npm run build` bestanden
+(Chunk-Warnung, darunter der lazy geladene Three.js-Chunk mit ca. 134 KB gzip);
+`git diff --check` bestanden. `runMapRendererSmoke(...)` mit nativer Chromium-Pinch-Prüfung bestanden,
+keine JavaScript-Seitenfehler. Kein Deployment.
+
 ### Messtabelle (Chromium, derselbe Canvas und Hausanker)
 
 | Ausschnitt | Canvas CSS-px | m/CSS-px | sichtbare Welt (m) | 8-m-Referenz (CSS-px) |
