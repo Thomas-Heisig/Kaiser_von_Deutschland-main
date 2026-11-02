@@ -2,6 +2,7 @@
 **Stand 24.10.2026 · Codebasis: main · Live unter https://thomas-heisig.github.io/Kaiser_von_Deutschland-main/**
 
 ## Belegt
+- [Mittelalter-Musik](../05-technical-architecture/MEDIEVAL_SOUNDTRACK.md): drei weitere Titel und WebP-Cover für 843–1199 lokal integriert; Epochengrenzen und Typprüfung bestanden. Kein Deployment-Nachweis; Zuordnung der beiden mystischen Originaldateien anhand Download-Reihenfolge angenommen.
 - [Spielzeit und Risiken](../05-technical-architecture/REALM_PACING.md): verzögerte Vorhaben, simulierte Jahre/Jahrzehnte/Jahrhunderte, Vorrats-/Feldschäden, stärkere Grenzmächte und reale Siedlungskarte. Erster finanzierter 100-Jahre-Lauf geprüft, keine allgemeine Balance-Freigabe.
 - [Vorzeit-Musik](../05-technical-architecture/PREHISTORY_SOUNDTRACK.md): fünf zusätzliche Aufnahmen und Cover, Ancient Veil als Startthema, vollständige Epochen-Playlist.
 - [Bürgerleben und Charakterautomatik](../05-technical-architecture/CITIZEN_LIFECYCLE.md): Versorgung statt dauerhaftem Bedürfnisverfall, Haushaltsgründung, fünf Charakterpläne und nachvollziehbare erwachsene Nachfolge. Zugewiesene Bürger sichtbar; automatische Hof-/Auftragsnachfolge erhält Aufgabenfortschritt. 60-Jahre-Demografie, Zehnjahres-Engine, Save/Load und Hotseat geprüft. Aktuelle vollständige Suite: 419 bestanden, sieben vorhandene übersprungen.

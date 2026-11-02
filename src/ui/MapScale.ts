@@ -73,7 +73,7 @@ export function clampZoomForViewport(zoom: number, cssWidth: number, fitFactor: 
 
 /** Zoomstufe, bei der die eigene Behausung als Ganzes sichtbar wird (≈ 15 m). */
 export const ZOOM_DWELLING = 1875;
-/** Zoomstufe, bei der die Siedlung als Ganzes sichtbar ist (20 km). */
+/** Historischer Referenzzoom der 20-km-Geodaten; die Startkamera zeigt heute 520 m. */
 export const ZOOM_SETTLEMENT = 1;
 /** Zoomstufe, bei der die nähere Umgebung (≈ 120 km) sichtbar wird. */
 export const ZOOM_SURROUNDINGS = 0.24;
@@ -86,7 +86,7 @@ export const ZOOM_EUROPE = 0.00703;
 export const MAP_DETAIL_WIDTHS = {
   desk: 3,
   dwelling: 15,
-  settlement: 40_000,
+  settlement: 1_500,
   surroundings: 120_000,
   region: 500_000,
   realm: 2_000_000,
@@ -190,7 +190,7 @@ export function longitudeStretch(latitude: number): number {
  *
  *   - Schreibtisch ≤ 3 m (Zoom ≥ 9.375) — Nahgeometrie + Ich-Perspektive
  *   - Behausung ≤ 15 m (Zoom ≥ 1.875)
- *   - Siedlung ≤ 40 km (Zoom ≥ 0,70)
+ *   - Siedlung ≤ 1,5 km (Zoom ≥ 18,75)
  *   - Umgebung ≤ 120 km (Zoom ≥ 0,234)
  *   - Region ≤ 500 km (Zoom ≥ 0,0563)
  *   - Herrschaftsraum ≤ 2.000 km (Zoom ≥ 0,0141)
@@ -237,24 +237,22 @@ export function clampZoom(zoom: number): number {
  * (`DWELLING_OFFSET_METRES`); weder Marker noch Versatz behaupten einen
  * vermessenen Hausstandort. Ortsmarker und Gebäudegeometrie bleiben getrennt.
  */
-export const DWELLING_ANCHOR = { x: 604, y: 384 } as const;
+export const DWELLING_ANCHOR = { x: 604.25, y: 383.79 } as const;
 
 /**
  * Geografische Verankerung des Ortsmarkers (places.home).
  *
- * Aus der EPSG:25832-Position des Markers abgeleitet (E=469 588,5 / N=5 876 004,4,
- * UTM 32N, Zentralmeridian 9°O, Maßstabsfaktor 0,9996):
- *
- *   lon = 9° − (500 000 − E) / (111 320 · cos(lat) · 0,9996) ≈ 8,5459°O
- *   lat ≈ 53,0336°N (Meridianbogen, Genauigkeit ±0,005°)
+ * Original-WGS84-Ortsbezug aus scripts/build-ganderkesee.py: geo(8.5465,53.0327).
+ * Der projizierte Marker places.home liegt bei [604.25,383.79].
+ * Keine erneute, grob gerundete Rückrechnung aus UTM.
  *
  * Diese Werte sind die **einzige** Brücke zwischen Grad-Geografie (Europa-
  * übersicht, Gemeindegrenze) und Basispixeln. Alle Transformationen laufen über
  * {@link lonToBaseX}/{@link latToBaseY}, damit Europa- und Lokalebene dieselbe
  * Verankerung teilen und beim Detailwechsel nichts verspringt.
  */
-export const HOME_LON = 8.5459;
-export const HOME_LAT = 53.0336;
+export const HOME_LON = 8.5465;
+export const HOME_LAT = 53.0327;
 
 /** Meter je Grad Breite am Standort (Meridianbogen, genähert). */
 export const METRES_PER_DEG_LAT = 110_950;

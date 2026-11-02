@@ -22,6 +22,10 @@ describe('Official soundtrack assets', () => {
     expect(tracksForYear(BUNDLED_TRACKS, -500)).toHaveLength(5);
     expect(trackForYear(BUNDLED_TRACKS, -499)?.id).toBe('anbeginn-der-zeit');
     expect(trackForYear(BUNDLED_TRACKS, 800)?.id).toBe('anbeginn-der-zeit');
+    expect(trackForYear(BUNDLED_TRACKS, 842)?.id).toBe('anbeginn-der-zeit');
+    for (const year of [843, 1000, 1199]) {
+      expect(tracksForYear(BUNDLED_TRACKS, year).map(track => track.id)).toEqual(['imperial-dawn', 'echowald', 'ewiger-nebel']);
+    }
     expect(trackForYear(BUNDLED_TRACKS, 1200)?.id).toBe('leitmotiv-1200');
   });
   it('gives every era its own track and never spills an era into the next', () => {

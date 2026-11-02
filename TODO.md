@@ -8,6 +8,8 @@ Die Aufgaben entsprechen dem nachgeprüften [Status](docs/00-meta/status.md) und
 
 ### Stabilisierung und Integration · 24.10.2026
 
+- [x] Drei Mittelalter-Musiktitel (843–1199) mit generierten WebP-Covern, Katalog- und Offline-Zuordnung; Epochengrenzen automatisiert geprüft. Browser-Abnahme und angenommene Zuordnung der mystischen Dateien siehe [Integrationsprompt](docs/05-technical-architecture/MEDIEVAL_SOUNDTRACK.md).
+
 - [x] [Spielzeit und langfristige Risiken](docs/05-technical-architecture/REALM_PACING.md): gespeicherte Bau-/Militärvorhaben mit Kosten und Abschluss, echte 1/10/100-Jahre-Simulation, stärkere neue Grenzmächte, Lagerverluste und Flutschäden. Bekannte Nachbarn mit Zahlen, echte Geländebasis auch in der Siedlung, Meldungsfilter und abschaltbare Spielbegleitung.
 - [x] Geschichte-Lesezeitreise und sieben weitere belegte Kultur-/Kunst-/Architekturkarten (Karolinger und Bauhaus).
 - [x] [Fünf Vorzeit-Musiktitel](docs/05-technical-architecture/PREHISTORY_SOUNDTRACK.md): umbenannte MP3s mit eingebetteten Covern, 20 Titel insgesamt, Ancient Veil als instrumentales Startthema und rotierende Epochen-Playlist.

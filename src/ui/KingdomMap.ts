@@ -4,8 +4,9 @@ import type { MapCameraState } from '../core/GameEngine';
 import { BUILDING_RENDER_VERSION, RenderedBuildingLibrary } from './RenderedBuildingLibrary';
 import type { RivalRealm } from '../core/CampaignWarfareSystem';
 import { StrategyWorld, type StrategyWorldSnapshot } from '../core/StrategyWorld';
-import { SettlementDistrict, SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtModernization, districtSceneSignature, earlyBuildingName } from './SettlementSceneModel';
-import { formatYear } from '../core/HistoricalCalendar';
+import { SETTLEMENT_DISTRICTS, DistrictFilter, visibleDistricts, districtSceneSignature, earlyBuildingName } from './SettlementSceneModel';
+import { VILLAGE_BUILDINGS, VILLAGE_VIEW_WIDTH, VILLAGE_ATTRIBUTION, villageBuildingName } from './SettlementWorld';
+import { drawVillageGround, villageLabel } from './VillageMapLayer';
 import { startLocation, LOCAL_MAP_NOTE } from '../core/StartLocations';
 import { drawLocalMap, validateLocalMap, validateBoundary, type LocalMapData, type BoundaryData } from './LocalMap';
 import { drawGeographicVectors, validateGeographicVectors, type GeographicVectors } from './GeographicVectors';
@@ -45,6 +46,10 @@ export class KingdomMap {
   private visibleGlbDistricts = 0;
   private readonly world = new Container();
   private readonly settlements = new Container();
+  private readonly villageGround = new Container();
+  private villageLabels: Text[] = [];
+  private villageArt: Container[] = [];
+  private terrainBackdrop?: Sprite;
   private readonly retroScenery = new Container();
   private readonly neighbors = new Container();
   private readonly worldMarker = new Container();
@@ -59,7 +64,7 @@ export class KingdomMap {
    * Bildschirmversatz: Resize erhält den Mittelpunkt, der sichtbare
    * Ausschnitt ändert sich dadurch. `offset` bleibt für Drag/Pfeiltasten.
    */
-  private centre = { x: 500, y: 310 };
+  private centre = { x: DWELLING_MAP_POSITION.x, y: DWELLING_MAP_POSITION.y };
   private destroyed: boolean = false;
   private initialized: boolean = false;
   private motionEnabled = false;
@@ -190,6 +195,7 @@ export class KingdomMap {
     this.world.addChild(this.retroScenery);
     this.world.addChild(this.neighbors);
     this.world.addChild(this.worldMarker);
+    this.world.addChild(this.villageGround);
     this.world.addChild(this.settlements);
     this.world.addChild(this.animation);
     // Additive Overlay-Ebene: niemals Teil der Simulation, nur Darstellung.
@@ -315,12 +321,19 @@ export class KingdomMap {
       if (drag && !drag.moved && this.zoomLevel === 'dorf' && this.mapScope === 'home') {
         const rect = canvas.getBoundingClientRect();
         const { x, y } = this.world.toLocal({ x: event.clientX - rect.left, y: event.clientY - rect.top });
-        const location = visibleDistricts(this.districtFilter).find((place: SettlementDistrict) => Math.hypot(place.x - x, place.y - y) < 47);
+        const allowed = new Set(visibleDistricts(this.districtFilter).map(place => place.type));
+        const location = this.settlements.visible ? VILLAGE_BUILDINGS.find(place => {
+          const point = positionToMapPixels({ x: place.x, z: place.z });
+          const pad = metresToBase(Math.min(4, 8 * (METRES_PER_BASE_PIXEL / this.effectiveScreenScale())));
+          return allowed.has(place.type) && Math.abs(point.x - x) <= metresToBase(place.width / 2) + pad
+            && Math.abs(point.y - y) <= metresToBase(place.depth / 2) + pad;
+        }) : undefined;
         if (location) onSelect(location.type);
       }
       endPointer(event);
     });
     canvas.addEventListener('pointercancel', (event: PointerEvent): void => { endPointer(event); });
+    this.zoom = this.app.screen.width * METRES_PER_BASE_PIXEL / (this.fitFactor() * (this.app.screen.width < 760 ? 260 : VILLAGE_VIEW_WIDTH));
     this.fit();
     this.app.ticker.stop();
     void this.loadRetroAssets();
@@ -664,109 +677,66 @@ export class KingdomMap {
     this.drawNeighbors(rivals);
     this.drawAtmosphere(kingdom.currentSeason, epochStyle);
     for (const child of this.settlements.removeChildren()) child.destroy({ children: true });
-    for (const location of visibleDistricts(this.districtFilter)) {
-      const count = kingdom.infrastructure[location.type];
-      const group = new Container();
-      const modernization = districtModernization(location.type, completed);
-      const winter = kingdom.currentSeason === 'winter';
-      group.position.set(location.x, location.y);
-      const ground = new Graphics()
-        .ellipse(0, 10, 62, 30).fill({ color: location.color, alpha: 0.12 })
-        .ellipse(0, 10, 62, 30).stroke({
-          color: selected === location.type ? 0xf0d89f : 0x6b8270,
-          width: selected === location.type ? 2 : 1, alpha: selected === location.type ? 1 : 0.35
+    for (const child of this.villageGround.removeChildren()) child.destroy({ children: true });
+    drawVillageGround(this.villageGround, year);
+    this.villageLabels = [];
+    this.villageArt = [];
+    const allowed = new Set(visibleDistricts(this.districtFilter).map(p => p.type));
+    for (const building of VILLAGE_BUILDINGS.filter(b => allowed.has(b.type))) {
+      const count = kingdom.infrastructure[building.type];
+      const point = positionToMapPixels({ x: building.x, z: building.z });
+      const group = new Container(); group.position.set(point.x, point.y);
+      const width = metresToBase(building.width), depth = metresToBase(building.depth);
+      // Ground plan remains the metric authority even when decorative art is shown.
+      const footprint = new Graphics().rect(-width/2, -depth/2, width, depth)
+        .fill({ color: count > 0 ? 0x986f49 : 0xb3a689, alpha: count > 0 ? .4 : .12 })
+        .stroke({ color: selected === building.type ? 0xffdf92 : 0x68553d, width: metresToBase(.15) });
+      group.addChild(footprint);
+      if (count > 0 && !(building.type === 'churches' && year < 1052)) {
+        const art = new Container();
+        const rendered = this.projection === 'isometric'
+          && !(building.type === 'churches' && year < 1052)
+          && this.renderedBuildings.drawMetric(art, building.type, year);
+        if (rendered) this.visibleGlbDistricts++;
+        else this.drawRetroDistrict(art, building.type, count, epochStyle);
+        const box = art.getLocalBounds();
+        if (box.width > 0 && box.height > 0) {
+          // Uniform scale: never stretch a sprite to force a different aspect ratio.
+          const scale = Math.min(width / box.width, depth / box.height);
+          art.pivot.set(box.x + box.width/2, box.y + box.height/2);
+          art.scale.set(scale); art.eventMode = 'none';
+          group.addChild(art); this.villageArt.push(art);
+        }
+      }
+      const name = year < 500 ? earlyBuildingName(building.type,year,villageBuildingName(building,year))
+        : villageBuildingName(building,year);
+      const label = villageLabel(name + ' · ' + count + ' · ' + Math.round(building.walkingMetres) + ' m Fußweg');
+      label.position.set(point.x, point.y + depth/2 + metresToBase(2));
+      label.label = building.type;
+      if (count > 0 || selected === building.type) this.villageLabels.push(label);
+      else label.visible = false;
+      this.settlements.addChild(group, label);
+      if (selected === building.type) {
+        const route = new Graphics();
+        building.route.forEach(([x,z],i) => {
+          const p = positionToMapPixels({x,z});
+          if (i) route.lineTo(p.x,p.y); else route.moveTo(p.x,p.y);
         });
-      group.addChild(ground);
-      const hasRenderedBuilding = this.projection === 'isometric' && this.renderedBuildings.draw(group,location.type,count,year);
-      if(hasRenderedBuilding){ this.visibleGlbDistricts += 1; }
-      else if (this.drawRetroDistrict(group, location.type, count, epochStyle)) {
-        // Visual-only retro representation. Interaction still uses fixed coordinates.
-      } else if ((modernization || epochStyle === 'modern' || epochStyle === 'industrial') && count > 0 && location.type !== 'farms' && location.type !== 'roads' && location.type !== 'ports' && location.type !== 'walls') {
-        group.addChild(new Graphics().roundRect(-29, -62, 58, 42, 5)
-          .fill({ color: 0x587f84, alpha: 0.95 }).roundRect(-24, -56, 48, 6, 2)
-          .fill(0xc2d4ce).rect(-16, -42, 11, 16).rect(5, -42, 11, 16).fill(0xecdcb0));
-        if (epochStyle === 'modern' && count > 0) group.addChild(new Graphics().rect(-36,-76,72,4).fill(0x69bec7));
-      } else if (location.type === 'farms') {
-        const fields = new Graphics();
-        for (let i = 0; i < 5; i++) {
-          fields.poly([-43 + i * 17, -13, -30 + i * 17, -20, -8 + i * 17, 0, -21 + i * 17, 8])
-            .fill({ color: i % 2 ? 0xa99857 : 0x8e9a5c, alpha: 0.85 });
-        }
-        group.addChild(fields);
-      } else if (location.type === 'ports') {
-        group.addChild(new Graphics().rect(-38, -2, 76, 15).fill(0x775b45)
-          .poly([-25, 2, 0, -33, 26, 2]).fill({ color: count ? 0xc4ae83 : 0x66776c, alpha: 0.85 })
-          .rect(-2, -37, 4, 40).fill(0xd5cbb3));
-      } else if (location.type === 'walls') {
-        group.addChild(new Graphics().rect(-47, -17, 94, 24).fill({ color: 0xa0aca2, alpha: count ? 1 : 0.25 })
-          .rect(-38, -31, 20, 14).rect(18, -31, 20, 14).fill(0x8d9f96));
-      } else if (location.type === 'roads') {
-        group.addChild(new Graphics().moveTo(-40, 20).lineTo(0, -26).lineTo(44, 19)
-          .stroke({ width: count ? 14 : 7, color: modernization ? 0x7e8d93 : 0xbca57c }));
-      } else if (location.type === 'mines') {
-        group.addChild(new Graphics().poly([-32, 13, 0, -38, 35, 13]).fill(0x6e817b)
-          .poly([0, -38, 9, 13, 35, 13]).fill(0x4a625e)
-          .roundRect(-10, -1, 18, 20, 6).fill(0x182a29));
-      } else {
-        const buildings = Math.min(Math.max(count, 1), 4);
-        for (let i = 0; i < buildings; i++) {
-          const x = (i % 2) * 30 - 25;
-          const y = Math.floor(i / 2) * 20 - 12;
-          const height = location.type === 'castles' || location.type === 'churches' ? 39 : 24;
-          const house = new Graphics()
-            .rect(x, y - height, 25, height).fill({ color: location.color, alpha: count ? 1 : 0.35 })
-            .poly([x - 4, y - height, x + 12, y - height - 16, x + 29, y - height])
-            .fill(count ? 0x6b5550 : 0x425650)
-            .rect(x + 9, y - 13, 6, 13).fill(0x293b35)
-            .rect(x + 4, y - height + 7, 5, 5).fill(0xe6cc8b);
-          group.addChild(house);
-          if (count > 0 && (location.type === 'workshops' || location.type === 'markets')) {
-            const smoke = new Graphics()
-              .circle(x + 22, y - height - 20, 5).fill({ color: 0xc5d1c5, alpha: 0.55 })
-              .circle(x + 18, y - height - 27, 7).fill({ color: 0xc5d1c5, alpha: 0.28 });
-            group.addChild(smoke);
-            this.chimneys.push(smoke);
-          }
-        }
+        route.stroke({ color: 0xf1d695, width: metresToBase(.6), cap: 'round' });
+        this.villageGround.addChild(route);
       }
-      if (count > 0 && (location.type === 'castles' || location.type === 'churches')) {
-        const flag = new Graphics().rect(0, -76, 2, 27).fill(0xe2ddc7)
-          .poly([2, -76, 24, -71, 2, -65]).fill(epochStyle === 'modern' ? 0x6bbac1 : 0xd2a356);
-        group.addChild(flag);
-      }
-      if (count > 0 && location.type === 'ports') {
-        group.addChild(new Graphics().ellipse(0, 24, 47, 5).fill({ color: 0x94c4ce, alpha: 0.3 }));
-      }
-      if (winter) group.addChild(new Graphics().ellipse(0, 20, 51, 8)
-        .fill({ color: 0xe1e9e6, alpha: 0.38 }));
-      const label = new Text({
-        text: `${earlyBuildingName(location.type,year,location.name)} · ${count}${modernization ? ' ⚙' : ''}`,
-        style: { fontFamily: 'Segoe UI', fontSize: 14, fill: 0xede8d2, fontWeight: '500' }
-      });
-      label.anchor.set(0.5, 0);
-      label.position.set(0, 43);
-      group.addChild(label);
-      this.settlements.addChild(group);
     }
-    this.app.canvas.dataset.renderedDistricts=String(this.visibleGlbDistricts);
-    this.app.canvas.dataset.buildingFramesLoaded=String(this.renderedBuildings.count);
-    // Total from the same infrastructure state the districts use; no copy.
-    const totalBuildings = visibleDistricts(this.districtFilter)
-      .reduce((sum, place) => sum + (kingdom.infrastructure[place.type] ?? 0), 0);
-    this.app.canvas.dataset.settlementBuildings = String(totalBuildings);
-    const summary = new Text({
-      text: `${totalBuildings} Gebäude`,
-      style: { fontFamily: 'Georgia', fontSize: 22, fill: 0xf4e6c5,
-        stroke: { color: 0x2b2318, width: 3 } }
-    });
-    summary.position.set(38, 58);
-    this.settlements.addChild(summary);
-    const eraText = epochStyle === 'modern' ? 'Moderne' : epochStyle === 'industrial'
-      ? 'Industrialisierung' : epochStyle === 'renaissance' ? 'Neuzeit' : epochStyle === 'bronze' ? 'Bronzezeit' : epochStyle === 'ancient' ? 'Antike' : 'Mittelalter';
-    const badge = new Text({text: eraText + ' · ' + formatYear(year), style: {fontFamily: 'Georgia',
-      fontSize: 25, fill: 0xf4e6c5}});
-    badge.position.set(38, 26);
-    this.settlements.addChild(badge);
+    const homeLabel = villageLabel('Deine Behausung · 6 × 8 m');
+    homeLabel.label = 'home';
+    homeLabel.position.set(DWELLING_MAP_POSITION.x, DWELLING_MAP_POSITION.y + metresToBase(7));
+    this.villageLabels.unshift(homeLabel); this.settlements.addChild(homeLabel);
+    this.app.canvas.dataset.renderedDistricts = String(this.visibleGlbDistricts);
+    this.app.canvas.dataset.buildingFramesLoaded = String(this.renderedBuildings.count);
+    this.app.canvas.dataset.villageBuildingCount = String(VILLAGE_BUILDINGS.length);
+    this.app.canvas.dataset.villageMaxWalkingMetres = String(Math.ceil(Math.max(...VILLAGE_BUILDINGS.map(b => b.walkingMetres))));
+    this.app.canvas.dataset.villageSource = 'OpenStreetMap';
+    this.app.canvas.dataset.settlementBuildings = String(visibleDistricts(this.districtFilter)
+      .reduce((sum, place) => sum + (kingdom.infrastructure[place.type] ?? 0), 0));
     this.fit();
   }
 
@@ -1002,12 +972,12 @@ export class KingdomMap {
   public setLandmarkAction(action: () => void): void { this.onLandmark = action; }
 
   private async loadLocalMap(): Promise<void> {
-    if ((this.localTexture && this.localMapData) || this.localLoading || this.destroyed) return;
+    if (this.localMapData || this.localLoading || this.destroyed) return;
     this.localLoading=true;
     try {
       const location=startLocation();
       const [texture,data]=await Promise.all([
-        Assets.load<Texture>(import.meta.env.BASE_URL+location.terrainAsset),
+        Assets.load<Texture>(import.meta.env.BASE_URL+location.terrainAsset).catch(() => undefined),
         Assets.load<unknown>(import.meta.env.BASE_URL+location.mapAsset)
       ]);
       if(this.destroyed)return;
@@ -1109,10 +1079,26 @@ export class KingdomMap {
     this.settlements.visible = buildingsVisible && this.mapScope === 'home';
     this.settlementTerrain.visible = buildingsVisible && this.mapScope === 'home';
     this.animation.visible = buildingsVisible && this.mapScope === 'home' && this.motionEnabled;
-    // Infrastructure counts are cartographic symbols, not metric building footprints.
+    // Local representatives now have metre-sized footprints, independently of counts.
     const metricView = visibleWidth < 2_000;
-    this.settlements.visible = this.settlements.visible && !metricView;
-    this.animation.visible = this.animation.visible && !metricView;
+    this.settlements.visible = this.mapScope === 'home' && visibleWidth < 1_500;
+    if (this.villageGround) this.villageGround.visible = this.mapScope === 'home' && visibleWidth < 8_000;
+    const labelBoxes: Array<{x:number;y:number;w:number;h:number}> = [];
+    for (const label of this.villageLabels ?? []) {
+      label.scale.set(1 / this.effectiveScreenScale());
+      label.visible = visibleWidth >= 60 && visibleWidth < 650;
+      if (label.visible) {
+        const p = this.world.toGlobal(label.position);
+        const w = label.width * this.effectiveScreenScale(), h = label.height * this.effectiveScreenScale();
+        const box = { x:p.x-w/2, y:p.y, w, h };
+        label.visible = !labelBoxes.some(b => box.x < b.x+b.w+6 && box.x+box.w+6 > b.x && box.y < b.y+b.h+4 && box.y+box.h+4>b.y);
+        if (label.visible) labelBoxes.push(box);
+      }
+    }
+    for (const art of this.villageArt ?? []) art.visible = visibleWidth >= 45;
+    if (this.terrainBackdrop) this.terrainBackdrop.visible = visibleWidth >= 2_000;
+    this.app.canvas.dataset.villageVisible = String(this.settlements.visible);
+    this.animation.visible = false;
     this.retroScenery.visible = false;
     this.atmosphere.visible = !metricView;
     for (const child of this.settlementTerrain.children) {
@@ -1228,7 +1214,7 @@ export class KingdomMap {
    *
    * Georeferenzierung: Die Textur deckt −10…40°O / 35…62°N ab. Die Position
    * in Basispixeln folgt aus dem belegten Ortsmarker: places.home
-   * (EPSG:25832 E=469 588, N=5 876 004 → 8,5459°O / 53,0336°N, siehe
+   * (EPSG:25832 Original-Ortsbezug 8,5465°O / 53,0327°N, siehe
    * {@link HOME_LON}) muss exakt auf DWELLING_ANCHOR liegen. Daraus ergibt sich
    * die Weltgröße der Textur in Basispixeln; die Europakamera ist damit an
    * dieselbe Weltgeometrie gebunden wie die lokale Karte (kein Sprung beim
@@ -1363,6 +1349,11 @@ export class KingdomMap {
     const roof = new Graphics();
     roof.roundRect(anchor.x - hw, anchor.y - hd, 2 * hw, 2 * hd, g(0.2))
       .fill({ color: 0x7a4f33, alpha: 0.9 });
+    for (let x = -DWELLING_HALF_WIDTH + .3; x < DWELLING_HALF_WIDTH; x += .3) {
+      roof.moveTo(anchor.x + g(x), anchor.y - hd).lineTo(anchor.x + g(x), anchor.y + hd);
+    }
+    roof.stroke({ color: 0xa98051, width: g(.035), alpha: .7 });
+    roof.moveTo(anchor.x,anchor.y-hd).lineTo(anchor.x,anchor.y+hd).stroke({color:0x513a25,width:g(.12)});
     this.nearRoof = roof;
     layer.addChild(roof);
     // Beschriftung erst ab Behausungsstufe sinnvoll; hier nur Datenattribut.
@@ -1578,7 +1569,7 @@ export class KingdomMap {
     const caption = new Text({
       text: `${bar.label} · ${this.getStage()}${this.europeLayer.visible
         ? ' · heutige physische Referenz · Maßstab um Ganderkesee angenähert'
-        : this.getVisibleWorldWidthMetres() < 2_000 ? ' · modellierte Spielgeometrie' : ''}`,
+        : this.getVisibleWorldWidthMetres() < 2_000 ? ' · ' + VILLAGE_ATTRIBUTION + ' · heutige Wege, Spielbauten modelliert' : ''}`,
       style: { fontFamily: 'Segoe UI', fontSize: 13, fill: 0x2c2418,
         stroke: { color: 0xf3ecd9, width: 3 }, wordWrap: true,
         wordWrapWidth: Math.max(100, this.app.screen.width - 80) }
@@ -1672,6 +1663,12 @@ export class KingdomMap {
     for(const child of this.settlementTerrain.removeChildren())child.destroy({children:true});
     if(!this.localMapData)return;
     this.settlementTerrain.addChild(new Graphics().rect(0,0,960,672).fill(0x83977a));
+    if (this.localTexture) {
+      this.terrainBackdrop = new Sprite(this.localTexture);
+      this.terrainBackdrop.width = 960; this.terrainBackdrop.height = 672;
+      this.terrainBackdrop.alpha = .65;
+      this.settlementTerrain.addChild(this.terrainBackdrop);
+    }
     const water=new Graphics();
     for(const river of this.localMapData.rivers) {
       if(river.points.length<2)continue;

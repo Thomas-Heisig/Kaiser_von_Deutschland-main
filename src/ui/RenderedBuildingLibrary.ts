@@ -1,5 +1,6 @@
-import { Assets, Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
+import { Assets, Container, Graphics, Rectangle, Sprite, Texture, type Spritesheet } from 'pixi.js';
 import type { KingdomInfrastructure } from '../core/Kingdom';
+import visibleBounds from '../data/json/building-visible-bounds.json';
 
 export const BUILDING_RENDER_VERSION = 'kenney-glb-districts-v1';
 const ORDER = ['workshops','taverns','warehouses','markets','guildhalls','schools','hospitals','universities','churches','castles','barracks','walls','mines','ports','farms','roads','urban-workshops','urban-warehouses','urban-markets','urban-guildhalls','urban-schools','urban-universities','urban-hospitals','urban-taverns'] as const;
@@ -14,6 +15,18 @@ export class RenderedBuildingLibrary {
   public load(base: string, onChange: () => void): Promise<void> {
     if (this.loading) return this.loading;
     this.loading = Promise.allSettled(Array.from({length:6}, async (_, page) => {
+      // Prefer the user-supplied package, retaining the original atlas as fallback.
+      try {
+        const packed = await Assets.load<Spritesheet>(base + 'pixijs-assets-2026-11-01/assets/kenney/buildings/districts-v1-' + page + '.json');
+        if (this.disposed) return;
+        for (const key of ORDER.slice(page * 4, page * 4 + 4)) {
+          if (!packed.textures[key]) throw new Error('Incomplete packaged atlas');
+        }
+        for (const key of ORDER.slice(page * 4, page * 4 + 4)) this.frames.set(key, new Texture({
+          source: packed.textures[key].source, frame: packed.textures[key].frame.clone(),
+        }));
+        onChange(); return;
+      } catch { /* Original shipped art remains a usable offline fallback. */ }
       const sheet = await Assets.load<Texture>(base + 'assets/kenney/buildings/districts-v1-' + page + '.webp');
       if (this.disposed) return;
       if (sheet.width !== 384 || sheet.height !== 384) throw new Error('Unexpected building atlas size');
@@ -41,6 +54,23 @@ export class RenderedBuildingLibrary {
     sprite.alpha=count>0?1:0.32;
     sprite.label='glb-building:'+type;
     sprite.eventMode='none';
+    group.addChild(sprite);
+    return true;
+  }
+
+  /** Crop transparent padding, not the artwork. The caller applies uniform metre scaling. */
+  public drawMetric(group: Container, type: keyof KingdomInfrastructure, year: number): boolean {
+    if (year < 500 || this.disposed) return false;
+    const candidate = ('urban-' + type) as Key;
+    const key = year >= 1800 && this.frames.has(candidate) ? candidate : type as Key;
+    const texture = this.frames.get(key), bounds = visibleBounds[key];
+    if (!texture || !bounds) return false;
+    const cropped = new Texture({ source: texture.source, frame: new Rectangle(
+      texture.frame.x + bounds.x, texture.frame.y + bounds.y, bounds.width, bounds.height) });
+    const sprite = new Sprite(cropped);
+    sprite.label = 'metric-building:' + type;
+    // This texture wrapper belongs to the sprite; the atlas source remains cached.
+    sprite.on('destroyed', () => cropped.destroy(false));
     group.addChild(sprite);
     return true;
   }

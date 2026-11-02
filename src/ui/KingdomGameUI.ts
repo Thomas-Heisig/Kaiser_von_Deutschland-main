@@ -1341,6 +1341,7 @@ ${body}
         });
         this.fp = view;
       }
+      this.fp.setVillage(this.player.kingdom.infrastructure, this.engine?.getCurrentYear() ?? 1200);
       this.fp.enter();
     } catch (error) {
       console.warn('Ich-Perspektive nicht verfügbar:', error);

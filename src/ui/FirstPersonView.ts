@@ -3,10 +3,10 @@
  *
  * WAS DAS IST: Ein separater Three.js-Renderer, der ausschließlich die unmittelbare
  * Umgebung der eigenen Behausung am {@link DWELLING_ANCHOR} darstellt —
- * Innenraum, Türöffnung und Hof. Augenhöhe und Gebäudegrößen in Metern,
+ * Innenraum, Türöffnung, Hof und begehbaren Ortskern. Augenhöhe und Gebäudegrößen in Metern,
  * konsistent zur Kartenmaßstabskette (MapScale.ts).
  *
- * WAS DAS NICHT IST: Keine begehbare Welt, kein Innenraum-Asset-Pipeline,
+ * Der begehbare Ausschnitt ist lokal begrenzt; keine unbegrenzte Welt oder Innenraum-Asset-Pipeline,
  * keine zweite Simulation. Die Ausstattung ist bewusst abstrakt (farbige
  * Flächen für Tisch, Bank, Bett) und im HUD als gestalterische Annäherung
  * gekennzeichnet ({@link FIRST_PERSON_NOTE}).
@@ -17,6 +17,9 @@
  * globale Handler das Spiel nicht pausiert.
  */
 
+import { buildVillageExterior, disposeVillageExterior } from './VillageFirstPerson';
+import { VILLAGE_BUILDINGS, type VillageBuilding } from './SettlementWorld';
+import type { KingdomInfrastructure } from '../core/Kingdom';
 import {
   DWELLING_FURNITURE,
   DWELLING_DOOR,
@@ -36,7 +39,7 @@ import {
 } from './FirstPersonLogic';
 import {
   BoxGeometry, Color, DirectionalLight, HemisphereLight, Mesh, MeshStandardMaterial,
-  PerspectiveCamera, Scene, WebGLRenderer,
+  PerspectiveCamera, Scene, WebGLRenderer, Group, Fog,
 } from 'three';
 
 /** UI-Texte der Ich-Perspektive. */
@@ -74,8 +77,10 @@ export class FirstPersonView {
   private host?: HTMLElement;
   private renderer?: WebGLRenderer;
   private scene?: Scene;
-  private camera = new PerspectiveCamera(FIELD_OF_VIEW_DEGREES, 1, 0.05, 120);
+  private camera = new PerspectiveCamera(FIELD_OF_VIEW_DEGREES, 1, 0.05, 900);
   private pitch = -25;
+  private village?: Group;
+  private villageBuildings: VillageBuilding[] = [];
   private observer?: ResizeObserver;
   private raf = 0;
   private disposed = false;
@@ -232,6 +237,16 @@ export class FirstPersonView {
   }
 
   /** Zeigt die Sicht an und hält die Karte an (nur Darstellung, keine Simulation). */
+  public setVillage(infrastructure: KingdomInfrastructure, year: number): void {
+    if (!this.scene) return;
+    if (this.village) disposeVillageExterior(this.village);
+    this.villageBuildings = VILLAGE_BUILDINGS.filter(b => infrastructure[b.type] > 0
+      && !(b.type === 'churches' && year < 1052));
+    this.village = buildVillageExterior(this.villageBuildings);
+    this.scene.add(this.village);
+    if (this.canvas) this.canvas.dataset.villageBuildings = String(this.villageBuildings.length);
+  }
+
   public enter(): void {
     if (!this.overlay || this.disposed) return;
     if (this.host) this.host.hidden = false;
@@ -359,6 +374,7 @@ export class FirstPersonView {
   private buildScene(): void {
     const scene = new Scene();
     scene.background = new Color(0x8ca9c2);
+    scene.fog = new Fog(0x8ca9c2,180,650);
     scene.add(new HemisphereLight(0xe8f2ff, 0x70543a, 2));
     const sun = new DirectionalLight(0xffe6bb, 2);
     sun.position.set(4, 10, 6);
@@ -412,6 +428,13 @@ export class FirstPersonView {
       r: 0.45, g: 0.30, b: 0.17,
     });
 
+    // Pitched outer roof above the existing ceiling; room dimensions stay unchanged.
+    for (const sign of [-1,1]) {
+      const roof = new Mesh(new BoxGeometry(Math.hypot(DWELLING_HALF_WIDTH,1.8),.12,2*DWELLING_HALF_DEPTH),
+        new MeshStandardMaterial({color:0x886044,roughness:1}));
+      roof.position.set(sign*DWELLING_HALF_WIDTH/2,DWELLING_WALL_HEIGHT+.9,0);
+      roof.rotation.z=-sign*Math.atan2(1.8,DWELLING_HALF_WIDTH); verts.push(roof);
+    }
     scene.add(...verts);
     this.scene = scene;
   }
@@ -460,7 +483,7 @@ export class FirstPersonView {
     // Bewegung läuft durch die testbare Logik (Kollisionen inklusive);
     // „Bewegung reduzieren“ dämpft auf einen Bruchteil.
     const speedScale = this.motionEnabled ? 1 : 0.3;
-    this.state = step(this.state, 0, { forward: f * speedScale, strafe: s * speedScale }, dt);
+    this.state = step(this.state, 0, { forward: f * speedScale, strafe: s * speedScale }, dt, this.villageBuildings);
   }
 
   private render(): void {

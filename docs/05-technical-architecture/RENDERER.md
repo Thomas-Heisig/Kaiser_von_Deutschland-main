@@ -1,3 +1,5 @@
+> Ergänzung 01.11.2026: [Metrischer Ortskern, gemischte Darstellung und gemeinsames Three.js-Weltmodell](WALKABLE_VILLAGE.md).
+
 # Renderer – verbindliche Grafikrichtung (18.10.2026)
 
 ## Einzige aktive Entscheidung

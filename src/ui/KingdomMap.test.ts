@@ -15,7 +15,7 @@ function mapFixture() {
     currentScale: 1,
     app: { canvas: { dataset: {} }, screen: { width: 800, height: 600 },
       ticker: { remove: vi.fn() }, destroy: vi.fn() },
-    fit: vi.fn(), drawRegionLayer: vi.fn(), loadReliefTexture: vi.fn(),
+    fit: vi.fn(), drawRegionLayer: vi.fn(), loadReliefTexture: vi.fn(), loadEuropeTexture: vi.fn(),
     observer: { disconnect: vi.fn() }
     , renderedBuildings: { dispose: vi.fn() }
   });
@@ -52,7 +52,7 @@ describe('map lifecycle and view transitions', () => {
   });
   it('hides buildings when zoomed out so no house spans a region', () => {
     const map = mapFixture();
-    map.setZoom(1);
+    map.setZoom(60);
     expect(map.settlements.visible).toBe(true);
     map.setZoom(0.1);
     expect(map.settlements.visible).toBe(false);
@@ -100,10 +100,10 @@ describe('map lifecycle and view transitions', () => {
     expect(map.worldMarker.visible).toBe(true);
     map.setMapScope('home');
     // Zooming back in reveals the districts again; the scope change alone does not.
-    map.setZoom(1);
+    map.setZoom(60);
     expect(map.settlements.visible).toBe(true);
     expect(map.worldMarker.visible).toBe(false);
-    expect(map.animation.visible).toBe(true);
+    expect(map.animation.visible).toBe(false);
     expect(map.retroScenery.visible).toBe(false);
   });
 
@@ -191,7 +191,7 @@ describe('map lifecycle and view transitions', () => {
     map.setZoom(1);
     const desktopWidth = map.getVisibleWorldWidthMetres();
     expect(desktopWidth).toBeCloseTo(28_125, 0);
-    expect(map.getStage()).toBe('Siedlung');
+    expect(map.getStage()).toBe('Umgebung');
     map.app.screen.width = 700;
     const narrowWidth = map.getVisibleWorldWidthMetres();
     expect(narrowWidth).not.toBe(desktopWidth);
@@ -225,17 +225,17 @@ describe('map lifecycle and view transitions', () => {
     map.setZoom(1_000);
     expect(roof.visible).toBe(true);
   });
-  it('culls cartographic infrastructure and oversized labels in the metric near view', () => {
+  it('keeps metric building footprints in the near view without oversized animation', () => {
     const map = mapFixture();
-    map.setZoom(1);
+    map.setZoom(60);
     expect(map.settlements.visible).toBe(true);
     map.setZoom(1_875);
-    expect(map.settlements.visible).toBe(false);
+    expect(map.settlements.visible).toBe(true);
     expect(map.animation.visible).toBe(false);
     expect(map.atmosphere.visible).toBe(false);
     expect(map.nearLayer.visible).toBe(true);
     expect(map.app.canvas.dataset.terrainRenderer).toBe('vector');
-    map.setZoom(1);
+    map.setZoom(60);
     expect(map.settlements.visible).toBe(true);
   });
   it('disposes the renderer once and ignores late region updates', () => {

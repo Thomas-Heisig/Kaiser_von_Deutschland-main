@@ -6,6 +6,8 @@ Der Nutzer hat den gesamten Roadmap-Umfang einschließlich der Großsysteme beau
 
 ## Leseregel
 
+Weitere lokale Soundtrack-Erweiterung: [drei Titel für 843–1199](../05-technical-architecture/MEDIEVAL_SOUNDTRACK.md); 23 Aufnahmen insgesamt.
+
 Weitere integrierte Ausbaustufe: [Vorhaben, Zeitreise und langfristige Risiken](../05-technical-architecture/REALM_PACING.md) sowie [Vorzeit-Soundtrack](../05-technical-architecture/PREHISTORY_SOUNDTRACK.md). Langzeitbalance über alle Startlagen, Produktionsketten und echte historische Bauplatzmodelle bleiben offen.
 
 Aktuelle Ausbaustufe: [regionale Versorgung, sichtbarer Reichszustand und Holzbalance](../05-technical-architecture/REGIONAL_PROVISIONING.md). Bezahlte Entscheidungen und Bürgeraufträge wirken auf drei modellierte Heimatgebiete und die tatsächliche Bauernzahl. Individuelle Familienwanderungen, Produktionsketten und politische Fraktionen bleiben anschließende Schritte. Namen neuer Bürger folgen Geburtskohorten; die Rollenliste ist in Sechsergruppen blätterbar.

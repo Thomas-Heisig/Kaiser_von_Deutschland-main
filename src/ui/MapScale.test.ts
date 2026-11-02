@@ -79,7 +79,7 @@ describe('Gemeinsame Kartenmaßstäbe', () => {
   it('orders all stages strictly between the endpoints', () => {
     // Zooming out walks Schreibtisch → Behausung → Siedlung → Umgebung →
     // Region → Herrschaftsraum → Europa without skipping or repeating a stage.
-    const walk = [ZOOM_MAX, 2000, 1, ZOOM_SURROUNDINGS + 0.01, ZOOM_REGION + 0.01, ZOOM_EUROPE * 2.1, ZOOM_MIN].map(stageForZoom);
+    const walk = [ZOOM_MAX, 2000, 60, ZOOM_SURROUNDINGS + 0.01, ZOOM_REGION + 0.01, ZOOM_EUROPE * 2.1, ZOOM_MIN].map(stageForZoom);
     expect(walk).toEqual([
       'Schreibtisch', 'Behausung', 'Siedlung', 'Umgebung',
       'Region', 'Herrschaftsraum', 'Europa'

@@ -13,6 +13,7 @@ import {
   DWELLING_OFFSET_METRES,
   metresToBase,
 } from './MapScale';
+import { WALKABLE_EXTENT, type VillageBuilding } from './SettlementWorld';
 /** Basispixel → Meter (einzige Umrechnung, identisch zur Karte). */
 export const MAP_METRES_PER_PIXEL = METRES_PER_BASE_PIXEL;
 
@@ -289,6 +290,7 @@ export function step(
   lookDelta: number,
   move: MoveInput,
   seconds: number,
+  buildings: readonly VillageBuilding[] = [],
 ): FirstPersonState {
   const looked = applyLook(state, lookDelta);
   const moved = applyMove(looked, looked.yaw, move, seconds);
@@ -297,12 +299,14 @@ export function step(
   const dx = (moved.x - looked.x) / steps, dz = (moved.z - looked.z) / steps;
   const blocked = (x: number, z: number): boolean => DWELLING_WALLS.some(wall =>
     Math.abs(x - wall.x) < wall.width / 2 + WALL_CLEARANCE
-      && Math.abs(z - wall.z) < wall.depth / 2 + WALL_CLEARANCE);
+      && Math.abs(z - wall.z) < wall.depth / 2 + WALL_CLEARANCE)
+    || buildings.some(building => Math.abs(x - building.x) < building.width / 2 + WALL_CLEARANCE
+      && Math.abs(z - building.z) < building.depth / 2 + WALL_CLEARANCE);
   let x = looked.x, z = looked.z;
   for (let i = 0; i < steps; i++) {
-    const nextX = clampAxis(x + dx, -YARD_EXTENT + WALL_CLEARANCE, YARD_EXTENT - WALL_CLEARANCE);
+    const nextX = clampAxis(x + dx, -WALKABLE_EXTENT + WALL_CLEARANCE, WALKABLE_EXTENT - WALL_CLEARANCE);
     if (!blocked(nextX, z)) x = nextX;
-    const nextZ = clampAxis(z + dz, -YARD_EXTENT + WALL_CLEARANCE, YARD_EXTENT - WALL_CLEARANCE);
+    const nextZ = clampAxis(z + dz, -WALKABLE_EXTENT + WALL_CLEARANCE, WALKABLE_EXTENT - WALL_CLEARANCE);
     if (!blocked(x, nextZ)) z = nextZ;
   }
   return { ...looked, x, z };
@@ -326,4 +330,4 @@ export function positionToMapPixels(pos: CameraPosition): { x: number; y: number
  * Kennzeichnet die Ich-Perspektive als gestalterische Annäherung an einen
  * historischen Innenraum. Die Ausstattung ist Spielmodell, nicht Beleg.
  */
-export const FIRST_PERSON_NOTE = 'Gestalterische Annäherung: Die Ausstattung der Behausung ist Spielmodell, kein archäologischer Befund.';
+export const FIRST_PERSON_NOTE = 'Heutiges Wegenetz: © OpenStreetMap contributors (ODbL). Gebäude, Ausstattung und Nutzungen sind Spielmodelle; keine historische Rekonstruktion.';

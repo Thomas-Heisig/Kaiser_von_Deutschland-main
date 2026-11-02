@@ -1,3 +1,5 @@
+> Ergänzung 01.11.2026: [Begehbarer Ortskern und Asset-Integration](WALKABLE_VILLAGE.md). Frühere Abnahmewerte weiter unten dokumentieren den damaligen Stand.
+
 # Karten-Zoom: Ein durchgehender Zoomweg mit korrekten Größen
 
 **Stand:** 01.11.2026 · **Status:** Vektor-/Kameragrundlage und lokale Three.js-Perspektive browsergeprüft.
@@ -42,7 +44,7 @@ Sichtbare Weltbreite = Canvasbreite in CSS-Pixeln × Meter je CSS-Pixel
 | --- | --- | --- |
 | Schreibtisch | ≤ 3 m | Nahgeometrie: Möbel und Innenraum; Ich-Perspektive optional |
 | Behausung | ≤ 15 m | Metrische Wände und Möbel; ob das ganze Haus passt, hängt auch von der sichtbaren Höhe ab |
-| Siedlung | ≤ 40 km | Symbolische Infrastruktur; unter 2 km echte modellierte Hausgeometrie statt großer Sprites |
+| Siedlung | ≤ 1,5 km | Metrische Spielbauten an realen Ortsbezügen, heutige Wege; Startbreite 520 m bzw. mobil 260 m |
 | Umgebung | ≤ 120 km | Lokale Referenz und schematische Nachbarn; zusammenhängende regionale Spielgeometrie fehlt |
 | Region | ≤ 500 km | Generalisierte Natural-Earth-Vektoren ab ca. 176 km Breite, keine vermessenen regionalen Bauplätze |
 | Herrschaftsraum | ≤ 2.000 km | Regionspunkte, keine Grenzpolygone |
