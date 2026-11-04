@@ -102,13 +102,41 @@ export async function runMapRendererSmoke(page, outputDir, url = 'http://127.0.0
   await page.mouse.move(fpBox.x + fpBox.width / 2 + 90, fpBox.y + fpBox.height / 2 + 40, { steps: 8 });
   await page.mouse.up();
   assert(Number(await fp.getAttribute('data-pitch')) !== -25, 'Vertical mouse-look missing');
+  await page.locator('.fp-lock-btn').click();
+  await page.waitForFunction(() => {
+    const canvas = document.querySelector('.fp-canvas');
+    const status = document.querySelector('.fp-lock-status');
+    return document.pointerLockElement === canvas || Boolean(status?.textContent);
+  }, {}, { timeout: 5000 });
+  const pointerLock = await fp.evaluate(el => document.pointerLockElement === el);
+  if (pointerLock) {
+    assert(await page.locator('.fp-lock-btn').getAttribute('aria-pressed') === 'true',
+      'Pointer-lock button state did not update');
+  } else {
+    assert((await page.locator('.fp-lock-status').textContent()).includes('Mausziehen'),
+      'Denied pointer lock did not expose the drag-look fallback');
+  }
   await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.pointerLockElement === null);
   const after = await read('after-perspective');
   assert(before.centre === after.centre && before.metresPerCssPixel === after.metresPerCssPixel,
     'First-person entry/exit changed the map camera');
   assert(await page.locator('[data-fp-control]').evaluate(el => el === document.activeElement),
     'Escape did not return focus');
   assert(await page.locator('[data-fp-control]').getAttribute('aria-pressed') === 'false', 'Eye state stale');
+  await page.locator('[data-fp-control]').click();
+  await fp.evaluate(el => {
+    Object.defineProperty(el, 'requestPointerLock', {
+      configurable: true,
+      value: () => Promise.reject(new Error('simulated pointer-lock denial')),
+    });
+  });
+  await page.locator('.fp-lock-btn').click();
+  await page.waitForFunction(() => document.querySelector('.fp-lock-status')
+    ?.textContent?.includes('Mausziehen'), {}, { timeout: 3000 });
+  assert(await page.locator('.fp-lock-btn').getAttribute('aria-pressed') === 'false',
+    'Denied pointer lock left the UI in a locked state');
+  await page.keyboard.press('Escape');
   await page.locator('[data-fp-control]').click();
   await page.locator('.fp-exit-btn').click();
   assert(await page.locator('[data-fp-control]').evaluate(el => el === document.activeElement),
@@ -169,7 +197,8 @@ export async function runMapRendererSmoke(page, outputDir, url = 'http://127.0.0
   await page.locator('[data-fp-control]').click();
   await page.locator('.fp-exit-btn').click();
   assert(errors.length === 0, errors.join('\n'));
-  const result = { rows, resizeBefore, resizeAfter, pinchErrorMetres, errors,
-    input: 'real Playwright wheel, drag, keyboard and Chromium native touch' };
+  const result = { rows, resizeBefore, resizeAfter, pinchErrorMetres, pointerLock,
+    pointerLockFallback: true, errors,
+    input: 'real Playwright wheel, drag, keyboard, Chromium pointer lock and native touch' };
   return result;
 }

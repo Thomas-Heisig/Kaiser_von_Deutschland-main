@@ -1193,6 +1193,12 @@ html,body,#app{width:100%;max-width:100%;min-width:0}
   opacity:.9;
   pointer-events:none;
 }
+.kingdom-app .game-layout>.map-card .fp-lock-status:not(:empty) {
+  display:block;
+  margin-top:4px;
+  color:#ffe09a;
+  letter-spacing:normal;
+}
 @media(max-width:760px){
   .kingdom-app .game-layout>.map-card .fp-hud { top:8px; left:8px; right:8px; gap:6px; }
   .kingdom-app .game-layout>.map-card .fp-hud-main { max-width:14rem; padding:6px 9px; }

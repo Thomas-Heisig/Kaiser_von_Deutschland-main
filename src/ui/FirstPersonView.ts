@@ -147,7 +147,14 @@ export class FirstPersonView {
     this.pointerLocked = document.pointerLockElement === this.canvas;
     const lockBtn = this.overlay?.querySelector('.fp-lock-btn');
     if (lockBtn) lockBtn.setAttribute('aria-pressed', this.pointerLocked ? 'true' : 'false');
+    if (this.pointerLocked) this.setPointerLockStatus('');
+    else if (this.pointerLockRequested && this.active) this.showPointerLockFallback();
+    else this.setPointerLockStatus('');
     if (!this.pointerLocked) this.pressed.clear();
+  };
+
+  private readonly onPointerLockError = (): void => {
+    if (this.pointerLockRequested && this.active) this.showPointerLockFallback();
   };
 
   private readonly onCanvasBlur = (): void => {
@@ -194,7 +201,7 @@ export class FirstPersonView {
           <button type="button" class="fp-exit-btn">${FIRST_PERSON_HUD.button}</button>
         </div>
       </div>
-      <p class="fp-hint">${FIRST_PERSON_HUD.hint}</p>
+      <p class="fp-hint">${FIRST_PERSON_HUD.hint}<span class="fp-lock-status" role="status" aria-live="polite"></span></p>
     `;
     host.appendChild(overlay);
     this.overlay = overlay;
@@ -215,14 +222,12 @@ export class FirstPersonView {
     }
 
     overlay.querySelector('.fp-exit-btn')?.addEventListener('click', () => this.requestExit());
-    overlay.querySelector('.fp-lock-btn')?.addEventListener('click', () => {
-      this.pointerLockRequested = true;
-      this.tryRequestPointerLock();
-    });
+    overlay.querySelector('.fp-lock-btn')?.addEventListener('click', () => this.requestPointerLock());
 
     document.addEventListener('keydown', this.onKeyDown, true);
     document.addEventListener('keyup', this.onKeyUp, true);
     document.addEventListener('pointerlockchange', this.onPointerLockChange);
+    document.addEventListener('pointerlockerror', this.onPointerLockError);
     window.addEventListener('resize', this.onResize);
     this.observer = new ResizeObserver(this.onResize);
     this.observer.observe(host);
@@ -278,6 +283,7 @@ export class FirstPersonView {
     this.pressed.clear();
     this.state = startingState();
     this.pitch = -25;
+    this.setPointerLockStatus('');
     const lockBtn = this.overlay.querySelector('.fp-lock-btn');
     if (lockBtn) lockBtn.setAttribute('aria-pressed', 'false');
     this.host?.parentElement?.querySelector<HTMLButtonElement>('[data-fp-control]')
@@ -323,6 +329,7 @@ export class FirstPersonView {
    */
   public requestPointerLock(): void {
     this.pointerLockRequested = true;
+    this.setPointerLockStatus('');
     this.tryRequestPointerLock();
   }
 
@@ -332,12 +339,28 @@ export class FirstPersonView {
    * unbehandelte Promise-Ablehnung in der Konsole zu landen.
    */
   private tryRequestPointerLock(): void {
+    const canvas = this.canvas;
+    if (!canvas || typeof canvas.requestPointerLock !== 'function') {
+      this.showPointerLockFallback();
+      return;
+    }
     try {
-      const result = this.canvas?.requestPointerLock?.();
-      if (result && typeof (result as Promise<void>).catch === 'function') {
-        void (result as Promise<void>).catch(() => { /* Anfrage verweigert */ });
+      const result = canvas.requestPointerLock();
+      if (result && typeof result.then === 'function') {
+        void result.catch(() => this.showPointerLockFallback());
       }
-    } catch { /* Anfrage sofort abgelehnt */ }
+    } catch {
+      this.showPointerLockFallback();
+    }
+  }
+
+  private showPointerLockFallback(): void {
+    this.setPointerLockStatus('Zeigersperre nicht verfügbar; Umschauen per Mausziehen bleibt aktiv.');
+  }
+
+  private setPointerLockStatus(message: string): void {
+    const status = this.overlay?.querySelector<HTMLElement>('.fp-lock-status');
+    if (status) status.textContent = message;
   }
 
   /** Entfernt DOM, Listener und GL-Ressourcen vollständig. */
@@ -347,6 +370,7 @@ export class FirstPersonView {
     document.removeEventListener('keydown', this.onKeyDown, true);
     document.removeEventListener('keyup', this.onKeyUp, true);
     document.removeEventListener('pointerlockchange', this.onPointerLockChange);
+    document.removeEventListener('pointerlockerror', this.onPointerLockError);
     window.removeEventListener('resize', this.onResize);
     if (this.canvas) {
       this.canvas.removeEventListener('pointerdown', this.onPointerDown);
