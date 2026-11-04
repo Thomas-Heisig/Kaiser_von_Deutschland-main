@@ -29,15 +29,21 @@ try {
     await page.screenshot({path:`smoke-menu-${year}.png`});
     await page.getByRole('button',{name:/Herrschaft beginnen/}).click();
     await page.locator('#kingdom-map canvas').waitFor();
+    if (await page.locator('#report-toggle').getAttribute('aria-expanded') === 'true')
+      await page.locator('#report-toggle').click();
     await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.buildingFramesLoaded === '24');
     if (year < 500 && await page.locator('#kingdom-map canvas').getAttribute('data-rendered-districts') !== '0') failures.push('Medieval GLB models leaked into antiquity');
+    const mapCanvas = page.locator('#kingdom-map canvas');
+    await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.mapStage);
     if (width === 1280) {
-      await page.locator('#map-style').selectOption('isometric');
-      await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.renderedDistricts === '16');
+      const before = Number(await mapCanvas.getAttribute('data-visible-width-metres'));
+      await page.locator('.map-controls [data-map-control=in]').click();
+      if (!(Number(await mapCanvas.getAttribute('data-visible-width-metres')) < before))
+        failures.push('Map zoom control did not reach a closer scale');
     }
     if (year<=0 && !(await page.locator('#date').textContent()).includes(`${1-year} v. Chr.`)) failures.push('Civil BCE date missing');
-    if (await page.locator('.map-card').getAttribute('data-level') !== 'schreibtisch') failures.push('Desk not first');
-    await inViewport(page, '.header-actions > button, #game-music-settings > summary, .atlas-navigation button, #zoom-slider, #legal-open');
+    if (!(await mapCanvas.getAttribute('data-map-stage'))) failures.push('Map detail stage missing');
+    await inViewport(page, '.header-actions > button, #game-music-settings > summary, .map-controls [data-map-control], #legal-open');
     if (width === 320) {
       await inViewport(page, '#end-turn, #turn-status');
       await page.locator('#end-turn').click();

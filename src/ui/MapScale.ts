@@ -16,9 +16,9 @@
  * Grenzen:
  *  - Gebäudegrundflächen sind Spielmodelle, keine vermessenen Grundrisse.
  *  - Regionenpositionen sind Ortsreferenzen, keine Gebietsgrenzen.
- *  - Europa wird über eine lineare Lon/Lat-Darstellung angenähert;
- *    die Verzerrung wächst mit der Breite und wird im Maßstab angegeben,
- *    nicht korrigiert.
+ *  - Die Europaübersicht verwendet eine explizit vereinfachte, lokale
+ *    Lon/Lat-Darstellung. Die Gemeinde- und Dorfgeometrie wird dagegen über
+ *    EPSG:25832 in die vermessene lokale Kartenbasis transformiert.
  */
 
 /** Breite der Siedlungsbasis in Pixeln (bestehender Siedlungsplan). */
@@ -34,6 +34,14 @@ export const METRES_PER_BASE_PIXEL = 20_000 / BASE_WIDTH;
 
 /** Meter je Basispixel auf der Y-Achse (identisch, zur Dokumentation). */
 export const METRES_PER_BASE_PIXEL_Y = 14_000 / BASE_HEIGHT;
+
+/** EPSG:25832 bounds of the local 960 × 672 px map, in metres. */
+export const LOCAL_MAP_BOUNDS = {
+  west: 457_000,
+  south: 5_870_000,
+  east: 477_000,
+  north: 5_884_000,
+} as const;
 
 /**
  * Kontinuierlicher Zoombereich.
@@ -71,8 +79,8 @@ export function clampZoomForViewport(zoom: number, cssWidth: number, fitFactor: 
   return Math.max(min, Math.min(max, Number.isFinite(zoom) ? zoom : min));
 }
 
-/** Zoomstufe, bei der die eigene Behausung als Ganzes sichtbar wird (≈ 15 m). */
-export const ZOOM_DWELLING = 1875;
+/** Zoomstufe, bei der die eigene Behausung mit Rand sichtbar wird (≈ 25 m). */
+export const ZOOM_DWELLING = 1125;
 /** Historischer Referenzzoom der 20-km-Geodaten; die Startkamera zeigt heute 520 m. */
 export const ZOOM_SETTLEMENT = 1;
 /** Zoomstufe, bei der die nähere Umgebung (≈ 120 km) sichtbar wird. */
@@ -85,7 +93,7 @@ export const ZOOM_EUROPE = 0.00703;
 /** Sichtbare Kartenbreiten, an denen die Namen der durchgehenden Detailstufen wechseln. */
 export const MAP_DETAIL_WIDTHS = {
   desk: 3,
-  dwelling: 15,
+  dwelling: 25,
   settlement: 1_500,
   surroundings: 120_000,
   region: 500_000,
@@ -189,7 +197,7 @@ export function longitudeStretch(latitude: number): number {
  * effektiven Maßstab aufrufen; diese Funktion bleibt für Referenz-/Altaufrufe.
  *
  *   - Schreibtisch ≤ 3 m (Zoom ≥ 9.375) — Nahgeometrie + Ich-Perspektive
- *   - Behausung ≤ 15 m (Zoom ≥ 1.875)
+ *   - Behausung ≤ 25 m (Zoom ≥ 1.125)
  *   - Siedlung ≤ 1,5 km (Zoom ≥ 18,75)
  *   - Umgebung ≤ 120 km (Zoom ≥ 0,234)
  *   - Region ≤ 500 km (Zoom ≥ 0,0563)
@@ -246,13 +254,89 @@ export const DWELLING_ANCHOR = { x: 604.25, y: 383.79 } as const;
  * Der projizierte Marker places.home liegt bei [604.25,383.79].
  * Keine erneute, grob gerundete Rückrechnung aus UTM.
  *
- * Diese Werte sind die **einzige** Brücke zwischen Grad-Geografie (Europa-
- * übersicht, Gemeindegrenze) und Basispixeln. Alle Transformationen laufen über
- * {@link lonToBaseX}/{@link latToBaseY}, damit Europa- und Lokalebene dieselbe
- * Verankerung teilen und beim Detailwechsel nichts verspringt.
+ * Diese Werte sind der gemeinsame Anker der Europaübersicht und der lokalen
+ * EPSG:25832-Karte. Lokale Daten verwenden {@link geographicToBase}; die
+ * Europaübersicht verwendet die dokumentierte, vereinfachte Lon/Lat-Abbildung
+ * über {@link lonToBaseX}/{@link latToBaseY}.
  */
 export const HOME_LON = 8.5465;
 export const HOME_LAT = 53.0327;
+
+const WGS84_SEMI_MAJOR_AXIS = 6_378_137;
+const WGS84_FLATTENING = 1 / 298.257223563;
+const UTM_SCALE_FACTOR = 0.9996;
+const UTM_FALSE_EASTING = 500_000;
+const UTM_CENTRAL_MERIDIAN = 9 * Math.PI / 180;
+const WGS84_ECCENTRICITY_SQUARED = WGS84_FLATTENING * (2 - WGS84_FLATTENING);
+const SECOND_ECCENTRICITY_SQUARED =
+  WGS84_ECCENTRICITY_SQUARED / (1 - WGS84_ECCENTRICITY_SQUARED);
+
+/**
+ * Transforms WGS84 coordinates into the UTM zone used by the local map.
+ * This EPSG:25832 implementation is restricted to that zone's northern area;
+ * the Europe overview must continue to use its separately documented display
+ * projection rather than extending UTM 32N across the continent.
+ * @param longitude Longitude in decimal degrees.
+ * @param latitude Latitude in decimal degrees.
+ * @returns Projected easting and northing in metres.
+ */
+export function geographicToUtm32(longitude: number, latitude: number): {
+  easting: number;
+  northing: number;
+} {
+  if (!Number.isFinite(longitude) || !Number.isFinite(latitude)
+    || longitude < 6 || longitude > 12 || latitude < 0 || latitude > 84) {
+    throw new Error('EPSG:25832 accepts coordinates only in UTM zone 32N.');
+  }
+
+  const phi = latitude * Math.PI / 180;
+  const lambda = longitude * Math.PI / 180;
+  const sinPhi = Math.sin(phi);
+  const cosPhi = Math.cos(phi);
+  const tanPhi = Math.tan(phi);
+  const eccentricitySquared = WGS84_ECCENTRICITY_SQUARED;
+  const eccentricityFourth = eccentricitySquared ** 2;
+  const eccentricitySixth = eccentricitySquared ** 3;
+  const n = WGS84_SEMI_MAJOR_AXIS
+    / Math.sqrt(1 - eccentricitySquared * sinPhi ** 2);
+  const t = tanPhi ** 2;
+  const c = SECOND_ECCENTRICITY_SQUARED * cosPhi ** 2;
+  const a = cosPhi * (lambda - UTM_CENTRAL_MERIDIAN);
+  const meridianArc = WGS84_SEMI_MAJOR_AXIS * (
+    (1 - eccentricitySquared / 4 - 3 * eccentricityFourth / 64 - 5 * eccentricitySixth / 256) * phi
+    - (3 * eccentricitySquared / 8 + 3 * eccentricityFourth / 32
+      + 45 * eccentricitySixth / 1024) * Math.sin(2 * phi)
+    + (15 * eccentricityFourth / 256 + 45 * eccentricitySixth / 1024) * Math.sin(4 * phi)
+    - (35 * eccentricitySixth / 3072) * Math.sin(6 * phi)
+  );
+
+  return {
+    easting: UTM_FALSE_EASTING + UTM_SCALE_FACTOR * n * (
+      a + (1 - t + c) * a ** 3 / 6
+      + (5 - 18 * t + t ** 2 + 72 * c - 58 * SECOND_ECCENTRICITY_SQUARED) * a ** 5 / 120
+    ),
+    northing: UTM_SCALE_FACTOR * (
+      meridianArc + n * tanPhi * (
+        a ** 2 / 2 + (5 - t + 9 * c + 4 * c ** 2) * a ** 4 / 24
+        + (61 - 58 * t + t ** 2 + 600 * c - 330 * SECOND_ECCENTRICITY_SQUARED) * a ** 6 / 720
+      )
+    ),
+  };
+}
+
+/**
+ * Maps WGS84 coordinates into the projected local map raster.
+ * @param longitude Longitude in decimal degrees.
+ * @param latitude Latitude in decimal degrees.
+ * @returns Local map base-pixel coordinates.
+ */
+export function geographicToBase(longitude: number, latitude: number): { x: number; y: number } {
+  const { easting, northing } = geographicToUtm32(longitude, latitude);
+  return {
+    x: (easting - LOCAL_MAP_BOUNDS.west) / (LOCAL_MAP_BOUNDS.east - LOCAL_MAP_BOUNDS.west) * BASE_WIDTH,
+    y: (LOCAL_MAP_BOUNDS.north - northing) / (LOCAL_MAP_BOUNDS.north - LOCAL_MAP_BOUNDS.south) * BASE_HEIGHT,
+  };
+}
 
 /** Meter je Grad Breite am Standort (Meridianbogen, genähert). */
 export const METRES_PER_DEG_LAT = 110_950;

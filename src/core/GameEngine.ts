@@ -222,12 +222,13 @@ export interface SaveMeta {
   year: number;
 }
 
-/** Camera centre in base-world pixels; optional metric scale migrates older zoom-only saves. */
+/** Camera centre in base-world pixels; untagged legacy positions are not geographic centres. */
 export interface MapCameraState {
   zoom: number;
   x: number;
   y: number;
   metresPerCssPixel?: number;
+  coordinateSpace?: 'base-world-v1';
 }
 
 export class GameEngine {
@@ -377,6 +378,11 @@ export class GameEngine {
       return;
     }
     this.mapCamera = { zoom: state.zoom, x: state.x, y: state.y };
+    if (state.coordinateSpace === 'base-world-v1') {
+      this.mapCamera.coordinateSpace = state.coordinateSpace;
+    } else if (state.coordinateSpace !== undefined) {
+      console.warn('Unbekannter Kartenkoordinatenraum; Mittelpunkt wird beim Laden ignoriert.');
+    }
     if (state.metresPerCssPixel !== undefined) {
       if (!Number.isFinite(state.metresPerCssPixel) || state.metresPerCssPixel <= 0) {
         console.warn('Ungültiger gespeicherter Kartenmaßstab; alter Zoom wird verwendet.');

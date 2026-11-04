@@ -14,15 +14,19 @@ try {
     await page.locator('[name=events]').uncheck();
     for(let i=0;i<6&&!await page.locator('#tutorial-toggle').isVisible();i++)await page.getByRole('button',{name:'Weitere Einstellungen',exact:true}).click();
     await page.locator('#tutorial-toggle').uncheck();await page.getByRole('button',{name:/Herrschaft beginnen/}).click();
-    await page.waitForFunction(()=>document.querySelector('#kingdom-map canvas')?.dataset.settlementTerrain==='ganderkesee');
-    await page.locator('[data-map-level=dorf]').click();
+    await page.waitForFunction(()=>document.querySelector('#kingdom-map canvas')?.dataset.localMapLoaded==='true');
+    if(await page.locator('#report-toggle').getAttribute('aria-expanded')==='true')
+      await page.locator('#report-toggle').click();
     assert.ok(Number(await page.locator('#kingdom-map canvas').getAttribute('data-settlement-river-segments'))>100);
     await page.screenshot({path:`.temp/pacing-map-${width}.png`});
     const open=async view=>{if(await page.locator('#view-select').isVisible())await page.locator('#view-select').selectOption(view);else await page.locator(`nav [data-view=${view}]`).click();};
     const close=async()=>page.locator('#section-dialog-close').click();
     await open('world');assert.ok(!(await page.locator('#section-dialog-body').innerText()).includes('Noch nicht erkundet'));await close();
+    if(await page.locator('#report-toggle').getAttribute('aria-expanded')==='false')
+      await page.locator('#report-toggle').click();
     if(await page.locator('[data-report-tab=tutorial]').isVisible())await page.locator('[data-report-tab=tutorial]').click();
     await page.locator('#hide-journey-guide').click();assert.equal(await page.locator('[data-report-card=tutorial]').isVisible(),false);
+    await page.locator('#report-toggle').click();
     await open('build');await page.locator('[data-build=farms]').click();
     assert.match(await page.locator('[data-project-queue]').innerText(),/noch 3 von 3/);
     await close();await page.locator('[data-action=month]').click();await open('build');

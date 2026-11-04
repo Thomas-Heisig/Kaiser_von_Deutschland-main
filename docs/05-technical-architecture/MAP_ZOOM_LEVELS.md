@@ -24,7 +24,7 @@ Die Simulation bleibt unberührt: Die Karte **liest** nur.
 | Siedlungsbasis | 960 × 672 px | `MapScale.BASE_WIDTH` / `BASE_HEIGHT` |
 | Entsprechung | 20 × 14 km (EPSG:25832, UTM 32N) | Kartendaten Ganderkesee |
 | Meter je Basispixel | 20.000 / 960 ≈ 20,83 m | `METRES_PER_BASE_PIXEL` — **einzige** Geometrieumrechnung |
-| Geografische Verankerung | näherungsweise 8,5459°O / 53,0336°N | `HOME_LON` / `HOME_LAT`; keine unabhängig verifizierte EPSG-Transformation |
+| Geografische Verankerung | 8,5465°O / 53,0327°N | Ortsmarker aus `ganderkesee-map.json`; lokal EPSG:25832, Europa als vereinfachte Übersicht |
 | Kameragrenzen | tatsächlich 3 m bis 4.000 km sichtbare Breite | `clampZoomForViewport(zoom, cssWidth, fitFactor)`; alte rohe Konstanten nur zur Kompatibilität |
 
 Der Zoom ist kontinuierlich; der tatsächlich sichtbare Maßstab ergibt sich aus der vollständigen Pixi-Transformation:
@@ -43,7 +43,7 @@ Sichtbare Weltbreite = Canvasbreite in CSS-Pixeln × Meter je CSS-Pixel
 | Stufe | Sichtbare Weltbreite | Sichtbar |
 | --- | --- | --- |
 | Schreibtisch | ≤ 3 m | Nahgeometrie: Möbel und Innenraum; Ich-Perspektive optional |
-| Behausung | ≤ 15 m | Metrische Wände und Möbel; ob das ganze Haus passt, hängt auch von der sichtbaren Höhe ab |
+| Behausung | ≤ 25 m | Metrische Wände und Möbel; das Haus passt im geprüften Standard-Viewport mit Rand in den Ausschnitt |
 | Siedlung | ≤ 1,5 km | Metrische Spielbauten an realen Ortsbezügen, heutige Wege; Startbreite 520 m bzw. mobil 260 m |
 | Umgebung | ≤ 120 km | Lokale Referenz und schematische Nachbarn; zusammenhängende regionale Spielgeometrie fehlt |
 | Region | ≤ 500 km | Generalisierte Natural-Earth-Vektoren ab ca. 176 km Breite, keine vermessenen regionalen Bauplätze |
@@ -55,8 +55,9 @@ Interne Layerübergänge verwenden dieselbe Weltbreite und Hysterese gegen Flack
 durch einen anderen Viewport oder eine abweichende Geräte-Pixeldichte. Alle Stufen teilen sich einen Kamerazustand
 `{ zoom, x, y, metresPerCssPixel? }` (`MapCameraState`) — es gibt keinen stufenabhängigen Offset.
 Resize erhält Mittelpunkt und Meter/CSS-Pixel; der rohe Zoom wird dem neuen Fit-Faktor angepasst.
-Neue Spielstände erhalten diesen Maßstab auch auf anderen Viewports. Alte Zoom-only-Zustände bleiben lesbar;
-die noch älteren Bildschirmversätze sind mangels ursprünglicher Viewportdaten nicht geografisch korrekt rekonstruierbar.
+Neue Spielstände speichern `coordinateSpace: 'base-world-v1'` und erhalten diesen Maßstab auch auf anderen Viewports.
+Alte Zoom-only-Zustände bleiben lesbar. Nicht markierte alte `x/y`-Werte werden nicht als geografischer Mittelpunkt
+ausgegeben, da sie Bildschirmversätze sein können; in diesem Fall bleibt der sichere Standardmittelpunkt aktiv.
 
 ---
 
@@ -81,7 +82,7 @@ deckte den benötigten Weltmaßstabsbereich nicht ab. `KingdomMap.setZoomSlider`
 | Vereinfachung | Konsequenz | Warum akzeptabel |
 | --- | --- | --- |
 | **Skalenkette mit einem Meter-Faktor** | Beide lokalen Achsen haben exakt denselben Faktor: 20.000/960 = 14.000/672. | Keine unterschiedliche Raster-/Vektor-Auflösung vermischt. |
-| **Europa-Verankerung am Bezugsbreitengrad** | Lineare Lon/Lat-Darstellung, um 53,0336°N angenähert; keine europaweit unverzerrte UTM-Abbildung. | Näherung ausdrücklich in `europe-vectors.json` und im bildschirmfesten Kartenhinweis markiert; unabhängige Kontrollpunkte noch offen. |
+| **Europa-Verankerung am Bezugsbreitengrad** | Lineare Lon/Lat-Darstellung um den lokalen Referenzpunkt; keine europaweit unverzerrte UTM-Abbildung. | Näherung ausdrücklich gekennzeichnet. Die lokale Gemeinde- und Dorfgeometrie wird davon getrennt mit WGS84→EPSG:25832 transformiert und an den Kontrollpunkten Ortsmarker/Stenum gegen die erzeugten Kartendaten geprüft. |
 | **Scale-Bar-Schrittauswahl** | `scaleBarForMetresPerPixel()` wählt den größten passenden 1-2-5-Schritt, dessen Bildschirmbreite 120 CSS-Pixel nicht überschreitet. | Label und gezeichnete Länge folgen derselben CSS-Skalierung. |
 | **Detail-Fade statt Stufenlogik** | Die Stufenlabels beruhen auf sichtbaren Weltbreiten; interne Layer-Schwellen und Hysterese stehen zentral in `MapScale.MAP_LAYER_WIDTHS`. | Übergänge sind gestaffelt, nicht hart und viewportunabhängig in realen Metern ausgedrückt. |
 | **Modellierter Nahbereich** | Kartenansicht und Ich-Perspektive teilen dieselbe metrische Haus-, Tür-, Möbel- und Offsetdefinition. Eintritt in die Ich-Perspektive verändert den Kartenkamerazustand nicht. | Grundrisse und Ausstattung sind weiterhin Spielmodelle, keine Vermessung oder archäologische Befunde. |

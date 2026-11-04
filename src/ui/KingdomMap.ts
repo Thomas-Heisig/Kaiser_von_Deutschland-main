@@ -861,15 +861,12 @@ export class KingdomMap {
   /** Kamerazustand zum Speichern (Mittelpunkt in Weltkoordinaten). */
   public getCameraState(): CameraState {
     return { zoom: this.zoom, x: this.centre.x, y: this.centre.y,
-      metresPerCssPixel: this.getMetresPerScreenPixel() };
+      metresPerCssPixel: this.getMetresPerScreenPixel(), coordinateSpace: 'base-world-v1' };
   }
 
   /**
-   * Stellt einen gespeicherten Kamerazustand wieder her.
-   * Der Mittelpunkt ist die Weltkoordinate; ältere Spielstände, die einen
-   * Bildschirmversatz speicherten, werden als Mittelpunkt interpretiert —
-   * der Wertebereich ist identisch (Basispixel), die Bedeutung hat sich
-   * zu Gunsten resize-stabiler Kamera geändert.
+   * Restores a saved camera. Zoom-only saves remain compatible; untagged x/y
+   * values are ignored because they may be legacy screen offsets.
    */
   public setCameraState(state: Partial<CameraState> | undefined | null): void {
     if (this.destroyed || !state) return;
@@ -881,8 +878,12 @@ export class KingdomMap {
         console.warn('Ungültiger Kartenmaßstab; gespeicherter Zoom wird verwendet.');
       }
     }
-    if (Number.isFinite(state.x)) this.centre.x = state.x as number;
-    if (Number.isFinite(state.y)) this.centre.y = state.y as number;
+    if (state.coordinateSpace === 'base-world-v1') {
+      if (Number.isFinite(state.x)) this.centre.x = state.x as number;
+      if (Number.isFinite(state.y)) this.centre.y = state.y as number;
+    } else if (state.coordinateSpace !== undefined) {
+      console.warn('Unbekannter Kartenkoordinatenraum; gespeicherter Mittelpunkt wird ignoriert.');
+    }
     this.offset = { x: 0, y: 0 };
     this.syncLevelFromZoom();
     this.fit();

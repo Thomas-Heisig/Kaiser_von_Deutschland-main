@@ -103,8 +103,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 .section-dialog { width:min(1060px,94vw)!important; height:min(760px,90dvh)!important; max-height:90dvh!important; padding:0!important; margin:auto; overflow:hidden!important; border:1px solid var(--gold); background:var(--surface)!important; color:var(--ink); border-radius:7px; box-shadow:0 25px 100px #000a; }
 /* Non-modal side sheet on large screens: the map stays interactive beside it.
    Narrow screens keep the modal dialog (focus trap, Escape closes). */
-.kingdom-app #section-dialog:not(.modal) { position:fixed; top:104px; right:0; bottom:23px; left:auto; width:min(560px,52vw)!important; height:auto!important; max-height:none!important; margin:0!important; border-radius:7px 0 0 7px; }
-.kingdom-app #section-dialog:not(.modal)::backdrop { background:transparent; }
+.kingdom-app #section-dialog:not(:modal) { position:fixed; top:104px; right:0; bottom:23px; left:auto; width:min(560px,52vw)!important; height:auto!important; max-height:none!important; margin:0!important; border-radius:7px 0 0 7px; }
+.kingdom-app #section-dialog:not(:modal)::backdrop { background:transparent; }
 @media (max-width:900px) {
  .kingdom-app #section-dialog { position:fixed; inset:0; width:96vw!important; height:93dvh!important; max-height:93dvh!important; margin:auto!important; border-radius:7px; }
 }

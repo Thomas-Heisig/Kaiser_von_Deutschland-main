@@ -30,6 +30,7 @@ jobs:
         run: |
           node scripts/browser-smoke.mjs
           node scripts/atlas-smoke.mjs
+          KAISER_TEST_URL=http://127.0.0.1:4173/ node scripts/village-smoke.mjs
           node scripts/report-smoke.mjs
           node scripts/history-smoke.mjs
           node scripts/strategy-smoke.mjs
@@ -55,4 +56,5 @@ jobs:
             .temp/lifecycle-*.png
             .temp/pacing-*.png
             .temp/music-*.png
+            output/village-acceptance/**
           if-no-files-found: ignore

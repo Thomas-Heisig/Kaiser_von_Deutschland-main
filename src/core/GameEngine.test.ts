@@ -165,7 +165,10 @@ describe('Playable campaign integration', (): void => {
   });
   it('saves the metric camera scale as well as legacy zoom and position',async()=>{
     const engine=await campaign();
-    const camera={zoom:1875,x:604.96,y:384.72,metresPerCssPixel:0.01};
+    const camera = {
+      zoom: 1875, x: 604.96, y: 384.72, metresPerCssPixel: 0.01,
+      coordinateSpace: 'base-world-v1' as const,
+    };
     engine.setMapCamera(camera);
     await engine.saveGame('metric-camera');
     const restored=new GameEngine({enableWiki:false});engines.push(restored);

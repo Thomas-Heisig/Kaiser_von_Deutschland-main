@@ -1,6 +1,6 @@
 import { Container, Graphics, Text, type Texture } from 'pixi.js';
 import { localLandmarks, localPlaceName, LOCAL_MAP_CREDIT } from '../core/StartLocations';
-import { DWELLING_ANCHOR, HOME_LON, HOME_LAT, METRES_PER_DEG_LAT, METRES_PER_DEG_LON_HOME, METRES_PER_BASE_PIXEL } from './MapScale';
+import { geographicToBase } from './MapScale';
 
 export interface LocalMapData {
   version: number; crs: string; bounds: number[]; width: number; height: number;
@@ -8,8 +8,8 @@ export interface LocalMapData {
   places: Record<string,[number,number]>;
 }
 /**
- * Heutige Gemeindegrenze (OSM, ODbL): Grad-Koordinaten, zur Laufzeit über die
- * zentrale Verankerung in Basispixel umgerechnet. Ausdrücklich heutige
+ * Heutige Gemeindegrenze (OSM, ODbL): WGS84-Koordinaten, zur Laufzeit über
+ * EPSG:25832 in die lokale Kartenbasis umgerechnet. Ausdrücklich heutige
  * Verwaltungsgrenze — keine historische Reichs- oder Herrschaftsgrenze.
  */
 export interface BoundaryData {
@@ -27,14 +27,10 @@ export function validateBoundary(value: unknown): BoundaryData {
   return data;
 }
 /**
- * Rechnet WGS84-Grad in Basispixel der Siedlungsbasis um. Dieselbe Verankerung
- * wie die Europa-Ebene (MapScale.HOME_LON), damit beide Ebenen zusammenpassen.
+ * Rechnet WGS84-Grad mit EPSG:25832 in Basispixel der lokalen Kartenbasis um.
  */
 export function lonLatToBase(lon: number, lat: number): { x: number; y: number } {
-  return {
-    x: DWELLING_ANCHOR.x + (lon - HOME_LON) * METRES_PER_DEG_LON_HOME / METRES_PER_BASE_PIXEL,
-    y: DWELLING_ANCHOR.y - (lat - HOME_LAT) * METRES_PER_DEG_LAT / METRES_PER_BASE_PIXEL
-  };
+  return geographicToBase(lon, lat);
 }
 export function validateLocalMap(value: unknown): LocalMapData {
   const data = value as LocalMapData;

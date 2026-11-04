@@ -46,8 +46,10 @@ try {
     });
     await page.reload();await page.locator('#intro-skip').click();await page.locator('#continue').click();
     const canvas=page.locator('#kingdom-map canvas');await canvas.waitFor();
-    await page.locator('#map-scope').selectOption('world');
-    await page.waitForFunction(()=>document.querySelector('#kingdom-map canvas')?.dataset.neighborTerritories==='20');
+    if(await page.locator('#report-toggle').getAttribute('aria-expanded')==='true')
+      await page.locator('#report-toggle').click();
+    await page.waitForFunction(()=>document.querySelector('#kingdom-map canvas')?.dataset.mapStage);
+    await page.locator('.map-controls [data-map-control=center]').click();
     await canvas.focus();await page.keyboard.press('ArrowLeft');await page.keyboard.press('Home');
     await page.screenshot({path:`.temp/strategy-world-${width}.png`});
     await view(page,'world');
@@ -63,6 +65,8 @@ try {
     await page.locator('#notice').filter({hasText:'Herrschaft gespeichert.'}).waitFor();
     await page.reload();await page.locator('#intro-skip').click();await page.locator('#continue').click();
     await page.locator('#kingdom-map canvas').waitFor();
+    if(await page.locator('#report-toggle').getAttribute('aria-expanded')==='true')
+      await page.locator('#report-toggle').click();
     await page.locator('[data-action=month]').click();
     await view(page,'world');
     assert.match(await page.locator('#section-dialog-body').textContent(),/Aufenthalt:\s*Grafschaft Ostmark/);

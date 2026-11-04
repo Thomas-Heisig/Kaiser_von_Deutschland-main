@@ -36,16 +36,9 @@ try {
     await page.locator('#start-era-summary').getByText('1820 · Industriezeitalter').waitFor();
     await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
     await page.locator('#kingdom-map').waitFor({ timeout: 30000 });
-    await page.waitForFunction(() => {
-      const canvas = document.querySelector('#kingdom-map canvas');
-      return canvas?.getAttribute('data-retro-loaded') === 'true' ||
-        canvas?.getAttribute('data-retro-loaded') === 'fallback';
-    }, null, { timeout: 15000 });
-    if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-loaded') !== 'true') {
-      failures.push('The live main map failed to load retro sprites');
-    }
-    await page.locator('#map-style').waitFor({ state:'visible' });
-    if (!(await page.locator('.desk-scene').isVisible())) failures.push('Game must begin on the desk');
+    await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.mapStage);
+    if (!(await page.locator('#kingdom-map canvas').isVisible()))
+      failures.push('Game must begin with the central map visible');
     await page.screenshot({ path: 'smoke-desk-'+width+'.png' });
     if (!(await page.locator('#date').textContent())?.includes('1820')) failures.push('selected start year did not enter the simulation');
     if (await page.locator('.kingdom-app').getAttribute('data-era') !== 'industrial') failures.push('industrial epoch style not applied');
@@ -112,44 +105,22 @@ try {
         // The persistent vital-sign row deliberately takes 40–44 px from the map.
         statusBudget:Math.max(0,(resources?.height??0)-(innerWidth<=600?42:46)),
         duplicatedBuildings:document.querySelectorAll('#settlement-districts').length,
-        overlaidControls:document.querySelectorAll('.map-card .map-hud #map-style, .map-card .map-hud [data-zoom]').length
+        overlaidControls:document.querySelectorAll('.map-controls [data-map-control]').length
       };
     });
     if(mapLayer.statusBudget>48 || mapLayer.mapHostHeight<300-mapLayer.statusBudget)
       failures.push('map must have a dedicated large viewport '+JSON.stringify(mapLayer));
     if(mapLayer.duplicatedBuildings||mapLayer.overlaidControls!==4)
-      failures.push('map has duplicate district list or missing overlay controls '+JSON.stringify(mapLayer));
-    await page.locator('#map-style').selectOption('isometric');
-    if (await page.locator('#kingdom-map').getAttribute('data-projection') !== 'isometric') failures.push('map switch failed');
-    if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-projection') !== 'isometric') failures.push('Pixi retro renderer did not receive isometric mode');
-    const scope = page.locator('#map-scope');
-    await page.locator('#zoom-slider').fill('28');
-    await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.zoomLevel === 'zentraleuropa');
-    await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.reliefLoaded === 'true');
-    await page.locator('#kingdom-map').screenshot({ path: `smoke-relief-${width}.png` });
-    await page.locator('#kingdom-map canvas').click({ position: { x: 100, y: 100 } });
-    if (await page.locator('#section-dialog[open]').count()) failures.push('Region click opened an invisible village district');
-    if (await scope.count()) {
-      await scope.selectOption('world');
-      if (await page.locator('#kingdom-map canvas').getAttribute('data-map-scope') !== 'world') failures.push('World selector did not activate world renderer on phone');
-      await scope.selectOption('home');
-      if (await page.locator('#kingdom-map canvas').getAttribute('data-map-scope') !== 'home') failures.push('Home selector did not restore home renderer on phone');
-      if (await page.locator('#zoom-slider').inputValue() !== '40') failures.push('Scope reset left slider out of sync');
-      if (await page.locator('#kingdom-map canvas').getAttribute('data-zoom-level') !== 'dorf') failures.push('Scope reset did not restore village level');
-    } else failures.push('Home/world map selector missing on phone');
-    await page.locator('#map-style').selectOption('flat');
-    if (await page.locator('#kingdom-map canvas').getAttribute('data-retro-projection') !== 'flat') failures.push('Pixi renderer did not return to geometric mode');
-    await page.locator('#map-style').selectOption('isometric');
+      failures.push('map has duplicate district list or missing camera controls '+JSON.stringify(mapLayer));
+    const canvas = page.locator('#kingdom-map canvas');
+    const widthBeforeZoom = Number(await canvas.getAttribute('data-visible-width-metres'));
+    await page.locator('.map-controls [data-map-control=in]').click();
+    const widthAfterZoom = Number(await canvas.getAttribute('data-visible-width-metres'));
+    if (!(widthAfterZoom < widthBeforeZoom)) failures.push('Zoom-in control did not reduce visible world width');
+    await page.locator('.map-controls [data-map-control=out]').click();
+    await page.locator('.map-controls [data-map-control=center]').click();
+    await page.locator('#kingdom-map').screenshot({ path: `smoke-map-${width}.png` });
     if (await page.locator('#objectives .objective').count() !== 0) failures.push('sandbox should have zero mandatory goals');
-    await page.locator('#settlement-filter').selectOption('versorgung');
-    if(await page.locator('#settlement-filter').inputValue()!=='versorgung')
-      failures.push('district category filter is not reachable in map HUD');
-    await page.locator('#settlement-filter').selectOption('alle');
-    await page.locator('[data-zoom="0.2"]').click();
-    await page.locator('[data-zoom="0"]').click();
-    if (await page.locator('#zoom-slider').inputValue() !== '40') failures.push('Center reset left slider out of sync');
-    if(!(await page.locator('#settlement-details [data-open-district]').count()))
-      failures.push('map-selected district upgrade shortcut missing');
     if (await page.locator('#section-dialog[open]').count()) await page.locator('#section-dialog-close').click();
     await openView(page, 'help');
     await page.locator('#section-dialog[open]').waitFor();
@@ -211,8 +182,8 @@ try {
       await page.locator('#intro-skip').click();
       await page.getByRole('button', { name: /Herrschaft beginnen/i }).click();
       await page.locator('#kingdom-map canvas').waitFor();
-      await page.locator('.atlas-navigation [data-map-level="zentraleuropa"]').click();
-      await page.waitForFunction(() => Number(document.querySelector('#kingdom-map canvas')?.dataset.regionCount) > 0);
+      await page.locator('.map-controls [data-map-control=center]').click();
+      await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.cameraCentre);
     } else {
       await page.locator('.campaign-result-dialog').waitFor({ state: 'detached' });
       await page.getByText('Du spielst im Sandbox-Modus weiter', { exact: false }).waitFor();
@@ -227,8 +198,7 @@ try {
     await page.close();
   }
 
-  // Mobile retro regression: assert a real game canvas, loaded assets and a visible
-  // retro render, not merely an unobstructed but empty HUD.
+  // Mobile map regression: assert the central canvas and reachable camera controls.
   {
     const page = await browser.newPage({ viewport:{width:375,height:812}, deviceScaleFactor:2, isMobile:true, hasTouch:true });
     const errors = [];
@@ -238,37 +208,23 @@ try {
     await page.getByRole('button',{name:/Herrschaft beginnen/i}).click();
     const canvas=page.locator('#kingdom-map canvas');
     await canvas.waitFor({timeout:30000});
-    await page.locator('.atlas-navigation [data-map-level="dorf"]').click();
-    await page.waitForFunction(() => {
-      const canvas=document.querySelector('#kingdom-map canvas');
-      return canvas?.dataset.retroLoaded === 'true' && canvas?.dataset.retroVisible === 'true';
-    }, {timeout:20000});
+    await page.waitForFunction(() => document.querySelector('#kingdom-map canvas')?.dataset.mapStage);
     const metrics=await page.evaluate(() => {
       const canvas=document.querySelector('#kingdom-map canvas');
-      const hud=document.querySelector('.game-layout>.map-card .map-hud');
       const rect=canvas?.getBoundingClientRect();
       return {width:rect?.width??0,height:rect?.height??0,
         statusBudget:Math.max(0,(document.querySelector('.resource-bar')?.getBoundingClientRect().height??0)-42),
-        hudBackground:hud?getComputedStyle(hud).backgroundColor:'',
-        loaded:canvas?.dataset.retroLoaded,visible:canvas?.dataset.retroVisible};
+        stage:canvas?.dataset.mapStage,
+        controls:document.querySelectorAll('.map-controls [data-map-control]').length};
     });
-    if(metrics.width<300 || metrics.statusBudget>48 || metrics.height<380-metrics.statusBudget) failures.push('Mobile retro canvas too small: '+JSON.stringify(metrics));
-    // The HUD is now a separate panel BELOW the map, not an overlay.
-    const overlap = await page.evaluate(() => {
-      const host=document.querySelector('#kingdom-map')?.getBoundingClientRect();
-      const hud=document.querySelector('.game-layout>.map-card .map-hud')?.getBoundingClientRect();
-      const hudStyle=document.querySelector('.game-layout>.map-card .map-hud');
-      return host && hud && hudStyle ? getComputedStyle(hudStyle).position === 'absolute'
-        || (Math.min(host.right,hud.right)>Math.max(host.left,hud.left)
-          && Math.min(host.bottom,hud.bottom)>Math.max(host.top,hud.top)) : true;
-    });
-    if(overlap) failures.push('HUD overlaps playable canvas');
-    await page.locator('#map-style').selectOption('flat');
-    if(await canvas.getAttribute('data-retro-visible')!=='false') failures.push('2D option did not disable retro canvas');
-    await page.locator('#map-style').selectOption('isometric');
-    if(await canvas.getAttribute('data-retro-visible')!=='true') failures.push('Retro option did not reenable retro canvas');
-    if(errors.length) failures.push('Mobile retro runtime errors: '+errors.join('; '));
-    await page.screenshot({path:'smoke-mobile-retro-375.png',fullPage:true});
+    if(metrics.width<300 || metrics.statusBudget>48 || metrics.height<300 || metrics.controls!==4)
+      failures.push('Mobile map or camera controls are not reachable: '+JSON.stringify(metrics));
+    const widthBefore = Number(await canvas.getAttribute('data-visible-width-metres'));
+    await page.locator('.map-controls [data-map-control=out]').click();
+    if (!(Number(await canvas.getAttribute('data-visible-width-metres')) > widthBefore))
+      failures.push('Mobile zoom-out control did not increase visible world width');
+    if(errors.length) failures.push('Mobile map runtime errors: '+errors.join('; '));
+    await page.screenshot({path:'smoke-mobile-map-375.png',fullPage:true});
     await page.close();
   }
   // Ensure all three epoch PNG files are actually present and valid in the built site.

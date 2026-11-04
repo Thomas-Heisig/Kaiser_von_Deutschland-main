@@ -13,29 +13,13 @@ try {
     if(!(await page.locator('#start-campaign-summary').innerText()).includes('Ganderkesee'))throw Error('Start place missing');
     await page.getByRole('button',{name:/Herrschaft beginnen/}).click();
     await page.locator('#kingdom-map canvas').waitFor();
-    await page.locator('.atlas-navigation [data-map-level=zentraleuropa]').click();
+    if(await page.locator('#report-toggle').getAttribute('aria-expanded')==='true')
+      await page.locator('#report-toggle').click();
     await page.waitForFunction(()=>document.querySelector('#kingdom-map canvas')?.dataset.localMapLoaded==='true');
     if(Number(await page.locator('#kingdom-map canvas').getAttribute('data-local-river-segments'))<100)throw Error('Real watercourses missing');
     await page.screenshot({path:`.temp/ganderkesee-${year}-${width}.png`});
-    await page.locator('#local-map-info').click();
-    await page.locator('[data-local-history=home]').waitFor();
-    if(await page.locator('[data-local-history=church]').count() !== (year>=1052?1:0))throw Error('Wrong church period');
-    if(await page.locator('[data-local-history=organ]').count() !== (year>=1699?1:0))throw Error('Wrong organ period');
-    const body=page.locator('#section-dialog-body');
-    if(await body.evaluate(el=>getComputedStyle(el).overflowY)!=='auto')throw Error('Popup cannot scroll');
-    await body.hover();await page.mouse.wheel(0,900);
-    await page.waitForFunction(()=>document.querySelector('#section-dialog-body').scrollTop>0);
-    if(width<500) {
-      await body.evaluate(el=>el.scrollTop=0);
-      const box=await body.boundingBox(),cdp=await page.context().newCDPSession(page);
-      const x=box.x+box.width/2,y=box.y+box.height*.8;
-      await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
-      for(let n=1;n<=8;n++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-n*25}]});
-      await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-      await page.waitForFunction(()=>document.querySelector('#section-dialog-body').scrollTop>0);
-      await cdp.detach();
-    }
-    await page.locator('#section-dialog-close').click();
+    if(!(await page.locator('#kingdom-map canvas').getAttribute('data-map-stage')))
+      throw Error('Map detail stage missing');
     const audio=await page.locator('#game-music-settings').evaluate(el=>!!el.closest('header'));
     if(!audio)throw Error('Audio not in header');
     const open=async(view)=>{

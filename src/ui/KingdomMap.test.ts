@@ -154,7 +154,9 @@ describe('map lifecycle and view transitions', () => {
     const map = mapFixture();
     map.app.screen.width = 390;
     map.app.screen.height = 650;
-    map.setCameraState({ x: 604, y: 384, metresPerCssPixel: 0.001 });
+    map.setCameraState({
+      x: 604, y: 384, metresPerCssPixel: 0.001, coordinateSpace: 'base-world-v1'
+    });
     const near = map.getZoom();
     map.zoomBy(1.12);
     expect(map.getZoom()).toBe(near);
@@ -162,16 +164,23 @@ describe('map lifecycle and view transitions', () => {
     expect(map.getZoom()).toBeCloseTo(near / 1.12, 8);
   });
 
-  it('migrates legacy camera states (screen offset) as centre values', () => {
-    // Ältere Spielstände speicherten einen Bildschirmversatz in denselben
-    // Feldern x/y; die Migration interpretiert sie als Mittelpunkt.
+  it('preserves zoom but ignores untagged legacy x/y values', () => {
+    // These values may be the old screen offset, so do not claim they are a
+    // geographic/world centre. The map's safe default centre remains active.
     const map = mapFixture();
-    map.setCameraState({ zoom: 1, x: 40, y: 20 });
+    map.setCameraState({ zoom: 2, x: 40, y: 20 });
     const state = map.getCameraState();
-    expect(state.x).toBe(40);
-    expect(state.y).toBe(20);
-    // Der Versatz ist nach der Migration neutralisiert.
+    expect(state.zoom).toBe(2);
+    expect(state.x).toBe(500);
+    expect(state.y).toBe(310);
     expect(map.offset).toEqual({ x: 0, y: 0 });
+  });
+
+  it('restores a centre only when its coordinate space is explicit', () => {
+    const map = mapFixture();
+    map.setCameraState({ zoom: 2, x: 40, y: 20, coordinateSpace: 'base-world-v1' });
+    expect(map.getCameraState().x).toBe(40);
+    expect(map.getCameraState().y).toBe(20);
   });
 
   it('rejects non-finite camera values instead of corrupting state', () => {

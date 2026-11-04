@@ -3,7 +3,8 @@ import {
   BASE_HEIGHT, BASE_WIDTH, DWELLING_ANCHOR, HOME_LAT, HOME_LON, METRES_PER_BASE_PIXEL,
   MAP_DETAIL_WIDTHS,
   ZOOM_DWELLING, ZOOM_EUROPE, ZOOM_MAX, ZOOM_MIN, ZOOM_REGION, ZOOM_SURROUNDINGS,
-  baseToMetres, clampZoom, clampZoomForViewport, formatDistance, latToBaseY, longitudeStretch, lonToBaseX, metresToBase,
+  baseToMetres, clampZoom, clampZoomForViewport, formatDistance, geographicToBase, geographicToUtm32,
+  latToBaseY, longitudeStretch, lonToBaseX, metresToBase,
   pixelsPerMetre, scaleBar, scaleBarForMetresPerPixel, stageForVisibleWidth, stageForZoom
 } from './MapScale';
 
@@ -102,8 +103,8 @@ describe('Gemeinsame Kartenmaßstäbe', () => {
     expect((1350 * METRES_PER_BASE_PIXEL) / ZOOM_MAX).toBeCloseTo(3, 1);
     // Europa: ≈ 4000 km visible across the 1350-px reference width.
     expect((1350 * METRES_PER_BASE_PIXEL) / ZOOM_MIN).toBeCloseTo(4_000_000, -5);
-    // Behausung: the dwelling anchor zoom shows ≈ 15 m.
-    expect((1350 * METRES_PER_BASE_PIXEL) / ZOOM_DWELLING).toBeCloseTo(15, 0);
+    // Behausung: the dwelling anchor zoom shows ≈ 25 m, fitting the full house.
+    expect((1350 * METRES_PER_BASE_PIXEL) / ZOOM_DWELLING).toBeCloseTo(25, 0);
   });
   it('reports more pixels per metre when zooming in', () => {
     expect(pixelsPerMetre(2)).toBeGreaterThan(pixelsPerMetre(1));
@@ -126,6 +127,21 @@ describe('Geografische Verankerung (Grad ↔ Basispixel)', () => {
     // Basispixeln: HOME_LON/HOME_LAT müssen exakt auf DWELLING_ANCHOR fallen.
     expect(lonToBaseX(HOME_LON)).toBeCloseTo(DWELLING_ANCHOR.x, 6);
     expect(latToBaseY(HOME_LAT)).toBeCloseTo(DWELLING_ANCHOR.y, 6);
+  });
+  it('matches EPSG:25832 control points from the generated source map', () => {
+    const home = geographicToUtm32(HOME_LON, HOME_LAT);
+    expect(home.easting).toBeCloseTo(469_588.54, 0);
+    expect(home.northing).toBeCloseTo(5_876_004.38, 0);
+    const homeBase = geographicToBase(HOME_LON, HOME_LAT);
+    expect(homeBase.x).toBeCloseTo(604.25, 1);
+    expect(homeBase.y).toBeCloseTo(383.79, 1);
+    // Stenum is an independent, pyproj-generated control point in the same asset.
+    const stenum = geographicToBase(8.554973, 53.0749);
+    expect(stenum.x).toBeCloseTo(632.92, 1);
+    expect(stenum.y).toBeCloseTo(158.63, 1);
+  });
+  it('does not silently apply the local UTM projection outside zone 32N', () => {
+    expect(() => geographicToUtm32(13.4, 52.52)).toThrow(/zone 32N/);
   });
   it('keeps control-point distances plausible (Ganderkesee–Berlin ≈ 325 km)', () => {
     // Gerade Linie über die Grad-Geometrie: Δlon × Meter/Grad am Bezugsbreiten-

@@ -1,5 +1,5 @@
 import source from '../../public/maps/ganderkesee-village.json';
-import { DWELLING_OFFSET_METRES, HOME_LAT, HOME_LON, METRES_PER_DEG_LAT, METRES_PER_DEG_LON_HOME } from './MapScale';
+import { DWELLING_OFFSET_METRES, HOME_LAT, HOME_LON, geographicToUtm32 } from './MapScale';
 import { SETTLEMENT_DISTRICTS, type SettlementDistrict } from './SettlementSceneModel';
 
 /** Shared local coordinates: metres east (+x), north (+z), relative to the home. */
@@ -7,9 +7,11 @@ export type WorldPoint = readonly [number, number];
 export const VILLAGE_VIEW_WIDTH = 520;
 export const WALKABLE_EXTENT = 330;
 export const VILLAGE_ATTRIBUTION = source.attribution;
+const HOME_UTM = geographicToUtm32(HOME_LON, HOME_LAT);
 export function geographicToLocal([lon, lat]: readonly number[]): WorldPoint {
-  return [(lon - HOME_LON) * METRES_PER_DEG_LON_HOME - DWELLING_OFFSET_METRES.east,
-    (lat - HOME_LAT) * METRES_PER_DEG_LAT + DWELLING_OFFSET_METRES.south];
+  const projected = geographicToUtm32(lon, lat);
+  return [projected.easting - HOME_UTM.easting - DWELLING_OFFSET_METRES.east,
+    projected.northing - HOME_UTM.northing + DWELLING_OFFSET_METRES.south];
 }
 export const VILLAGE_FEATURES = source.features.map(feature => ({
   ...feature, points: feature.points.map(geographicToLocal),

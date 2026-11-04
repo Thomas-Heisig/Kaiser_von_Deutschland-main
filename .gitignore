@@ -30,6 +30,7 @@ smoke-*.png
 # Caches & temp
 .cache/
 .temp/
+output/village-acceptance/
 *.tmp
 .eslintcache
 
