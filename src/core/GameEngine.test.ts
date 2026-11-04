@@ -41,8 +41,8 @@ describe('Playable campaign integration', (): void => {
     vi.unstubAllGlobals();
   });
 
-  const campaign = async (): Promise<GameEngine> => {
-    const engine = new GameEngine({ startingYear: 1200, randomEvents: false, enableWiki: false });
+  const campaign = async (startingYear: number = 1200): Promise<GameEngine> => {
+    const engine = new GameEngine({ startingYear, randomEvents: false, enableWiki: false });
     engines.push(engine);
     engine.addPlayer({ name: 'Heinrich', kingdomName: 'Testreich', gender: 'other', startingStats: { age: 25 } });
     await engine.startGame();
@@ -84,6 +84,33 @@ describe('Playable campaign integration', (): void => {
     const engine=await campaign(),p=engine.getPlayers()[0];
     expect(engine.getBuildPlan(p.id,'farm').key).toBe('farms');
     expect(()=>engine.getBuildPlan(p.id,'flugplatz')).toThrow(/Unbekanntes Gebäude/);
+  });
+  it.each([
+    ['hospitals', 499, 500],
+    ['castles', 799, 800],
+    ['guildhalls', 999, 1000],
+    ['universities', 1199, 1200]
+  ] as const)('only allows %s starting in year %i', async (type, beforeYear, availableYear): Promise<void> => {
+    const early = await campaign(beforeYear);
+    const earlyPlayer = early.getPlayers()[0];
+    Object.assign(earlyPlayer.kingdom.resources, {
+      gold: 1_000_000, wood: 1_000_000, stone: 1_000_000, iron: 1_000_000
+    });
+    const plan = early.getBuildPlan(earlyPlayer.id, type);
+    expect(plan.availableFromYear).toBe(availableYear);
+    expect(plan.blockers.some((blocker: string): boolean => blocker.startsWith('Erst ab'))).toBe(true);
+    const resources = { ...earlyPlayer.kingdom.resources };
+    expect(await early.buildForPlayer(earlyPlayer.id, type)).toBe(false);
+    expect(earlyPlayer.kingdom.resources).toEqual(resources);
+    expect(early.getProjects(earlyPlayer.id)).toHaveLength(0);
+
+    const available = await campaign(availableYear);
+    const availablePlayer = available.getPlayers()[0];
+    Object.assign(availablePlayer.kingdom.resources, {
+      gold: 1_000_000, wood: 1_000_000, stone: 1_000_000, iron: 1_000_000
+    });
+    expect(available.getBuildPlan(availablePlayer.id, type).canStart).toBe(true);
+    expect(await available.buildForPlayer(availablePlayer.id, type)).toBe(true);
   });
   it('keeps the recruit preview identical to the actual recruitment cost',async()=>{
     const engine=await campaign(),p=engine.getPlayers()[0],k=p.kingdom;

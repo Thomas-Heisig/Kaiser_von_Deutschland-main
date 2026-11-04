@@ -160,6 +160,8 @@ export const RESOURCE_LABELS: Record<(typeof RECRUIT_RESOURCES)[number] | 'stone
 export interface BuildPlan {
   /** Resolved infrastructure key (aliases already mapped). */
   key: keyof KingdomInfrastructure;
+  /** First calendar year in which this building form can be started, when era-limited. */
+  availableFromYear?: number;
   /** Exact resources charged when the build starts. */
   bill: BuildBill;
   /** Construction time in calendar months. */
@@ -1439,12 +1441,16 @@ export class GameEngine {
     if (this.realmProjects.list(playerId).length >= MAX_REALM_PROJECTS) {
       blockers.push(`${MAX_REALM_PROJECTS} Vorhaben laufen bereits`);
     }
+    if (cost.availableFromYear !== undefined && this.currentYear < cost.availableFromYear) {
+      blockers.push(`Erst ab ${formatYear(cost.availableFromYear)} verfügbar`);
+    }
     for (const resource of BILL_RESOURCES) {
       const missing = bill[resource] - player.kingdom.resources[resource];
       if (missing > 0) blockers.push(`${formatResource(missing)} ${RESOURCE_LABELS[resource]} fehlt`);
     }
     return {
       key,
+      ...(cost.availableFromYear !== undefined ? { availableFromYear: cost.availableFromYear } : {}),
       bill,
       months: constructionMonths(key, this.currentYear),
       blockers,

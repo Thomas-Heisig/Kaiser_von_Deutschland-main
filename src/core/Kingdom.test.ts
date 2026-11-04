@@ -53,6 +53,23 @@ describe('Kingdom campaign economy', (): void => {
     expect(kingdom.infrastructure.workshops).toBe(workshops);
   });
 
+  it.each([
+    ['hospitals', 500],
+    ['castles', 800],
+    ['guildhalls', 1000],
+    ['universities', 1200]
+  ] as const)('gates %s at its historical availability year', (type, availableFromYear): void => {
+    const kingdom = new Kingdom({ name: 'Testreich', rulerName: 'Heinrich', foundingYear: availableFromYear - 1 });
+    Object.assign(kingdom.resources, {
+      gold: 1_000_000, wood: 1_000_000, stone: 1_000_000, iron: 1_000_000
+    });
+    expect(kingdom.buildStructure(type)).toBe(false);
+    expect(kingdom.infrastructure[type]).toBe(0);
+    kingdom.currentYear = availableFromYear;
+    expect(kingdom.buildStructure(type)).toBe(true);
+    expect(kingdom.infrastructure[type]).toBe(1);
+  });
+
   it('charges all displayed construction costs and permanently increases production', (): void => {
     const kingdom = createKingdom();
     const before = { ...kingdom.resources };

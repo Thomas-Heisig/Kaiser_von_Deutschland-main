@@ -2250,6 +2250,8 @@ ${body}
               <div class="cost">${format(plan.bill.gold)} Gold${plan.bill.wood ? ` · ${format(plan.bill.wood)} Holz` : ''}
                 ${plan.bill.stone ? ` · ${format(plan.bill.stone)} Stein` : ''}
                 ${plan.bill.iron ? ` · ${format(plan.bill.iron)} Eisen` : ''}</div>
+              ${plan.availableFromYear !== undefined && this.engine!.getCurrentYear() < plan.availableFromYear
+                ? `<p class="muted">Historisch verfügbar ab ${formatYear(plan.availableFromYear)}.</p>` : ''}
               <p class="muted">Bauzeit: ${plan.months} Monate</p>
               <button data-build="${type}" ${plan.canStart ? '' : 'disabled'} class="secondary"
                 aria-label="${plan.canStart ? `${info.name} bauen`

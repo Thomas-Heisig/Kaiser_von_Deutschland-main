@@ -33,6 +33,9 @@ KingdomGameUI -> GameEngine -> Kingdom / EconomySystem / weitere Systeme
 - `Kingdom.getMonthlyBalance()` liefert dieselben gerundeten Beträge, die
   `processMonth()` vor Ereignissen und Handelsrouten verbucht.
 - `Kingdom.getBuildingData()` ist die gemeinsame Kostenquelle für UI und Bau.
+- Zeitgebundene Gebäudeformen deklarieren dort `availableFromYear`; Engine und
+  Bauansicht verwenden dieselbe Freigabeprüfung. Die Grenzen sind Spielmodell-
+  Meilensteine, keine Behauptungen über die erste historische Existenz einer Bauform.
 - Markthandel verwendet die vorhandene Preistabelle von `EconomySystem`.
 - Kampagnenziele werden in `GameEngine.getCampaignGoals()` aus dem Reichszustand
   abgeleitet und benötigen keinen separaten Fortschrittsspeicher.

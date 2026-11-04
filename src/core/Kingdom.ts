@@ -109,6 +109,7 @@ export interface StructureDefinition {
   woodCost?: number;
   stoneCost?: number;
   ironCost?: number;
+  availableFromYear?: number;
   effects?: Array<{ type: string; value: number }>;
 }
 
@@ -361,7 +362,8 @@ export class Kingdom {
       throw new RangeError('Die Bauanzahl muss eine positive ganze Zahl sein.');
     }
     const buildingData = this.getBuildingData(type);
-    if (!buildingData) return false;
+    if (!buildingData || (buildingData.availableFromYear !== undefined &&
+        this.currentYear < buildingData.availableFromYear)) return false;
 
     const totalCost = buildingData.cost * count;
     
@@ -794,13 +796,7 @@ export class Kingdom {
    * @returns A detached structure definition, or undefined for an unknown category.
    */
   public getBuildingData(type: keyof KingdomInfrastructure): StructureDefinition | undefined {
-    const buildingData: Record<keyof KingdomInfrastructure, {
-      cost: number;
-      woodCost?: number;
-      stoneCost?: number;
-      ironCost?: number;
-      effects?: Array<{ type: string; value: number }>;
-    }> = {
+    const buildingData: Record<keyof KingdomInfrastructure, StructureDefinition> = {
       markets: { cost: 2000, woodCost: 500, effects: [{ type: 'happiness', value: 3 }, { type: 'trade', value: 10 }] },
       churches: { cost: 1500, stoneCost: 300, effects: [{ type: 'happiness', value: 4 }, { type: 'stability', value: 5 }] },
       barracks: { cost: 2500, woodCost: 800, stoneCost: 400, effects: [{ type: 'recruitment', value: 5 }, { type: 'training', value: 3 }] },
@@ -808,12 +804,24 @@ export class Kingdom {
       mines: { cost: 3000, woodCost: 400, effects: [{ type: 'resourceProduction', value: 10 }] },
       roads: { cost: 800, stoneCost: 200, effects: [{ type: 'trade', value: 5 }, { type: 'mobility', value: 8 }] },
       schools: { cost: 2200, woodCost: 400, stoneCost: 300, effects: [{ type: 'literacy', value: 7 }] },
-      hospitals: { cost: 2800, woodCost: 600, stoneCost: 400, effects: [{ type: 'happiness', value: 5 }, { type: 'health', value: 10 }] },
+      hospitals: {
+        cost: 2800, woodCost: 600, stoneCost: 400, availableFromYear: 500,
+        effects: [{ type: 'happiness', value: 5 }, { type: 'health', value: 10 }]
+      },
       ports: { cost: 3500, woodCost: 1200, stoneCost: 800, effects: [{ type: 'trade', value: 15 }, { type: 'navy', value: 10 }] },
       walls: { cost: 5000, stoneCost: 2000, effects: [{ type: 'defense', value: 20 }, { type: 'stability', value: 8 }] },
-      castles: { cost: 10000, stoneCost: 5000, woodCost: 2000, ironCost: 500, effects: [{ type: 'defense', value: 50 }, { type: 'prestige', value: 15 }] },
-      universities: { cost: 6000, woodCost: 1500, stoneCost: 1200, effects: [{ type: 'literacy', value: 15 }, { type: 'technology', value: 10 }] },
-      guildhalls: { cost: 1800, woodCost: 600, effects: [{ type: 'trade', value: 8 }, { type: 'artisans', value: 5 }] },
+      castles: {
+        cost: 10000, stoneCost: 5000, woodCost: 2000, ironCost: 500, availableFromYear: 800,
+        effects: [{ type: 'defense', value: 50 }, { type: 'prestige', value: 15 }]
+      },
+      universities: {
+        cost: 6000, woodCost: 1500, stoneCost: 1200, availableFromYear: 1200,
+        effects: [{ type: 'literacy', value: 15 }, { type: 'technology', value: 10 }]
+      },
+      guildhalls: {
+        cost: 1800, woodCost: 600, availableFromYear: 1000,
+        effects: [{ type: 'trade', value: 8 }, { type: 'artisans', value: 5 }]
+      },
       taverns: { cost: 900, woodCost: 300, effects: [{ type: 'happiness', value: 6 }] },
       warehouses: { cost: 1400, woodCost: 800, effects: [{ type: 'storage', value: 1000 }] },
       workshops: { cost: 1600, woodCost: 500, ironCost: 100, effects: [{ type: 'production', value: 8 }] }

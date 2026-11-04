@@ -133,6 +133,11 @@ wenden dieselbe Prüfung an, damit eine Vorschau nie von der Ausführung abweich
 Ein voller Vorhabenplatz (`MAX_REALM_PROJECTS`, derzeit 12) erscheint als
 eigener Grund und nicht als Ressourcenmangel. Rekrutierungskosten stehen einmalig
 in `RECRUITMENT_COSTS` (`src/core/Kingdom.ts`).
+Ein Bauplan für eine zeitgebundene Bauform enthält außerdem `availableFromYear`;
+vor diesem Kalenderjahr blockieren Vorschau und Ausführung den Bau gemeinsam.
+Aktuelle Meilensteine: Heilstätten/Hospitäler ab 500, Burgen ab 800, Gildenhäuser
+ab 1000 und Universitäten ab 1200. Diese Jahre sind Spielmodell-Meilensteine,
+keine Aussage über die erstmalige historische Existenz vergleichbarer Gebäude.
 
 Einkauf kostet `ceil(Basispreis × Menge × 1,2)`, Verkauf bringt
 `floor(Basispreis × Menge × 0,8)`. Kampagnenziele enthalten jeweils `label` und
