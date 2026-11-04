@@ -139,6 +139,14 @@ Aktuelle Meilensteine: Heilstätten/Hospitäler ab 500, Burgen ab 800, Gildenhä
 ab 1000 und Universitäten ab 1200. Diese Jahre sind Spielmodell-Meilensteine,
 keine Aussage über die erstmalige historische Existenz vergleichbarer Gebäude.
 
+Die Verwaltungsautomatik ist pro Reich optional und speichert aktivierte Bereiche
+im Spielstand. Der Bereich `diplomacy` entsendet höchstens eine Gesandtschaft je
+Monat für 350 Gold an den schwächsten geeigneten unabhängigen Nachbarn. Dafür gelten
+das gemeinsame monatliche Ausgabenlimit sowie die Ausschlüsse für Vasallen,
+laufende Missionen und Kriegs-/Feindbeziehungen. Vertrags- und Kriegsentscheidungen
+werden nicht automatisiert. Alte Spielstände ohne `domains.diplomacy` laden den
+Bereich deaktiviert.
+
 Einkauf kostet `ceil(Basispreis × Menge × 1,2)`, Verkauf bringt
 `floor(Basispreis × Menge × 0,8)`. Kampagnenziele enthalten jeweils `label` und
 `done` und beziehen sich auf den aktuellen Zustand, nicht auf frühere Bestwerte.

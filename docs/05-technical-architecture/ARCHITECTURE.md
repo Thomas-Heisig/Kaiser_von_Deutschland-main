@@ -49,6 +49,11 @@ KingdomGameUI -> GameEngine -> Kingdom / EconomySystem / weitere Systeme
 - Handelsrouten und Transportmittel erhalten für ihre Verfügbarkeitsprüfung
   ausschließlich die Technologien ihres Reiches. Route und Forschungsvorrat
   werden gemeinsam im Spielstand persistiert.
+- Die optionale Verwaltungsautomatik kann einmal pro Monat eine Gesandtschaft
+  (350 Gold) zum schwächsten geeigneten unabhängigen Nachbarn entsenden. Aktive
+  Missionen, Vasallen, Kriegs-/Feindbeziehungen und das gemeinsame Ausgabenlimit
+  werden berücksichtigt; Verträge und Kriege bleiben manuell. Fehlende
+  Diplomatiepräferenzen in älteren Spielständen werden als deaktiviert migriert.
 - Rollenwechsel nutzt `RoleSwitchingSystem`; persönliche Aktionen sind je Spieler
   auf eine Aktion pro Monat begrenzt, auch nach einem Rollenwechsel.
 - Mehrere lokale Spieler aktivieren Hotseat: `endTurn()` wechselt den Herrscher

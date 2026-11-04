@@ -17,6 +17,16 @@ describe('Delegated spending and treasury accounting',()=>{
     expect(validateAdministration(legacy)).toEqual(defaultAdministration());
     expect(()=>validateAdministration({...defaultAdministration(),characterPlan:'unknown'})).toThrow();
   });
+  it('migrates administration preferences that predate the diplomacy domain',()=>{
+    const legacy={...defaultAdministration(),domains:{...defaultAdministration().domains}};
+    delete (legacy.domains as Partial<typeof legacy.domains>).diplomacy;
+    expect(validateAdministration(legacy)).toEqual(defaultAdministration());
+  });
+  it('migrates administration preferences that predate the diplomacy domain',()=>{
+    const legacy=defaultAdministration();
+    delete (legacy.domains as Partial<typeof legacy.domains>).diplomacy;
+    expect(validateAdministration(legacy)).toEqual(defaultAdministration());
+  });
   it('records a clamped depletion and rejects unaccounted gold',()=>{
     const ledger=new TreasuryLedger('Januar',50);
     ledger.checkpoint('Unterhalt',0);ledger.checkpoint('Handel',20);

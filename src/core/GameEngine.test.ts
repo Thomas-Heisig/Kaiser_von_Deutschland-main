@@ -584,6 +584,56 @@ describe('Playable campaign integration', (): void => {
     expect(restored.getCivicMissions(player.id).active).toEqual(engine.getCivicMissions(player.id).active);
   });
 
+  it('automatically sends one budgeted envoy to the weakest safe independent neighbour',async()=>{
+    const engine=await campaign(),player=engine.getPlayers()[0];
+    player.kingdom.resources.gold=100000;
+    const rivals=engine.getRivals(player.id);
+    const relations=engine.getRivalRelations(player.id);
+    for(const relation of relations) {
+      relation.relationshipValue=40;
+      relation.trust=50;
+    }
+    const hostile=relations.find(relation=>relation.kingdomId===rivals[0].id)!;
+    hostile.relationshipValue=-90;
+    hostile.relationType='hostile';
+    const target=relations.find(relation=>relation.kingdomId===rivals[1].id)!;
+    target.relationshipValue=-20;
+    const preferences=engine.getAdministration(player.id);
+    preferences.domains.diplomacy=true;
+    engine.setAdministration(player.id,preferences);
+    const gold=player.kingdom.resources.gold;
+
+    await engine.advanceMonth();
+
+    expect(engine.getRivalMissions(player.id).map(mission=>mission.targetKingdomId)).toEqual([target.kingdomId]);
+    expect(player.kingdom.resources.gold).toBeLessThan(gold);
+    expect(engine.getTreasuryReport(player.id)?.entries.some(entry=>
+      entry.reason===`Automatik: Gesandtschaft nach ${target.kingdomName}`&&entry.amount===-350)).toBe(true);
+    expect(engine.getRivalTreaties(player.id)).toHaveLength(0);
+    await engine.advanceMonth();
+    expect(engine.getRivalMissions(player.id)).toHaveLength(1);
+
+    await engine.saveGame('diplomacy-automation');
+    const restored=new GameEngine({enableWiki:false});engines.push(restored);
+    await restored.loadGame('diplomacy-automation');
+    expect(restored.getAdministration(player.id)).toEqual(preferences);
+    expect(restored.getRivalMissions(player.id).map(mission=>mission.targetKingdomId)).toEqual([target.kingdomId]);
+  });
+
+  it('does not send delegated envoys when the shared monthly budget cannot cover them',async()=>{
+    const engine=await campaign(),player=engine.getPlayers()[0];
+    player.kingdom.resources.gold=2000;
+    const preferences=engine.getAdministration(player.id);
+    preferences.domains.diplomacy=true;
+    engine.setAdministration(player.id,preferences);
+    const gold=player.kingdom.resources.gold;
+    await engine.advanceMonth();
+    expect(engine.getRivalMissions(player.id)).toHaveLength(0);
+    expect(player.kingdom.resources.gold).toBeLessThanOrEqual(gold);
+    expect(engine.getTreasuryReport(player.id)?.entries.some(entry=>
+      entry.reason.startsWith('Automatik: Gesandtschaft'))).toBe(false);
+  });
+
   it('runs one delegated personal action per month, persists the plan and respects manual priority',async()=>{
     const engine=await campaign(),p=engine.getActivePlayer(),character=engine.getCurrentCharacter(p.id)!;
     const prefs=engine.getAdministration(p.id);prefs.domains.character=true;prefs.characterPlan='study';engine.setAdministration(p.id,prefs);

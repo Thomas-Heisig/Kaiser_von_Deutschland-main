@@ -3017,6 +3017,20 @@ export class GameEngine {
       if(option)await action('Forschung: '+option.technology.name,()=>this.startResearch(player.id,option.technology.id));
     }
     if(domains.military) await this.runGarrisonAutomation(player,canSpend,action);
+    if(domains.diplomacy) {
+      const rivals=new Map(this.getRivals(player.id).map(rival=>[rival.id,rival]));
+      const activeTargets=new Set(this.getRivalMissions(player.id).map(mission=>mission.targetKingdomId));
+      const target=this.getRivalRelations(player.id)
+        .filter(relation=>{
+          const rival=rivals.get(relation.kingdomId);
+          return rival&&!rival.subjugated&&!activeTargets.has(rival.id)&&
+            relation.relationType!=='war'&&relation.relationType!=='hostile'&&
+            (relation.relationshipValue<30||relation.trust<40);
+        })
+        .sort((a,b)=>a.relationshipValue-b.relationshipValue||a.trust-b.trust)[0];
+      if(target&&canSpend({gold:350}))
+        await action(`Gesandtschaft nach ${target.kingdomName}`,()=>this.sendRivalEnvoy(player.id,target.kingdomId));
+    }
     if(domains.culture&&kingdom.happiness<85) {
       const option=this.getFestivalOptions(player.id).find(o=>!o.alreadyHeld&&o.affordable&&
         canSpend({gold:o.event.effects.goldCost??0,food:o.event.effects.foodConsumption??0}));
