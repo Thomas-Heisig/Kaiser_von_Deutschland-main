@@ -64,7 +64,10 @@ try {
     assert.equal(await page.locator(`[data-sponsor-exhibition="${sponsoredId}"]`).isDisabled(),true);
     await page.locator('#section-dialog-close').click();
     if (fixture.month>1) {
+      if (await page.locator('#report-toggle').getAttribute('aria-expanded') === 'true')
+        await page.locator('#report-close').click();
       await page.locator('[data-action=month]').click();
+      await page.locator('#report-toggle').click();
       const id=fixture.year===1970 ? 'warsaw-treaty' : fixture.year===-43 ? 'caesar-assassination' : 'war-end-europe';
       assert.match(await page.locator('#report-history-context').textContent(),/Belegtes Ereignis/);
       await openHistory(page); await topic(page,'events');

@@ -18,6 +18,8 @@ try {
     for(let i=0;i<6&&!await page.locator('#tutorial-toggle').isVisible();i++)await page.getByRole('button',{name:'Weitere Einstellungen',exact:true}).click();
     await page.locator('#tutorial-toggle').uncheck();await page.getByRole('button',{name:/Herrschaft beginnen/}).click();
     await page.locator('#kingdom-map canvas').waitFor();
+    if(await page.locator('#report-toggle').getAttribute('aria-expanded')==='true')
+      await page.locator('#report-toggle').click();
     const open=async view=>{
       if(await page.locator('#view-select').isVisible())await page.locator('#view-select').selectOption(view);
       else await page.locator(`nav [data-view=${view}]`).click();
@@ -26,9 +28,11 @@ try {
     const literacy=()=>page.locator('.skill-list label').filter({hasText:'Bildung'}).locator('progress').getAttribute('value').then(Number);
     await open('civic');
     const worker=await page.locator('[data-civic-citizen=water] option:checked').innerText();
-    const workerName=worker.split(' · ')[0];
+    const workerName=worker.split(' · ')[0].trim();
+    assert.ok(workerName);
     await page.locator('[data-civic-assign=water]').click();
-    assert.ok((await page.locator('[data-active-civic]').innerText()).includes(workerName));
+    const activeCivic=await page.locator('[data-active-civic]').innerText();
+    assert.ok(activeCivic.includes(workerName),`Expected ${workerName} in active assignment: ${activeCivic}`);
     await page.locator('[data-administration-domain=civic]').check();
     await close();await open('court');
     assert.ok((await page.locator('.automation-people').innerText()).includes(workerName));
