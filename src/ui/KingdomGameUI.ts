@@ -952,7 +952,7 @@ ${body}
       this.root.querySelector('#' + id)?.addEventListener('click', () => {
         const body = this.root.querySelector<HTMLElement>('#section-dialog-body');
         if (!body) return;
-        body.scrollTop += direction * Math.max(1, body.clientHeight - 64);
+        body.scrollTop += direction * this.panelPageStep(body);
         this.updatePanelPagination();
       });
     }
@@ -1753,10 +1753,14 @@ ${body}
     this.refresh();
   }
 
+  private panelPageStep(body: HTMLElement): number {
+    return Math.max(1, Math.floor(body.clientHeight / 2));
+  }
+
   private updatePanelPagination(): void {
     const body = this.root.querySelector<HTMLElement>('#section-dialog-body');
     if (!body || body.clientHeight === 0) return;
-    const step = Math.max(1, body.clientHeight - 64);
+    const step = this.panelPageStep(body);
     const maximum = Math.max(0, body.scrollHeight - body.clientHeight);
     const pages = Math.ceil(maximum / step) + 1;
     const current = body.scrollTop >= maximum - 1 ? pages : Math.floor(body.scrollTop / step) + 1;

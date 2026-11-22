@@ -13,6 +13,19 @@ async function bounds(page, selector) {
   }).map(el=>({id:el.id,text:el.textContent,rect:el.getBoundingClientRect().toJSON()})));
   assert.deepEqual(invalid,[],`Offscreen controls at ${JSON.stringify(page.viewportSize())}`);
 }
+async function reportControlsFit(page) {
+  const invalid = await page.locator('.report-card').evaluateAll(cards => cards.flatMap(card => {
+    const container = card.getBoundingClientRect();
+    return Array.from(card.querySelectorAll('button,input,a')).filter(element => {
+      const rect = element.getBoundingClientRect();
+      return rect.width && rect.height && (
+        rect.left < container.left - 1 || rect.top < container.top - 1 ||
+        rect.right > container.right + 1 || rect.bottom > container.bottom + 1
+      );
+    }).map(element => ({id:element.id,text:element.textContent}));
+  }));
+  assert.deepEqual(invalid,[],`Clipped report controls at ${JSON.stringify(page.viewportSize())}`);
+}
 try {
   for (const [width,height] of [[1280,740],[375,667],[844,480],[320,568],[320,740],[375,812]]) {
     const page=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'});
@@ -25,18 +38,27 @@ try {
     const auto=page.locator('.realm-report [data-council-auto]');
     assert.equal(await auto.isChecked(),false);
     await bounds(page,'.realm-report,.realm-report button,.realm-report input,.realm-report a');
+    if(width<=600) {
+      await reportControlsFit(page);
+      await page.locator('[data-report-card=news] [data-view=chronicle]').click({trial:true});
+    }
     const tabs=page.locator('.report-tabs');
     if(await tabs.isVisible()) await page.locator('[data-report-tab=tutorial][type=button]').click();
+    if(width<=600) await reportControlsFit(page);
     assert.match(await page.locator('#report-tutorial-title').textContent(),/Tutorial 1\/5/);
     await page.locator('#report-tutorial-go').click();
     await page.locator('#section-dialog[open]').waitFor();
     await page.locator('#section-dialog-close').click();
     if(await tabs.isVisible()) await page.locator('[data-report-tab=history][type=button]').click();
+    if(width<=600) await reportControlsFit(page);
     assert.match(await page.locator('#report-history-text').textContent(),/Universität Paris/);
     assert.match(await page.locator('#report-history-source').getAttribute('href'),/sorbonne.fr/);
     await bounds(page,'.realm-report button,.realm-report input,.realm-report a');
     await page.screenshot({path:`.temp/report-${width}.png`});
     if(width===1280) {
+      await page.locator('#report-close').click();
+      assert.equal(await page.locator('.realm-report').isVisible(),false);
+      assert.equal(await page.locator('#report-toggle').getAttribute('aria-expanded'),'false');
       for(let i=0;i<6 && !await page.locator('.council-modal[open]').count();i++) {
         await page.locator('[data-action=month]').click();
       }
@@ -46,6 +68,8 @@ try {
       // Assert the persistent report control below instead of check()'s detached input.
       await modal.locator('[data-council-auto]').click();
       await modal.waitFor({state:'detached'});
+      await page.locator('#report-toggle').click();
+      assert.equal(await page.locator('#report-toggle').getAttribute('aria-expanded'),'true');
       assert.equal(await auto.isChecked(),true);
       assert.match(await page.locator('#report-news').textContent(),/Automatisch entschieden/);
       await auto.uncheck();
@@ -58,6 +82,7 @@ try {
       await page.locator('#continue').click();
       await page.locator('#kingdom-map canvas').waitFor();
       assert.equal(await page.locator('.realm-report [data-council-auto]').isChecked(),true);
+      await page.locator('#report-close').click();
       await page.locator('[data-action=month]').click();
       assert.equal(await page.locator('.council-modal[open]').count(),0);
     }

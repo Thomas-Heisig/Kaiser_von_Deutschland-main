@@ -14,6 +14,11 @@ try {
     await page.locator('[name=events]').uncheck();
     await page.getByRole('button',{name:/Herrschaft beginnen/}).click();
     await page.locator('#kingdom-map canvas').waitFor();
+    const closeReport=async()=>{
+      if(await page.locator('#report-toggle').getAttribute('aria-expanded')==='true')
+        await page.locator('#report-toggle').click();
+    };
+    await closeReport();
     const open=async(view)=>{
       if(await page.locator('#view-select').isVisible())await page.locator('#view-select').selectOption(view);
       else await page.locator(`nav [data-view=${view}]`).click();
@@ -61,7 +66,7 @@ try {
       throw error;
     }
     await page.reload();await page.locator('#intro-skip').click();await page.locator('#continue').click();
-    await page.locator('#kingdom-map canvas').waitFor();await open('world');
+    await page.locator('#kingdom-map canvas').waitFor();await closeReport();await open('world');
     assert.equal(await page.locator('[data-provision-region=geest] [data-provision-storage]').innerText(),'1 / 3');
     assert.equal(await page.locator('[data-provision-action=storage][data-provision-target=geest]').isDisabled(),true);
     await page.locator('#section-dialog-close').click();await page.locator('[data-action=month]').click();await open('world');
