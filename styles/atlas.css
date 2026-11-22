@@ -341,7 +341,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
 @media (max-width:600px) {
  .kingdom-app .game-layout { grid-template-columns:minmax(0,1fr)!important; grid-template-rows:36px minmax(0,1fr) 43px!important; }
  .kingdom-app .game-layout>.workspace { grid-row:3; }
- .realm-report { width:100%; grid-template-rows:27px minmax(0,1fr) 24px; padding:5px 8px; gap:4px; border-top:1px solid var(--line); border-left:0; top:auto; height:178px; }
+ .realm-report { width:100%; grid-template-rows:27px 27px minmax(0,1fr) 24px; padding:5px 8px; gap:4px; border-top:1px solid var(--line); border-left:0; top:auto; height:min(210px,100%); }
  .report-heading { font-size:.62rem; }
  .report-card { padding:6px 8px; gap:2px; }
  .report-card h2 { font-size:.72rem; }
@@ -352,7 +352,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { 
  .council-auto { font-size:.65rem; padding:0; }
 }
 @media (max-width:600px) and (min-height:700px) {
- .realm-report { height:160px; }
  .report-card { padding:4px 8px; gap:1px; }
 }
 /* The historical reading filter stays within the paginated administration panel. */

@@ -44,10 +44,20 @@ try {
         const dx=Math.max(-200,Math.min(200,delta/.22));
         await page.mouse.move(box.x+box.width/2,box.y+box.height/2);
         await page.mouse.down();await page.mouse.move(box.x+box.width/2+dx,box.y+box.height/2,{steps:4});await page.mouse.up();
+        await page.waitForFunction(yaw=>JSON.parse(document.querySelector('.fp-canvas').dataset.position).yaw!==yaw,
+          state.yaw,{timeout:10000});
       }
+      const aligned=JSON.parse(await fp.getAttribute('data-position'));
+      assert(Math.abs(((0-aligned.yaw+540)%360)-180)<.3,`Could not face north: ${JSON.stringify(aligned)}`);
       await page.keyboard.down('w');
-      await page.waitForFunction(()=>JSON.parse(document.querySelector('.fp-canvas').dataset.position).z>13,{},{timeout:20000});
-      await page.keyboard.up('w');
+      try {
+        await page.waitForFunction(()=>JSON.parse(document.querySelector('.fp-canvas').dataset.position).z>13,
+          null,{timeout:60000});
+      } catch(error) {
+        throw new Error(`Walking did not pass the yard boundary: ${await fp.getAttribute('data-position')}`,{cause:error});
+      } finally {
+        await page.keyboard.up('w');
+      }
       await page.screenshot({path:`${output}/village-on-foot.png`});
       assert(JSON.parse(await fp.getAttribute('data-position')).z>12,'Walking still stops at the old yard boundary');
     }

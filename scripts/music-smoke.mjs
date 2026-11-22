@@ -24,7 +24,10 @@ try {
   await page.locator('#tutorial-toggle').uncheck();
   await page.getByRole('button',{name:/Herrschaft beginnen/}).click();
   await page.locator('#kingdom-map canvas').waitFor();
-  const originals=catalog.tracks.slice(15);
+  if(await page.locator('#report-toggle').getAttribute('aria-expanded')==='true')
+    await page.locator('#report-toggle').click();
+  const originals=catalog.tracks.filter(track=>track.year===-1999&&track.endYear===-500);
+  assert.equal(originals.length,5);
   // A real media element decodes each recording, advances its clock, then triggers the next era track.
   for(const track of originals){
     await page.waitForFunction(filename=>window.testAudio.some(a=>a.src.endsWith('/'+filename)&&!a.paused&&a.currentTime>0.05),track.filename);
@@ -38,7 +41,7 @@ try {
   }
   await page.waitForFunction(()=>window.testAudio.some(a=>a.src.endsWith('/schleier-der-vorzeit.mp3')&&!a.paused));
   await page.locator('#game-music-settings > summary').click();
-  assert.equal(await page.locator('[data-jukebox-select] option').count(),20);
+  assert.equal(await page.locator('[data-jukebox-select] option').count(),catalog.tracks.length);
   await page.locator('.playlist-covers > summary').click();
   for(let i=0;i<5;i++) await page.locator('[data-cover-page="1"]').click();
   await page.locator('[data-cover-id=schleier-der-vorzeit] img').waitFor();

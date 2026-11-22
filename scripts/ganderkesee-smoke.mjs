@@ -45,10 +45,14 @@ try {
     await open('military');await page.locator('[data-garrison=training]').click();
     await page.locator('#section-dialog-close').click();
     await open('court');await page.locator('[data-administration-preset=watch]').click();
-    if(await page.locator('[data-administration-domain]:checked').count()!==7)throw Error('All seven spectator domains, including character, must be enabled');
+    const domains=['economy','construction','research','military','culture','civic','diplomacy','character'];
+    if(await page.locator('[data-administration-domain]:checked').count()!==domains.length)
+      throw Error('All spectator domains, including diplomacy and character, must be enabled');
+    for(const domain of domains)
+      if(!await page.locator(`[data-administration-domain=${domain}]`).isChecked())throw Error(`Spectator domain ${domain} is disabled`);
     await page.locator('[data-administration-policy]').selectOption('normal');
     await page.locator('[data-administration-domain=research]').uncheck();
-    if(await page.locator('[data-administration-domain]:checked').count()!==6)throw Error('Chosen focus not retained');
+    if(await page.locator('[data-administration-domain]:checked').count()!==domains.length-1)throw Error('Chosen focus not retained');
     await page.screenshot({path:`.temp/administration-${year}-${width}.png`});
     await page.locator('#section-dialog-close').click();
     await open('modernization');
