@@ -39,6 +39,9 @@ KingdomGameUI -> GameEngine -> Kingdom / EconomySystem / weitere Systeme
 - Markthandel verwendet die vorhandene Preistabelle von `EconomySystem`.
 - Kampagnenziele werden in `GameEngine.getCampaignGoals()` aus dem Reichszustand
   abgeleitet und benötigen keinen separaten Fortschrittsspeicher.
+- Automatische Niederlagebedingungen gelten nur für Zielkampagnen. Das offene
+  Spiel `frei` ist eine ausdrückliche Sandbox ohne Sieg- oder Niederlagezwang;
+  Kampagnen können nach ihrem Ende weiterhin bewusst als Sandbox fortgesetzt werden.
 - `CampaignWarfareSystem` löst Feldzüge und Überfälle statistisch auf und verwaltet
   Rivalen, Tribut, Monatslimits und maximal 60 Berichte. Die Engine bindet
   Feldherrenboni aus dem aktuell gespielten Bürger ein.

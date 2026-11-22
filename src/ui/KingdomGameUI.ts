@@ -1886,7 +1886,9 @@ ${body}
     const chapter = this.engine.getCampaignChapterStatus(this.player.id);
     setText('campaign-title', this.engine.getCampaignDefinition().name + ' · ' +
       (chapter.finished ? 'Alle Kapitel bestanden' : 'Kapitel ' + (chapter.index + 1) + '/' + chapter.total + ': ' + chapter.title));
-    setText('campaign-story', this.engine.getCampaignId() === 'frei' ? 'Offenes Spiel: Erkunde jede Epoche ohne verpflichtende Ziele.' : chapter.narrative);
+    setText('campaign-story', this.engine.getCampaignId() === 'frei'
+      ? 'Offenes Spiel: Sandbox ohne automatische Niederlage durch Bankrott, Hungersnot oder Anarchie. Erkunde jede Epoche ohne verpflichtende Ziele.'
+      : chapter.narrative);
     const completed = goals.filter((goal: CampaignGoal) => goal.done).length;
     const objectiveHost = this.root.querySelector('#objectives');
     if (objectiveHost) objectiveHost.innerHTML = goals.map((goal: CampaignGoal) =>

@@ -1131,6 +1131,7 @@ export class GameEngine {
    * Ein bereits untergangenes Reich wird nicht erneut gemeldet.
    */
   private checkCampaignDefeat(): void {
+    // Open play is intentionally a sandbox; defeat applies only to goal-driven campaigns.
     if (this.getCampaignId() === 'frei') return;
     for (const player of this.players.values()) {
       if (this.defeatSystem.isDefeated(player.id)) continue;

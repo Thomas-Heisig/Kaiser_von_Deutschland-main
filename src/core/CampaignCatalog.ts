@@ -3,7 +3,7 @@ export type CampaignId = 'aufbau' | 'hanse' | 'wissenschaft' | 'grenzland' | 'ku
 export interface CampaignDefinition { id: CampaignId; name: string; description: string; year: number; minYear?: number; maxYear?: number; }
 export interface CampaignObjective { label: string; done: boolean }
 export const CAMPAIGNS: readonly CampaignDefinition[] = [
-  { id: 'frei', name: 'Offenes Spiel', description: 'Ohne Siegzwang: Geschichte und Reich frei gestalten.', year: 1200 },
+  { id: 'frei', name: 'Offenes Spiel', description: 'Sandbox ohne Siegzwang oder automatische Niederlage: Geschichte und Reich frei gestalten.', year: 1200 },
   { id: 'aufbau', name: 'Ein neuer Anfang', description: 'Baue ein blühendes Lehen auf.', year: 1200, minYear: 1200, maxYear: 1500 },
   { id: 'hanse', name: 'Aufstieg der Hanse', description: 'Errichte Häfen und ein Handelsnetz.', year: 1200, minYear: 1200, maxYear: 1600 },
   { id: 'wissenschaft', name: 'Zeitalter des Wissens', description: 'Fördere Bildung und eigene Forschung.', year: 1200, minYear: 1500, maxYear: 9999 },

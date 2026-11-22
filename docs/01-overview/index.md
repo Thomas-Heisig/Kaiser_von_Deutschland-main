@@ -140,7 +140,7 @@ Es gibt **kein festes Spielziel** - stattdessen:
 ### Singleplayer
 
 - **Kampagne**: Vorgegebene historische Szenarien
-- **Sandbox**: Freies Spiel ohne Einschränkungen
+- **Offenes Spiel (Sandbox)**: Freies Spiel ohne verpflichtende Ziele und ohne automatische Niederlage durch Bankrott, Hungersnot oder Anarchie. Diese Niederlagebedingungen gelten nur in Zielkampagnen.
 - **Tutorial**: Schrittweise Einführung in Mechaniken
 
 ### Multiplayer

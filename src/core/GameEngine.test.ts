@@ -1508,6 +1508,38 @@ describe('Playable campaign integration', (): void => {
   });
 
   describe('real defeat conditions (bankruptcy, famine, anarchy)', (): void => {
+    it('keeps open play as a defeat-free sandbox through a ruined year and save/load', async (): Promise<void> => {
+      const engine = new GameEngine({
+        startingYear: 1200, campaignId: 'frei', randomEvents: false, enableWiki: false
+      });
+      engines.push(engine);
+      const player = engine.addPlayer({ name: 'Heinrich', kingdomName: 'Testreich', gender: 'other' });
+      await engine.startGame();
+      engine.pauseGame();
+      const defeats: string[] = [];
+      engine.on('campaignDefeat', (detail: { reason: string }): void => {
+        defeats.push(detail.reason);
+      });
+
+      for (let month = 0; month < 12; month++) {
+        player.kingdom.resources.gold = 0;
+        player.kingdom.resources.food = 0;
+        player.kingdom.infrastructure.farms = 0;
+        player.kingdom.happiness = 0;
+        await engine.advanceMonth();
+      }
+
+      expect(engine.getCampaignId()).toBe('frei');
+      expect(engine.isPlayerDefeated(player.id)).toBe(false);
+      expect(defeats).toEqual([]);
+      expect(engine.getChronicle().some(entry => entry.message.startsWith('Untergang:'))).toBe(false);
+      await engine.saveGame('free-sandbox-no-defeat');
+      await engine.loadGame('free-sandbox-no-defeat');
+      expect(engine.isPlayerDefeated(player.id)).toBe(false);
+      await engine.advanceMonth();
+      expect(engine.isPlayerDefeated(player.id)).toBe(false);
+    });
+
     it('requires an explicit sandbox continuation and persists the free campaign', async () => {
       const engine = await campaign();
       const player = engine.getPlayers()[0];
